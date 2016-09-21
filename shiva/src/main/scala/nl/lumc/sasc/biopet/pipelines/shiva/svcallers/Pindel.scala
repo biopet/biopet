@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -18,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.extensions.pindel._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -39,7 +39,7 @@ class Pindel(val root: Configurable) extends SvCaller {
       val configFile: File = new File(pindelDir, sample + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
-      cfg.sampleName = sample
+      cfg.sampleName = sample + sampleNameSuffix
       cfg.output = configFile
       add(cfg)
 
@@ -58,7 +58,12 @@ class Pindel(val root: Configurable) extends SvCaller {
       pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
       add(pindelVcf)
 
-      addVCF(sample, pindelVcf.outputVCF)
+      val compressedVCF = new SortVcf(this)
+      compressedVCF.input = pindelVcf.outputVCF
+      compressedVCF.output = new File(pindelDir, s"${sample}.pindel.vcf.gz")
+      add(compressedVCF)
+
+      addVCF(sample, compressedVCF.output)
     }
 
   }

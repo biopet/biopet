@@ -1,3 +1,17 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
@@ -43,6 +57,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Output(fullName = "log_to_file", shortName = "log", doc = "Set the logging location", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var log_to_file: File = _
+
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph() = {
     super.beforeGraph()

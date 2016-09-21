@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -88,30 +87,31 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
     repeat("PROGRAM=", program, spaceSeparated = false)
 
   override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
-    program.foreach(p => {
-      val stats: Any = p match {
-        case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
-          Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))
-        case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-          Map(
-            "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
-            "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
-          )
-        case _ if p == Programs.QualityScoreDistribution.toString =>
-          Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))
-        case _ if p == Programs.MeanQualityByCycle.toString =>
-          Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))
-        case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-          Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")
-        case _ => None
+    program
+      .filterNot(_ == Programs.CollectInsertSizeMetrics.toString && !new File(outputName + ".insert_size_metrics").exists())
+      .foreach { p =>
+        val stats: Any = p match {
+          case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
+            Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))
+          case _ if p == Programs.CollectInsertSizeMetrics.toString =>
+            Map(
+              "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
+              "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
+            )
+          case _ if p == Programs.QualityScoreDistribution.toString =>
+            Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))
+          case _ if p == Programs.MeanQualityByCycle.toString =>
+            Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))
+          case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
+            Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")
+          case _ => None
+        }
+        val sum = new Summarizable {
+          override def summaryStats = stats
+          override def summaryFiles: Map[String, File] = Map()
+        }
+        qscript.addSummarizable(sum, p)
       }
-      val sum = new Summarizable {
-        override def summaryStats = stats
-        override def summaryFiles: Map[String, File] = Map()
-      }
-      qscript.addSummarizable(sum, p)
-    })
-
   }
 
   def summaryStats = Map()

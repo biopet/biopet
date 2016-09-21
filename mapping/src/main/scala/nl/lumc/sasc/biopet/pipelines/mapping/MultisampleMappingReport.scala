@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -50,6 +49,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
+    val mappingExecuted = summary.getLibraryValues("mapping").nonEmpty
+    val pairedFound = !mappingExecuted || summary.getLibraryValues("mapping", "settings", "paired").exists(_._2 == Some(true))
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => value.isDefined }
 
@@ -72,7 +73,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         )) ++
-        (if (insertsizeExecuted) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+        (if (pairedFound) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
         else Nil) ++
         (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",

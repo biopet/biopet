@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -17,6 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
+import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caller delly */
@@ -41,7 +41,13 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DEL"
         delly.outputvcf = new File(dellyDir, sample + ".delly.del.vcf")
         add(delly)
-        catVariants.variant :+= delly.outputvcf
+
+        val compressedVCF = new SortVcf(this)
+        compressedVCF.input = delly.outputvcf
+        compressedVCF.output = new File(dellyDir, s"${sample}.delly.del.vcf.gz")
+        add(compressedVCF)
+
+        catVariants.variant :+= compressedVCF.output
       }
       if (dup) {
         val delly = new DellyCaller(this)
@@ -49,7 +55,13 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DUP"
         delly.outputvcf = new File(dellyDir, sample + ".delly.dup.vcf")
         add(delly)
-        catVariants.variant :+= delly.outputvcf
+
+        val compressedVCF = new SortVcf(this)
+        compressedVCF.input = delly.outputvcf
+        compressedVCF.output = new File(dellyDir, s"${sample}.delly.dup.vcf.gz")
+        add(compressedVCF)
+
+        catVariants.variant :+= compressedVCF.output
       }
       if (inv) {
         val delly = new DellyCaller(this)
@@ -57,18 +69,30 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "INV"
         delly.outputvcf = new File(dellyDir, sample + ".delly.inv.vcf")
         add(delly)
-        catVariants.variant :+= delly.outputvcf
+
+        val compressedVCF = new SortVcf(this)
+        compressedVCF.input = delly.outputvcf
+        compressedVCF.output = new File(dellyDir, s"${sample}.delly.inv.vcf.gz")
+        add(compressedVCF)
+
+        catVariants.variant :+= compressedVCF.output
       }
       if (tra) {
         val delly = new DellyCaller(this)
         delly.input = bamFile
         delly.analysistype = "TRA"
         delly.outputvcf = new File(dellyDir, sample + ".delly.tra.vcf")
-        catVariants.variant :+= delly.outputvcf
         add(delly)
+
+        val compressedVCF = new SortVcf(this)
+        compressedVCF.input = delly.outputvcf
+        compressedVCF.output = new File(dellyDir, s"${sample}.delly.tra.vcf.gz")
+        add(compressedVCF)
+
+        catVariants.variant :+= compressedVCF.output
       }
 
-      require(catVariants.variant.nonEmpty, "Must atleast 1 SV-type be selected for Delly")
+      require(catVariants.variant.nonEmpty, "At least 1 SV-type should be selected for Delly")
 
       add(catVariants)
       addVCF(sample, catVariants.outputFile)

@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -35,28 +34,28 @@ object VcfToTsv extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    }
+    } text "Input vcf file"
     opt[File]('o', "outputFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output file, default to stdout"
     opt[String]('f', "field") unbounded () action { (x, c) =>
       c.copy(fields = x :: c.fields)
-    }
+    } text "Genotype field to use" valueName "Genotype field name"
     opt[String]('i', "info_field") unbounded () action { (x, c) =>
       c.copy(infoFields = x :: c.infoFields)
-    }
+    } text "Info field to use" valueName "Info field name"
     opt[Unit]("all_info") unbounded () action { (x, c) =>
       c.copy(allInfo = true)
-    }
+    } text "Use all info fields in the vcf header"
     opt[Unit]("all_format") unbounded () action { (x, c) =>
       c.copy(allFormat = true)
-    }
+    } text "Use all genotype fields in the vcf header"
     opt[String]('s', "sample_field") unbounded () action { (x, c) =>
       c.copy(sampleFields = x :: c.sampleFields)
-    }
+    } text "Genotype fields to use in the tsv file"
     opt[Unit]('d', "disable_defaults") unbounded () action { (x, c) =>
       c.copy(disableDefaults = true)
-    }
+    } text "Don't output the default columns from the vcf file"
     opt[String]("separator") maxOccurs 1 action { (x, c) =>
       c.copy(separator = x)
     } text "Optional separator. Default is tab-delimited"

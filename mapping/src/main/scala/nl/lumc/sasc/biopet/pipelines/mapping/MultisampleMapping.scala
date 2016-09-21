@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -67,6 +66,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   }
 
   override def defaults = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+
+  override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
   /** In a default multisample mapping run there are no multsample jobs. This method can be overriden by other pipelines */
   def addMultiSampleJobs(): Unit = {

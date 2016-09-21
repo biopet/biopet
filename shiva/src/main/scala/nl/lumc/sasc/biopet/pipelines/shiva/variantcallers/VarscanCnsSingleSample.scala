@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -61,7 +60,9 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       val varscan = new VarscanMpileup2cns(this)
       varscan.vcfSampleList = Some(sampleFile)
 
-      add(mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf)
+      val variantcallingJob = mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf
+      variantcallingJob.threadsCorrection = -2
+      add(variantcallingJob)
       add(Tabix(this, sampleVcf))
 
       sampleVcf

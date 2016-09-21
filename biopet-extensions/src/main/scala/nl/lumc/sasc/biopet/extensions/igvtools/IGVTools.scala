@@ -8,24 +8,23 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-
 package nl.lumc.sasc.biopet.extensions.igvtools
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Version }
 
 /**
  * General igvtools extension
  *
  * Created by wyleung on 5-1-15
  */
-abstract class IGVTools extends BiopetCommandLineFunction with Version {
-  executable = config("exe", default = "igvtools", namespace = "igvtools", freeVar = false)
-  def versionCommand = executable + " version"
+abstract class IGVTools extends BiopetJavaCommandLineFunction with Version {
+  jarFile = config("igvtools_jar", namespace = "igvtools")
+
+  def versionCommand = executable + s" -jar ${jarFile.getAbsolutePath} version"
   def versionRegex = """IGV Version:? ([\w\.]*) .*""".r
   override def versionExitcode = List(0)
 }

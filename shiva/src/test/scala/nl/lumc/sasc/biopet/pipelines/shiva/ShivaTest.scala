@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -21,7 +20,7 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -87,6 +86,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       intercept[IllegalArgumentException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else {
       val pipeline = initPipeline(map)
       pipeline.script()
@@ -210,7 +210,7 @@ object ShivaTest {
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),

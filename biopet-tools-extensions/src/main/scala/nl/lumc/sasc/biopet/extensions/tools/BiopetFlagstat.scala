@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -19,12 +18,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.tools.flagstat
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BiopetFlagstat(val root: Configurable) extends ToolCommandFunction with Summarizable {
-  def toolObject = nl.lumc.sasc.biopet.tools.BiopetFlagstat
+  def toolObject = flagstat.BiopetFlagstat
 
   @Input(doc = "Input bam", shortName = "input", required = true)
   var input: File = _

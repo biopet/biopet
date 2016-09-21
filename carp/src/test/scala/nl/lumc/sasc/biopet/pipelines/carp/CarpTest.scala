@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -22,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -66,13 +65,15 @@ class CarpTest extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2 && !sample3 && !threatment && !control) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else if (threatment && !control) { // If control of a samples does not exist in samples
       intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else { // When samples are correct
       val carp = initPipeline(map)
       carp.script()
@@ -124,7 +125,7 @@ object CarpTest {
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )

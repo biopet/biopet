@@ -10,8 +10,7 @@
 
     Contact us at: sasc@lumc.nl
 
-    A dual licensing mode is applied. The source code within this project that are
-    not part of GATK Queue is freely available for non-commercial use under an AGPL
+    A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
     license; For commercial users or users who do not want to follow the AGPL
     license, please contact us to obtain a separate license.
 
@@ -22,7 +21,7 @@
     <parent>
         <artifactId>Biopet</artifactId>
         <groupId>nl.lumc.sasc</groupId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -57,7 +56,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
-            <version>3.5</version>
+            <version>3.6</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.broadinstitute.gatk</groupId>
@@ -68,7 +67,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-public</artifactId>
-            <version>3.5</version>
+            <version>3.6</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra.scalate</groupId>

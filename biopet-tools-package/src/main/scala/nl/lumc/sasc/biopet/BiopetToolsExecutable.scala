@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -23,10 +22,11 @@ object BiopetToolsExecutable extends BiopetExecutable {
 
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
+    nl.lumc.sasc.biopet.tools.bamstats.BamStats,
     nl.lumc.sasc.biopet.tools.BaseCounter,
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
-    nl.lumc.sasc.biopet.tools.BiopetFlagstat,
+    nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat,
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSplitter,

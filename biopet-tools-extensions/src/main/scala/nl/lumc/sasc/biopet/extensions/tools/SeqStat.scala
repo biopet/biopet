@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -37,7 +36,7 @@ class SeqStat(val root: Configurable) extends ToolCommandFunction with Summariza
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = null
 
-  override def defaultCoreMemory = 2.5
+  override def defaultCoreMemory = 4.0
 
   override def cmdLine = super.cmdLine + required("-i", input) + required("-o", output)
 

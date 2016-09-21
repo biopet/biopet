@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -118,15 +117,17 @@ class Gentrap(val root: Configurable) extends QScript
     ),
     // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
     "mapping" -> Map(
+      "aligner" -> "gsnap",
       "skip_markduplicates" -> true
+    ),
+    "wipereads" -> Map(
+      "limit_removal" -> true,
+      "no_make_index" -> false
     )
   )
 
   lazy val fragmentsPerGene = if (expMeasures().contains(ExpMeasures.FragmentsPerGene))
     Some(new FragmentsPerGene(this)) else None
-
-  lazy val fragmentsPerExon = if (expMeasures().contains(ExpMeasures.FragmentsPerExon))
-    Some(new FragmentsPerExon(this)) else None
 
   lazy val baseCounts = if (expMeasures().contains(ExpMeasures.BaseCounts))
     Some(new BaseCounts(this)) else None
@@ -140,7 +141,7 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val cufflinksStrict = if (expMeasures().contains(ExpMeasures.CufflinksStrict))
     Some(new CufflinksStrict(this)) else None
 
-  def executedMeasures = (fragmentsPerGene :: fragmentsPerExon :: baseCounts :: cufflinksBlind ::
+  def executedMeasures = (fragmentsPerGene :: baseCounts :: cufflinksBlind ::
     cufflinksGuided :: cufflinksStrict :: Nil).flatten
 
   /** Whether to do simple variant calling on RNA or not */
@@ -209,7 +210,7 @@ class Gentrap(val root: Configurable) extends QScript
       job.inputBam = bamFile.get
       ribosomalRefFlat().foreach(job.intervalFile = _)
       job.outputBam = createFile("cleaned.bam")
-      job.discardedBam = createFile("rrna.bam")
+      job.discardedBam = Some(createFile("rrna.bam"))
       add(job)
       Some(job.outputBam)
     } else bamFile
@@ -249,7 +250,7 @@ object Gentrap extends PipelineCommand {
   }
 
   /** Converts string with underscores into camel-case strings */
-  private def camelize(ustring: String): String = ustring
+  private[gentrap] def camelize(ustring: String): String = ustring
     .split("_")
     .map(_.toLowerCase.capitalize)
     .mkString("")

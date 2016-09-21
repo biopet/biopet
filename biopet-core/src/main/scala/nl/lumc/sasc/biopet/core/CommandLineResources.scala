@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -32,12 +31,16 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
       t
   }
 
+  val multiplyVmemThreads: Boolean = config("multiply_vmem_threads", default = true)
+  val multiplyRssThreads: Boolean = config("multiply_rss_threads", default = true)
+
   var vmem: Option[String] = config("vmem")
   def defaultCoreMemory: Double = 2.0
   def defaultVmemFactor: Double = 1.4
+  def defaultResidentFactor: Double = 1.2
   var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
-  var residentFactor: Double = config("resident_factor", default = 1.2)
+  var residentFactor: Double = config("resident_factor", default = defaultResidentFactor)
 
   private var _coreMemory: Double = 2.0
   def coreMemory = _coreMemory
@@ -85,9 +88,10 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     else memoryLimit = Some(_coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor)
+    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) threads else 1))
 
-    if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler))) + "G")
+    if (!config.contains("vmem"))
+      vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) threads else 1)) + "G")
     jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
   }
 

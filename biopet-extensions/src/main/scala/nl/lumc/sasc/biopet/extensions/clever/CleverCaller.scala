@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -17,9 +16,9 @@ package nl.lumc.sasc.biopet.extensions.clever
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, Reference, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "clever")
@@ -39,17 +38,17 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Input(doc = "Reference")
   var reference: File = _
 
-  protected def workDir: File = new File(cwd, "work")
-  var cwd: File = _
+  protected def cleverOutputDir: File = new File(cleverWorkDir, "work")
+  var cleverWorkDir: File = _
 
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
-    new File(cwd, "predictions.vcf")
+    new File(cleverOutputDir, "predictions.vcf")
   }
 
   @Output(doc = "Clever raw output")
   lazy val outputraw: File = {
-    new File(workDir, "predictions.raw.txt")
+    new File(cleverOutputDir, "predictions.raw.txt")
   }
 
   //  var T: Option[Int] = config("T", default = defaultThreads)
@@ -61,7 +60,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (workDir == null) throw new Exception("Clever :: Workdirectory is not defined")
+    if (cleverOutputDir == null) throw new Exception("Clever :: Workdirectory is not defined")
     if (reference == null) reference = referenceFasta()
   }
 
@@ -75,14 +74,14 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     conditional(r, "-r") +
     required(input) +
     required(reference) +
-    required(workDir)
+    required(cleverOutputDir)
 }
 
 object CleverCaller {
   def apply(root: Configurable, input: File, svDir: File): CleverCaller = {
     val clever = new CleverCaller(root)
     clever.input = input
-    clever.cwd = svDir
+    clever.cleverWorkDir = svDir
     clever
   }
 }

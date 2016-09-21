@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -23,6 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
+import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
@@ -99,7 +99,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
-  override def defaults = Map("gsnap" -> Map("batch" -> 4))
+  override def defaults = Map(
+    "gsnap" -> Map("batch" -> 4),
+    "star" -> Map("outsamunmapped" -> "Within")
+  )
 
   override def fixedValues = Map(
     "gsnap" -> Map("format" -> "sam"),
@@ -123,9 +126,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "skip_metrics" -> skipMetrics,
     "skip_flexiprep" -> skipFlexiprep,
     "skip_markduplicates" -> skipMarkduplicates,
+    "paired" -> inputR2.isDefined,
     "aligner" -> aligner,
     "chunking" -> chunking,
-    "numberChunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
+    "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
   override def reportClass = {
@@ -230,6 +234,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bowtie"     => addBowtie(R1, R2, outputBam)
         case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
+        case "hisat2"     => addHisat2(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
         case "stampy"     => addStampy(R1, R2, outputBam)
@@ -359,6 +364,32 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -2
     add(pipe)
     ar._2
+  }
+
+  def addHisat2(R1: File, R2: Option[File], output: File): File = {
+    val hisat2 = new Hisat2(this)
+    hisat2.R1 = R1
+    hisat2.R2 = R2
+    hisat2.rgId = Some(readgroupId)
+    hisat2.rg +:= s"PL:$platform"
+    hisat2.rg +:= s"PU:$platformUnit"
+    libId match {
+      case Some(id)  => hisat2.rg +:= s"LB:$id"
+      case otherwise => ;
+    }
+    sampleId match {
+      case Some(id)  => hisat2.rg +:= s"SM:$id"
+      case otherwise => ;
+    }
+
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = hisat2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = 1
+    add(pipe)
+
+    output
   }
 
   def addTophat(R1: File, R2: Option[File], output: File): File = {

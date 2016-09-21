@@ -1,9 +1,10 @@
 # FindRepeatsPacBio
 
 ## Introduction
-This tool looks and annotates repeat regions inside a BAM file. It extracts the regions of interest from a bed file and then intersects
-those regions with the BAM file. On those extracted regions the tool will perform a
- Mpileup and counts all insertions/deletions etc. etc. for that specific location on a per read basis.
+This tool searches for and annotates repeat regions inside a BAM file. 
+It intersect the regions provided in the bed file with the BAM file and extracts them. 
+On the extracted regions *samtools mpileup* will be run and all insertions, deletions or substitutions will be counted on a per read basis 
+
 
 
 ## Example

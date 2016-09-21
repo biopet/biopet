@@ -63,6 +63,7 @@
         #if (!sampleLevel) <th>Library</th> #end
         <th>Total</th>
         <th>Mapped</th>
+        <th>Secondary</th>
         <th>(%)</th>
         <th>Duplicates</th>
         <th>(%)</th>
@@ -85,12 +86,14 @@
                         val total = summary.getValue((prefixPath ::: List("biopet_flagstat", "All")):_*).getOrElse(0L).asInstanceOf[Long]
                         val mapped = summary.getValue((prefixPath ::: List("biopet_flagstat", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
                         val duplicates = summary.getValue((prefixPath ::: List("biopet_flagstat", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val secondary = summary.getValue((prefixPath ::: List("biopet_flagstat", "NotPrimaryAlignment")):_*).getOrElse(0L).asInstanceOf[Long]
                     }#
                     <td>${total}</td>
                     <td>${mapped}</td>
-                    <td>${mapped.toDouble / total * 100}%</td>
+                    <td>${secondary}</td>
+                    <td>${(mapped - secondary).toDouble / (total - secondary) * 100}%</td>
                     <td>${duplicates}</td>
-                    <td>${duplicates.toDouble / total * 100}%</td>
+                    <td>${duplicates.toDouble / (total - secondary) * 100}%</td>
                 </tr>
             #end
         #end

@@ -1,3 +1,17 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
 import java.io.{ File, FileOutputStream }
@@ -5,7 +19,7 @@ import java.io.{ File, FileOutputStream }
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -58,9 +72,10 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2 && !sample3 && !sample4) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else if (sample4 && !bamToFastq && !correctReadgroups) {
       intercept[IllegalStateException] {
         initPipeline(map).script()
@@ -179,7 +194,7 @@ object MultisampleMappingTestTrait {
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),

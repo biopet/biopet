@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -25,7 +24,7 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 2/5/16.
  */
-class GearsKrakenTest extends TestNGSuite with Matchers {
+class KrakenToKronaTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
   }

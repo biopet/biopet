@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -28,10 +27,10 @@ object BedtoolsCoverageToCounts extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
-    }
+    } text "Coverage file produced with bedtools"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
-    }
+    } text "Output file name"
   }
 
   /**

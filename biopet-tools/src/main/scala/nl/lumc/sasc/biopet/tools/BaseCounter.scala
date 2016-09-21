@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -39,13 +38,13 @@ object BaseCounter extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
-    }
+    } text "refFlat file. Mandatory"
     opt[File]('o', "outputDir") required () valueName "<directory>" action { (x, c) =>
       c.copy(outputDir = x)
-    }
+    } text "Output directory. Mandatory"
     opt[File]('b', "bam") required () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
-    }
+    } text "Bam file. Mandatory"
     opt[String]('p', "prefix") valueName "<prefix>" action { (x, c) =>
       c.copy(prefix = x)
     }
@@ -58,8 +57,13 @@ object BaseCounter extends ToolCommand {
     //Sets picard logging level
     htsjdk.samtools.util.Log.setGlobalLogLevel(htsjdk.samtools.util.Log.LogLevel.valueOf(logger.getLevel.toString))
 
+    require(cmdArgs.outputDir.exists(), s"Output dir does not exist: ${cmdArgs.outputDir}")
+    require(cmdArgs.outputDir.isDirectory, s"Output dir is not a dir: ${cmdArgs.outputDir}")
+
     logger.info("Start reading RefFlat file")
+
     val bamReader = SamReaderFactory.makeDefault().open(cmdArgs.bamFile)
+    require(bamReader.hasIndex, "Bamfile require an index")
     val geneReader = GeneAnnotationReader.loadRefFlat(cmdArgs.refFlat, bamReader.getFileHeader.getSequenceDictionary)
     bamReader.close()
     logger.info("Done reading RefFlat file")

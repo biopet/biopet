@@ -1,10 +1,8 @@
 # FastqSplitter
 
 ## Introduction
-This tool splits a fastq files based on the number of output files specified. So if one specifies 5 output files it will split the fastq
-into 5 files. This can be very usefull if one wants to use chunking option in one of our pipelines, we can generate the exact amount of fastqs
-needed for the number of chunks specified. Note that this will be automatically done inside the pipelines.  
-
+This tool divides a fastq file into smaller fastq files, based on the number of output files specified. For ecample, if one specifies 5 output files it will split the fastq
+into 5 files of equal size. This can be very useful if one wants to use chunking option in one of our pipelines: FastqSplitter can generate the exact number of fastq files (chunks) as needed. This tool is used internally in our pipelines as required
 
 ## Example
 To get the help menu:
@@ -29,7 +27,7 @@ biopet tool FastqSplitter --inputFile myFastq.fastq \
 --output mySplittedFastq_1.fastq --output mySplittedFastq_2.fastq \
 --output mySplittedFastq_3.fastq
 ~~~
-The above invocation will split the input in 3 equally divided fastq files.
+The above invocation will split the input file into 3 fastq files of equal size.
 
 ## Output
 Multiple fastq files based on the number of outputFiles specified.

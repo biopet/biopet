@@ -9,8 +9,7 @@
 #
 # Contact us at: sasc@lumc.nl
 #
-# A dual licensing mode is applied. The source code within this project that are
-# not part of GATK Queue is freely available for non-commercial use under an AGPL
+# A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
 # license; For commercial users or users who do not want to follow the AGPL
 # license, please contact us to obtain a separate license.
 #
@@ -30,19 +29,21 @@ import csv
 import datetime
 
 
-def main(tsvfile, vcffile):
+def main(tsvfile, vcffile, samplename):
     '''
     :param tsvfile: filename of input file.tsv
     :type tsvfile: string
     :param vcffile: filename of output file.vcf
     :type vcffile: string
+    :param samplename: Name of the sample
+    :type samplename: string
     '''
     with open(tsvfile) as reader:
         # Parse file
         dictreader = _parse_tsvfile(reader)
 
         # Write out file
-        _format_vcffile(dictreader, vcffile)
+        _format_vcffile(dictreader, vcffile, samplename)
 
 def _parse_tsvfile(readable):
     '''
@@ -92,11 +93,11 @@ _tsv_fields = ('Chr1', 'Pos1', 'Orientation1',
 
 
 
-_vcf_fields = ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'default')
+_vcf_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
 
 TS_NOW = datetime.datetime.now()
 
-VCF_HEADER = """##fileformat=VCFv4.1
+VCF_HEADER = """##fileformat=VCFv4.2
 ##fileDate={filedate}
 ##source=breakdancer-max
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
@@ -106,6 +107,7 @@ VCF_HEADER = """##fileformat=VCFv4.1
 ##INFO=<ID=NOVEL,Number=0,Type=Flag,Description="Indicates a novel structural variation">
 ##INFO=<ID=SVEND,Number=1,Type=Integer,Description="End position of the variant described in this record">
 ##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
+##INFO=<ID=SVMETHOD,Number=0,Type=String,Description="Program called with">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=CIPOS,Number=2,Type=Integer,Description="Confidence interval around POS for imprecise variants">
@@ -138,7 +140,7 @@ VCF_HEADER = """##fileformat=VCFv4.1
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">""".format( filedate=TS_NOW.strftime( "%Y%m%d" ) )
 
-def _format_vcffile(dictreader, vcffile):
+def _format_vcffile(dictreader, vcffile, samplename):
     '''
     Create a pseudo .vcf file based on values read from DictReader instance.
     :param dictreader: DictReader instance to read data from
@@ -148,22 +150,22 @@ def _format_vcffile(dictreader, vcffile):
     '''
     FORMAT = "GT:DP"
     with open(vcffile, mode='w') as writer:
-        writer.write('{header}\n#{columns}\n'.format(header=VCF_HEADER, columns='\t'.join(_vcf_fields)))
+        writer.write('{header}\n#{columns}\n'.format(header=VCF_HEADER, columns='\t'.join(_vcf_fields + [samplename])))
         output_vcf = []
         for line in dictreader:
             CHROM = line['Chr1']
             # TODO Figure out whether we have zero or one based positioning
             POS = int(line['Pos1'])
-            ALT = '.'
+            ALT = '<{}>'.format(line['Type'])
             SVEND = int(line['Pos2'])
 
-            INFO = 'PROGRAM=breakdancer;SVTYPE={}'.format(line['Type'])
+            INFO = 'SVMETHOD=breakdancer;SVTYPE={}'.format(line['Type'])
 
             if line['Type'] not in ['CTX']:
                 INFO += ';SVLEN={}'.format(int(line['Size']))
                 INFO += ";SVEND={}".format(SVEND)
                 INFO += ";END={}".format(SVEND)
-            
+
             # write alternate ALT field for Intrachromosomal translocations
             if line['Type'] in ['CTX']:
                 ALT = "N[{}:{}[".format(line['Chr2'], line['Pos2'])
@@ -172,7 +174,7 @@ def _format_vcffile(dictreader, vcffile):
 
             SAMPLEINFO = "{}:{}".format( '1/.', line['num_Reads'] )
             # Create record
-            output_vcf.append([CHROM, POS, '.', '.', ALT, '.', 'PASS', INFO, FORMAT, SAMPLEINFO])
+            output_vcf.append([CHROM, POS, '.', 'N', ALT, '.', 'PASS', INFO, FORMAT, SAMPLEINFO])
 
         # Sort all results
         output_vcf.sort()
@@ -184,9 +186,11 @@ def _format_vcffile(dictreader, vcffile):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--breakdancertsv', dest='breakdancertsv', type=str,
-            help='Breakdancer TSV outputfile')
+                        help='Breakdancer TSV outputfile')
     parser.add_argument('-o', '--outputvcf', dest='outputvcf', type=str,
-            help='Output vcf to')
+                        help='Output vcf to')
+    parser.add_argument('-s', '--sample', dest='sample', type=str,
+                        help='sample name')
 
     args = parser.parse_args()
-    main(args.breakdancertsv, args.outputvcf)
+    main(args.breakdancertsv, args.outputvcf, args.sample)
