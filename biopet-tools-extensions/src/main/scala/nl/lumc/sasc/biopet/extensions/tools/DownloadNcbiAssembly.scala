@@ -39,6 +39,8 @@ class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
   var mustHaveOne: Map[String, String] = Map()
   var mustNotHave: Map[String, String] = Map()
 
+  override def defaultCoreMemory = 4.0
+
   override def cmdLine = super.cmdLine +
     required("-a", assemblyId) +
     required("--report", outputReport) +
