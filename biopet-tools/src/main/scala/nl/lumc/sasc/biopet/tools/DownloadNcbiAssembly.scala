@@ -19,22 +19,22 @@ object DownloadNcbiAssembly extends ToolCommand {
                   mustNotHave: List[(String, String)] = List()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[String]('a', "assembly id") required () valueName "<file>" action { (x, c) =>
+    opt[String]('a', "assembly id") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(assemblyId = x)
     }
-    opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]("report") required () valueName "<file>" action { (x, c) =>
+    opt[File]("report") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(reportFile = Some(x))
     }
-    opt[String]("nameHeader") valueName "<string>" action { (x, c) =>
+    opt[String]("nameHeader") unbounded () valueName "<string>" action { (x, c) =>
       c.copy(contigNameHeader = Some(x))
     }
-    opt[(String, String)]("mustHaveOne") valueName "<string>" action { (x, c) =>
+    opt[(String, String)]("mustHaveOne") unbounded () valueName "<string>" action { (x, c) =>
       c.copy(mustHaveOne = (x._1, x._2) :: c.mustHaveOne)
     }
-    opt[(String, String)]("mustNotHave") valueName "<string>" action { (x, c) =>
+    opt[(String, String)]("mustNotHave") unbounded () valueName "<string>" action { (x, c) =>
       c.copy(mustNotHave = (x._1, x._2) :: c.mustNotHave)
     }
   }
