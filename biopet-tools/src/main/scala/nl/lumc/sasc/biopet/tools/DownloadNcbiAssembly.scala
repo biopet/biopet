@@ -1,14 +1,14 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.io.Source
 
 /**
-  * Created by pjvan_thof on 21-9-16.
-  */
+ * Created by pjvan_thof on 21-9-16.
+ */
 object DownloadNcbiAssembly extends ToolCommand {
 
   case class Args(assemblyId: String = null,
@@ -40,11 +40,11 @@ object DownloadNcbiAssembly extends ToolCommand {
   }
 
   /**
-    * @param args the command line arguments
-    */
+   * @param args the command line arguments
+   */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdargs: Args = argsParser.parse (args, Args () ) getOrElse (throw new IllegalArgumentException)
+    val cmdargs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.info(s"Reading ${cmdargs.assemblyId} from NCBI")
     val reader = Source.fromURL(s"ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/${cmdargs.assemblyId}.assembly.txt")
@@ -80,14 +80,14 @@ object DownloadNcbiAssembly extends ToolCommand {
     filterLength.foreach(l => logger.info(s"Filtered length: ${l}"))
 
     filterContigs.foreach { values =>
-        val id = if (values(6) == "na") values(4) else values(6)
-        logger.info(s"Start download ${id}")
-        val fastaReader = Source.fromURL(s"${baseUrlEutils}/efetch.fcgi?db=nuccore&id=${id}&retmode=text&rettype=fasta")
-        fastaReader.getLines()
-          .map(x => nameId.map(y => x.replace(">", s">${values(y)} ")).getOrElse(x))
-          .foreach(fastaWriter.println)
-        fastaReader.close()
-      }
+      val id = if (values(6) == "na") values(4) else values(6)
+      logger.info(s"Start download ${id}")
+      val fastaReader = Source.fromURL(s"${baseUrlEutils}/efetch.fcgi?db=nuccore&id=${id}&retmode=text&rettype=fasta")
+      fastaReader.getLines()
+        .map(x => nameId.map(y => x.replace(">", s">${values(y)} ")).getOrElse(x))
+        .foreach(fastaWriter.println)
+      fastaReader.close()
+    }
 
     logger.info("Downloading complete")
 

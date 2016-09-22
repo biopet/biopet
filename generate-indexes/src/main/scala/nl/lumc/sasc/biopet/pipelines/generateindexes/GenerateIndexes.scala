@@ -1,8 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
-import nl.lumc.sasc.biopet.extensions.{Ln, Star}
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
+import nl.lumc.sasc.biopet.extensions.{ Ln, Star }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2Build
@@ -14,8 +14,8 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Created by pjvan_thof on 21-9-16.
-  */
+ * Created by pjvan_thof on 21-9-16.
+ */
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 

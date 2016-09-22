@@ -2,15 +2,15 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.util.matching.Regex
 
 /**
-  * Created by pjvanthof on 18/05/16.
-  */
+ * Created by pjvanthof on 18/05/16.
+ */
 class Sed(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "sed", freeVar = false)
 
