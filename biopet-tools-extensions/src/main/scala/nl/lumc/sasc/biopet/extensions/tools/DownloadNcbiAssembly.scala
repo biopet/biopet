@@ -36,8 +36,8 @@ class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
 
   var nameHeader: Option[String] = None
 
-  var mustHaveOne: Map[String, String] = Map()
-  var mustNotHave: Map[String, String] = Map()
+  var mustHaveOne: List[String] = Nil
+  var mustNotHave: List[String] = Nil
 
   override def defaultCoreMemory = 4.0
 
@@ -46,7 +46,7 @@ class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
     required("--report", outputReport) +
     required("-o", output) +
     optional("--nameHeader", nameHeader) +
-    repeat("--mustHaveOne", mustHaveOne.map(x => s"${x._1}=${x._2}")) +
-    repeat("--mustNotHave", mustNotHave.map(x => s"${x._1}=${x._2}"))
+    repeat("--mustHaveOne", mustHaveOne) +
+    repeat("--mustNotHave", mustNotHave)
 }
 

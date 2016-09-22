@@ -15,8 +15,8 @@ object DownloadNcbiAssembly extends ToolCommand {
                   outputFile: File = null,
                   reportFile: Option[File] = None,
                   contigNameHeader: Option[String] = None,
-                  mustHaveOne: Map[String, String] = Map(),
-                  mustNotHave: Map[String, String] = Map()) extends AbstractArgs
+                  mustHaveOne: List[(String, String)] = List(),
+                  mustNotHave: List[(String, String)] = List()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[String]('a', "assembly id") required () valueName "<file>" action { (x, c) =>
@@ -32,10 +32,10 @@ object DownloadNcbiAssembly extends ToolCommand {
       c.copy(contigNameHeader = Some(x))
     }
     opt[(String, String)]("mustHaveOne") valueName "<string>" action { (x, c) =>
-      c.copy(mustHaveOne = c.mustHaveOne + (x._1 -> x._2))
+      c.copy(mustHaveOne = (x._1, x._2) :: c.mustHaveOne)
     }
     opt[(String, String)]("mustNotHave") valueName "<string>" action { (x, c) =>
-      c.copy(mustNotHave = c.mustNotHave + (x._1 -> x._2))
+      c.copy(mustNotHave = (x._1, x._2) :: c.mustNotHave)
     }
   }
 

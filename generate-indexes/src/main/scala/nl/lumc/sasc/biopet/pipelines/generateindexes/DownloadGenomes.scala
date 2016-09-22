@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.generateindexes
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Cat, Curl, Zcat }
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.extensions.{Cat, Curl, Zcat}
 import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -61,14 +61,16 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
             val downloadAssembly = new DownloadNcbiAssembly(this)
             downloadAssembly.assemblyId = assemblyID
             downloadAssembly.output = fastaFile
-            downloadAssembly.outputReport = new File(genomeDir, s"$speciesName-$genomeName.assamble.report")
-            downloadAssembly.nameHeader = referenceConfig.get("ncbi_assembly_header_name").map(_.toString)
-            downloadAssembly.mustHaveOne = referenceConfig.get("ncbi_assembly_must_have_one")
-              .map(_.asInstanceOf[Map[String, String]])
-              .getOrElse(Map())
-            downloadAssembly.mustNotHave = referenceConfig.get("ncbi_assembly_must_not_have")
-              .map(_.asInstanceOf[Map[String, String]])
-              .getOrElse(Map())
+            downloadAssembly.outputReport = new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
+            downloadAssembly.nameHeader = genomeConfig.get("ncbi_assembly_header_name").map(_.toString)
+            downloadAssembly.mustHaveOne = genomeConfig.get("ncbi_assembly_must_have_one")
+              .map(_.asInstanceOf[util.ArrayList[util.LinkedHashMap[String, String]]])
+              .getOrElse(new util.ArrayList()).flatMap(x => x.map(y => y._1 + "=" + y._2))
+              .toList
+            downloadAssembly.mustNotHave = genomeConfig.get("ncbi_assembly_must_not_have")
+              .map(_.asInstanceOf[util.ArrayList[util.LinkedHashMap[String, String]]])
+              .getOrElse(new util.ArrayList()).flatMap(x => x.map(y => y._1 + "=" + y._2))
+              .toList
             add(downloadAssembly)
           }
           case _ => {
