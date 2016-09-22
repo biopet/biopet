@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.generateindexes
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
-import nl.lumc.sasc.biopet.extensions.{Cat, Curl, Zcat}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Curl, Zcat }
 import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable

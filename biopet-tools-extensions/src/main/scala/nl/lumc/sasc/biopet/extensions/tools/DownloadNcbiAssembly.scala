@@ -46,7 +46,7 @@ class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
     required("--report", outputReport) +
     required("-o", output) +
     optional("--nameHeader", nameHeader) +
-    repeat("--mustHaveOne", mustHaveOne) +
-    repeat("--mustNotHave", mustNotHave)
+    repeat("--mustHaveOne:", mustHaveOne, spaceSeparated = false) +
+    repeat("--mustNotHave:", mustNotHave, spaceSeparated = false)
 }
 
