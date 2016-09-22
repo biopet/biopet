@@ -123,6 +123,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
         generateIndexes.fastaFile = fastaFile
         generateIndexes.speciesName = speciesName
         generateIndexes.genomeName = genomeName
+        generateIndexes.outputDir = genomeDir
         //generateIndexes.fastaUris = fastaUris
         //TODO: add gtf file
         add(generateIndexes)
