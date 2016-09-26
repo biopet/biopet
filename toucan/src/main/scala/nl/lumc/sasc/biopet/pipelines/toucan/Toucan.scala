@@ -92,7 +92,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     } else inputVcf
 
     if (enableScatter) {
-      val doNotRemove: Boolean = config("do_not_remove", namespace = "variant_effect_predictor", default = false)
+      val doNotRemove: Boolean = config("do_not_remove", default = false)
       if (doNotRemove) {
         logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
       }
