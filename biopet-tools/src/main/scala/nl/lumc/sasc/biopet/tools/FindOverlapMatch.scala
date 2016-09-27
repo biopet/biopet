@@ -8,13 +8,16 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
+ * This tool will find all pairs above a cutoff in a data table
+ *
  * Created by pjvan_thof on 21-9-16.
  */
 object FindOverlapMatch extends ToolCommand {
 
   case class Args(inputMetrics: File = null,
                   outputFile: Option[File] = None,
-                  cutoff: Double = 0.0) extends AbstractArgs
+                  cutoff: Double = 0.0,
+                  filterSameNames: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "input") required () unbounded () valueName "<file>" action { (x, c) =>
@@ -26,6 +29,10 @@ object FindOverlapMatch extends ToolCommand {
     opt[Double]('c', "cutoff") required () unbounded () valueName "<value>" action { (x, c) =>
       c.copy(cutoff = x)
     } text "minimum value to report it as pair"
+    opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (x, c) =>
+      c.copy(filterSameNames = false)
+    } text "Do not compare samples with the same name"
+
   }
 
   /**
@@ -55,7 +62,7 @@ object FindOverlapMatch extends ToolCommand {
       val buffer = ListBuffer[(String, Double)]()
       for (i2 <- samplesRowHeader) {
         val value = data(i1._2)(i2._2).toDouble
-        if (value >= cmdArgs.cutoff && i1._2 != i2._2) {
+        if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || i1._2 != i2._2)) {
           buffer.+=((i2._1, value))
         }
       }
