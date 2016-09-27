@@ -69,7 +69,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testSingleDbsnp: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf.gz")))))
+      "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz")))))
     pipeline.script()
   }
 
@@ -77,7 +77,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testContigMapDbsnp: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
+      "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
     pipeline.script()
   }
 
@@ -85,7 +85,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testUnzippedContigMapDbsnp: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
+      "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
     pipeline.script()
   }
 
@@ -93,7 +93,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testSingleUnzippedDbsnp: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "dbsnp" -> Map("version" ->Map(("vcf_uri" -> "uri.vcf"))))))
+      "dbsnp" -> Map("version" -> Map(("vcf_uri" -> "uri.vcf"))))))
     pipeline.script()
   }
 
@@ -101,7 +101,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testMultiDbsnp: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "dbsnp" -> Map("version" ->Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
+      "dbsnp" -> Map("version" -> Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
     pipeline.script()
   }
 
@@ -109,7 +109,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testVep: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "vep" -> Map("version" ->Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
+      "vep" -> Map("version" -> Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
     pipeline.script()
   }
 
@@ -117,7 +117,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testGtfZipped: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "gene_annotation" -> Map("version" ->Map("gtf_uri" -> "bla.gf.gz")))))
+      "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf.gz")))))
     pipeline.script()
   }
 
@@ -125,7 +125,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testGtf: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "gene_annotation" -> Map("version" ->Map("gtf_uri" -> "bla.gf")))))
+      "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf")))))
     pipeline.script()
   }
 
@@ -133,7 +133,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testGff: Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-      "gene_annotation" -> Map("version" ->Map("gff_uri" -> "bla.gf")))))
+      "gene_annotation" -> Map("version" -> Map("gff_uri" -> "bla.gf")))))
     pipeline.script()
   }
 
