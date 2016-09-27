@@ -45,6 +45,13 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testNcbiAssembly: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_id" -> "id")))
+    pipeline.script()
+  }
+
+  @Test
   def testSingleFasta: Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri")))
@@ -60,57 +67,73 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testSingleDbsnp: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf.gz")))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf.gz")))))
     pipeline.script()
   }
 
   @Test
   def testContigMapDbsnp: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf.gz", "dbsnp_contig_map" -> Map("1" -> "chr1"))))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
     pipeline.script()
   }
 
   @Test
   def testUnzippedContigMapDbsnp: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf", "dbsnp_contig_map" -> Map("1" -> "chr1"))))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "dbsnp" -> Map("version" ->Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
     pipeline.script()
   }
 
   @Test
   def testSingleUnzippedDbsnp: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf")))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "dbsnp" -> Map("version" ->Map(("vcf_uri" -> "uri.vcf"))))))
     pipeline.script()
   }
 
   @Test
   def testMultiDbsnp: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "dbsnp" -> Map("version" ->Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
     pipeline.script()
   }
 
   @Test
   def testVep: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "vep_cache_uri" -> "something/human_vep_80_hg19.tar.gz")))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "vep" -> Map("version" ->Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
     pipeline.script()
   }
 
   @Test
   def testGtfZipped: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "gtf_uri" -> "bla.gf.gz")))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "gene_annotation" -> Map("version" ->Map("gtf_uri" -> "bla.gf.gz")))))
     pipeline.script()
   }
 
   @Test
   def testGtf: Unit = {
-    val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "gtf_uri" -> "bla.gf")))
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "gene_annotation" -> Map("version" ->Map("gtf_uri" -> "bla.gf")))))
+    pipeline.script()
+  }
+
+  @Test
+  def testGff: Unit = {
+    val pipeline = initPipeline(Map("download_annotations" -> true))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
+      "gene_annotation" -> Map("version" ->Map("gff_uri" -> "bla.gf")))))
     pipeline.script()
   }
 
@@ -130,6 +153,7 @@ object DownloadGenomesTest {
     "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "gatk_jar" -> "test",
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "gffread" -> Map("exe" -> "test")
   )
 }

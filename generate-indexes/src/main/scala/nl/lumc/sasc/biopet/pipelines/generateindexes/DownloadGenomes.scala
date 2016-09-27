@@ -136,12 +136,12 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
           val annotationDir = new File(genomeDir, "annotation")
 
           def getAnnotation(tag: String): Map[String, Map[String, Any]] = (genomeConfig.get(tag) match {
-            case s: Map[_, _] => s.map(x => x._2 match {
+            case Some(s: Map[_, _]) => s.map(x => x._2 match {
               case o: Map[_, _] => x._1.toString -> o.map(x => (x._1.toString, x._2))
               case _            => throw new IllegalStateException("values in the tag vep should be json objects")
             })
             case None => Map()
-            case _    => throw new IllegalStateException("tag vep should be an object with objects")
+            case x    => throw new IllegalStateException(s"tag vep should be an object with objects, now $x")
           })
 
           // Download vep caches
