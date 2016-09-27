@@ -10,8 +10,8 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvan_thof on 27-9-16.
-  */
+ * Created by pjvan_thof on 27-9-16.
+ */
 class FindOverlapMatchTest extends TestNGSuite with Matchers {
 
   private def resourcePath(p: String): String = {

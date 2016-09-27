@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintStream, PrintWriter}
+import java.io.{ File, PrintStream }
 
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
@@ -55,7 +55,7 @@ object FindOverlapMatch extends ToolCommand {
 
     val writer = cmdArgs.outputFile match {
       case Some(file) => new PrintStream(file)
-      case _ => sys.process.stdout
+      case _          => sys.process.stdout
     }
 
     for (i1 <- samplesColumnHeader) {
