@@ -36,7 +36,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNoFastaUri: Unit = {
+  def testNoFastaUri(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("" -> "")))
     intercept[IllegalArgumentException] {
@@ -45,28 +45,28 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNcbiAssembly: Unit = {
+  def testNcbiAssembly(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_id" -> "id")))
     pipeline.script()
   }
 
   @Test
-  def testSingleFasta: Unit = {
+  def testSingleFasta(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri")))
     pipeline.script()
   }
 
   @Test
-  def testMultiFasta: Unit = {
+  def testMultiFasta(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> List("uri", "uri2", "uri3.gz"))))
     pipeline.script()
   }
 
   @Test
-  def testSingleDbsnp: Unit = {
+  def testSingleDbsnp(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz")))))
@@ -74,7 +74,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testContigMapDbsnp: Unit = {
+  def testContigMapDbsnp(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
@@ -82,7 +82,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testUnzippedContigMapDbsnp: Unit = {
+  def testUnzippedContigMapDbsnp(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
@@ -90,7 +90,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSingleUnzippedDbsnp: Unit = {
+  def testSingleUnzippedDbsnp(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map(("vcf_uri" -> "uri.vcf"))))))
@@ -98,7 +98,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMultiDbsnp: Unit = {
+  def testMultiDbsnp(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
@@ -106,7 +106,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testVep: Unit = {
+  def testVep(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "vep" -> Map("version" -> Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
@@ -114,7 +114,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGtfZipped: Unit = {
+  def testGtfZipped(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf.gz")))))
@@ -122,7 +122,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGtf: Unit = {
+  def testGtf(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf")))))
@@ -130,7 +130,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGff: Unit = {
+  def testGff(): Unit = {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gff_uri" -> "bla.gf")))))
