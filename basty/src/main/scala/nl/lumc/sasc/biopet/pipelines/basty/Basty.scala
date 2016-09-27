@@ -46,27 +46,25 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def summaryFile: File = new File(outputDir, "Basty.summary.json")
 
-  //TODO: Add summary
-  def summaryFiles: Map[String, File] = Map()
+  def summaryFiles: Map[String, File] = shiva.summaryFiles
 
-  //TODO: Add summary
-  def summarySettings: Map[String, Any] = Map()
+  def summarySettings: Map[String, Any] = shiva.summarySettings
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    //TODO: Add summary
-    def summaryFiles: Map[String, File] = Map()
+    def summaryFiles: Map[String, File] = shiva.samples(sampleId).summaryFiles
 
-    //TODO: Add summary
-    def summaryStats: Map[String, Any] = Map()
+    def summaryStats: Map[String, Any] = shiva.samples(sampleId).summaryStats
+
+    override def summarySettings: Map[String, Any] = shiva.samples(sampleId).summarySettings
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      //TODO: Add summary
-      def summaryFiles: Map[String, File] = Map()
+      def summaryFiles: Map[String, File] = shiva.samples(sampleId).libraries(libId).summaryFiles
 
-      //TODO: Add summary
-      def summaryStats: Map[String, Any] = Map()
+      def summaryStats: Map[String, Any] = shiva.samples(sampleId).libraries(libId).summaryStats
+
+      override def summarySettings: Map[String, Any] = shiva.samples(sampleId).libraries(libId).summarySettings
 
       protected def addJobs(): Unit = {}
     }
