@@ -14,11 +14,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
+import java.io.File
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Cat, Curl, Zcat }
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -33,9 +35,11 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
   @Argument(required = true)
   var referenceConfigFiles: List[File] = Nil
 
-  var referenceConfig: Map[String, Any] = null
+  var referenceConfig: Map[String, Any] = _
 
   override def fixedValues = Map("gffread" -> Map("T" -> true))
+
+  val downloadAnnotations: Boolean = config("download_annotations", default = false)
 
   /** This is executed before the script starts */
   def init(): Unit = {
@@ -46,7 +50,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
   /** Method where jobs must be added */
   def biopetScript(): Unit = {
 
-    val outputConfig = for ((speciesName, c) <- referenceConfig) yield speciesName -> {
+    for ((speciesName, c) <- referenceConfig) yield speciesName -> {
       val speciesConfig = ConfigUtils.any2map(c)
       val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) yield genomeName -> {
@@ -57,7 +61,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
         val fastaFile = new File(genomeDir, "reference.fa")
 
         genomeConfig.get("ncbi_assembly_id") match {
-          case Some(assemblyID: String) => {
+          case Some(assemblyID: String) =>
             val downloadAssembly = new DownloadNcbiAssembly(this)
             downloadAssembly.assemblyId = assemblyID
             downloadAssembly.output = fastaFile
@@ -72,8 +76,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
               .getOrElse(new util.ArrayList()).flatMap(x => x.map(y => y._1 + "=" + y._2))
               .toList
             add(downloadAssembly)
-          }
-          case _ => {
+          case _ =>
             val fastaUris = genomeConfig.getOrElse("fasta_uri",
               throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
                 case a: Traversable[_]    => a.map(_.toString).toArray
@@ -118,7 +121,6 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
               add(fastaCat)
               configDeps :+= fastaCat.output
             }
-          }
         }
 
         val generateIndexes = new GenerateIndexes(this)
@@ -130,115 +132,120 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
         //TODO: add gtf file
         add(generateIndexes)
 
-        //        val annotationDir = new File(genomeDir, "annotation")
-        //
-        //        genomeConfig.get("vep_cache_uri").foreach { vepCacheUri =>
-        //          val vepDir = new File(annotationDir, "vep")
-        //          val curl = new Curl(this)
-        //          curl.url = vepCacheUri.toString
-        //          curl.output = new File(vepDir, new File(curl.url).getName)
-        //          curl.isIntermediate = true
-        //          add(curl)
-        //
-        //          val tar = new TarExtract(this)
-        //          tar.inputTar = curl.output
-        //          tar.outputDir = vepDir
-        //          add(tar)
-        //
-        //          val regex = """.*\/(.*)_vep_(\d*)_(.*)\.tar\.gz""".r
-        //          vepCacheUri.toString match {
-        //            case regex(species, version, assembly) if version.forall(_.isDigit) =>
-        //              outputConfig ++= Map("varianteffectpredictor" -> Map(
-        //                "species" -> species,
-        //                "assembly" -> assembly,
-        //                "cache_version" -> version.toInt,
-        //                "cache" -> vepDir,
-        //                "fasta" -> createLinks(vepDir)))
-        //            case _ => throw new IllegalArgumentException("Cache found but no version was found")
-        //          }
-        //        }
-        //
-        //        genomeConfig.get("dbsnp_vcf_uri").foreach { dbsnpUri =>
-        //          val contigMap = genomeConfig.get("dbsnp_contig_map").map(_.asInstanceOf[Map[String, Any]])
-        //          val contigSed = contigMap.map { map =>
-        //            val sed = new Sed(this)
-        //            sed.expressions = map.map(x => s"""s/^${x._1}\t/${x._2}\t/""").toList
-        //            sed
-        //          }
-        //
-        //          val cv = new CombineVariants(this)
-        //          cv.reference_sequence = fastaFile
-        //          def addDownload(uri: String): Unit = {
-        //            val isZipped = uri.endsWith(".gz")
-        //            val output = new File(annotationDir, new File(uri).getName + (if (isZipped) "" else ".gz"))
-        //            val curl = new Curl(this)
-        //            curl.url = uri
-        //
-        //            val downloadCmd = (isZipped, contigSed) match {
-        //              case (true, Some(sed)) => curl | Zcat(this) | sed | new Bgzip(this) > output
-        //              case (false, Some(sed)) => curl | sed | new Bgzip(this) > output
-        //              case (true, None) => curl > output
-        //              case (false, None) => curl | new Bgzip(this) > output
-        //            }
-        //            downloadCmd.isIntermediate = true
-        //            add(downloadCmd)
-        //
-        //            val tabix = new Tabix(this)
-        //            tabix.input = output
-        //            tabix.p = Some("vcf")
-        //            tabix.isIntermediate = true
-        //            add(tabix)
-        //
-        //            cv.variant :+= output
-        //          }
-        //
-        //          dbsnpUri match {
-        //            case l: Traversable[_]    => l.foreach(x => addDownload(x.toString))
-        //            case l: util.ArrayList[_] => l.foreach(x => addDownload(x.toString))
-        //            case _                    => addDownload(dbsnpUri.toString)
-        //          }
-        //
-        //          cv.out = new File(annotationDir, "dbsnp.vcf.gz")
-        //          add(cv)
-        //          outputConfig += "dbsnp" -> cv.out
-        //        }
-        //
-        //        val gffFile: Option[File] = genomeConfig.get("gff_uri").map { gtfUri =>
-        //          val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
-        //          val curl = new Curl(this)
-        //          curl.url = gtfUri.toString
-        //          if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
-        //          else add(curl > outputFile)
-        //          outputConfig += "annotation_gff" -> outputFile
-        //          outputFile
-        //        }
-        //
-        //        val gtfFile: Option[File] = if (gffFile.isDefined) gffFile.map { gff =>
-        //          val gffRead = new GffRead(this)
-        //          gffRead.input = gff
-        //          gffRead.output = swapExt(annotationDir, gff, ".gff", ".gtf")
-        //          add(gffRead)
-        //          gffRead.output
-        //        } else genomeConfig.get("gtf_uri").map { gtfUri =>
-        //          val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
-        //          val curl = new Curl(this)
-        //          curl.url = gtfUri.toString
-        //          if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
-        //          else add(curl > outputFile)
-        //          outputConfig += "annotation_gtf" -> outputFile
-        //          outputFile
-        //        }
-        //
-        //        val refFlatFile: Option[File] = gtfFile.map { gtf =>
-        //          val refFlat = new File(gtf + ".refFlat")
-        //          val gtfToGenePred = new GtfToGenePred(this)
-        //          gtfToGenePred.inputGtfs :+= gtf
-        //
-        //          add(gtfToGenePred | Awk(this, """{ print $12"\t"$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10 }""") > refFlat)
-        //
-        //          outputConfig += "annotation_refflat" -> refFlat
-        //          refFlat
-        //        }
+        if (downloadAnnotations) {
+          val annotationDir = new File(genomeDir, "annotation")
+
+          def getAnnotation(tag: String): Map[String, Map[String, Any]] = (genomeConfig.get(tag) match {
+            case s: Map[_, _] => s.map(x => x._2 match {
+              case o: Map[_, _] => x._1.toString -> o.map(x => (x._1.toString, x._2))
+              case _            => throw new IllegalStateException("values in the tag vep should be json objects")
+            })
+            case None => Map()
+            case _    => throw new IllegalStateException("tag vep should be an object with objects")
+          })
+
+          // Download vep caches
+          getAnnotation("vep").foreach {
+            case (version, vep) =>
+              val vepDir = new File(annotationDir, "vep" + File.separator + version)
+              val curl = new Curl(this)
+              curl.url = vep("cache_uri").toString
+              curl.output = new File(vepDir, new File(curl.url).getName)
+              curl.isIntermediate = true
+              add(curl)
+
+              val tar = new TarExtract(this)
+              tar.inputTar = curl.output
+              tar.outputDir = vepDir
+              add(tar)
+          }
+
+          getAnnotation("dbsnp").foreach {
+            case (version, dbsnp) =>
+              val dbpsnpDir = new File(annotationDir, "dbsnp")
+              val contigMap = dbsnp.get("dbsnp_contig_map").map(_.asInstanceOf[Map[String, Any]])
+              val contigSed = contigMap.map { map =>
+                val sed = new Sed(this)
+                sed.expressions = map.map(x => s"""s/^${x._1}\t/${x._2}\t/""").toList
+                sed
+              }
+
+              val cv = new CombineVariants(this)
+              cv.reference_sequence = fastaFile
+              def addDownload(uri: String): Unit = {
+                val isZipped = uri.endsWith(".gz")
+                val output = new File(dbpsnpDir, version + "." + new File(uri).getName + (if (isZipped) "" else ".gz"))
+                val curl = new Curl(this)
+                curl.url = uri
+
+                val downloadCmd = (isZipped, contigSed) match {
+                  case (true, Some(sed))  => curl | Zcat(this) | sed | new Bgzip(this) > output
+                  case (false, Some(sed)) => curl | sed | new Bgzip(this) > output
+                  case (true, None)       => curl > output
+                  case (false, None)      => curl | new Bgzip(this) > output
+                }
+                downloadCmd.isIntermediate = true
+                add(downloadCmd)
+
+                val tabix = new Tabix(this)
+                tabix.input = output
+                tabix.p = Some("vcf")
+                tabix.isIntermediate = true
+                add(tabix)
+
+                cv.variant :+= output
+              }
+
+              dbsnp.get("vcf_uri") match {
+                case Some(l: Traversable[_])    => l.foreach(x => addDownload(x.toString))
+                case Some(l: util.ArrayList[_]) => l.foreach(x => addDownload(x.toString))
+                case Some(s)                    => addDownload(s.toString)
+                case None                       => throw new IllegalStateException("Dbsnp should always have a 'vcf_uri' key")
+              }
+
+              cv.out = new File(dbpsnpDir, s"dbsnp.$version.vcf.gz")
+              add(cv)
+          }
+
+          getAnnotation("gene_annotation").foreach {
+            case (version, geneAnnotation) =>
+              val dir = new File(annotationDir, version)
+              val gffFile: Option[File] = geneAnnotation.get("gff_uri").map { gtfUri =>
+                val outputFile = new File(dir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
+                val curl = new Curl(this)
+                curl.url = gtfUri.toString
+                if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+                else add(curl > outputFile)
+                outputFile
+              }
+
+              val gtfFile: Option[File] = if (gffFile.isDefined) gffFile.map { gff =>
+                val gffRead = new GffRead(this)
+                gffRead.input = gff
+                gffRead.output = swapExt(dir, gff, ".gff", ".gtf")
+                add(gffRead)
+                gffRead.output
+              }
+              else geneAnnotation.get("gtf_uri").map { gtfUri =>
+                val outputFile = new File(dir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
+                val curl = new Curl(this)
+                curl.url = gtfUri.toString
+                if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+                else add(curl > outputFile)
+                outputFile
+              }
+
+              val refFlatFile: Option[File] = gtfFile.map { gtf =>
+                val refFlat = new File(gtf + ".refFlat")
+                val gtfToGenePred = new GtfToGenePred(this)
+                gtfToGenePred.inputGtfs :+= gtf
+
+                add(gtfToGenePred | Awk(this, """{ print $12"\t"$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10 }""") > refFlat)
+
+                refFlat
+              }
+          }
+        }
       }
     }
   }
