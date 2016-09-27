@@ -92,10 +92,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     } else inputVcf
 
     if (enableScatter) {
-      val doNotRemove: Boolean = config("do_not_remove", default = false)
-      if (doNotRemove) {
-        logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
-      }
       val outputVcfFiles = BedRecordList.fromReference(referenceFasta())
         .scatter(config("bin_size", default = 50000000))
         .allRecords.map { region =>
@@ -115,6 +111,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
           runChunk(sv.out, chunkDir, chunkName)
         }
+
+      if (this.functions.filter(_.isInstanceOf[VepNormalizer]).exists(_.asInstanceOf[VepNormalizer].doNotRemove))
+        logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
 
       val cv = new CatVariants(this)
       cv.variant = outputVcfFiles.toList
