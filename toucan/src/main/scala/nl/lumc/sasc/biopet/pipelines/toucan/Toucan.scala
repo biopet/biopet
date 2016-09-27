@@ -58,9 +58,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   lazy val enableScatter: Boolean = config("enable_scatter", default = {
     val ref = new FastaSequenceFile(referenceFasta(), true)
-    val refLenght = ref.getSequenceDictionary.getReferenceLength
+    val refLength = ref.getSequenceDictionary.getReferenceLength
     ref.close()
-    refLenght > minScatterGenomeSize
+    refLength > minScatterGenomeSize
   })
 
   def sampleInfo: Map[String, Map[String, Any]] = root match {
@@ -111,6 +111,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
           runChunk(sv.out, chunkDir, chunkName)
         }
+
+      if (this.functions.filter(_.isInstanceOf[VepNormalizer]).exists(_.asInstanceOf[VepNormalizer].doNotRemove))
+        logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
 
       val cv = new CatVariants(this)
       cv.variant = outputVcfFiles.toList
