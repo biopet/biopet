@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintWriter}
+import java.io.File
 
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
@@ -43,7 +43,7 @@ object FindOverlapMatch extends ToolCommand {
 
     for (i1 <- samples) {
       val buffer = ListBuffer[(String, Double)]()
-      for (i2 <- samples ) {
+      for (i2 <- samples) {
         val value = data(i1._2)(i2._2).toDouble
         if (value >= cmdargs.cutoff && i1._2 != i2._2) {
           buffer.+=((i2._1, value))
