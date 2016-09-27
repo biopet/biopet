@@ -3,9 +3,10 @@ package nl.lumc.sasc.biopet.pipelines.basty
 import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.{Raxml, RunGubbins}
 import nl.lumc.sasc.biopet.extensions.gatk.{BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
-import nl.lumc.sasc.biopet.extensions.tools.VcfStats
+import nl.lumc.sasc.biopet.extensions.tools.{BastyGenerateFasta, VcfStats}
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
@@ -41,10 +42,11 @@ class BastyTest extends TestNGSuite with Matchers {
   def multisampleCalling: Boolean = true
   def sampleCalling = false
   def libraryCalling = false
-  def dbsnp = true
+  def dbsnp = false
   def svCalling = false
   def cnvCalling = false
   def annotation = false
+  def bootRuns: Option[Int] = None
 
   @Test(dataProvider = "bastyOptions")
   def testBasty(f: String, sample1: Boolean, sample2: Boolean): Unit = {
@@ -61,7 +63,8 @@ class BastyTest extends TestNGSuite with Matchers {
         "use_base_recalibration" -> baseRecalibration,
         "sv_calling" -> svCalling,
         "cnv_calling" -> cnvCalling,
-        "annotation" -> annotation), m)
+        "annotation" -> annotation,
+        "boot_runs" -> bootRuns), m)
 
     }
 
@@ -105,6 +108,10 @@ class BastyTest extends TestNGSuite with Matchers {
         (if (multisampleCalling) 2 else 0) +
           (if (sampleCalling) numberSamples * 2 else 0) +
           (if (libraryCalling) numberLibs * 2 else 0))
+
+      pipeline.functions.count(_.isInstanceOf[BastyGenerateFasta]) shouldBe 2 + (2 * numberSamples)
+      pipeline.functions.count(_.isInstanceOf[Raxml]) shouldBe (2 * (2 + bootRuns.getOrElse(100)))
+      pipeline.functions.count(_.isInstanceOf[RunGubbins]) shouldBe 2
     }
   }
 }
