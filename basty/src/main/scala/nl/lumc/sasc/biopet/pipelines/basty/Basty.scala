@@ -33,9 +33,17 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def this() = this(null)
 
-  case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
+  case class FastaOutput(variants: File, consensus: File, consensusVariants: File) {
+    def summaryFiles(prefix: Option[String] = None) = Map(
+      s"${prefix.map(_ + "_").getOrElse("")}variants_fasta" -> variants,
+      s"${prefix.map(_ + "_").getOrElse("")}consensus_fasta" -> consensus,
+      s"${prefix.map(_ + "_").getOrElse("")}consensus_variants_fasta" -> consensusVariants
+    )
+  }
 
   def variantcallers = List("unifiedgenotyper")
+
+  val numBoot = config("boot_runs", default = 100, namespace = "raxml").asInt
 
   override def defaults = Map(
     "ploidy" -> 1,
@@ -46,25 +54,25 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def summaryFile: File = new File(outputDir, "Basty.summary.json")
 
-  def summaryFiles: Map[String, File] = shiva.summaryFiles
+  def summaryFiles: Map[String, File] = Map()
 
-  def summarySettings: Map[String, Any] = shiva.summarySettings
+  def summarySettings: Map[String, Any] = Map("boot_runs" -> numBoot)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    def summaryFiles: Map[String, File] = shiva.samples(sampleId).summaryFiles
+    def summaryFiles: Map[String, File] = output.summaryFiles() ++ outputSnps.summaryFiles(Some("snps_only"))
 
-    def summaryStats: Map[String, Any] = shiva.samples(sampleId).summaryStats
+    def summaryStats: Map[String, Any] = Map()
 
-    override def summarySettings: Map[String, Any] = shiva.samples(sampleId).summarySettings
+    override def summarySettings: Map[String, Any] = Map()
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      def summaryFiles: Map[String, File] = shiva.samples(sampleId).libraries(libId).summaryFiles
+      def summaryFiles: Map[String, File] = Map()
 
-      def summaryStats: Map[String, Any] = shiva.samples(sampleId).libraries(libId).summaryStats
+      def summaryStats: Map[String, Any] = Map()
 
-      override def summarySettings: Map[String, Any] = shiva.samples(sampleId).libraries(libId).summarySettings
+      override def summarySettings: Map[String, Any] = Map()
 
       protected def addJobs(): Unit = {}
     }
@@ -134,7 +142,6 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(raxmlMl)
 
       val r = new scala.util.Random(seed)
-      val numBoot = config("boot_runs", default = 100, namespace = "raxml").asInt
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
         raxmlBoot.input = variants

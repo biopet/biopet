@@ -88,19 +88,23 @@ class BastyTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
 
-      pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
-      pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
-      pipeline.summarySettings.get("cnv_calling") shouldBe Some(cnvCalling)
+      pipeline.summarySettings.get("boot_runs") shouldBe Some(bootRuns.getOrElse(100))
 
       pipeline.samples foreach {
         case (sampleId, sample) =>
-          sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
-          sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+          sample.summarySettings shouldBe Map()
+          sample.summaryFiles.get("variants_fasta") should not be None
+          sample.summaryFiles.get("consensus_fasta") should not be None
+          sample.summaryFiles.get("consensus_variants_fasta") should not be None
+          sample.summaryFiles.get("snps_only_variants_fasta") should not be None
+          sample.summaryFiles.get("snps_only_consensus_fasta") should not be None
+          sample.summaryFiles.get("snps_only_consensus_variants_fasta") should not be None
+          sample.summaryStats shouldBe Map()
           sample.libraries.foreach {
             case (libId, lib) =>
-              lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
-              lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
-              lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
+              lib.summarySettings shouldBe Map()
+              lib.summaryFiles shouldBe Map()
+              lib.summaryStats shouldBe Map()
           }
       }
 
