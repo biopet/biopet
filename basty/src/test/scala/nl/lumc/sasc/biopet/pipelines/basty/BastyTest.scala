@@ -89,6 +89,9 @@ class BastyTest extends TestNGSuite with Matchers {
 
       pipeline.summarySettings.get("boot_runs") shouldBe Some(bootRuns.getOrElse(100))
 
+      pipeline.summaryFile shouldBe new File(BastyTest.outputDir, "Basty.summary.json")
+      pipeline.summaryFiles shouldBe Map()
+
       pipeline.samples foreach {
         case (sampleId, sample) =>
           sample.summarySettings shouldBe Map()
