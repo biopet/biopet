@@ -15,15 +15,15 @@
 package nl.lumc.sasc.biopet.pipelines.sage
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.extensions.tools.SquishBed
-import nl.lumc.sasc.biopet.extensions.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.extensions.tools.{BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import org.broadinstitute.gatk.queue.QScript
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
@@ -54,26 +54,20 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
-  //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()
 
-  //TODO: Add summary
   def summarySettings: Map[String, Any] = Map()
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    //TODO: Add summary
     def summaryFiles: Map[String, File] = Map()
 
-    //TODO: Add summary
     def summaryStats: Map[String, Any] = Map()
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      //TODO: Add summary
       def summaryFiles: Map[String, File] = Map()
 
-      //TODO: Add summary
       def summaryStats: Map[String, Any] = Map()
 
       val inputFastq: File = config("R1")
@@ -92,9 +86,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.inputR1 = inputFastq
-        flexiprep.init()
-        flexiprep.biopetScript()
-        qscript.addAll(flexiprep.functions)
+        add(flexiprep)
 
         val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
         val pf = new PrefixFastq(qscript)
@@ -106,9 +98,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
         mapping.inputR1 = pf.outputFastq
         mapping.outputDir = libDir
-        mapping.init()
-        mapping.biopetScript()
-        qscript.addAll(mapping.functions)
+        add(mapping)
 
         if (config("library_counts", default = false).asBoolean) {
           addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libId, libDir)
@@ -142,9 +132,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def init() {
     if (transcriptome.isEmpty && tagsLibrary.isEmpty)
-      throw new IllegalStateException("No transcriptome or taglib found")
+      Logging.addError("No transcriptome or taglib found")
     if (countBed.isEmpty)
-      throw new IllegalStateException("No bedfile supplied, please add a countBed")
+      Logging.addError("No bedfile supplied, please add a countBed")
   }
 
   def biopetScript() {
