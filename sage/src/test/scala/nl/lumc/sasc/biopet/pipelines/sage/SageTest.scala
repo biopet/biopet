@@ -1,18 +1,18 @@
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
-  * Created by pjvanthof on 28/09/16.
-  */
+ * Created by pjvanthof on 28/09/16.
+ */
 class SageTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Sage = {
     new Sage() {
@@ -71,15 +71,17 @@ class SageTest extends TestNGSuite with Matchers {
       pipeline.summaryFiles shouldBe Map()
       pipeline.summarySettings shouldBe Map()
 
-      pipeline.samples.foreach { case (sampleId, sample) =>
-        sample.summaryFiles shouldBe Map()
-        sample.summaryStats shouldBe Map()
-        sample.summarySettings shouldBe Map()
-        sample.libraries.foreach { case (libId, lib) =>
-          lib.summaryFiles shouldBe Map()
-          lib.summaryStats shouldBe Map()
-          lib.summarySettings shouldBe Map()
-        }
+      pipeline.samples.foreach {
+        case (sampleId, sample) =>
+          sample.summaryFiles shouldBe Map()
+          sample.summaryStats shouldBe Map()
+          sample.summarySettings shouldBe Map()
+          sample.libraries.foreach {
+            case (libId, lib) =>
+              lib.summaryFiles shouldBe Map()
+              lib.summaryStats shouldBe Map()
+              lib.summarySettings shouldBe Map()
+          }
       }
 
     }
