@@ -2,7 +2,8 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
+import nl.lumc.sasc.biopet.extensions.Gzip
+import nl.lumc.sasc.biopet.extensions.centrifuge.{Centrifuge, CentrifugeKreport}
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -27,15 +28,17 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
   }
 
   def biopetScript(): Unit = {
+    val centrifugeOutput = new File(outputDir, s"$outputName.centrifuge.gz")
     val centrifuge = new Centrifuge(this)
     centrifuge.inputR1 = fastqR1
     centrifuge.inputR2 = fastqR2
-    centrifuge.output = new File(outputDir, s"$outputName.centrifuge")
     centrifuge.report = Some(new File(outputDir, s"$outputName.centrifuge.report"))
-    add(centrifuge)
+    val cmd = centrifuge | new Gzip(this) > centrifugeOutput
+    cmd.threadsCorrection = -1
+    add(cmd)
 
-    makeKreport(List(centrifuge.output), "centrifuge", unique = false)
-    makeKreport(List(centrifuge.output), "centrifuge_unique", unique = true)
+    makeKreport(List(centrifugeOutput), "centrifuge", unique = false)
+    makeKreport(List(centrifugeOutput), "centrifuge_unique", unique = true)
 
     addSummaryJobs()
   }
