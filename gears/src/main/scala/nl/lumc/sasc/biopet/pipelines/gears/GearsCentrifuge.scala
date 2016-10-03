@@ -23,10 +23,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
 
   def init(): Unit = {
     require(fastqR1 != null)
-    if (outputName == null) outputName = fastqR1.getName
-      .stripSuffix(".gz")
-      .stripSuffix(".fq")
-      .stripSuffix(".fastq")
+    require(outputName != null)
   }
 
   def biopetScript(): Unit = {

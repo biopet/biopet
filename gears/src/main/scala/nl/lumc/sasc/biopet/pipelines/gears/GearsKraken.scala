@@ -41,10 +41,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
   def init(): Unit = {
     require(fastqR1 != null)
-    if (outputName == null) outputName = fastqR1.getName
-      .stripSuffix(".gz")
-      .stripSuffix(".fq")
-      .stripSuffix(".fastq")
+    require(outputName != null)
   }
 
   lazy val krakenConvertToFasta: Boolean = config("kraken_discard_quality", default = false)
