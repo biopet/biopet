@@ -18,7 +18,6 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   @Input(doc = "Input: FastQ or FastA", required = false)
   var inputR2: Option[File] = None
 
-  @Input(doc = "Centrifuge index prefix", required = true)
   var index: File = config("centrifuge_index")
 
   @Output(doc = "Output with hits per sequence")
@@ -36,6 +35,13 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
 
   /** Regex to get version from version command output */
   def versionRegex: Regex = ".* version (.*)".r
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    deps :+= index + ".1.cf"
+    deps :+= index + ".2.cf"
+    deps :+= index + ".3.cf"
+  }
 
   /**
    * This function needs to be implemented to define the command that is executed

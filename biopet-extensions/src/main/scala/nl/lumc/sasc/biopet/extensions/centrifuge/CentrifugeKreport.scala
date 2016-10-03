@@ -16,7 +16,6 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   @Output(doc = "Output report")
   var output: File = _
 
-  @Input(doc = "Centrifuge index prefix", required = true)
   var index: File = config("centrifuge_index", namespace = "centrifuge")
 
   var onlyUnique: Boolean = config("only_unique", default = false)
@@ -29,6 +28,13 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   override def defaultCoreMemory = 4.0
 
   executable = config("exe", default = "centrifuge-kreport", freeVar = false)
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    deps :+= index + ".1.cf"
+    deps :+= index + ".2.cf"
+    deps :+= index + ".3.cf"
+  }
 
   def cmdLine = executable +
     conditional(onlyUnique, "--only-unique") +
