@@ -33,7 +33,7 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   def cmdLine = executable +
     conditional(onlyUnique, "--only-unique") +
     conditional(showZeros, "--show-zeros") +
-    conditional(showZeros, "--is-counts") +
+    conditional(isCounts, "--is-counts") +
     optional("--min-score=", minScore, spaceSeparated = false) +
     optional("--min-length=", minLength, spaceSeparated = false) +
     required("-x", index) +
