@@ -31,9 +31,9 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    deps :+= index + ".1.cf"
-    deps :+= index + ".2.cf"
-    deps :+= index + ".3.cf"
+    deps :+= new File(index + ".1.cf")
+    deps :+= new File(index + ".2.cf")
+    deps :+= new File(index + ".3.cf")
   }
 
   def cmdLine = executable +

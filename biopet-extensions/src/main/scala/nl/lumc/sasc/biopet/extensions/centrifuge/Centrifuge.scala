@@ -38,9 +38,9 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    deps :+= index + ".1.cf"
-    deps :+= index + ".2.cf"
-    deps :+= index + ".3.cf"
+    deps :+= new File(index + ".1.cf")
+    deps :+= new File(index + ".2.cf")
+    deps :+= new File(index + ".3.cf")
   }
 
   /**
