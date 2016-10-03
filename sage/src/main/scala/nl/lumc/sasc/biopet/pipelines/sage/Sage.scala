@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.extensions.tools.SquishBed
 import nl.lumc.sasc.biopet.extensions.tools.{BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
@@ -139,14 +139,14 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def biopetScript() {
     val squishBed = new SquishBed(this)
-    squishBed.input = countBed.get
-    squishBed.output = new File(outputDir, countBed.get.getName.stripSuffix(".bed") + ".squish.bed")
+    squishBed.input = countBed.getOrElse(null)
+    squishBed.output = new File(outputDir, countBed.getOrElse(new File("fake")).getName.stripSuffix(".bed") + ".squish.bed")
     add(squishBed)
     squishedCountBed = squishBed.output
 
     if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
-      cdl.input = transcriptome.get
+      cdl.input = transcriptome.getOrElse(null)
       cdl.output = new File(outputDir, "taglib/tag.lib")
       cdl.noAntiTagsOutput = new File(outputDir, "taglib/no_antisense_genes.txt")
       cdl.noTagsOutput = new File(outputDir, "taglib/no_sense_genes.txt")

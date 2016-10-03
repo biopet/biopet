@@ -33,9 +33,11 @@ class SageTest extends TestNGSuite with Matchers {
   }
 
   def sample1 = Array(false, true)
-
   def sample2 = Array(false, true)
-
+  def transcriptome = true
+  def countBed = true
+  def tagsLibrary = false
+  def libraryCounts: Option[Boolean] = None
 
   @Test(dataProvider = "sageOptions")
   def testSage(f: String, sample1: Boolean, sample2: Boolean): Unit = {
@@ -43,13 +45,16 @@ class SageTest extends TestNGSuite with Matchers {
       var m: Map[String, Any] = SageTest.config
       if (sample1) m = ConfigUtils.mergeMaps(SageTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(SageTest.sample2, m)
-      ConfigUtils.mergeMaps(Map(
-        // Config values
-      ), m)
+      ConfigUtils.mergeMaps(
+        (if (transcriptome) Map[String, Any]("transcriptome" -> SageTest.inputTouch("trans.fa")) else Map[String, Any]()) ++
+          (if (countBed) Map[String, Any]("count_bed" -> SageTest.inputTouch("count.bed")) else Map[String, Any]()) ++
+          (if (tagsLibrary) Map[String, Any]("tags_library" -> SageTest.inputTouch("tablib")) else Map[String, Any]()) ++
+          libraryCounts.map("library_counts" -> _),
+        m)
 
     }
 
-    if (!sample1 && !sample2) {
+    if ((!sample1 && !sample2) || !countBed || (!transcriptome && !tagsLibrary)) {
       // When no samples
       intercept[IllegalStateException] {
         initPipeline(map).script()
@@ -81,6 +86,25 @@ class SageTest extends TestNGSuite with Matchers {
   }
 }
 
+class SageNoBedTest extends SageTest {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def countBed = false
+}
+
+class SageNoLibTest extends SageTest {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def transcriptome = false
+  override def tagsLibrary = false
+}
+
+class SageLibraryCountsTest extends SageTest {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def libraryCounts = Some(true)
+}
+
 object SageTest {
   val outputDir = Files.createTempDir()
   outputDir.deleteOnExit()
@@ -107,8 +131,6 @@ object SageTest {
   val config: Map[String, Any] = Map(
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "output_dir" -> outputDir.getAbsolutePath,
-    "transcriptome" -> inputTouch("trans.fa"),
-    "count_bed" -> inputTouch("count.bed"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
