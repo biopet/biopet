@@ -15,14 +15,14 @@
 package nl.lumc.sasc.biopet.pipelines.sage
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.extensions.tools.SquishBed
-import nl.lumc.sasc.biopet.extensions.tools.{BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts}
+import nl.lumc.sasc.biopet.extensions.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
@@ -113,17 +113,17 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
       val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-      else if (libraryBamfiles.size > 1) {
+      else {
         val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, new File(sampleDir, s"$sampleId.bam"))
         qscript.add(mergeSamFiles)
         mergeSamFiles.output
-      } else null
+      }
       val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
-      else if (libraryFastqFiles.size > 1) {
+      else {
         val cat = Cat(qscript, libraryFastqFiles, createFile(".fastq"))
         qscript.add(cat)
         cat.output
-      } else null
+      }
 
       addBedtoolsCounts(bamFile, sampleId, sampleDir)
       addTablibCounts(fastqFile, sampleId, sampleDir)
