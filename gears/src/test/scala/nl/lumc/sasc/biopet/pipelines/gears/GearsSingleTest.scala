@@ -17,12 +17,13 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.core.BiopetPipe
+import nl.lumc.sasc.biopet.extensions.centrifuge.{Centrifuge, CentrifugeKreport}
+import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -105,6 +106,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
       }
 
+      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+
       gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(true)
       gears.summarySettings("gear_use_qiime_rtax") shouldBe qiimeRtax
       gears.summarySettings("gear_use_qiime_closed") shouldBe qiimeClosed
@@ -126,7 +129,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
         ((if (kraken.getOrElse(true)) 1 else 0) + (if (centrifuge) 2 else 0))
 
-      gears.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
       gears.functions.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
   }
