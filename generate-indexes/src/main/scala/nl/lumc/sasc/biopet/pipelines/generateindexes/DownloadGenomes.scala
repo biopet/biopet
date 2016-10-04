@@ -18,7 +18,7 @@ import java.io.File
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.picard.NormalizeFasta
@@ -40,7 +40,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
 
   override def fixedValues = Map("gffread" -> Map("T" -> true))
 
-  override def defaults = Map("normalizefasta" ->  Map("line_length" -> 60))
+  override def defaults = Map("normalizefasta" -> Map("line_length" -> 60))
 
   val downloadAnnotations: Boolean = config("download_annotations", default = false)
 
