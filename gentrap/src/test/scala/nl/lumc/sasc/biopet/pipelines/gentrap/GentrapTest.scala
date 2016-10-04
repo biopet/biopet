@@ -194,6 +194,7 @@ object GentrapTest {
     "ribosome_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test",
     "rscript" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "gatk_jar" -> "test"
   ) ++ Seq(
       // fastqc executables
@@ -203,7 +204,7 @@ object GentrapTest {
       // gentrap executables
       "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage", "md5sum",
       // bam2wig executables
-      "igvtools", "wigtobigwig"
+      "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap
 
   val sample1: Map[String, Any] = Map(

@@ -22,15 +22,17 @@ object BiopetToolsExecutable extends BiopetExecutable {
 
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
+    nl.lumc.sasc.biopet.tools.bamstats.BamStats,
     nl.lumc.sasc.biopet.tools.BaseCounter,
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
-    nl.lumc.sasc.biopet.tools.BiopetFlagstat,
+    nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat,
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
     nl.lumc.sasc.biopet.tools.FastqSync,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
+    nl.lumc.sasc.biopet.tools.FindOverlapMatch,
     nl.lumc.sasc.biopet.tools.GvcfToBed,
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.MergeTables,

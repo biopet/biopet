@@ -1,4 +1,4 @@
-# Release notes Biopet version 0.6.0
+# Release notes Biopet version 0.7.0
 
 ## General Code changes
 
@@ -24,6 +24,7 @@
 * Utils - BamUtils is now estimating insert size by sampling the bam-file taking all parts of the available contigs.
 * Fix in VCF filter (#370)[https://git.lumc.nl/biopet/biopet/merge_requests/370]
 * Fix Star wrapper - added full functionality in wrapper.
+* Added a new tools: BamStats
 
 ## Reporting
 

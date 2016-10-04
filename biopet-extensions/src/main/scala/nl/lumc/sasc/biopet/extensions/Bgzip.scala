@@ -30,7 +30,7 @@ class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = null
 
   var f: Boolean = config("f", default = false)
-  executable = config("exe", default = "bgzip")
+  executable = config("exe", default = "bgzip", freeVar = false)
 
   def cmdLine = required(executable) +
     conditional(f, "-f") +

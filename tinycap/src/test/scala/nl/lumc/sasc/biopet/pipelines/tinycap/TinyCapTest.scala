@@ -134,7 +134,7 @@ object TinyCapTest {
     "cutadapt" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
     "htseqcount" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test")
   )
 

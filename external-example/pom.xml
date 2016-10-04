@@ -27,7 +27,7 @@
     <artifactId>ExternalExample</artifactId>
 
     <!--TODO: replace version, for a new pipeline it's advised to start with '0.1.0-SNAPSHOT' -->
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -56,19 +56,19 @@
             <artifactId>BiopetCore</artifactId>
 
             <!--TODO: replace version of pipeline to a fixed version -->
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.8.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetExtensions</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.8.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Shiva</artifactId>
 
             <!--TODO: replace version of pipeline to a fixed version -->
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.8.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
