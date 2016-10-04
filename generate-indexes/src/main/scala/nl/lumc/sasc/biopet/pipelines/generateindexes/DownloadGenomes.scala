@@ -111,14 +111,14 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
                   val zcat = new Zcat(this)
                   zcat.appending = true
                   zcat.input :+= file
-                  zcat.output = fastaFile
+                  zcat.output = downloadFastaFile
                   fastaCat.cmds :+= zcat
                   fastaCat.input :+= file
                 } else {
                   val cat = new Cat(this)
                   cat.appending = true
                   cat.input :+= file
-                  cat.output = fastaFile
+                  cat.output = downloadFastaFile
                   fastaCat.cmds :+= cat
                   fastaCat.input :+= file
                 }
