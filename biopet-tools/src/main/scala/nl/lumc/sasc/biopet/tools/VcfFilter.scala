@@ -16,10 +16,10 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.variant.variantcontext.{GenotypeType, VariantContext}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.{ GenotypeType, VariantContext }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{ ToolCommand, VcfUtils }
 
 import scala.collection.JavaConversions._
 import scala.io.Source
