@@ -142,11 +142,11 @@ object VcfUtils {
   }
 
   /**
-   * Check whether genotype is of the from 0/.
+   * Check whether genotype is of the form 0/.
    * @param genotype genotype
    * @return boolean
    */
   def isCompoundNoCall(genotype: Genotype): Boolean = {
-    genotype.isCalled && genotype.getAlleles.exists(_.isNoCall)
+    genotype.isCalled && genotype.getAlleles.exists(_.isNoCall) && genotype.getAlleles.exists(_.isReference)
   }
 }
