@@ -10,8 +10,8 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvanthof on 03/10/16.
-  */
+ * Created by pjvanthof on 03/10/16.
+ */
 class DownloadNcbiAssemblyTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString

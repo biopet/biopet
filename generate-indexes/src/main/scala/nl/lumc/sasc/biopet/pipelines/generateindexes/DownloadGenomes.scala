@@ -18,9 +18,10 @@ import java.io.File
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.picard.NormalizeFasta
 import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -38,6 +39,8 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
   var referenceConfig: Map[String, Any] = _
 
   override def fixedValues = Map("gffread" -> Map("T" -> true))
+
+  override def defaults = Map("normalizefasta" ->  Map("line_length" -> 60))
 
   val downloadAnnotations: Boolean = config("download_annotations", default = false)
 
@@ -59,12 +62,13 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
 
         val genomeDir = new File(speciesDir, genomeName)
         val fastaFile = new File(genomeDir, "reference.fa")
+        val downloadFastaFile = new File(genomeDir, "download.reference.fa")
 
         genomeConfig.get("ncbi_assembly_id") match {
           case Some(assemblyID: String) =>
             val downloadAssembly = new DownloadNcbiAssembly(this)
             downloadAssembly.assemblyId = assemblyID
-            downloadAssembly.output = fastaFile
+            downloadAssembly.output = downloadFastaFile
             downloadAssembly.outputReport = new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
             downloadAssembly.nameHeader = genomeConfig.get("ncbi_assembly_header_name").map(_.toString)
             downloadAssembly.mustHaveOne = genomeConfig.get("ncbi_assembly_must_have_one")
@@ -75,6 +79,7 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
               .map(_.asInstanceOf[util.ArrayList[util.LinkedHashMap[String, String]]])
               .getOrElse(new util.ArrayList()).flatMap(x => x.map(y => y._1 + "=" + y._2))
               .toList
+            downloadAssembly.isIntermediate = true
             add(downloadAssembly)
           case _ =>
             val fastaUris = genomeConfig.getOrElse("fasta_uri",
@@ -98,8 +103,8 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
             }
 
             val fastaCat = new FastaMerging(this)
-            fastaCat.output = fastaFile
-
+            fastaCat.output = downloadFastaFile
+            fastaCat.isIntermediate = true
             if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
               fastaFiles.foreach { file =>
                 if (file.getName.endsWith(".gz")) {
@@ -123,6 +128,11 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
             }
         }
 
+        val normalizeFasta = new NormalizeFasta(this)
+        normalizeFasta.input = downloadFastaFile
+        normalizeFasta.output = fastaFile
+        add(normalizeFasta)
+
         val generateIndexes = new GenerateIndexes(this)
         generateIndexes.fastaFile = fastaFile
         generateIndexes.speciesName = speciesName
@@ -138,10 +148,10 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
           def getAnnotation(tag: String): Map[String, Map[String, Any]] = (genomeConfig.get(tag) match {
             case Some(s: Map[_, _]) => s.map(x => x._2 match {
               case o: Map[_, _] => x._1.toString -> o.map(x => (x._1.toString, x._2))
-              case _            => throw new IllegalStateException("values in the tag vep should be json objects")
+              case _            => throw new IllegalStateException(s"values in the tag $tag should be json objects")
             })
             case None => Map()
-            case x    => throw new IllegalStateException(s"tag vep should be an object with objects, now $x")
+            case x    => throw new IllegalStateException(s"tag $tag should be an object with objects, now $x")
           })
 
           // Download vep caches

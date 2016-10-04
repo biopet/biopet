@@ -29,7 +29,6 @@ class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output fasta file", required = true)
   var output: File = _
 
-  @Output(doc = "Output NCBI report", required = true)
   var outputReport: File = _
 
   var assemblyId: String = null
