@@ -20,7 +20,6 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
   var outputName: String = _
 
   override def fixedValues = Map("centrifugekreport" -> Map("only_unique" -> false))
-  override def defaults = Map("centrifugekreport" -> Map("show_zeros" -> true))
 
   def init(): Unit = {
     require(fastqR1 != null)
