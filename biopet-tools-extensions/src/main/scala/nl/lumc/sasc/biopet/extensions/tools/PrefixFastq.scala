@@ -48,20 +48,3 @@ class PrefixFastq(val root: Configurable) extends ToolCommandFunction {
     required("-o", outputFastq) +
     optional("-s", prefixSeq)
 }
-
-object PrefixFastq {
-  /**
-   * Create a PrefixFastq class object with a sufix ".prefix.fastq" in the output folder
-   *
-   * @param root parent object
-   * @param input input file
-   * @param outputDir outputFolder
-   * @return PrefixFastq class object
-   */
-  def apply(root: Configurable, input: File, outputDir: String): PrefixFastq = {
-    val prefixFastq = new PrefixFastq(root)
-    prefixFastq.inputFastq = input
-    prefixFastq.outputFastq = new File(outputDir, input.getName + ".prefix.fastq")
-    prefixFastq
-  }
-}
