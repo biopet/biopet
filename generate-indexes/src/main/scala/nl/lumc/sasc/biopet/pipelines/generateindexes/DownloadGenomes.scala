@@ -219,20 +219,21 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
                 outputFile
               }
 
-              val gtfFile: Option[File] = if (gffFile.isDefined) gffFile.map { gff =>
-                val gffRead = new GffRead(this)
-                gffRead.input = gff
-                gffRead.output = swapExt(dir, gff, ".gff", ".gtf")
-                add(gffRead)
-                gffRead.output
-              }
-              else geneAnnotation.get("gtf_uri").map { gtfUri =>
-                val outputFile = new File(dir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
-                val curl = new Curl(this)
-                curl.url = gtfUri.toString
-                if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
-                else add(curl > outputFile)
-                outputFile
+              val gtfFile: Option[File] = geneAnnotation.get("gtf_uri") match {
+                case Some(gtfUri) =>
+                  val outputFile = new File(dir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
+                  val curl = new Curl(this)
+                  curl.url = gtfUri.toString
+                  if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+                  else add(curl > outputFile)
+                  Some(outputFile)
+                case _ => gffFile.map { gff =>
+                  val gffRead = new GffRead(this)
+                  gffRead.input = gff
+                  gffRead.output = swapExt(dir, gff, ".gff", ".gtf")
+                  add(gffRead)
+                  gffRead.output
+                }
               }
 
               val refFlatFile: Option[File] = gtfFile.map { gtf =>
