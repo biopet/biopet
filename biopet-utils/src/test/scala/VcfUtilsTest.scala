@@ -1,4 +1,4 @@
-import htsjdk.variant.variantcontext.{Allele, Genotype, GenotypeBuilder}
+import htsjdk.variant.variantcontext.{ Allele, Genotype, GenotypeBuilder }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -8,8 +8,8 @@ import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.utils.VcfUtils
 
 /**
-  * Created by Sander Bollen on 4-10-16.
-  */
+ * Created by Sander Bollen on 4-10-16.
+ */
 class VcfUtilsTest extends TestNGSuite with Matchers {
 
   @Test
