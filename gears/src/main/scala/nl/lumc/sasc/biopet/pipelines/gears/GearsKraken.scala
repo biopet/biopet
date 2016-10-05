@@ -41,10 +41,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
   def init(): Unit = {
     require(fastqR1 != null)
-    if (outputName == null) outputName = fastqR1.getName
-      .stripSuffix(".gz")
-      .stripSuffix(".fq")
-      .stripSuffix(".fastq")
+    require(outputName != null)
   }
 
   lazy val krakenConvertToFasta: Boolean = config("kraken_discard_quality", default = false)
@@ -107,7 +104,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
   def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty
+  def summarySettings: Map[String, Any] = Map()
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1) ++ (fastqR2 match {
