@@ -129,7 +129,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
         ((if (kraken.getOrElse(true)) 1 else 0) + (if (centrifuge) 2 else 0))
 
-      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
+      gears.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
       gears.functions.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
   }
