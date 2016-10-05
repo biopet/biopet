@@ -37,7 +37,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     centrifuge.isIntermediate = true
     add(centrifuge)
 
-    add(centrifuge.output :<: new Gzip(this) > centrifugeOutput)
+    add(Gzip(this, centrifuge.output, centrifugeOutput))
 
     makeKreport(List(centrifuge.output), "centrifuge", unique = false)
     makeKreport(List(centrifuge.output), "centrifuge_unique", unique = true)

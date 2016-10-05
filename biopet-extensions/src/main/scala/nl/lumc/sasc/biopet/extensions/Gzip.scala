@@ -40,6 +40,8 @@ class Gzip(val root: Configurable) extends BiopetCommandLineFunction with Versio
 object Gzip {
   def apply(root: Configurable): Gzip = new Gzip(root)
 
+  def apply(root: Configurable, input: File, output: File): Gzip = Gzip(root, List(input), output)
+
   def apply(root: Configurable, input: List[File], output: File): Gzip = {
     val gzip = new Gzip(root)
     gzip.input = input
