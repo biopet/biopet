@@ -26,7 +26,20 @@ windowLength <- opt$wl
 bamFile <- args
 
 BAMFiles <- strsplit(c(bamFile), " ")[[1]]
-bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=windowLength, parallel=opt$threads)
+bamDataRanges <- tryCatch(
+    {
+        getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=windowLength, parallel=opt$threads)
+    },
+    error = function(e) {
+        quit("no")
+    },
+    warning = function(w) {
+        quit("no")
+    },
+    finally = {
+
+    }
+)
 
 write.table(as.data.frame( bamDataRanges ), quote = FALSE, opt$rawoutput, row.names=FALSE)
 
