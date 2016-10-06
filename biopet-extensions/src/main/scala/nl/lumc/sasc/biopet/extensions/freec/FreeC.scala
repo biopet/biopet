@@ -125,7 +125,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   override def versionCommand = executable
   override def versionRegex = """Control-FREEC v([0-9\.]+) : .*""".r
   override def defaultThreads = 4
-  override def defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 50
 
   private var configFile: File = _
 
