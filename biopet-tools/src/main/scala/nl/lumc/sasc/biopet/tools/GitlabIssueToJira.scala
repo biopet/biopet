@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import play.api.libs.ws.ning.NingWSClient
 
@@ -39,10 +39,14 @@ object GitlabIssueToJira extends ToolCommand {
     // and call wsClient.close() when you're done
     val wsClient = NingWSClient()
 
-    val gitlabIssues = getGitlabIssues(cmdArgs.gitlabUrl, cmdArgs.gitlabProject, cmdArgs.gitlabToken, wsClient)
+    val gitlabIssuesFuture = getGitlabIssues(cmdArgs.gitlabUrl, cmdArgs.gitlabProject, cmdArgs.gitlabToken, wsClient)
+    gitlabIssuesFuture.onFailure { case e => throw e }
+
+    val gitlabIssues = Await.result(gitlabIssuesFuture, Duration.Inf)
 
     println(gitlabIssues.size)
-    println(gitlabIssues.head)
+    println(gitlabIssues.head.issue("author"))
+    println(gitlabIssues.head.comments.map(_.keys))
 
     wsClient.close()
   }
@@ -54,38 +58,42 @@ object GitlabIssueToJira extends ToolCommand {
                       token: String,
                       wsClient: NingWSClient,
                       page: Int = 1,
-                      perPage: Int = 100): List[GitlabIssue] = {
-
-    getGitlabPagedOutput(s"${url}/api/v3/projects/${project.replace("/", "%2F")}/issues", token, wsClient, Map("per_page" -> "100"))
-        .map(GitlabIssue(_, List()))
+                      perPage: Int = 100): Future[List[GitlabIssue]] = {
+    val issuesUrl = s"${url}/api/v3/projects/${project.replace("/", "%2F")}/issues"
+    getGitlabPagedOutput(issuesUrl, token, wsClient, Map("per_page" -> "100"))
+        .map { x => x.map(i => GitlabIssue(i, Await.result(getGitlabPagedOutput(issuesUrl + s"/${i("id")}/notes", token, wsClient), Duration.Inf))) }
   }
 
   def getGitlabPagedOutput(url: String,
                            token: String,
                            wsClient: NingWSClient,
-                           queryParams: Map[String, String] = Map()): List[Map[String, Any]] = {
-    val init = wsClient
-      .url(url)
-      .withHeaders("PRIVATE-TOKEN" -> token)
-      .withQueryString(queryParams.toSeq: _*)
-      .get().map { wsResponse =>
-      val pages = wsResponse.header("X-Total-Pages").map(_.toInt).getOrElse(1)
-      val page1 = ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
-      (page1, pages)
-    }
-
-    val (page1, pages) = Await.result(init, Duration.Inf)
-
-    val results = for (i <- 2 to pages) yield {
-      wsClient
+                           queryParams: Map[String, String] = Map()): Future[List[Map[String, Any]]] = {
+    val f = Future {
+      val init = wsClient
         .url(url)
         .withHeaders("PRIVATE-TOKEN" -> token)
-        .withQueryString((queryParams.toSeq :+ ("page" -> s"$i")): _*)
+        .withQueryString(queryParams.toSeq: _*)
         .get().map { wsResponse =>
-        ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
+        val pages = wsResponse.header("X-Total-Pages").map(_.toInt).getOrElse(1)
+        val page1 = ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
+        (page1, pages)
       }
-    }
 
-    results.foldLeft(page1) { case (a, b) => a ++ Await.result(b, Duration.Inf) }
+      val (page1, pages) = Await.result(init, Duration.Inf)
+
+      val results = for (i <- 2 to pages) yield {
+        wsClient
+          .url(url)
+          .withHeaders("PRIVATE-TOKEN" -> token)
+          .withQueryString((queryParams.toSeq :+ ("page" -> s"$i")): _*)
+          .get().map { wsResponse =>
+          ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
+        }
+      }
+
+      results.foldLeft(page1) { case (a, b) => a ++ Await.result(b, Duration.Inf) }
+    }
+    f.onFailure { case e => throw e }
+    f
   }
 }
