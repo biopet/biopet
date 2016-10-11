@@ -1,11 +1,5 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.net.URI
-
-import argonaut.Argonaut._
-import argonaut.Json._
-import argonaut._
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
 
 import scala.concurrent.Await
@@ -43,35 +37,55 @@ object GitlabIssueToJira extends ToolCommand {
     // Instantiation of the client
     // In a real-life application, you would instantiate one, share it everywhere,
     // and call wsClient.close() when you're done
-    val url = s"${cmdArgs.gitlabUrl}/api/v3/projects/${cmdArgs.gitlabProject.replace("/", "%2F")}/issues"
     val wsClient = NingWSClient()
-    val bla = wsClient
-      .url(url)
-      //.withQueryString("page" -> "1")
-      .withHeaders("PRIVATE-TOKEN" -> cmdArgs.gitlabToken)
-      .get()
-      .map { wsResponse =>
-        if (! (200 to 299).contains(wsResponse.status)) {
-          logger.error(s"Received unexpected status ${wsResponse.status} : ${wsResponse.body}")
-        }
-        println(s"OK, received ${wsResponse.body}")
-        //println(s"The response header PRIVATE-TOKEN was ${wsResponse.header("PRIVATE-TOKEN")}")
-        ConfigUtils.textToJson(wsResponse.body)
-      }
 
-    Await.ready(bla, Duration.Inf)
+    val gitlabIssues = getGitlabIssues(cmdArgs.gitlabUrl, cmdArgs.gitlabProject, cmdArgs.gitlabToken, wsClient)
 
-
-    println(bla.value.get.get.array.get.size)
-    bla.value.get.get match {
-      case a:JsonArray  => println(a.size)
-      case a => println(a.getClass.getName)
-    }
-
-    println(bla.value.get.get.spaces2)
+    println(gitlabIssues.size)
+    println(gitlabIssues.head)
 
     wsClient.close()
+  }
 
-    logger.info(url)
+  case class GitlabIssue(issue: Map[String, Any], comments: List[Map[String, Any]])
+
+  def getGitlabIssues(url: String,
+                      project: String,
+                      token: String,
+                      wsClient: NingWSClient,
+                      page: Int = 1,
+                      perPage: Int = 100): List[GitlabIssue] = {
+
+    getGitlabPagedOutput(s"${url}/api/v3/projects/${project.replace("/", "%2F")}/issues", token, wsClient, Map("per_page" -> "100"))
+        .map(GitlabIssue(_, List()))
+  }
+
+  def getGitlabPagedOutput(url: String,
+                           token: String,
+                           wsClient: NingWSClient,
+                           queryParams: Map[String, String] = Map()): List[Map[String, Any]] = {
+    val init = wsClient
+      .url(url)
+      .withHeaders("PRIVATE-TOKEN" -> token)
+      .withQueryString(queryParams.toSeq: _*)
+      .get().map { wsResponse =>
+      val pages = wsResponse.header("X-Total-Pages").map(_.toInt).getOrElse(1)
+      val page1 = ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
+      (page1, pages)
+    }
+
+    val (page1, pages) = Await.result(init, Duration.Inf)
+
+    val results = for (i <- 2 to pages) yield {
+      wsClient
+        .url(url)
+        .withHeaders("PRIVATE-TOKEN" -> token)
+        .withQueryString((queryParams.toSeq :+ ("page" -> s"$i")): _*)
+        .get().map { wsResponse =>
+        ConfigUtils.textToJson(wsResponse.body).array.get.map(ConfigUtils.jsonToMap)
+      }
+    }
+
+    results.foldLeft(page1) { case (a, b) => a ++ Await.result(b, Duration.Inf) }
   }
 }
