@@ -33,7 +33,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
 
   def versionCommand = super.cmdLine + "--version"
-  def versionRegex =  "\\d+\\.\\d+\\.\\d+".r
+  def versionRegex = "\\d+\\.\\d+\\.\\d+".r
 
   private def stringToInt(s: String): Option[Int] = {
     try {
@@ -44,10 +44,10 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   }
 
   /**
-    * Check whether version of cn mops is at least 1.18.0
-    *
-    * @return
-    */
+   * Check whether version of cn mops is at least 1.18.0
+   *
+   * @return
+   */
   def versionCheck: Boolean = {
     getVersion match {
       case Some(version) => {
@@ -79,7 +79,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   lazy val outputCnv: File = {
     outputDir match {
       case Some(dir) if dir.exists => new File(dir, "cnv.txt")
-      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
+      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
     }
   }
 
@@ -87,7 +87,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   lazy val outputCnr: File = {
     outputDir match {
       case Some(dir) if dir.exists => new File(dir, "cnr.txt")
-      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
+      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
     }
   }
 
@@ -95,7 +95,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   lazy val rawOutput: File = {
     outputDir match {
       case Some(dir) if dir.exists => new File(dir, "rawoutput.txt")
-      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
+      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
     }
   }
 
