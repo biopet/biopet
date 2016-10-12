@@ -68,82 +68,26 @@ package object utils {
   val semanticVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
 
   /**
-    * Check whether a version string is a semantic version.
-    *
-    * @param version version string
-    * @return boolean
-    */
-  def isSemanticVersion(version: String): Boolean = {
-    version.matches(semanticVersionRegex.toString)
-  }
+   * Check whether a version string is a semantic version.
+   *
+   * @param version version string
+   * @return boolean
+   */
+  def isSemanticVersion(version: String): Boolean = getSemanticVersion(version).isDefined
+
+  case class SemanticVersion(major: Int, minor: Int, patch: Int, build: Option[String] = None)
 
   /**
-    * Get major number from a semantic version
-    *
-    * @param version version string
-    * @return
-    */
-  def majorVersion(version: String): Option[Int] = {
-    if (!isSemanticVersion(version)) {
-      None
-    } else {
-      semanticVersionRegex.findFirstMatchIn(version) match {
-        case Some(matcher) => tryToParseNumber(matcher.group(1)) match {
-          case Success(s) => s match {
-            case i: Int => Some(i)
-            case _ => None
-          }
-          case _ => None
-        }
-        case _ => None
-      }
-    }
-  }
-
-  /**
-    * Get minor number from a semantic version
-    *
-    * @param version version string
-    * @return
-    */
-  def minorVersion(version: String): Option[Int] = {
-    if (!isSemanticVersion(version)) {
-      None
-    } else {
-      semanticVersionRegex.findFirstMatchIn(version) match {
-        case Some(matcher) => tryToParseNumber(matcher.group(2)) match {
-          case Success(s) => s match {
-            case i: Int => Some(i)
-            case _ => None
-          }
-          case _ => None
-        }
-        case _ => None
-      }
-    }
-  }
-
-
-  /**
-    * Get patch number from a semantic version
-    *
-    * @param version version string
-    * @return
-    */
-  def patchVersion(version: String): Option[Int] = {
-    if (!isSemanticVersion(version)) {
-      None
-    } else {
-      semanticVersionRegex.findFirstMatchIn(version) match {
-        case Some(matcher) => tryToParseNumber(matcher.group(3)) match {
-          case Success(s) => s match {
-            case i: Int => Some(i)
-            case _ => None
-          }
-          case _ => None
-        }
-        case _ => None
-      }
+   * Check whether a version string is a semantic version.
+   *
+   * @param version version string
+   * @return SemanticVersion case class
+   */
+  def getSemanticVersion(version: String) = {
+    version match {
+      case semanticVersionRegex(major, minor, patch, build) =>
+        Some(SemanticVersion(major.toInt, minor.toInt, patch.toInt, Option(build).map(x => x.stripPrefix("-"))))
+      case _ => None
     }
   }
 }
