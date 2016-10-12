@@ -22,7 +22,8 @@ object GitlabIssueToJira extends ToolCommand {
                   jiraUrl: String = null,
                   jiraProject: String = null,
                   jiraToken: String = null,
-                  jiraUsername: String = null) extends AbstractArgs
+                  jiraUsername: String = null,
+                  jiraPassword: Option[String] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[String]("gitlabUrl") required () maxOccurs 1 valueName "<url>" action { (x, c) =>
@@ -43,6 +44,9 @@ object GitlabIssueToJira extends ToolCommand {
     opt[String]("jiraUsername") required () maxOccurs 1 valueName "<string>" action { (x, c) =>
       c.copy(jiraUsername = x)
     }
+    opt[String]("jiraPassword") required () maxOccurs 1 valueName "<string>" action { (x, c) =>
+      c.copy(jiraPassword = Some(x))
+    }
   }
 
   def main(args: Array[String]): Unit = {
@@ -53,7 +57,11 @@ object GitlabIssueToJira extends ToolCommand {
     val c = System.console()
 
     //Console.out.close()
-    val pw = if (c != null) c.readPassword("Jira password >").toString else ""
+    val pw = cmdArgs.jiraPassword match {
+      case Some(pass) => pass
+      case _ if c != null => c.readPassword("Jira password >").toString
+      case _ => ""
+    }
     //println(pw)
 
     // Instantiation of the client
@@ -72,23 +80,28 @@ object GitlabIssueToJira extends ToolCommand {
 
     val url = s"${cmdArgs.jiraUrl}/rest/api/2/project/${cmdArgs.jiraProject}"
     println(url)
-    val test = getWsrequestJsonToMap(wsClient
+    val projectFurure = getWsrequestJsonToMap(wsClient
       .url(url)
       .withAuth(cmdArgs.jiraUsername, pw, WSAuthScheme.BASIC))
 
     logger.info("Done1")
-    Await.ready(test, Duration.Inf)
-    if (test.value.get.isFailure) sys.exit(1)
+    val project = waitForFuture(projectFurure)
+
+    println(project("id"))
+
     logger.info("Done2")
     wsClient.close()
 
     logger.info("Done3")
   }
 
-  def getWsrequestJsonToMap(request: WSRequest) = {
-    val f = request.get()
+  def getWsrequestJsonToMap(request: WSRequest, putBody: Option[String] = None) = {
+    val f = putBody match {
+      case Some(body) => request.put(body)
+      case _ => request.get()
+    }
     val r = f.map { wsResponse =>
-      val map = if (wsResponse.status >= 200 && wsResponse.status <= 299)
+      if (wsResponse.status >= 200 && wsResponse.status <= 299)
         ConfigUtils.jsonToMap(ConfigUtils.textToJson(wsResponse.body))
       else throw new IllegalStateException(s"Request gave status ${wsResponse.status}")
     }
@@ -98,6 +111,12 @@ object GitlabIssueToJira extends ToolCommand {
 
   case class GitlabIssue(issue: Map[String, Any], comments: List[Map[String, Any]])
 
+  def waitForFuture[T](future: Future[T]): T = {
+    Await.ready(future, Duration.Inf)
+    if (future.value.get.isFailure) sys.exit(1)
+    Await.result(future, Duration.Inf)
+  }
+
   def getGitlabIssues(url: String,
                       project: String,
                       token: String,
@@ -106,7 +125,7 @@ object GitlabIssueToJira extends ToolCommand {
                       perPage: Int = 100): Future[List[GitlabIssue]] = {
     val issuesUrl = s"${url}/api/v3/projects/${project.replace("/", "%2F")}/issues"
     getGitlabPagedOutput(issuesUrl, token, wsClient, Map("per_page" -> "100"))
-      .map { x => x.map(i => GitlabIssue(i, Await.result(getGitlabPagedOutput(issuesUrl + s"/${i("id")}/notes", token, wsClient), Duration.Inf))) }
+      .map { x => x.map(i => GitlabIssue(i, waitForFuture(getGitlabPagedOutput(issuesUrl + s"/${i("id")}/notes", token, wsClient)))) }
   }
 
   def getGitlabPagedOutput(url: String,
@@ -124,7 +143,7 @@ object GitlabIssueToJira extends ToolCommand {
           (page1, pages)
         }
 
-      val (page1, pages) = Await.result(init, Duration.Inf)
+      val (page1, pages) = waitForFuture(init)
 
       val results = for (i <- 2 to pages) yield {
         wsClient
@@ -138,7 +157,7 @@ object GitlabIssueToJira extends ToolCommand {
           }
       }
 
-      results.foldLeft(page1) { case (a, b) => a ++ Await.result(b, Duration.Inf) }
+      results.foldLeft(page1) { case (a, b) => a ++ waitForFuture(b) }
     }
     f.onFailure { case e => throw e }
     f
