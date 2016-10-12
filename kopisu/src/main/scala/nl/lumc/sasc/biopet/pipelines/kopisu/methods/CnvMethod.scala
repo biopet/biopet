@@ -43,6 +43,8 @@ trait CnvMethod extends QScript with SummaryQScript with Reference {
 
   protected var cnvOutputFiles: Map[String, File] = Map.empty
 
+  def getCnvOutputFiles: Map[String, File] = cnvOutputFiles
+
   protected def addOutput(sample: String, outputFile: File) = {
     cnvOutputFiles += (sample -> outputFile)
   }
