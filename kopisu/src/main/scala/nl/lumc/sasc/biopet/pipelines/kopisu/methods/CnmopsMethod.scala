@@ -27,7 +27,7 @@ class CnmopsMethod(val root: Configurable) extends CnvMethod {
         case (sampleName, bamFile) => Some(bamFile)
         case _                     => None
       }.toList
-      cnmops.outputDir = new File(outputDir, contig.getSequenceName).getAbsolutePath
+      cnmops.outputDir = Some(new File(outputDir, contig.getSequenceName))
       cnmops.beforeGraph
       cnmops
     }).toList

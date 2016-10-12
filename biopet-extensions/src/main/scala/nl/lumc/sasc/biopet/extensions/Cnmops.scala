@@ -43,28 +43,34 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
   // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
   lazy val outputCnv: File = {
-    require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS CNV output")
-    new File(outputDir, "cnv.txt")
+    outputDir match {
+      case Some(dir) if dir.exists => new File(dir, "cnv.txt")
+      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
+    }
   }
 
   @Output(doc = "Output CNR file")
   lazy val outputCnr: File = {
-    require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS CNR output")
-    new File(outputDir, "cnr.txt")
+    outputDir match {
+      case Some(dir) if dir.exists => new File(dir, "cnr.txt")
+      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
+    }
   }
 
   @Output(doc = "Raw output")
   lazy val rawOutput: File = {
-    require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS raw output")
-    new File(outputDir, "rawoutput.txt")
+    outputDir match {
+      case Some(dir) if dir.exists => new File(dir, "rawoutput.txt")
+      case _ => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
+    }
   }
 
   /** write all output files to this directory [./] */
-  var outputDir: String = _
+  var outputDir: Option[File] = None
 
   override def beforeGraph = {
     super.beforeGraph
-    require(!outputDir.isEmpty, "Outputdir for cn.MOPS should not be empty")
+    require(outputDir.isDefined, "Outputdir for cn.MOPS should not be empty")
     require(input.length >= 2, "Please supply at least 2 BAM files for cn.MOPS")
   }
 
