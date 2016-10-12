@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-suppressPackageStartupMessages(library('cn.mops'))
-suppressPackageStartupMessages(library('optparse'))
+suppressWarnings(suppressPackageStartupMessages(library('cn.mops')))
+suppressWarnings(suppressPackageStartupMessages(library('optparse')))
 
 # Script from  https://git.lumc.nl/lgtc-bioinformatics/gapss3/blob/master/src/CNV/makeCnmops.sh
 # modified to take arguments
@@ -11,13 +11,19 @@ option_list <- list(
     make_option(c("--cnr"), dest="cnr"),
     make_option(c("--chr"), dest="chr"),
     make_option(c("--threads"), dest="threads", default=8, type="integer"),
-    make_option(c("--wl"), dest="wl", default=1000, type="integer")
+    make_option(c("--wl"), dest="wl", default=1000, type="integer"),
+    make_option(c("--version"), action="store_true", default=FALSE)
     )
 
 parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
 arguments = parse_args(parser, positional_arguments=TRUE)
 opt = arguments$options
 args = arguments$args
+
+if (opt$version) {
+    cat(toString(packageVersion('cn.mops')))
+    quit("no")
+}
 
 chromosome <- opt$chr
 CNVoutput <- opt$cnv
