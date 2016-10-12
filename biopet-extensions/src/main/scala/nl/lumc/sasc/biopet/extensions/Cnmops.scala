@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Version
 import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
@@ -24,12 +25,45 @@ import org.broadinstitute.gatk.utils.commandline._
  * Wrapper for the Cnmops command line tool.
  * Written based on Cnmops version v2.2.1.
  */
-class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
+class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Version {
 
   override def defaultThreads = 4
   override def defaultCoreMemory: Double = 4.0
 
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
+
+  def versionCommand = super.cmdLine + "--version"
+  def versionRegex =  "\\d+\\.\\d+\\.\\d+".r
+
+  private def stringToInt(s: String): Option[Int] = {
+    try {
+      Some(s.toInt)
+    } catch {
+      case e: Exception => None
+    }
+  }
+
+  /**
+    * Check whether version of cn mops is at least 1.18.0
+    *
+    * @return
+    */
+  def versionCheck: Boolean = {
+    getVersion match {
+      case Some(version) => {
+        val contents = version.split('.')
+        if (contents.length < 3) {
+          false
+        } else {
+          val major = stringToInt(contents(0))
+          val minor = stringToInt(contents(1))
+          (major.getOrElse(0) == 1 && minor.getOrElse(0) >= 18) || major.getOrElse(0) >= 2
+        }
+      }
+      case _ => false
+    }
+
+  }
 
   @Input(doc = "Input file BAM", required = true)
   var input: List[File] = List()
@@ -72,6 +106,9 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
     super.beforeGraph
     require(outputDir.isDefined, "Outputdir for cn.MOPS should not be empty")
     require(input.length >= 2, "Please supply at least 2 BAM files for cn.MOPS")
+    if (!versionCheck) {
+      logger.warn("cn.mops version is below 1.18.0. Contigs containing little to no reads WILL fail")
+    }
   }
 
   override def cmdLine = super.cmdLine +
