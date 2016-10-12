@@ -64,4 +64,86 @@ package object utils {
     case _ if fallBack => Try(raw)
     case _             => Try(throw new Exception(s"Can not extract number from string $raw"))
   }
+
+  val semanticVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
+
+  /**
+    * Check whether a version string is a semantic version.
+    *
+    * @param version version string
+    * @return boolean
+    */
+  def isSemanticVersion(version: String): Boolean = {
+    version.matches(semanticVersionRegex.toString)
+  }
+
+  /**
+    * Get major number from a semantic version
+    *
+    * @param version version string
+    * @return
+    */
+  def majorVersion(version: String): Option[Int] = {
+    if (!isSemanticVersion(version)) {
+      None
+    } else {
+      semanticVersionRegex.findFirstMatchIn(version) match {
+        case Some(matcher) => tryToParseNumber(matcher.group(1)) match {
+          case Success(s) => s match {
+            case i: Int => Some(i)
+            case _ => None
+          }
+          case _ => None
+        }
+        case _ => None
+      }
+    }
+  }
+
+  /**
+    * Get minor number from a semantic version
+    *
+    * @param version version string
+    * @return
+    */
+  def minorVersion(version: String): Option[Int] = {
+    if (!isSemanticVersion(version)) {
+      None
+    } else {
+      semanticVersionRegex.findFirstMatchIn(version) match {
+        case Some(matcher) => tryToParseNumber(matcher.group(2)) match {
+          case Success(s) => s match {
+            case i: Int => Some(i)
+            case _ => None
+          }
+          case _ => None
+        }
+        case _ => None
+      }
+    }
+  }
+
+
+  /**
+    * Get patch number from a semantic version
+    *
+    * @param version version string
+    * @return
+    */
+  def patchVersion(version: String): Option[Int] = {
+    if (!isSemanticVersion(version)) {
+      None
+    } else {
+      semanticVersionRegex.findFirstMatchIn(version) match {
+        case Some(matcher) => tryToParseNumber(matcher.group(3)) match {
+          case Success(s) => s match {
+            case i: Int => Some(i)
+            case _ => None
+          }
+          case _ => None
+        }
+        case _ => None
+      }
+    }
+  }
 }
