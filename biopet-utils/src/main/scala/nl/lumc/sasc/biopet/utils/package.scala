@@ -76,9 +76,9 @@ package object utils {
   def isSemanticVersion(version: String): Boolean = getSemanticVersion(version).isDefined
 
   case class SemanticVersion(major: Int, minor: Int, patch: Int, build: Option[String] = None)
-
   /**
    * Check whether a version string is a semantic version.
+   * Note: the toInt calls here are only safe because the regex only matches numbers
    *
    * @param version version string
    * @return SemanticVersion case class
