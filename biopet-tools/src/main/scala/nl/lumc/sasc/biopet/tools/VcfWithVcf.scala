@@ -18,8 +18,9 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
+import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.vcf
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
@@ -128,7 +129,7 @@ object VcfWithVcf extends ToolCommand {
 
       val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
 
-      writer.add(createRecord(fieldMap, record, commandArgs.fields, header))
+      writer.add(createRecord(fieldMap, record, commandArgs.fields, header, secondaryRecords))
 
       counter += 1
       if (counter % 100000 == 0) {
@@ -185,7 +186,7 @@ object VcfWithVcf extends ToolCommand {
   }
 
   def createRecord(fieldMap: Map[String, List[Any]], record: VariantContext,
-                   fields: List[Fields], header: VCFHeader): VariantContext = {
+                   fields: List[Fields], header: VCFHeader, secondaryRecords: List[VariantContext]): VariantContext = {
     fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
       builder.attribute(attribute._1, fields.filter(_.outputField == attribute._1).head.fieldMethod match {
         case FieldMethod.max =>
@@ -203,7 +204,8 @@ object VcfWithVcf extends ToolCommand {
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
         case _ => {
           header.getInfoHeaderLine(attribute._1).getCountType match {
-            case VCFHeaderLineCount.A => scalaListToJavaObjectArrayList(numberA(record, record, attribute._1)) // TODO: get the reference reocrd in here
+            case VCFHeaderLineCount.A => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberA(x, record, attribute._1)))
+            case VCFHeaderLineCount.R => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberR(x, record, attribute._1)))
             case _ => scalaListToJavaObjectArrayList(attribute._2)
           }
         }
@@ -219,11 +221,21 @@ object VcfWithVcf extends ToolCommand {
     * @return
     */
   def numberA(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
-    val refValues = referenceRecord.getAttributeAsList(field)
+    val refValues = referenceRecord.getAttributeAsList(field).toArray
     annotateRecord.
-      getAlternateAlleles.
+      getAlternateAlleles.filter(referenceRecord.hasAlternateAllele).
       map(x => referenceRecord.getAlternateAlleles.indexOf(x)).
-      map(x => refValues(x)).
+      flatMap(x => refValues.lift(x)).
+      toList
+  }
+
+  def numberR(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
+    val refValues = referenceRecord.getAttributeAsList(field).toArray
+    annotateRecord.
+      getAlleles.
+      filter(referenceRecord.hasAllele).
+      map(x => referenceRecord.getAlleles.indexOf(x)).
+      flatMap(x => refValues.lift(x)).
       toList
   }
 }
