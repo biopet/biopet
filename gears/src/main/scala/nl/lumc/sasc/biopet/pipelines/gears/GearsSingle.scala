@@ -41,6 +41,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   var outputName: String = _
 
   lazy val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
+  lazy val centrifugeScript = if (config("gears_use_centrifuge", default = false)) Some(new GearsCentrifuge(this)) else None
   lazy val qiimeRatx = if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
   lazy val qiimeClosed = if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
   lazy val qiimeOpen = if (config("gears_use_qiime_open", default = false)) Some(new GearsQiimeOpen(this)) else None
@@ -124,6 +125,14 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       kraken.fastqR2 = r2
       kraken.outputName = outputName
       add(kraken)
+    }
+
+    centrifugeScript foreach { centrifuge =>
+      centrifuge.outputDir = new File(outputDir, "centrifuge")
+      centrifuge.fastqR1 = r1
+      centrifuge.fastqR2 = r2
+      centrifuge.outputName = outputName
+      add(centrifuge)
     }
 
     qiimeRatx foreach { qiimeRatx =>
