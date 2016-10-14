@@ -190,7 +190,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
 
     val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), secRec)
-    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header)
+    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header, secRec)
     identicalVariantContext(createdRecord, vepRecord) shouldBe true
   }
 

@@ -18,8 +18,8 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -206,7 +206,7 @@ object VcfWithVcf extends ToolCommand {
           header.getInfoHeaderLine(attribute._1).getCountType match {
             case VCFHeaderLineCount.A => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberA(x, record, attribute._1)))
             case VCFHeaderLineCount.R => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberR(x, record, attribute._1)))
-            case _ => scalaListToJavaObjectArrayList(attribute._2)
+            case _                    => scalaListToJavaObjectArrayList(attribute._2)
           }
         }
       })
@@ -214,12 +214,12 @@ object VcfWithVcf extends ToolCommand {
   }
 
   /**
-    * Get the correct values from a field that has number=A
-    * @param referenceRecord the reference record
-    * @param annotateRecord the to-be-annotated record
-    * @param field the field to annotate
-    * @return
-    */
+   * Get the correct values from a field that has number=A
+   * @param referenceRecord the reference record
+   * @param annotateRecord the to-be-annotated record
+   * @param field the field to annotate
+   * @return
+   */
   def numberA(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
     val refValues = referenceRecord.getAttributeAsList(field).toArray
     annotateRecord.
