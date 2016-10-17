@@ -13,7 +13,7 @@ class CnmopsTest extends TestNGSuite with Matchers {
   def testVersionCommand() = {
     val cn = new Cnmops(null)
     cn.versionCommand.endsWith("--version") shouldBe true
-    cn.versionCommand.startsWith("'Rscript'") shouldBe true
+    cn.versionCommand.startsWith("Rscript") shouldBe true
   }
 
 }
