@@ -32,8 +32,11 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
 
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
 
-  def versionCommand = super.cmdLine + "--version"
-  def versionRegex = "\\d+\\.\\d+\\.\\d+".r
+  def versionCommand = {
+    val v = super.cmdLine + "--version"
+    v.trim.replace("'", "")
+  }
+  def versionRegex = "(\\d+\\.\\d+\\.\\d+)".r
 
   private def stringToInt(s: String): Option[Int] = {
     try {
