@@ -10,11 +10,13 @@
 <%@ var libId: Option[String] = None %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
+<%@ var summaryStatsTag: String = "krakenreport" %>
+<%@ var summaryModuleTag: String = "gearskraken" %>
 
 <%
     val summaries = if (sampleId.isEmpty && libId.isEmpty) {
-        summary.getSampleValues("gearskraken", "stats", "krakenreport").map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
-    } else summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
+        summary.getSampleValues(summaryModuleTag, "stats", summaryStatsTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
+    } else summary.getValue(sampleId, libId, summaryModuleTag, "stats", summaryStatsTag).map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
@@ -24,10 +26,10 @@
     args ++ Map("kronaXml" -> tempFile))
 
 
-    val file = new File(outputDir, "kraken_krona.html")
+    val file = new File(outputDir, s"$summaryModuleTag-$summaryStatsTag.html")
     val writer = new PrintWriter(file)
     writer.println(output)
     writer.close()
 %>
 
-<iframe src="kraken_krona.html" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe src="${summaryModuleTag}-${summaryStatsTag}.html" style="width:100%;height:80vh;border:none;"></iframe>

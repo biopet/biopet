@@ -39,7 +39,9 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   val veppedPath = resourcePath("/VEP_oneline.vcf")
+  val starPath = resourcePath("/star_genotype.vcf.gz")
   val vepped = new File(veppedPath)
+  val star = new File(starPath)
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
@@ -183,6 +185,9 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     mustHaveVariant(record, List("Sample_101")) shouldBe true
     mustHaveVariant(record, List("Sample_101", "Sample_102")) shouldBe true
     mustHaveVariant(record, List("Sample_101", "Sample_102", "Sample_103")) shouldBe false
+
+    val starReader = new VCFFileReader(star, false)
+    starReader.iterator().foreach(x => mustHaveVariant(x, List("Sample_101")) shouldBe false)
   }
 
   @Test def testSameGenotype() = {
