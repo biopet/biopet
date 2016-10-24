@@ -66,19 +66,19 @@ object FindOverlapMatch extends ToolCommand {
       case _          => sys.process.stdout
     }
 
-    for (i1 <- samplesColumnHeader if cmdArgs.columnSampleRegex.map(_.findFirstIn(i1._1).isDefined).getOrElse(true)) {
+    for (columnSample <- samplesColumnHeader if cmdArgs.columnSampleRegex.map(_.findFirstIn(columnSample._1).isDefined).getOrElse(true)) {
       val buffer = ListBuffer[(String, Double)]()
-      for (i2 <- samplesRowHeader if cmdArgs.rowSampleRegex.map(_.findFirstIn(i2._1).isDefined).getOrElse(true)) {
-        val value = data(i1._2)(i2._2).toDouble
-        if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || i1._2 != i2._2)) {
-          buffer.+=((i2._1, value))
+      for (rowSample <- samplesRowHeader if cmdArgs.rowSampleRegex.map(_.findFirstIn(rowSample._1).isDefined).getOrElse(true)) {
+        val value = data(columnSample._2)(rowSample._2).toDouble
+        if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || columnSample._2 != rowSample._2)) {
+          buffer.+=((rowSample._1, value))
         }
       }
       if (buffer.nonEmpty) overlap += 1
       else noOverlap += 1
       if (buffer.size > 1) multiOverlap += 1
 
-      writer.println(s"${i1._1}\t${buffer.mkString("\t")}")
+      writer.println(s"${columnSample._1}\t${buffer.mkString("\t")}")
     }
     logger.info(s"$overlap found")
     logger.info(s"no $noOverlap found")
