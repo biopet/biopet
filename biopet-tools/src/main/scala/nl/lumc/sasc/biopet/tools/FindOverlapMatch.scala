@@ -37,10 +37,10 @@ object FindOverlapMatch extends ToolCommand {
     } text "Do not compare samples with the same name"
     opt[String]("rowSampleRegex") unbounded () valueName "<regex>" action { (x, c) =>
       c.copy(rowSampleRegex = Some(x.r))
-    }
+    } text "Samples in the row should match this regex"
     opt[String]("columnSampleRegex") unbounded () valueName "<regex>" action { (x, c) =>
       c.copy(columnSampleRegex = Some(x.r))
-    }
+    } text "Samples in the column should match this regex"
   }
 
   /**
