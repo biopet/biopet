@@ -150,7 +150,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             val dictOke: Boolean = {
               var oke = true
               try {
-                header.getSequenceDictionary.assertSameDictionary(referenceFile.getSequenceDictionary)
+                header.getSequenceDictionary.assertSameDictionary(referenceDict)
               } catch {
                 case e: AssertionError =>
                   logger.error(e.getMessage)
