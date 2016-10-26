@@ -81,7 +81,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
     this match {
       case r: Reference =>
-        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.dictRequired) deps :+= r.referenceDictFile
         if (r.faiRequired) deps :+= r.referenceFai
         deps = deps.distinct
       case _ =>
