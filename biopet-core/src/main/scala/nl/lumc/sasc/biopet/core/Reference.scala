@@ -54,6 +54,13 @@ trait Reference extends Configurable {
     referenceConfigPath ::: super.subPath
   }
 
+  lazy val geneAnnotationVersion: Option[String] = config("gene_annotation_name")
+  lazy val geneAnnotationSubPath = geneAnnotationVersion.map(x => List("gene_annotations", x)).getOrElse(Nil)
+  lazy val dbsnpVersion: Option[Int] = config("dbsnp_version")
+  lazy val dbsnpSubPath: List[String] = dbsnpVersion.map(x => List("dbsnp_annotations", x.toString)).getOrElse(Nil)
+  def dbsnpVcfFile: Option[File] = config("dbsnp_vcf", extraSubPath = dbsnpSubPath)
+  lazy val vepConfig: Option[String] = config("vep_config")
+
   /** Returns the reference config path */
   def referenceConfigPath = {
     List("references", referenceSpecies, referenceName)

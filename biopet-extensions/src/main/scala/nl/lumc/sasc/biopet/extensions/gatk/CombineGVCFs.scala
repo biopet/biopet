@@ -37,7 +37,7 @@ class CombineGVCFs(val root: Configurable) extends CommandLineGATK with ScatterG
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: Option[File] = config("dbsnp")
+  var dbsnp: Option[File] = dbsnpVcfFile
 
   /** One or more input gVCF files */
   @Input(fullName = "variant", shortName = "V", doc = "One or more input gVCF files", required = true, exclusiveOf = "", validation = "")

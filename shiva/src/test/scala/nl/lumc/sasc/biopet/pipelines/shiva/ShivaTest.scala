@@ -69,7 +69,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       var m: Map[String, Any] = ShivaTest.config
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
-      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test.vcf.gz"), m)
+      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp_vcf" -> "test.vcf.gz"), m)
       ConfigUtils.mergeMaps(Map(
         "multisample_variantcalling" -> multisampleCalling,
         "single_sample_variantcalling" -> sampleCalling,
