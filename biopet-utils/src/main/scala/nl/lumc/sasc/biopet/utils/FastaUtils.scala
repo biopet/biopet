@@ -26,7 +26,9 @@ object FastaUtils {
   private var dictCache: Map[File, SAMSequenceDictionary] = Map()
 
   /** This will clear the dict cache */
-  def clearCache() = dictCache = Map()
+  def clearCache() = {
+    dictCache = Map()
+  }
 
   /**
    * This method will get a dict from the fasta file. If it's already in the cache file will not opened again.
