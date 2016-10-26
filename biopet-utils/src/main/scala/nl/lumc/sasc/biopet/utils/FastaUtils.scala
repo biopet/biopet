@@ -37,7 +37,7 @@ object FastaUtils {
    * @return sequence dict
    */
   def getCachedDict(fastaFile: File): SAMSequenceDictionary = {
-    if (!dictCache.contains(fastaFile)) dictCache += fastaFile -> getDictFromFasta(fastaFile)
-    dictCache(fastaFile)
+    if (!dictCache.contains(fastaFile)) getDictFromFasta(fastaFile)
+    else dictCache(fastaFile)
   }
 }
