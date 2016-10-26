@@ -39,6 +39,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   @Output(doc = "output file", required = true)
   var output: File = null
 
+  override def subPath = super.subPath ++ vepConfig
+
   def versionRegex = """version (\d*)""".r
   def versionCommand = executable + " " + vepScript + " --help"
 
@@ -106,7 +108,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var skibDbCheck: Boolean = config("skip_db_check", default = false)
 
   // Textual args
-  var vepConfig: Option[String] = config("config", freeVar = false)
+  var vepConfigArg: Option[String] = config("config", freeVar = false)
   var species: Option[String] = config("species", freeVar = false)
   var assembly: Option[String] = config("assembly")
   var format: Option[String] = config("format")
@@ -229,7 +231,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
       conditional(lrg, "--lrg") +
       conditional(noWholeGenome, "--no_whole_genome") +
       conditional(skibDbCheck, "--skip_db_check") +
-      optional("--config", vepConfig) +
+      optional("--config", vepConfigArg) +
       optional("--species", species) +
       optional("--assembly", assembly) +
       optional("--format", format) +

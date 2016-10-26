@@ -68,7 +68,7 @@ class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK wit
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("", default = false)
 
-  known ::= dbsnpVcfFile
+  dbsnpVcfFile.foreach(known :+= _)
 
   override def beforeGraph() {
     super.beforeGraph()

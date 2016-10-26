@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.core.annotations
 
-import nl.lumc.sasc.biopet.core.{BiopetQScript, Reference}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, Reference }
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.utils.LazyCheck
 import org.broadinstitute.gatk.queue.QScript
