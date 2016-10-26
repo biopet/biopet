@@ -128,9 +128,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   override def defaultCoreMemory = 50
 
   // wallclock time limit in seconds
-  var wallClockTimeLimit: Int = config("wall_time_limit", namespace = "freec", default = 7200)
-
-  jobNativeArgs = jobNativeArgs.toList ::: List(s"-l h_rt=$wallClockTimeLimit")
+  jobWallClockTimeLimit = config("job_wall_time_limit", namespace = "freec", default = 7200)
 
   private var configFile: File = _
 
