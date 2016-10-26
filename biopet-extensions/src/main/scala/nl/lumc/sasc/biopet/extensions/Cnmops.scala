@@ -81,7 +81,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   @Output(doc = "Output CNV file")
   lazy val outputCnv: File = {
     outputDir match {
-      case Some(dir) if dir.exists => new File(dir, "cnv.txt")
+      case Some(dir) => new File(dir, "cnv.txt")
       case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
     }
   }
@@ -89,7 +89,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   @Output(doc = "Output CNR file")
   lazy val outputCnr: File = {
     outputDir match {
-      case Some(dir) if dir.exists => new File(dir, "cnr.txt")
+      case Some(dir) => new File(dir, "cnr.txt")
       case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
     }
   }
@@ -97,7 +97,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   @Output(doc = "Raw output")
   lazy val rawOutput: File = {
     outputDir match {
-      case Some(dir) if dir.exists => new File(dir, "rawoutput.txt")
+      case Some(dir)  => new File(dir, "rawoutput.txt")
       case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
     }
   }
@@ -121,5 +121,5 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
     required("--rawoutput", rawOutput) +
     required("--threads", threads) +
     optional("--wl", windowLength) +
-    required(input.map(f => f.getAbsolutePath).mkString(" "))
+    repeat(input)
 }
