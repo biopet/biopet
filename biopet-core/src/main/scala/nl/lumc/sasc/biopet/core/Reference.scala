@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, LazyCheck, Logging}
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 
 import scala.collection.JavaConversions._
 
@@ -59,7 +59,6 @@ trait Reference extends Configurable {
   lazy val dbsnpVersion: Option[Int] = config("dbsnp_version")
   lazy val dbsnpSubPath: List[String] = dbsnpVersion.map(x => List("dbsnp_annotations", x.toString)).getOrElse(Nil)
   def dbsnpVcfFile: Option[File] = config("dbsnp_vcf", extraSubPath = dbsnpSubPath)
-  lazy val vepConfig: Option[String] = config("vep_config")
 
   /** Returns the reference config path */
   def referenceConfigPath = {

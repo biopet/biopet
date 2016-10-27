@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.{ Logging, VcfUtils, tryToParseNumber }
+import nl.lumc.sasc.biopet.utils.{LazyCheck, Logging, VcfUtils, tryToParseNumber}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.io.Source
 
@@ -39,7 +39,15 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   @Output(doc = "output file", required = true)
   var output: File = null
 
-  override def subPath = super.subPath ++ vepConfig
+  lazy val vepConfig = new LazyCheck({
+    val s: Option[String] = config("vep_config")
+    s
+  })
+
+  override def subPath = {
+    if (vepConfig.isSet) super.subPath ++ vepConfig()
+    else super.subPath
+  }
 
   def versionRegex = """version (\d*)""".r
   def versionCommand = executable + " " + vepScript + " --help"
