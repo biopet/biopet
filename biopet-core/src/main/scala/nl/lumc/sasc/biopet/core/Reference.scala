@@ -16,11 +16,10 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import htsjdk.samtools.SAMSequenceDictionary
-import htsjdk.samtools.reference.{ FastaSequenceFile, IndexedFastaSequenceFile }
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.{ BamUtils, ConfigUtils, FastaUtils, Logging }
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, Logging }
 
 import scala.collection.JavaConversions._
 
