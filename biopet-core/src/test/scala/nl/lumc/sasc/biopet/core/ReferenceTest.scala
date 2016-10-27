@@ -14,10 +14,11 @@
  */
 package nl.lumc.sasc.biopet.core
 
+import java.io.File
 import java.nio.file.Paths
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
-import nl.lumc.sasc.biopet.utils.config.{ Configurable, Config }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -58,6 +59,20 @@ class ReferenceTest extends TestNGSuite with Matchers with MockitoSugar {
     Logging.checkErrors(true)
   }
 
+  @Test
+  def testDbpsnp: Unit = {
+    val a = make(config :: Map("dbsnp_version" -> 1) :: testReferenceNoIndex :: Nil, fai = true, dict = true)
+    a.dbsnpVcfFile shouldBe Some(new File("vcf1"))
+    val b = make(config :: Map("dbsnp_version" -> 321) :: testReferenceNoIndex :: Nil, fai = true, dict = true)
+    b.dbsnpVcfFile shouldBe None
+
+    val c = make(config :: Map("dbsnp_version" -> 1) :: testReference :: Nil, fai = true, dict = true)
+    c.dbsnpVcfFile shouldBe None
+    val d = make(config :: Map("dbsnp_version" -> 2) :: testReference :: Nil, fai = true, dict = true)
+    d.dbsnpVcfFile shouldBe Some(new File("vcf2"))
+    val e = make(config :: Map("dbsnp_version" -> 3) :: testReference :: Nil, fai = true, dict = true)
+    e.dbsnpVcfFile shouldBe Some(new File("vcf3"))
+  }
 }
 
 object ReferenceTest {
@@ -72,13 +87,20 @@ object ReferenceTest {
     "references" -> Map(
       "test_species" -> Map(
         "test_genome" -> Map(
-          "reference_fasta" -> resourcePath("/fake_chrQ_no_index.fa")))))
+          "reference_fasta" -> resourcePath("/fake_chrQ_no_index.fa"),
+          "dbsnp_annotations" -> Map(
+            "1" -> Map("dbsnp_vcf" -> "vcf1")
+          )))))
 
   val testReference = Map(
     "references" -> Map(
       "test_species" -> Map(
         "test_genome" -> Map(
-          "reference_fasta" -> resourcePath("/fake_chrQ.fa")))))
+          "reference_fasta" -> resourcePath("/fake_chrQ.fa"),
+          "dbsnp_annotations" -> Map(
+            "2" -> Map("dbsnp_vcf" -> "vcf2"),
+            "3" -> Map("dbsnp_vcf" -> "vcf3")
+          )))))
 
   def make(configs: List[Map[String, Any]],
            r: Configurable = null,
