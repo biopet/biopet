@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException
 import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
@@ -82,11 +82,8 @@ object BamStats extends ToolCommand {
     val samHeader = samReader.getFileHeader
     samReader.close()
     referenceFasta.map { f =>
-      val referenceReader = new FastaSequenceFile(f, true)
-      val referenceDict = referenceReader.getSequenceDictionary
-      samHeader.getSequenceDictionary.assertSameDictionary(referenceDict, false)
-      referenceReader.close()
-      referenceDict
+      samHeader.getSequenceDictionary.assertSameDictionary(FastaUtils.getCachedDict(f), false)
+      FastaUtils.getCachedDict(f)
     }.getOrElse(samHeader.getSequenceDictionary)
   }
 

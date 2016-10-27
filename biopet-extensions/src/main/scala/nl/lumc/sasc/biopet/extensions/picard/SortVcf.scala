@@ -37,7 +37,7 @@ class SortVcf(val root: Configurable) extends Picard with Reference {
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (sequenceDictionary == null) sequenceDictionary = referenceDict
+    if (sequenceDictionary == null) sequenceDictionary = referenceDictFile
   }
 
   /** Returns command to execute */
