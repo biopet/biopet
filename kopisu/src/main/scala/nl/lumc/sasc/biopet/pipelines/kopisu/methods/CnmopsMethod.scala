@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu.methods
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.extensions.Cnmops
 import nl.lumc.sasc.biopet.utils.config.Configurable

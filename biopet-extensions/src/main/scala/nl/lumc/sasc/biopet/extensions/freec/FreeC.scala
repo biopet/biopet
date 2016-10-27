@@ -22,6 +22,8 @@ import org.broadinstitute.gatk.utils.commandline._
 
 class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
+  override def defaults = Map("max_walltime_limit" -> 7200)
+
   @Input(doc = "BAMfile", required = true)
   var input: File = _
 
@@ -126,9 +128,6 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   override def versionRegex = """Control-FREEC v([0-9\.]+) : .*""".r
   override def defaultThreads = 4
   override def defaultCoreMemory = 50
-
-  // wallclock time limit in seconds
-  jobWallClockTimeLimit = config("job_wall_time_limit", namespace = "freec", default = 7200)
 
   private var configFile: File = _
 

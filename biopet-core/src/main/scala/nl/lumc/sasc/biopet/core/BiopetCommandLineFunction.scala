@@ -58,11 +58,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   var jobDelayTime: Option[Int] = config("job_delay_time")
 
-  /**
-    * wall clock time limit in seconds for a job
-    */
-  var jobWallClockTimeLimit: Option[Int] = config("job_wall_time_limit")
-
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
     case jt: JobTemplate =>
@@ -104,7 +99,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
     _pipesJobs.foreach(_.beforeGraph())
     _pipesJobs.foreach(_.internalBeforeGraph())
-    jobWallClockTimeLimit.foreach(x => jobNativeArgs = jobNativeArgs.toList ::: List(s"-l h_rt=$x"))
 
   }
 

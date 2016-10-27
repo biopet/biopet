@@ -55,8 +55,8 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
    */
   def versionCheck: Boolean = {
     getVersion.flatMap(getSemanticVersion(_)) match {
-      case Some(version) =>  (version.major == 1 && version.minor >= 18) || version.major >= 2
-      case _ => false
+      case Some(version) => (version.major == 1 && version.minor >= 18) || version.major >= 2
+      case _             => false
     }
   }
 
@@ -74,7 +74,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   lazy val outputCnv: File = {
     outputDir match {
       case Some(dir) => new File(dir, "cnv.txt")
-      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
+      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
     }
   }
 
@@ -82,15 +82,15 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Ver
   lazy val outputCnr: File = {
     outputDir match {
       case Some(dir) => new File(dir, "cnr.txt")
-      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
+      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
     }
   }
 
   @Output(doc = "Raw output")
   lazy val rawOutput: File = {
     outputDir match {
-      case Some(dir)  => new File(dir, "rawoutput.txt")
-      case _                       => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
+      case Some(dir) => new File(dir, "rawoutput.txt")
+      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
     }
   }
 
