@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, Logging }
 
 import scala.collection.JavaConversions._
 
@@ -49,6 +49,8 @@ trait Reference extends Configurable {
     }
   }
 
+  def referenceDict = FastaUtils.getCachedDict(referenceFasta())
+
   /** All config values will get a prefix */
   override def subPath = {
     referenceConfigPath ::: super.subPath
@@ -66,7 +68,7 @@ trait Reference extends Configurable {
   def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
 
   /** Returns the dict file belonging to the fasta file */
-  def referenceDict = new File(referenceFasta().getAbsolutePath
+  def referenceDictFile = new File(referenceFasta().getAbsolutePath
     .stripSuffix(".fa")
     .stripSuffix(".fasta")
     .stripSuffix(".fna") + ".dict")
@@ -108,9 +110,8 @@ trait Reference extends Configurable {
   /** Create summary part for reference */
   def referenceSummary: Map[String, Any] = {
     Reference.requireDict(referenceFasta())
-    val file = new IndexedFastaSequenceFile(referenceFasta())
     Map("contigs" ->
-      (for (seq <- file.getSequenceDictionary.getSequences) yield seq.getSequenceName -> {
+      (for (seq <- referenceDict.getSequences) yield seq.getSequenceName -> {
         val md5 = Option(seq.getAttribute("M5"))
         Map("md5" -> md5, "length" -> seq.getSequenceLength)
       }).toMap,

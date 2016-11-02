@@ -50,6 +50,7 @@ class FreecMethod(val root: Configurable) extends CnvMethod {
         fcAssessSignificancePlot.ratios = freec.ratioOutput
         fcAssessSignificancePlot.output = new File(sampleOutput, sampleName + ".freec_significant_calls.txt")
         add(fcAssessSignificancePlot)
+        addOutput(sampleName, fcAssessSignificancePlot.output)
 
         val fcCnvPlot = new FreeCCNVPlot(this)
         fcCnvPlot.input = freec.ratioOutput

@@ -56,7 +56,6 @@ class Impute2Vcf(val root: Configurable) extends QScript with BiopetQScript with
   /** Init for pipeline */
   def init(): Unit = {
     inputGens.foreach { g =>
-      val referenceDict = new FastaSequenceFile(referenceFasta(), true).getSequenceDictionary
       if (referenceDict.getSequenceIndex(g.contig) == -1)
         Logging.addError(s"Contig '${g.contig}' does not exist on reference: ${referenceFasta()}")
     }
