@@ -33,7 +33,7 @@ class Delly(val root: Configurable) extends SvCaller {
       val dellyDir = new File(outputDir, sample)
 
       val catVariants = new CatVariants(this)
-      catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf.gz")
+      catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf")
 
       if (del) {
         val delly = new DellyCaller(this)
@@ -42,12 +42,7 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.outputvcf = new File(dellyDir, sample + ".delly.del.vcf")
         add(delly)
 
-        val compressedVCF = new SortVcf(this)
-        compressedVCF.input = delly.outputvcf
-        compressedVCF.output = new File(dellyDir, s"${sample}.delly.del.vcf.gz")
-        add(compressedVCF)
-
-        catVariants.variant :+= compressedVCF.output
+        catVariants.variant :+= delly.outputvcf
       }
       if (dup) {
         val delly = new DellyCaller(this)
@@ -56,12 +51,7 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.outputvcf = new File(dellyDir, sample + ".delly.dup.vcf")
         add(delly)
 
-        val compressedVCF = new SortVcf(this)
-        compressedVCF.input = delly.outputvcf
-        compressedVCF.output = new File(dellyDir, s"${sample}.delly.dup.vcf.gz")
-        add(compressedVCF)
-
-        catVariants.variant :+= compressedVCF.output
+        catVariants.variant :+= delly.outputvcf
       }
       if (inv) {
         val delly = new DellyCaller(this)
@@ -70,12 +60,7 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.outputvcf = new File(dellyDir, sample + ".delly.inv.vcf")
         add(delly)
 
-        val compressedVCF = new SortVcf(this)
-        compressedVCF.input = delly.outputvcf
-        compressedVCF.output = new File(dellyDir, s"${sample}.delly.inv.vcf.gz")
-        add(compressedVCF)
-
-        catVariants.variant :+= compressedVCF.output
+        catVariants.variant :+= delly.outputvcf
       }
       if (tra) {
         val delly = new DellyCaller(this)
@@ -84,18 +69,19 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.outputvcf = new File(dellyDir, sample + ".delly.tra.vcf")
         add(delly)
 
-        val compressedVCF = new SortVcf(this)
-        compressedVCF.input = delly.outputvcf
-        compressedVCF.output = new File(dellyDir, s"${sample}.delly.tra.vcf.gz")
-        add(compressedVCF)
-
-        catVariants.variant :+= compressedVCF.output
+        catVariants.variant :+= delly.outputvcf
       }
 
       require(catVariants.variant.nonEmpty, "At least 1 SV-type should be selected for Delly")
 
       add(catVariants)
-      addVCF(sample, catVariants.outputFile)
+
+      val compressedVCF = new SortVcf(this)
+      compressedVCF.input = catVariants.outputFile
+      compressedVCF.output = catVariants + ".gz"
+      add(compressedVCF)
+
+      addVCF(sample, compressedVCF.output)
     }
   }
 }
