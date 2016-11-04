@@ -16,7 +16,8 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -29,10 +30,10 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
-  var fastqR1: Option[File] = None
+  var fastqR1: List[File] = Nil
 
   @Input(doc = "R2 reads in FastQ format", shortName = "R2", required = false)
-  var fastqR2: Option[File] = None
+  var fastqR2: List[File] = Nil
 
   @Input(doc = "All unmapped reads will be extracted from this bam for analysis", shortName = "bam", required = false)
   var bamFile: Option[File] = None
@@ -49,12 +50,13 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
   /** Executed before running the script */
   def init(): Unit = {
-    if (!fastqR1.isDefined && !bamFile.isDefined) Logging.addError("Please specify fastq-file(s) or bam file")
-    if (fastqR1.isDefined == bamFile.isDefined) Logging.addError("Provide either a bam file or a R1/R2 file")
+    if (fastqR1.isEmpty && !bamFile.isDefined) Logging.addError("Please specify fastq-file(s) or bam file")
+    if (fastqR1.nonEmpty == bamFile.isDefined) Logging.addError("Provide either a bam file or a R1/R2 file")
+    if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size) Logging.addError("R1 and R2 has not the same number of files")
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
     if (outputName == null) {
-      if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
+      if (fastqR1.nonEmpty) outputName = fastqR1.headOption.map(_.getName
         .stripSuffix(".gz")
         .stripSuffix(".fastq")
         .stripSuffix(".fq"))
@@ -62,7 +64,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       else outputName = bamFile.map(_.getName.stripSuffix(".bam")).getOrElse("noName")
     }
 
-    if (fastqR1.isDefined) {
+    if (fastqR1.nonEmpty) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
     } else bamFile.foreach(inputFiles :+= InputFile(_))
@@ -79,30 +81,42 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
   protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
-  protected def executeFlexiprep(r1: File, r2: Option[File]): (File, Option[File]) = {
+  protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
+    val read1: File = if (r1.size == 1) r1.head else {
+      val outputFile = new File(outputDir, "merged.R1.fq.gz")
+      Zcat(this, r1) | new Gzip(this) > outputFile
+      outputFile
+    }
+
+    val read2: Option[File] = if (r2.size <= 1) r2.headOption else {
+      val outputFile = new File(outputDir, "merged.R2.fq.gz")
+      Zcat(this, r2) | new Gzip(this) > outputFile
+      Some(outputFile)
+    }
+
     if (!skipFlexiprep) {
       val flexiprep = new Flexiprep(this)
-      flexiprep.inputR1 = r1
-      flexiprep.inputR2 = r2
+      flexiprep.inputR1 = read1
+      flexiprep.inputR2 = read2
       flexiprep.sampleId = if (sampleId.isEmpty) Some("noSampleName") else sampleId
       flexiprep.libId = if (libId.isEmpty) Some("noLibName") else libId
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       add(flexiprep)
       (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
-    } else (r1, r2)
+    } else (read1, read2)
   }
 
   /** Method to add jobs */
   def biopetScript(): Unit = {
     val (r1, r2): (File, Option[File]) = (fastqR1, fastqR2, bamFile) match {
-      case (Some(r1), _, _) => executeFlexiprep(r1, fastqR2)
+      case (r1, _, _) if r1.nonEmpty => executeFlexiprep(r1, fastqR2)
       case (_, _, Some(bam)) =>
         val extract = new ExtractUnmappedReads(this)
         extract.outputDir = outputDir
         extract.bamFile = bam
         extract.outputName = outputName
         add(extract)
-        executeFlexiprep(extract.fastqUnmappedR1, extract.fastqUnmappedR2)
+        executeFlexiprep(extract.fastqUnmappedR1 :: Nil, extract.fastqUnmappedR2.toList)
       case _ => throw new IllegalArgumentException("Missing input files")
     }
 
@@ -178,8 +192,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = Map.empty ++
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
-    (if (fastqR2.isDefined) Map("input_R2" -> fastqR2.get) else Map()) ++
+    fastqR1.zipWithIndex.map(x => s"input_R1_${x._2}" -> x._1) ++
+    fastqR2.zipWithIndex.map(x => s"input_R2_${x._2}" -> x._1) ++
     outputFiles
 }
 

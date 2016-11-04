@@ -218,6 +218,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     /** Default is set to keep the merged files, user can set this in the config. To change the default this method can be overriden */
     def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
 
+    /**
+      * @deprecated
+      */
+    lazy val unmappedToGears: Boolean = config("unmapped_to_gears", default = false)
+    if (config.contains("unmapped_to_gears")) logger.warn("Config value 'unmapped_to_gears' is replaced with 'mapping_to_gears', Assumes default: mapping_to_gears=unmapped")
+
+    lazy val mappingToGears: String = config("mapping_to_gears", default = if (unmappedToGears) "unmapped" else "none")
+
     /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
     def addJobs(): Unit = {
       addPerLibJobs() // This add jobs for each library
@@ -249,12 +257,22 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, preProcessBam.get))
       }
 
-      if (config("unmapped_to_gears", default = false) && libraries.flatMap(_._2.bamFile).nonEmpty) {
-        val gears = new GearsSingle(qscript)
-        gears.bamFile = preProcessBam
-        gears.sampleId = Some(sampleId)
-        gears.outputDir = new File(sampleDir, "gears")
-        add(gears)
+      mappingToGears match {
+        case "unmapped" =>
+          val gears = new GearsSingle(qscript)
+          gears.bamFile = preProcessBam
+          gears.sampleId = Some(sampleId)
+          gears.outputDir = new File(sampleDir, "gears")
+          add(gears)
+        case "all" =>
+          val gears = new GearsSingle(qscript)
+          gears.fastqR1 = libraries.flatMap(_._2.inputR1).toList
+          gears.fastqR2 = libraries.flatMap(_._2.inputR2).toList
+          gears.sampleId = Some(sampleId)
+          gears.outputDir = new File(sampleDir, "gears")
+          add(gears)
+        case "none" =>
+        case x => Logging.addError(s"${x} is not a valid value for 'mapping_to_gears'")
       }
     }
   }
