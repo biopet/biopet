@@ -23,23 +23,22 @@ class GearsSingleReport(val root: Configurable) extends ReportBuilderExtension {
 
 object GearsSingleReport extends ReportBuilder {
 
-  // TODO: Add dustbin analysis (aggregated)
-  // TODO: Add alignment stats per sample for the dustbin analysis
-
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
+    val krakenExecuted = summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").isDefined
+    val centrifugeExecuted = summary.getValue(sampleId, libId, "gearscentrifuge", "stats", "centrifuge_report").isDefined
+
+
     ReportPage(
       List(
-        "Versions" -> ReportPage(List(), List((
-          "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-          ))), Map())
+        "Versions" -> ReportPage(List(),
+          List(("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"))), Map())
       ),
-      List(
-        "Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp"),
-        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")
-      ),
+      List("Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp")) ++
+        (if (krakenExecuted) List("Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")) else Nil) ++
+        (if (centrifugeExecuted) List("Centrifuge analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp", Map("summaryStatsTag" -> "centrifuge_report"))) else Nil),
       pageArgs
     )
   }
