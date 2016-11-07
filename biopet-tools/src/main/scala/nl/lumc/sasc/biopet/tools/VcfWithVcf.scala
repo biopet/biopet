@@ -22,7 +22,7 @@ import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 
@@ -85,7 +85,7 @@ object VcfWithVcf extends ToolCommand {
     val reader = new VCFFileReader(commandArgs.inputFile)
     val secondaryReader = new VCFFileReader(commandArgs.secondaryVcf)
 
-    val referenceDict = new FastaSequenceFile(commandArgs.referenceFasta, true).getSequenceDictionary
+    val referenceDict = FastaUtils.getCachedDict(commandArgs.referenceFasta)
 
     val header = reader.getFileHeader
     val vcfDict = header.getSequenceDictionary match {

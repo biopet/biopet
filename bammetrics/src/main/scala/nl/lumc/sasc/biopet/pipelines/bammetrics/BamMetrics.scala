@@ -166,11 +166,15 @@ class BamMetrics(val root: Configurable) extends QScript
       addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val sorter = new BedtoolsSort(this)
-      sorter.input = intervals.bed
-      sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
-      add(sorter)
-      val bedCov = BedtoolsCoverage(this, sorter.output, inputBam, depth = true)
+      val sortedBed = BamMetrics.sortedbedCache.getOrElse(intervals.bed, {
+        val sorter = new BedtoolsSort(this)
+        sorter.input = intervals.bed
+        sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
+        add(sorter)
+        BamMetrics.sortedbedCache += intervals.bed -> sorter.output
+        sorter.output
+      })
+      val bedCov = BedtoolsCoverage(this, sortedBed, inputBam, depth = true)
       val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       covStats.title = Some("Coverage Plot")
       covStats.subTitle = Some(s"for file '$targetName.bed'")
@@ -198,4 +202,6 @@ object BamMetrics extends PipelineCommand {
     bamMetrics.biopetScript()
     bamMetrics
   }
+
+  private var sortedbedCache: Map[File, File] = Map()
 }

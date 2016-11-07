@@ -117,11 +117,21 @@ object ConfigUtils extends Logging {
   def fileToJson(configFile: File): Json = {
     logger.debug("Jsonfile: " + configFile)
     val jsonText = scala.io.Source.fromFile(configFile).mkString
+    try { textToJson(jsonText) }
+    catch {
+      case e: IllegalStateException =>
+        throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile, e)
+    }
+  }
+
+  /** Make json aboject from a file */
+  def textToJson(jsonText: String): Json = {
+    logger.debug("jsonText: " + jsonText)
     val json = Parse.parseOption(jsonText)
     logger.debug(json)
 
     json getOrElse {
-      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
+      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + jsonText)
     }
   }
 
