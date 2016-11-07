@@ -30,15 +30,19 @@ object GearsSingleReport extends ReportBuilder {
     val krakenExecuted = summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").isDefined
     val centrifugeExecuted = summary.getValue(sampleId, libId, "gearscentrifuge", "stats", "centrifuge_report").isDefined
 
-
     ReportPage(
       List(
         "Versions" -> ReportPage(List(),
           List(("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"))), Map())
       ),
       List("Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp")) ++
-        (if (krakenExecuted) List("Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")) else Nil) ++
-        (if (centrifugeExecuted) List("Centrifuge analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp", Map("summaryStatsTag" -> "centrifuge_report"))) else Nil),
+        (if (krakenExecuted) List("Kraken analysis" ->
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"))
+        else Nil) ++
+        (if (centrifugeExecuted) List("Centrifuge analysis" ->
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+            Map("summaryStatsTag" -> "centrifuge_report")))
+        else Nil),
       pageArgs
     )
   }
