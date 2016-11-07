@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
 import nl.lumc.sasc.biopet.extensions.picard.SortVcf
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caller delly */
@@ -77,7 +78,7 @@ class Delly(val root: Configurable) extends SvCaller {
         catVariants.variant :+= delly.outputvcf
       }
 
-      require(catVariants.variant.nonEmpty, "At least 1 SV-type should be selected for Delly")
+      if (catVariants.variant.isEmpty) Logging.addError("At least 1 SV-type should be selected for Delly")
 
       add(catVariants)
 
