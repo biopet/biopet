@@ -67,7 +67,10 @@ object VcfWithVcf extends ToolCommand {
       else c.copy(fields = Fields(x, x) :: c.fields)
     } text """| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
               | By default we will return all values found for a given field.
-              | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
+              | For INFO fields with type R or A we will take the respective alleles present in the input file.
+              | If a <method> is supplied, a method will be applied over the contents of the field.
+              | In this case, all values will be considered.
+              | The following methods are available:
               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
               |   - min   : takes minimum of found value, only works for numeric (integer/float) fields
               |   - unique: takes only unique values """.stripMargin

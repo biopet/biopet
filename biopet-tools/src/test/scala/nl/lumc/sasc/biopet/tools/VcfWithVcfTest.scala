@@ -18,6 +18,7 @@ import java.io.File
 import java.nio.file.Paths
 import java.util
 
+import htsjdk.variant.vcf
 import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -26,7 +27,6 @@ import org.testng.annotations.Test
 
 import scala.util.Random
 import scala.collection.JavaConversions._
-
 import nl.lumc.sasc.biopet.utils.VcfUtils.identicalVariantContext
 
 /**
@@ -44,6 +44,8 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   val veppedPath = resourcePath("/VEP_oneline.vcf.gz")
   val unveppedPath = resourcePath("/unvep_online.vcf.gz")
   val referenceFasta = resourcePath("/fake_chrQ.fa")
+  val monoPath = resourcePath("/chrQ_monoallelic.vcf.gz")
+  val multiPath = resourcePath("/chrQ_multiallelic.vcf.gz")
   val rand = new Random()
 
   @Test
@@ -192,6 +194,36 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), secRec)
     val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header, secRec)
     identicalVariantContext(createdRecord, vepRecord) shouldBe true
+  }
+
+  @Test
+  def testNumberA() = {
+    val multiRecord = new VCFFileReader(new File(multiPath)).iterator().next()
+    val monoRecord = new VCFFileReader(new File(monoPath)).iterator().next()
+
+    val annot = numberA(multiRecord, monoRecord, "AF")
+    annot shouldBe List("0.333")
+
+  }
+
+  @Test
+  def testNumberR() = {
+    val multiRecord = new VCFFileReader(new File(multiPath)).iterator().next()
+    val monoRecord = new VCFFileReader(new File(monoPath)).iterator().next()
+    val annot = numberR(multiRecord, monoRecord, "ALL_ALLELE")
+
+    annot shouldBe List("C", "A")
+  }
+
+  @Test
+  def testNumberAOutput = {
+    val tmpFile = File.createTempFile("numberA", ".vcf.gz")
+    tmpFile.deleteOnExit()
+    val arguments = Array("-I", monoPath, "-s", multiPath, "-o", tmpFile.getAbsolutePath, "-f", "AF:MULTI_AF", "-R", referenceFasta)
+    main(arguments)
+    val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
+    annotatedRecord.getAttribute("MULTI_AF").toString shouldBe "0.333"
+
   }
 
 }
