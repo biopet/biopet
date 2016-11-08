@@ -219,8 +219,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
 
     /**
-      * @deprecated
-      */
+     * @deprecated
+     */
     lazy val unmappedToGears: Boolean = config("unmapped_to_gears", default = false)
     if (config.contains("unmapped_to_gears")) logger.warn("Config value 'unmapped_to_gears' is replaced with 'mapping_to_gears', Assumes default: mapping_to_gears=unmapped")
 
@@ -272,7 +272,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           gears.outputDir = new File(sampleDir, "gears")
           add(gears)
         case "none" =>
-        case x => Logging.addError(s"${x} is not a valid value for 'mapping_to_gears'")
+        case x      => Logging.addError(s"${x} is not a valid value for 'mapping_to_gears'")
       }
     }
   }

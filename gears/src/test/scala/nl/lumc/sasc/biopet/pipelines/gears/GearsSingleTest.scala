@@ -80,8 +80,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
     inputMode match {
       case Some("fastq") =>
-        gears.fastqR1 = Some(TestGearsSingle.r1)
-        gears.fastqR2 = if (paired) Some(TestGearsSingle.r2) else None
+        gears.fastqR1 = List(TestGearsSingle.r1)
+        gears.fastqR2 = if (paired) List(TestGearsSingle.r2) else Nil
       case Some("bam") => gears.bamFile = Some(TestGearsSingle.bam)
       case None        =>
       case _           => new IllegalStateException(s"$inputMode not allowed as inputMode")

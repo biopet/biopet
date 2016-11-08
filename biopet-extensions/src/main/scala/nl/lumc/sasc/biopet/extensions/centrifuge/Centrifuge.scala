@@ -59,7 +59,7 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   var norc: Boolean = config("norc", default = false)
 
   // Classification args
-  var minHitlen = Option[Int] = config("min_hitlen")
+  var minHitlen: Option[Int] = config("min_hitlen")
   var minTotallen: Option[Int] = config("min_totallen")
   var hostTaxids: List[Int] = config("host_taxids", default = Nil)
   var excludeTaxids: List[Int] = config("exclude_taxids", default = Nil)
