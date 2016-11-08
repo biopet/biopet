@@ -27,19 +27,19 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   var report: Option[File] = None
 
   @Output(required = false)
-  var un: Option[File] = _
+  var un: Option[File] = None
 
   @Output(required = false)
-  var al: Option[File] = _
+  var al: Option[File] = None
 
   @Output(required = false)
-  var unConc: Option[File] = _
+  var unConc: Option[File] = None
 
   @Output(required = false)
-  var alConc: Option[File] = _
+  var alConc: Option[File] = None
 
   @Output(required = false)
-  var metFile: Option[File] = _
+  var metFile: Option[File] = None
 
   // Input args
   var q: Boolean = config("q", default = false)

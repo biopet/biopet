@@ -108,12 +108,12 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
       val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
 
-      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(true)
+      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(false)
       gears.summarySettings("gear_use_qiime_rtax") shouldBe qiimeRtax
       gears.summarySettings("gear_use_qiime_closed") shouldBe qiimeClosed
       gears.summarySettings("gear_use_qiime_open") shouldBe qiimeOpen
 
-      gears.krakenScript.isDefined shouldBe kraken.getOrElse(true)
+      gears.krakenScript.isDefined shouldBe kraken.getOrElse(false)
       gears.centrifugeScript.isDefined shouldBe centrifuge
       gears.qiimeClosed.isDefined shouldBe qiimeClosed
       gears.qiimeOpen.isDefined shouldBe qiimeOpen
@@ -124,10 +124,10 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
       gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
 
-      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
       gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
-        ((if (kraken.getOrElse(true)) 1 else 0) + (if (centrifuge) 2 else 0))
+        ((if (kraken.getOrElse(false)) 1 else 0) + (if (centrifuge) 2 else 0))
 
       gears.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
       gears.functions.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
