@@ -198,6 +198,9 @@ object MultisampleMappingTestTrait {
     "wigtobigwig" -> Map("exe" -> "test"),
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
+    "centrifuge" -> Map("exe" -> "test"),
+    "centrifugekreport" -> Map("exe" -> "test"),
+    "centrifuge_index" -> "test",
     "md5sum" -> Map("exe" -> "test")
   )
 
