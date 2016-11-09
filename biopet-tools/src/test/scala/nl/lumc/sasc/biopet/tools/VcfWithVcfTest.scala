@@ -114,7 +114,9 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test
   def testFieldMap = {
-    val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
+    val unvepReader = new VCFFileReader(new File(unveppedPath))
+    val header = unvepReader.getFileHeader
+    val unvepRecord = unvepReader.iterator().next()
 
     var fields = List(new Fields("FG", "FG"))
     fields :::= List(new Fields("FD", "FD"))
@@ -142,7 +144,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     fields :::= List(new Fields("VQSLOD", "VQSLOD"))
     fields :::= List(new Fields("culprit", "culprit"))
 
-    val fieldMap = createFieldMap(fields, List(unvepRecord))
+    val fieldMap = createFieldMap(fields, unvepRecord, List(unvepRecord), header)
 
     fieldMap("FG") shouldBe List("intron")
     fieldMap("FD") shouldBe List("unknown")
@@ -191,8 +193,8 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
 
-    val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), secRec)
-    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header, secRec)
+    val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), vepRecord, secRec, header)
+    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header)
     identicalVariantContext(createdRecord, vepRecord) shouldBe true
   }
 

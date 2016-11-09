@@ -1,4 +1,4 @@
-##fileformat=VCFv4.1
+##fileformat=VCFv4.2
 ##INFO=<ID=DN,Number=1,Type=Integer,Description="inDbSNP">
 ##INFO=<ID=DT,Number=0,Type=Flag,Description="in1000Genomes">
 ##INFO=<ID=DA,Number=1,Type=String,Description="allelesDBSNP">

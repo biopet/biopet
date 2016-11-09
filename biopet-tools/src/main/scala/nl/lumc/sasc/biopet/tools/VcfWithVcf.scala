@@ -130,9 +130,9 @@ object VcfWithVcf extends ToolCommand {
       require(vcfDict.getSequence(record.getContig) != null, s"Contig ${record.getContig} does not exist on reference")
       val secondaryRecords = getSecondaryRecords(secondaryReader, record, commandArgs.matchAllele)
 
-      val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
+      val fieldMap = createFieldMap(commandArgs.fields, record, secondaryRecords, secondHeader)
 
-      writer.add(createRecord(fieldMap, record, commandArgs.fields, header, secondaryRecords))
+      writer.add(createRecord(fieldMap, record, commandArgs.fields, header))
 
       counter += 1
       if (counter % 100000 == 0) {
@@ -151,17 +151,19 @@ object VcfWithVcf extends ToolCommand {
   /**
    * Create Map of field -> List of attributes in secondary records
    * @param fields List of Field
+   * @param record Original record
    * @param secondaryRecords List of VariantContext with secondary records
+   * @param header: header of secondary reader
    * @return Map of fields and their values in secondary records
    */
-  def createFieldMap(fields: List[Fields], secondaryRecords: List[VariantContext]): Map[String, List[Any]] = {
+  def createFieldMap(fields: List[Fields], record: VariantContext, secondaryRecords: List[VariantContext], header: VCFHeader): Map[String, List[Any]] = {
     val fieldMap = (for (
       f <- fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
     ) yield {
       f.outputField -> (for (
         secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
       ) yield {
-        secondRecord.getAttribute(f.inputField) match {
+        getSecondaryField(record, secondRecord, f.inputField, header) match {
           case l: List[_]           => l
           case y: util.ArrayList[_] => y.toList
           case x                    => List(x)
@@ -188,8 +190,9 @@ object VcfWithVcf extends ToolCommand {
     }
   }
 
+
   def createRecord(fieldMap: Map[String, List[Any]], record: VariantContext,
-                   fields: List[Fields], header: VCFHeader, secondaryRecords: List[VariantContext]): VariantContext = {
+                   fields: List[Fields], header: VCFHeader): VariantContext = {
     fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
       builder.attribute(attribute._1, fields.filter(_.outputField == attribute._1).head.fieldMethod match {
         case FieldMethod.max =>
@@ -206,14 +209,26 @@ object VcfWithVcf extends ToolCommand {
           }
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
         case _ => {
-          header.getInfoHeaderLine(attribute._1).getCountType match {
-            case VCFHeaderLineCount.A => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberA(x, record, attribute._1)))
-            case VCFHeaderLineCount.R => scalaListToJavaObjectArrayList(secondaryRecords.flatMap(x => numberR(x, record, attribute._1)))
-            case _                    => scalaListToJavaObjectArrayList(attribute._2)
-          }
+          scalaListToJavaObjectArrayList(attribute._2)
         }
       })
     }).make()
+  }
+
+  /**
+    * Get the proper representation of a field from a secondary record given an original record
+    * @param record original record
+    * @param secondaryRecord secondary record
+    * @param field field
+    * @param header header of secondary record
+    * @return
+    */
+  def getSecondaryField(record: VariantContext, secondaryRecord: VariantContext, field: String, header: VCFHeader): Any = {
+    header.getInfoHeaderLine(field).getCountType match {
+      case VCFHeaderLineCount.A => numberA(record, secondaryRecord, field)
+      case VCFHeaderLineCount.R => numberR(record, secondaryRecord, field)
+      case _ => secondaryRecord.getAttribute(field)
+    }
   }
 
   /**
