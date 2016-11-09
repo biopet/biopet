@@ -73,7 +73,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testOutputFieldException = {
+  def testOutputFieldException() = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:AC", "-R", referenceFasta)
@@ -83,7 +83,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testInputFieldException = {
+  def testInputFieldException() = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I", unveppedPath, "-s", unveppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:NEW_CSQ", "-R", referenceFasta)
@@ -93,7 +93,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMinMethodException = {
+  def testMinMethodException() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:min", "-R", referenceFasta)
@@ -103,7 +103,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMaxMethodException = {
+  def testMaxMethodException() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:max", "-R", referenceFasta)
@@ -113,7 +113,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testFieldMap = {
+  def testFieldMap() = {
     val unvepReader = new VCFFileReader(new File(unveppedPath))
     val header = unvepReader.getFileHeader
     val unvepRecord = unvepReader.iterator().next()
@@ -174,7 +174,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testGetSecondaryRecords = {
+  def testGetSecondaryRecords() = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val vepRecord = vepReader.iterator().next()
@@ -185,7 +185,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testCreateRecord = {
+  def testCreateRecord() = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val header = vepReader.getFileHeader
@@ -218,7 +218,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testNumberAOutput = {
+  def testNumberAOutput() = {
     val tmpFile = File.createTempFile("numberA", ".vcf.gz")
     tmpFile.deleteOnExit()
     val arguments = Array("-I", monoPath, "-s", multiPath, "-o", tmpFile.getAbsolutePath, "-f", "AF:MULTI_AF", "-R", referenceFasta)
@@ -226,6 +226,20 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
     annotatedRecord.getAttribute("MULTI_AF").toString shouldBe "0.333"
 
+  }
+
+  @Test
+  def testNumberROutput() = {
+    val tmpFile = File.createTempFile("numberR", ".vcf.gz")
+    tmpFile.deleteOnExit()
+    val arguments = Array("-I", monoPath, "-s", multiPath, "-o", tmpFile.getAbsolutePath, "-f", "ALL_ALLELE:MULTI_ALL_ALLELE", "-R", referenceFasta)
+    main(arguments)
+    val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
+    annotatedRecord.getAttribute("MULTI_ALL_ALLELE") match {
+      case l: List[_] => l shouldBe List("C", "A")
+      case u: util.ArrayList[_] => u.toList shouldBe List("C", "A")
+      case _ => throw new IllegalStateException("Not a list")
+    }
   }
 
 }
