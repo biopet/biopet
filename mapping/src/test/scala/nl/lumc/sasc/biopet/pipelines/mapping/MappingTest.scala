@@ -14,12 +14,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
-import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -27,7 +26,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, BeforeClass, DataProvider, Test}
+import org.testng.annotations.{ AfterClass, BeforeClass, DataProvider, Test }
 
 /**
  * Test class for [[Mapping]]
