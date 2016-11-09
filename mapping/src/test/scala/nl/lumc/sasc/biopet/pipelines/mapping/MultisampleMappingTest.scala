@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
@@ -88,6 +89,8 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq) 1 else 0) + (if (sample4 && bamToFastq) 1 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
+      val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+
       import MultisampleMapping.MergeStrategy
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
         (if (sample2 && (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)) 1 else 0))
@@ -103,7 +106,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
+      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }

@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
@@ -86,10 +87,12 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     mapping.libId = Some("1")
     mapping.script()
 
+    val pipesJobs = mapping.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
 
-    mapping.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
+    pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
   }
 
   val outputDir = Files.createTempDir()
