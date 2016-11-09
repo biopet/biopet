@@ -14,17 +14,18 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.extensions.kraken.Kraken
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 /**
  * Created by pjvanthof on 15/05/16.
@@ -102,7 +103,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
+      pipeline.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
