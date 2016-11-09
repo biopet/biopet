@@ -36,6 +36,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     centrifuge.report = Some(new File(outputDir, s"$outputName.centrifuge.report"))
     centrifuge.metFile = Some(centrifugeMetOutput)
     val centrifugeCmd = centrifuge | new Gzip(this) > centrifugeOutput
+    centrifugeCmd.threadsCorrection = -1
     add(centrifugeCmd)
 
     makeKreport("centrifuge", unique = false)
