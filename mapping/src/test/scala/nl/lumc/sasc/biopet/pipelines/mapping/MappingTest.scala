@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.BiopetPipe
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -86,7 +86,8 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     mapping.libId = Some("1")
     mapping.script()
 
-    val pipesJobs = mapping.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+    val pipesJobs = mapping.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+      .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)

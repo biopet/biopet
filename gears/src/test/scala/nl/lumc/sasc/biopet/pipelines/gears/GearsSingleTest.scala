@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.BiopetPipe
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
@@ -106,7 +106,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
       }
 
-      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+        .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
       gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(false)
       gears.summarySettings("gear_use_qiime_rtax") shouldBe qiimeRtax
