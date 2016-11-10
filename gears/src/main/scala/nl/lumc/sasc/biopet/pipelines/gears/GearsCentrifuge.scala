@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.SampleLibraryTag
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
@@ -46,10 +46,12 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
   }
 
   protected def makeKreport(name: String, unique: Boolean): Unit = {
+    val fifo = new File(outputDir, s"$outputName.$name.fifo")
     val centrifugeKreport = new CentrifugeKreport(this)
+    centrifugeKreport.centrifugeOutputFiles :+= fifo
     centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
-    add(centrifugeOutput :<: Zcat(this) | centrifugeKreport)
+    add(new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo))))
 
     val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = centrifugeKreport.output
