@@ -236,9 +236,9 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
     val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
     annotatedRecord.getAttribute("MULTI_ALL_ALLELE") match {
-      case l: List[_] => l shouldBe List("C", "A")
+      case l: List[_]           => l shouldBe List("C", "A")
       case u: util.ArrayList[_] => u.toList shouldBe List("C", "A")
-      case _ => throw new IllegalStateException("Not a list")
+      case _                    => throw new IllegalStateException("Not a list")
     }
   }
 

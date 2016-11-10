@@ -17,10 +17,8 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.vcf
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
@@ -190,7 +188,6 @@ object VcfWithVcf extends ToolCommand {
     }
   }
 
-
   def createRecord(fieldMap: Map[String, List[Any]], record: VariantContext,
                    fields: List[Fields], header: VCFHeader): VariantContext = {
     fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
@@ -216,18 +213,18 @@ object VcfWithVcf extends ToolCommand {
   }
 
   /**
-    * Get the proper representation of a field from a secondary record given an original record
-    * @param record original record
-    * @param secondaryRecord secondary record
-    * @param field field
-    * @param header header of secondary record
-    * @return
-    */
+   * Get the proper representation of a field from a secondary record given an original record
+   * @param record original record
+   * @param secondaryRecord secondary record
+   * @param field field
+   * @param header header of secondary record
+   * @return
+   */
   def getSecondaryField(record: VariantContext, secondaryRecord: VariantContext, field: String, header: VCFHeader): Any = {
     header.getInfoHeaderLine(field).getCountType match {
       case VCFHeaderLineCount.A => numberA(record, secondaryRecord, field)
       case VCFHeaderLineCount.R => numberR(record, secondaryRecord, field)
-      case _ => secondaryRecord.getAttribute(field)
+      case _                    => secondaryRecord.getAttribute(field)
     }
   }
 
@@ -247,6 +244,13 @@ object VcfWithVcf extends ToolCommand {
       toList
   }
 
+  /**
+   * Get the correct values from a field that has number=R
+   * @param referenceRecord the reference record
+   * @param annotateRecord the to-be-annotated record
+   * @param field the field to annotate
+   * @return
+   */
   def numberR(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
     val refValues = referenceRecord.getAttributeAsList(field).toArray
     annotateRecord.
