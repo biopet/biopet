@@ -17,7 +17,6 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
@@ -66,7 +65,10 @@ object VcfWithVcf extends ToolCommand {
       else c.copy(fields = Fields(x, x) :: c.fields)
     } text """| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
               | By default we will return all values found for a given field.
-              | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
+              | For INFO fields with type R or A we will take the respective alleles present in the input file.
+              | If a <method> is supplied, a method will be applied over the contents of the field.
+              | In this case, all values will be considered.
+              | The following methods are available:
               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
               |   - min   : takes minimum of found value, only works for numeric (integer/float) fields
               |   - unique: takes only unique values """.stripMargin
@@ -126,7 +128,7 @@ object VcfWithVcf extends ToolCommand {
       require(vcfDict.getSequence(record.getContig) != null, s"Contig ${record.getContig} does not exist on reference")
       val secondaryRecords = getSecondaryRecords(secondaryReader, record, commandArgs.matchAllele)
 
-      val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
+      val fieldMap = createFieldMap(commandArgs.fields, record, secondaryRecords, secondHeader)
 
       writer.add(createRecord(fieldMap, record, commandArgs.fields, header))
 
@@ -147,17 +149,19 @@ object VcfWithVcf extends ToolCommand {
   /**
    * Create Map of field -> List of attributes in secondary records
    * @param fields List of Field
+   * @param record Original record
    * @param secondaryRecords List of VariantContext with secondary records
+   * @param header: header of secondary reader
    * @return Map of fields and their values in secondary records
    */
-  def createFieldMap(fields: List[Fields], secondaryRecords: List[VariantContext]): Map[String, List[Any]] = {
+  def createFieldMap(fields: List[Fields], record: VariantContext, secondaryRecords: List[VariantContext], header: VCFHeader): Map[String, List[Any]] = {
     val fieldMap = (for (
       f <- fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
     ) yield {
       f.outputField -> (for (
         secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
       ) yield {
-        secondRecord.getAttribute(f.inputField) match {
+        getSecondaryField(record, secondRecord, f.inputField, header) match {
           case l: List[_]           => l
           case y: util.ArrayList[_] => y.toList
           case x                    => List(x)
@@ -206,5 +210,54 @@ object VcfWithVcf extends ToolCommand {
         }
       })
     }).make()
+  }
+
+  /**
+   * Get the proper representation of a field from a secondary record given an original record
+   * @param record original record
+   * @param secondaryRecord secondary record
+   * @param field field
+   * @param header header of secondary record
+   * @return
+   */
+  def getSecondaryField(record: VariantContext, secondaryRecord: VariantContext, field: String, header: VCFHeader): Any = {
+    header.getInfoHeaderLine(field).getCountType match {
+      case VCFHeaderLineCount.A => numberA(record, secondaryRecord, field)
+      case VCFHeaderLineCount.R => numberR(record, secondaryRecord, field)
+      case _                    => secondaryRecord.getAttribute(field)
+    }
+  }
+
+  /**
+   * Get the correct values from a field that has number=A
+   * @param referenceRecord the reference record
+   * @param annotateRecord the to-be-annotated record
+   * @param field the field to annotate
+   * @return
+   */
+  def numberA(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
+    val refValues = referenceRecord.getAttributeAsList(field).toArray
+    annotateRecord.
+      getAlternateAlleles.filter(referenceRecord.hasAlternateAllele).
+      map(x => referenceRecord.getAlternateAlleles.indexOf(x)).
+      flatMap(x => refValues.lift(x)).
+      toList
+  }
+
+  /**
+   * Get the correct values from a field that has number=R
+   * @param referenceRecord the reference record
+   * @param annotateRecord the to-be-annotated record
+   * @param field the field to annotate
+   * @return
+   */
+  def numberR(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
+    val refValues = referenceRecord.getAttributeAsList(field).toArray
+    annotateRecord.
+      getAlleles.
+      filter(referenceRecord.hasAllele).
+      map(x => referenceRecord.getAlleles.indexOf(x)).
+      flatMap(x => refValues.lift(x)).
+      toList
   }
 }
