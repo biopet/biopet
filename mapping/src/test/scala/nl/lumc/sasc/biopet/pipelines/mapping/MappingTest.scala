@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
-import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, BeforeClass, DataProvider, Test}
+import org.testng.annotations.{ AfterClass, BeforeClass, DataProvider, Test }
 
 /**
  * Test class for [[Mapping]]
@@ -86,10 +86,13 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     mapping.libId = Some("1")
     mapping.script()
 
+    val pipesJobs = mapping.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+      .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
+
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
 
-    mapping.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
+    pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
   }
 
   val outputDir = Files.createTempDir()
