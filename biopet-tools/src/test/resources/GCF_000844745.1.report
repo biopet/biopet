@@ -1,0 +1,23 @@
+# Assembly name:  ViralProj14444
+# Organism name:  Ageratum yellow vein betasatellite (viruses)
+# Taxid:          185750
+# BioProject:     PRJNA14444
+# Submitter:      NCBI
+# Date:           2000-6-14
+# Assembly type:  n/a
+# Release type:   major
+# Assembly level: Complete Genome
+# Genome representation: full
+# RefSeq assembly accession: GCF_000844745.1
+#
+## Assembly-Units:
+## GenBank Unit Accession	RefSeq Unit Accession	Assembly-Unit name
+## 	GCF_000844735.1	Primary assembly
+#
+# Ordered by chromosome/plasmid; the chromosomes/plasmids are followed by
+# unlocalized scaffolds.
+# Unplaced scaffolds are listed at the end.
+# RefSeq is equal or derived from GenBank object.
+#
+# Sequence-Name	Sequence-Role	Assigned-Molecule	Assigned-Molecule-Location/Type	GenBank-Accn	Relationship	RefSeq-Accn	Assembly-Unit	Sequence-Length	UCSC-style-name
+Unknown	assembled-molecule	Unknown	Segment	na	<>	NC_003403.1	Primary assembly	1347	na
