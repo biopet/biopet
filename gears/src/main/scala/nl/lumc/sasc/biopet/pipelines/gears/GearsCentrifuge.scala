@@ -1,8 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.SampleLibraryTag
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.Gzip
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -27,30 +27,31 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
   }
 
   def centrifugeOutput = new File(outputDir, s"$outputName.centrifuge.gz")
+  def centrifugeMetOutput = new File(outputDir, s"$outputName.centrifuge.met")
 
   def biopetScript(): Unit = {
     val centrifuge = new Centrifuge(this)
     centrifuge.inputR1 = fastqR1
     centrifuge.inputR2 = fastqR2
-    centrifuge.output = new File(outputDir, s"$outputName.centrifuge")
     centrifuge.report = Some(new File(outputDir, s"$outputName.centrifuge.report"))
-    centrifuge.isIntermediate = true
-    add(centrifuge)
+    centrifuge.metFile = Some(centrifugeMetOutput)
+    val centrifugeCmd = centrifuge | new Gzip(this) > centrifugeOutput
+    centrifugeCmd.threadsCorrection = -1
+    add(centrifugeCmd)
 
-    add(Gzip(this, centrifuge.output, centrifugeOutput))
-
-    makeKreport(List(centrifuge.output), "centrifuge", unique = false)
-    makeKreport(List(centrifuge.output), "centrifuge_unique", unique = true)
+    makeKreport("centrifuge", unique = false)
+    makeKreport("centrifuge_unique", unique = true)
 
     addSummaryJobs()
   }
 
-  protected def makeKreport(inputFiles: List[File], name: String, unique: Boolean): Unit = {
+  protected def makeKreport(name: String, unique: Boolean): Unit = {
+    val fifo = new File(outputDir, s"$outputName.$name.fifo")
     val centrifugeKreport = new CentrifugeKreport(this)
-    centrifugeKreport.centrifugeOutputFiles = inputFiles
+    centrifugeKreport.centrifugeOutputFiles :+= fifo
     centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
-    add(centrifugeKreport)
+    add(new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo))))
 
     val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = centrifugeKreport.output
@@ -72,5 +73,4 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
       case Some(file) => Map("input_R2" -> file)
       case _          => Map()
     })
-
 }

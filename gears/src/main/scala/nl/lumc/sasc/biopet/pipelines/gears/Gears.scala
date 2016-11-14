@@ -163,8 +163,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
           gs.libId = Some(libId)
           gs.outputDir = libDir
 
-          gs.fastqR1 = Some(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
-          gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir))
+          gs.fastqR1 = List(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
+          gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir)).toList
           add(gs)
         }
       }
@@ -194,8 +194,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
       }
 
-      gearsSingle.fastqR1 = Some(addDownsample(mergeR1, gearsSingle.outputDir))
-      gearsSingle.fastqR2 = mergeR2.map(addDownsample(_, gearsSingle.outputDir))
+      gearsSingle.fastqR1 = List(addDownsample(mergeR1, gearsSingle.outputDir))
+      gearsSingle.fastqR2 = mergeR2.map(addDownsample(_, gearsSingle.outputDir)).toList
       add(gearsSingle)
     }
 

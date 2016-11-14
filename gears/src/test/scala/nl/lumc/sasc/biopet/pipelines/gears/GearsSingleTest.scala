@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.BiopetPipe
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
@@ -80,8 +80,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
     inputMode match {
       case Some("fastq") =>
-        gears.fastqR1 = Some(TestGearsSingle.r1)
-        gears.fastqR2 = if (paired) Some(TestGearsSingle.r2) else None
+        gears.fastqR1 = List(TestGearsSingle.r1)
+        gears.fastqR2 = if (paired) List(TestGearsSingle.r2) else Nil
       case Some("bam") => gears.bamFile = Some(TestGearsSingle.bam)
       case None        =>
       case _           => new IllegalStateException(s"$inputMode not allowed as inputMode")
@@ -106,14 +106,15 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
       }
 
-      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+        .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
-      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(true)
+      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(false)
       gears.summarySettings("gear_use_qiime_rtax") shouldBe qiimeRtax
       gears.summarySettings("gear_use_qiime_closed") shouldBe qiimeClosed
       gears.summarySettings("gear_use_qiime_open") shouldBe qiimeOpen
 
-      gears.krakenScript.isDefined shouldBe kraken.getOrElse(true)
+      gears.krakenScript.isDefined shouldBe kraken.getOrElse(false)
       gears.centrifugeScript.isDefined shouldBe centrifuge
       gears.qiimeClosed.isDefined shouldBe qiimeClosed
       gears.qiimeOpen.isDefined shouldBe qiimeOpen
@@ -124,13 +125,13 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
       gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
 
-      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
       gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
-        ((if (kraken.getOrElse(true)) 1 else 0) + (if (centrifuge) 2 else 0))
+        ((if (kraken.getOrElse(false)) 1 else 0) + (if (centrifuge) 2 else 0))
 
-      gears.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
-      gears.functions.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
+      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
   }
 }

@@ -31,6 +31,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
     nl.lumc.sasc.biopet.tools.FastqSync,
+    nl.lumc.sasc.biopet.tools.FastqFilter,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
     nl.lumc.sasc.biopet.tools.FindOverlapMatch,
     nl.lumc.sasc.biopet.tools.GvcfToBed,

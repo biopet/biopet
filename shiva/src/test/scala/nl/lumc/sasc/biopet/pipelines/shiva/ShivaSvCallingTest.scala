@@ -130,7 +130,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
-    if (!del && !dup && !inv && !tra) intercept[IllegalArgumentException] {
+    if (!del && !dup && !inv && !tra) intercept[IllegalStateException] {
       pipeline.init()
       pipeline.script()
     }

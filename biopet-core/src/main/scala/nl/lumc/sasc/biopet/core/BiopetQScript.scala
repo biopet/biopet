@@ -38,6 +38,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     if (config.contains("output_dir", path = Nil)) config("output_dir", path = Nil).asFile
     else new File(".")
   }
+  require(outputDir.canRead, s"No premision to read outputdir: $outputDir")
+  require(outputDir.canWrite, s"No premision to read outputdir: $outputDir")
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
   var disableScatter: Boolean = false
@@ -67,6 +69,9 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
   final def script() {
     outputDir = config("output_dir")
     outputDir = outputDir.getAbsoluteFile
+
+    BiopetQScript.checkOutputDir(outputDir)
+
     init()
     biopetScript()
     logger.info("Biopet script done")
@@ -153,4 +158,13 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
 object BiopetQScript {
   case class InputFile(file: File, md5: Option[String] = None)
+
+  def checkOutputDir(outputDir: File): Unit = {
+    // Sanity checks
+    require(outputDir.getParentFile.canRead, s"No premision to read parent of outputdir: ${outputDir.getParentFile}")
+    require(outputDir.getParentFile.canWrite, s"No premision to write parent of outputdir: ${outputDir.getParentFile}")
+    outputDir.mkdir()
+    require(outputDir.canRead, s"No premision to read outputdir: $outputDir")
+    require(outputDir.canWrite, s"No premision to write outputdir: $outputDir")
+  }
 }
