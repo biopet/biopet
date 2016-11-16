@@ -143,7 +143,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     protected def libIds: Set[String] = {
       val ids = ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
       if (ids.isEmpty) {
-        logger.error(s"No libraries found in config for sample $sampleId", IllegalArgumentException)
+        logger.error(s"No libraries found in config for sample $sampleId")
       }
       ids
     }
