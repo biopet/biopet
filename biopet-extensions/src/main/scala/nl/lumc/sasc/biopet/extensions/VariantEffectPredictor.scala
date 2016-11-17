@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.{LazyCheck, Logging, VcfUtils, tryToParseNumber}
+import nl.lumc.sasc.biopet.utils.{ LazyCheck, Logging, VcfUtils, tryToParseNumber }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
 

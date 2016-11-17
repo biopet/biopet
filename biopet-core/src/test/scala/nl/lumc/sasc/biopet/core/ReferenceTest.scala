@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 import java.nio.file.Paths
 
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
