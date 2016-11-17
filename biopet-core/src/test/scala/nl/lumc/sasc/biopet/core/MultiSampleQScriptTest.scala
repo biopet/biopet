@@ -15,10 +15,11 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
+import java.lang.IllegalStateException
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QScript
 import org.scalatest.Matchers
@@ -119,6 +120,11 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
       "Dash (-) and underscore (_) are permitted."
 
   }
+
+  @Test
+  def testNoLibSample(): Unit = {
+    an [IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(noLibSample :: Nil))
+  }
 }
 
 object MultiSampleQScriptTest {
@@ -153,10 +159,48 @@ object MultiSampleQScriptTest {
     "lib1" -> Map("test" -> "4-1")
   ))))
 
-  val child = Map("samples" -> Map("child" -> Map("tags" -> Map(
-    "gender" -> "male", "father" -> "father", "mother" -> "mother"))))
-  val father = Map("samples" -> Map("father" -> Map("tags" -> Map("gender" -> "male"))))
-  val mother = Map("samples" -> Map("mother" -> Map("tags" -> Map("gender" -> "female"))))
+  val child = Map(
+    "samples" -> Map(
+      "child" -> Map(
+        "tags" -> Map(
+          "gender" -> "male",
+          "father" -> "father",
+          "mother" -> "mother"
+        ),
+        "libraries" -> Map(
+          "lib1" -> Map("test" -> "child-1")
+        )
+      )
+    )
+  )
+  val father = Map(
+    "samples" -> Map(
+      "father" -> Map(
+        "tags" -> Map("gender" -> "male"),
+        "libraries" -> Map(
+          "lib1" -> Map("test" -> "father-1")
+        )
+      )
+    )
+  )
+  val mother = Map(
+    "samples" -> Map(
+      "mother" -> Map(
+        "tags" -> Map("gender" -> "female"),
+        "libraries" -> Map(
+          "lib1" -> Map("test" -> "mother-1")
+        )
+      )
+    )
+  )
+
+  val noLibSample = Map(
+    "samples" -> Map(
+      "sample1" -> Map(
+        "tags" -> Map("gender" -> "female")
+      )
+    )
+  )
 
   def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
     new QScript with MultiSampleQScript { qscript =>
