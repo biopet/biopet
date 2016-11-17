@@ -161,10 +161,10 @@ object BiopetQScript {
 
   def checkOutputDir(outputDir: File): Unit = {
     // Sanity checks
-    require(outputDir.getParentFile.canRead, s"No premision to read parent of outputdir: ${outputDir.getParentFile}")
-    require(outputDir.getParentFile.canWrite, s"No premision to write parent of outputdir: ${outputDir.getParentFile}")
+    require(outputDir.getAbsoluteFile.getParentFile.canRead, s"No premision to read parent of outputdir: ${outputDir.getParentFile}")
+    require(outputDir.getAbsoluteFile.getParentFile.canWrite, s"No premision to write parent of outputdir: ${outputDir.getParentFile}")
     outputDir.mkdir()
-    require(outputDir.canRead, s"No premision to read outputdir: $outputDir")
-    require(outputDir.canWrite, s"No premision to write outputdir: $outputDir")
+    require(outputDir.getAbsoluteFile.canRead, s"No premision to read outputdir: $outputDir")
+    require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")
   }
 }
