@@ -38,8 +38,6 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     if (config.contains("output_dir", path = Nil)) config("output_dir", path = Nil).asFile
     else new File(".")
   }
-  require(outputDir.canRead, s"No premision to read outputdir: $outputDir")
-  require(outputDir.canWrite, s"No premision to read outputdir: $outputDir")
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
   var disableScatter: Boolean = false
