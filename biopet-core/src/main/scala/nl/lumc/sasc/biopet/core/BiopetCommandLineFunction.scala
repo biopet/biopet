@@ -225,7 +225,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
       cmdLine +
       stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
       stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
-    addJobReportBinding("command", cmd)
     cmd
   }
 
