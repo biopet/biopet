@@ -15,11 +15,9 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
-import java.lang.IllegalStateException
-
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QScript
 import org.scalatest.Matchers
@@ -123,7 +121,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
   @Test
   def testNoLibSample(): Unit = {
-    an [IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(noLibSample :: Nil))
+    an[IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(noLibSample :: Nil))
   }
 }
 
