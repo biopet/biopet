@@ -52,7 +52,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
-        if (nameRegex.findFirstIn(libId) == None)
+        if (nameRegex.findFirstIn(libId).isEmpty)
           Logging.addError(s"Library '$libId' $nameError")
         currentSample = Some(sampleId)
         currentLib = Some(libId)
@@ -139,9 +139,13 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
      */
     def makeLibrary(id: String): Library
 
-    /** returns a set with library names */
+    /** returns a set with library names or throws error when not found */
     protected def libIds: Set[String] = {
-      ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      val ids = ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      if (ids.isEmpty) {
+        throw new IllegalStateException(s"No libraries found in config for sample $sampleId")
+      }
+      ids
     }
 
     /** Name overules the one from qscript */
@@ -151,7 +155,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
-      if (nameRegex.findFirstIn(sampleId) == None)
+      if (nameRegex.findFirstIn(sampleId).isEmpty)
         Logging.addError(s"Sample '$sampleId' $nameError")
       currentSample = Some(sampleId)
       addJobs()
