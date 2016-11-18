@@ -36,7 +36,7 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
     required("-b", bamFile) +
     required("-o", outputDir) +
     required("-R", reference) +
-    optional("--binSize", binSize),
+    optional("--binSize", binSize) +
     optional("--threadBinSize", threadBinSize)
 
 }
