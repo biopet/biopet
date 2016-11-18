@@ -22,13 +22,12 @@ import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.mockito.Mockito._
 import org.testng.annotations.Test
 
 /**
  * Created by pjvan_thof on 12/30/15.
  */
-class ReferenceTest extends TestNGSuite with Matchers with MockitoSugar {
+class ReferenceTest extends TestNGSuite with Matchers {
 
   import ReferenceTest._
 
