@@ -16,13 +16,13 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{ AnnotationRefFlat, RibosomalRefFlat }
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort}
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.extensions.tools.{BamStats, BiopetFlagstat}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
@@ -85,6 +85,11 @@ class BamMetrics(val root: Configurable) extends QScript
     val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)
     addSummarizable(biopetFlagstat, "biopet_flagstat")
+
+    val bamStats = new BamStats(this)
+    bamStats.bamFile = inputBam
+    bamStats.outputDir = new File(outputDir, "bamstats")
+    add(bamStats)
 
     val multiMetrics = new CollectMultipleMetrics(this)
     multiMetrics.input = inputBam
