@@ -108,7 +108,10 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
     bowtieIndex.baseName = "reference"
     add(bowtieIndex)
     configDeps += bowtieIndex.jobOutputFile
-    outputConfig += "bowtie" -> Map("reference_fasta" -> bowtieIndex.reference.getAbsolutePath)
+    outputConfig += "bowtie" -> Map(
+      "bowtie_index" -> bowtieIndex.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta"),
+      "reference_fasta" -> bowtieIndex.reference.getAbsolutePath
+    )
 
     // Bowtie2 index
     val bowtie2Index = new Bowtie2Build(this)
@@ -116,7 +119,10 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
     bowtie2Index.baseName = "reference"
     add(bowtie2Index)
     configDeps += bowtie2Index.jobOutputFile
-    outputConfig += "bowtie2" -> Map("reference_fasta" -> bowtie2Index.reference.getAbsolutePath)
+    outputConfig += "bowtie2" -> Map(
+      "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta"),
+      "reference_fasta" -> bowtie2Index.reference.getAbsolutePath
+    )
     outputConfig += "tophat" -> Map(
       "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
     )
