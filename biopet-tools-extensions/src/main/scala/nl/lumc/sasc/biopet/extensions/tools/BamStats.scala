@@ -26,6 +26,11 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
   override def defaultThreads = 3
   override def defaultCoreMemory = 5.0
 
+  override def beforeGraph() {
+    super.beforeGraph()
+    jobOutputFile = new File(outputDir, ".bamstats.out")
+  }
+
   /** Creates command to execute extension */
   override def cmdLine = super.cmdLine +
     required("-b", bamFile) +
