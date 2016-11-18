@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
