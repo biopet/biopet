@@ -82,10 +82,6 @@ class BamMetrics(val root: Configurable) extends QScript
   def biopetScript() {
     add(SamtoolsFlagstat(this, inputBam, outputDir))
 
-    val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
-    add(biopetFlagstat)
-    addSummarizable(biopetFlagstat, "biopet_flagstat")
-
     val bamStats = new BamStats(this)
     bamStats.bamFile = inputBam
     bamStats.outputDir = new File(outputDir, "bamstats")
