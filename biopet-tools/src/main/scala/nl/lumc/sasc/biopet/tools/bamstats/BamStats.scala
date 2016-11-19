@@ -166,7 +166,7 @@ object BamStats extends ToolCommand {
         if (!samRecord.getReadUnmappedFlag) { // Mapped read
           totalStats.mappingQualityHistogram.add(samRecord.getMappingQuality)
         }
-        if (samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
+        if (samRecord.getReadPairedFlag && samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
           totalStats.insertSizeHistogram.add(samRecord.getInferredInsertSize.abs)
 
         val leftClipping = samRecord.getAlignmentStart - samRecord.getUnclippedStart
