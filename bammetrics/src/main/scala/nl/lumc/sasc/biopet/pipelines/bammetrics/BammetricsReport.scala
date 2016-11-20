@@ -237,15 +237,11 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    val plot = new LinePlot(null)
-    plot.input = tsvFile
-    plot.output = pngFile
-    plot.ylabel = Some("Reads")
-    plot.xlabel = Some("Insert size")
-    plot.width = Some(1200)
-    plot.removeZero = true
-    plot.title = Some("Insert size")
-    plot.runLocal()
+    LinePlot(tsvFile, outputDir,
+      xlabel = Some("Insert size"),
+      ylabel = Some("Reads"),
+      title = Some("Insert size"),
+      removeZero = true).runLocal()
   }
 
   /**
@@ -328,15 +324,11 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    val plot = new LinePlot(null)
-    plot.input = tsvFile
-    plot.output = pngFile
-    plot.ylabel = Some("Bases")
-    plot.xlabel = Some("Coverage")
-    plot.width = Some(1200)
-    plot.removeZero = true
-    plot.title = Some("Whole genome coverage")
-    plot.runLocal()
+    LinePlot(tsvFile, outputDir,
+      xlabel = Some("Coverage"),
+      ylabel = Some("Bases"),
+      title = Some("Whole genome coverage"),
+      removeZero = true).runLocal()
   }
 
   /**
@@ -419,14 +411,10 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    val plot = new LinePlot(null)
-    plot.input = tsvFile
-    plot.output = pngFile
-    plot.xlabel = Some("Relative position")
-    plot.ylabel = Some("Coverage")
-    plot.width = Some(1200)
-    plot.removeZero = true
-    plot.title = Some("Rna coverage")
-    plot.runLocal()
+    LinePlot(tsvFile, outputDir,
+      xlabel = Some("Relative position"),
+      ylabel = Some("Coverage"),
+      title = Some("Rna coverage"),
+      removeZero = true).runLocal()
   }
 }
