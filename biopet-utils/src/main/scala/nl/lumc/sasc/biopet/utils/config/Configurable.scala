@@ -103,11 +103,12 @@ trait Configurable extends ImplicitConversions {
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null,
+              extraSubPath: List[String] = Nil,
               path: List[String] = null): ConfigValue = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (namespace != null) namespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath else path ::: extraSubPath
       val d = {
         val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -130,11 +131,12 @@ trait Configurable extends ImplicitConversions {
                  freeVar: Boolean = true,
                  sample: String = null,
                  library: String = null,
+                 extraSubPath: List[String] = Nil,
                  path: List[String] = null) = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (namespace != null) namespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath else path ::: extraSubPath
 
       globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }

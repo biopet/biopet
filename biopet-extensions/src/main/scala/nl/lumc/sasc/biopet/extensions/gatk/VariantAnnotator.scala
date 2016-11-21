@@ -37,7 +37,7 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: Option[File] = config("dbsnp")
+  var dbsnp: Option[File] = dbsnpVcfFile
 
   /** Comparison VCF file */
   @Input(fullName = "comp", shortName = "comp", doc = "Comparison VCF file", required = false, exclusiveOf = "", validation = "")
