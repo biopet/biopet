@@ -46,21 +46,21 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testNcbiAssembly(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_id" -> "id")))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
   def testSingleFasta(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri")))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
   def testMultiFasta(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> List("uri", "uri2", "uri3.gz"))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -68,7 +68,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz")))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -76,7 +76,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -84,7 +84,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -92,7 +92,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map(("vcf_uri" -> "uri.vcf"))))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -100,7 +100,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -108,7 +108,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "vep" -> Map("version" -> Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -116,7 +116,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf.gz")))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -124,7 +124,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf")))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
   @Test
@@ -132,7 +132,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val pipeline = initPipeline(Map("download_annotations" -> true))
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gff_uri" -> "bla.gf")))))
-    pipeline.script()
+    noException should be thrownBy pipeline.script()
   }
 
 }
