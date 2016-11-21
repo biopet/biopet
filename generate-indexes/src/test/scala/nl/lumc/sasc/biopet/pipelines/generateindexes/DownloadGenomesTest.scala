@@ -39,9 +39,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   def testNoFastaUri(): Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("" -> "")))
-    intercept[IllegalArgumentException] {
-      pipeline.script()
-    }
+    an[IllegalArgumentException] should be thrownBy pipeline.script()
   }
 
   @Test
