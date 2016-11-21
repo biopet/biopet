@@ -86,6 +86,7 @@ class BamMetrics(val root: Configurable) extends QScript
     bamStats.bamFile = inputBam
     bamStats.outputDir = new File(outputDir, "bamstats")
     add(bamStats)
+    addSummarizable(bamStats, "bamStats")
 
     val multiMetrics = new CollectMultipleMetrics(this)
     multiMetrics.input = inputBam
