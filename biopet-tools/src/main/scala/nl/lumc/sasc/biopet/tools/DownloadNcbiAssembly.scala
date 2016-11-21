@@ -21,22 +21,22 @@ object DownloadNcbiAssembly extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[String]('a', "assembly id") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(assemblyId = x)
-    }
+    } text "refseq ID from NCBI"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
-    }
+    } text "output Fasta file"
     opt[File]("report") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(reportFile = Some(x))
-    }
+    } text "where to write report from ncbi"
     opt[String]("nameHeader") unbounded () valueName "<string>" action { (x, c) =>
       c.copy(contigNameHeader = Some(x))
-    }
-    opt[(String, String)]("mustHaveOne") unbounded () valueName "<string>" action { (x, c) =>
+    } text "What column to use from the NCBI report for the nam,e of the contigs"
+    opt[(String, String)]("mustHaveOne") unbounded () valueName "<column_name=regex>" action { (x, c) =>
       c.copy(mustHaveOne = (x._1, x._2) :: c.mustHaveOne)
-    }
-    opt[(String, String)]("mustNotHave") unbounded () valueName "<string>" action { (x, c) =>
+    } text "This can be used to filter based on the NCBI report, multiple conditions can be given, at least 1 should be true"
+    opt[(String, String)]("mustNotHave") unbounded () valueName "<column_name=regex>" action { (x, c) =>
       c.copy(mustNotHave = (x._1, x._2) :: c.mustNotHave)
-    }
+    } text "This can be used to filter based on the NCBI report, multiple conditions can be given, all should be false"
   }
 
   /**
