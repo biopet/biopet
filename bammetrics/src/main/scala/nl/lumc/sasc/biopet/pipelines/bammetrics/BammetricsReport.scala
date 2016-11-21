@@ -237,7 +237,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, outputDir,
+    LinePlot(tsvFile, new File(outputDir, "insertsize.png"),
       xlabel = Some("Insert size"),
       ylabel = Some("Reads"),
       title = Some("Insert size"),
@@ -324,7 +324,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, outputDir,
+    LinePlot(tsvFile, new File(outputDir, "wgs.png"),
       xlabel = Some("Coverage"),
       ylabel = Some("Bases"),
       title = Some("Whole genome coverage"),
@@ -411,7 +411,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, outputDir,
+    LinePlot(tsvFile, new File(outputDir, "rna.png"),
       xlabel = Some("Relative position"),
       ylabel = Some("Coverage"),
       title = Some("Rna coverage"),
