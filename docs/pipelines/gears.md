@@ -22,7 +22,8 @@ This pipeline is used to analyse a group of samples. This pipeline only accepts 
 
 | Key | Type | default | Function |
 | --- | ---- | ------- | -------- |
-| gears_use_kraken | Boolean | true | Run fastq file with kraken |
+| gears_use_centrifuge | Boolean | true | Run fastq file with centrifuge |
+| gears_use_kraken | Boolean | false | Run fastq file with kraken |
 | gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
 | gears_use_qiime_open | Boolean | false | Run fastq files with qiime with the open reference module |
 | gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
