@@ -141,12 +141,20 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
     class Library(libId: String) extends AbstractLibrary(libId) {
 
-      lazy val flexiprep = new Flexiprep(qscript)
-      flexiprep.sampleId = Some(sampleId)
-      flexiprep.libId = Some(libId)
-      flexiprep.inputR1 = config("R1")
-      flexiprep.inputR2 = config("R2")
-      flexiprep.outputDir = new File(libDir, "flexiprep")
+      lazy val inputR1: File = config("R1")
+      lazy val inputR2: Option[File] = config("R2")
+
+      lazy val skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
+
+      lazy val flexiprep = if (skipFlexiprep) None else Some(new Flexiprep(qscript))
+      flexiprep.foreach(_.sampleId = Some(sampleId))
+      flexiprep.foreach(_.libId = Some(libId))
+      flexiprep.foreach(_.inputR1 = inputR1)
+      flexiprep.foreach(_.inputR2 = inputR2)
+      flexiprep.foreach(_.outputDir = new File(libDir, "flexiprep"))
+
+      lazy val qcR1: File = flexiprep.map(_.fastqR1Qc).getOrElse(inputR1)
+      lazy val qcR2: Option[File] = flexiprep.map(_.fastqR2Qc).getOrElse(inputR2)
 
       val libraryGears: Boolean = config("library_gears", default = false)
 
@@ -154,17 +162,17 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
-        inputFiles :+= InputFile(flexiprep.inputR1, config("R1_md5"))
-        flexiprep.inputR2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
-        add(flexiprep)
+        inputFiles :+= InputFile(inputR1, config("R1_md5"))
+        inputR2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
+        flexiprep.foreach(add(_))
 
         gearsSingle.foreach { gs =>
           gs.sampleId = Some(sampleId)
           gs.libId = Some(libId)
           gs.outputDir = libDir
 
-          gs.fastqR1 = List(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
-          gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir)).toList
+          gs.fastqR1 = List(addDownsample(qcR1, gs.outputDir))
+          gs.fastqR2 = qcR2.map(addDownsample(_, gs.outputDir)).toList
           add(gs)
         }
       }
@@ -187,11 +195,11 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       val flexipreps = libraries.values.map(_.flexiprep).toList
 
       val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
-      add(Zcat(qscript, flexipreps.map(_.fastqR1Qc)) | new Gzip(qscript) > mergeR1)
+      add(Zcat(qscript, libraries.values.map(_.qcR1).toList) | new Gzip(qscript) > mergeR1)
 
-      val mergeR2 = if (flexipreps.exists(_.paired)) Some(new File(sampleDir, s"$sampleId.R2.fq.gz")) else None
+      val mergeR2 = if (libraries.values.exists(_.inputR2.isDefined)) Some(new File(sampleDir, s"$sampleId.R2.fq.gz")) else None
       mergeR2.foreach { file =>
-        add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
+        add(Zcat(qscript, libraries.values.flatMap(_.qcR2).toList) | new Gzip(qscript) > file)
       }
 
       gearsSingle.fastqR1 = List(addDownsample(mergeR1, gearsSingle.outputDir))
