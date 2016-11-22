@@ -195,20 +195,21 @@ object ConfigUtils extends Logging {
   /** Convert native scala value to json, fall back on .toString if type is not a native scala value */
   def anyToJson(any: Any): Json = {
     any match {
-      case j: Json      => j
-      case None         => Json.jNull
-      case Some(x)      => anyToJson(x)
-      case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
-      case l: List[_]   => Json.array(l.map(anyToJson): _*)
-      case b: Boolean   => Json.jBool(b)
-      case n: Int       => Json.jNumberOrString(n)
-      case n: Double    => Json.jNumberOrString(n)
-      case n: Long      => Json.jNumberOrString(n)
-      case n: Short     => Json.jNumberOrString(n)
-      case n: Float     => Json.jNumberOrString(n)
-      case n: Byte      => Json.jNumberOrString(n)
-      case null         => Json.jNull
-      case _            => jString(any.toString)
+      case j: Json       => j
+      case None          => Json.jNull
+      case Some(x)       => anyToJson(x)
+      case m: Map[_, _]  => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
+      case l: List[_]    => Json.array(l.map(anyToJson): _*)
+      case l: Array[_]   => Json.array(l.map(anyToJson): _*)
+      case b: Boolean    => Json.jBool(b)
+      case n: Int        => Json.jNumberOrString(n)
+      case n: Double     => Json.jNumberOrString(n)
+      case n: Long       => Json.jNumberOrString(n)
+      case n: Short      => Json.jNumberOrString(n)
+      case n: Float      => Json.jNumberOrString(n)
+      case n: Byte       => Json.jNumberOrString(n)
+      case null          => Json.jNull
+      case _             => jString(any.toString)
     }
   }
 
