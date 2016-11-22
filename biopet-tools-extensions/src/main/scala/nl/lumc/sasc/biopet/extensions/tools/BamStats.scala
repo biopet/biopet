@@ -3,12 +3,13 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
+import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
@@ -74,15 +75,15 @@ object BamStats {
     val reader = Source.fromFile(tsvFile)
     val it = reader.getLines()
     val header = it.next().split("\t")
-    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> Array[Int]()))
+    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Int]()))
     for (line <- it) {
       val values = line.split("\t")
       require(values.size == header.size, s"Line does not have the number of field as header: $line")
       for (array <- arrays) {
-        array._2._2 :+ values(array._1)
+        array._2._2.append(values(array._1).toInt)
       }
     }
     reader.close()
-    arrays.map(_._2).toMap
+    arrays.map(x => x._2._1 -> x._2._2.toArray).toMap
   }
 }
