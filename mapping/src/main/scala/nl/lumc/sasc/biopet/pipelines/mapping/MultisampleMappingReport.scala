@@ -72,8 +72,12 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         additionalSections ++
         List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
+        ),"Mapping Quality" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
+        ),"Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         )) ++
-        (if (pairedFound) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+        (if (pairedFound && insertsizeExecuted) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
         else Nil) ++
         (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
