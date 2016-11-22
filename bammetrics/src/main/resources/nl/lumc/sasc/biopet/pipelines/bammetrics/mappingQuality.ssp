@@ -1,0 +1,102 @@
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
+#import(java.io.File)
+#import(org.apache.commons.io.FileUtils)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
+<%@ var rootPath: String %>
+<%@ var metricsTag: String = "bammetrics" %>
+<%@ var sampleLevel: Boolean = false %>
+<%@ var outputDir: File %>
+<%@ var fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size")%>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true%>
+#{
+    val samples = sampleId match {
+    case Some(sample) => {
+    List(sample.toString)
+    }
+    case _ => summary.samples.toList
+    }
+}#
+
+#if (showIntro)
+    <br/>
+    <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-6">
+        <p>
+        #if (sampleId.isDefined && libId.isDefined)
+            This plot shows the mapping quality distribution for all libraries combined in sample <b>${sampleId}</b>.
+        #elseif(sampleId.isDefined)
+            This plot shows the mapping quality distribution for the libraries of sample <b>${sampleId}</b>.
+        #else
+            This plot shows the mapping quality distribution for each of the <b>${samples.size}</b> samples.
+        #end
+        </p>
+    </div>
+    </div>
+#end
+
+#if (showPlot)
+    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+
+    <div class="panel-body">
+    <img src="mapping_quality.png" class="img-responsive" />
+    </div>
+    <div class="panel-footer">
+        #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#mapping_qualityTable">
+                <i class="glyphicon glyphicon-eye-close"></i> Hide table</button>
+        #else
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#mapping_qualityTable">
+            <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
+        #end
+        <button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"> <a href="mapping_quality.tsv">tsv file</a></i></button>
+
+    </div>
+#end
+
+<div class="panel-body collapse #if (showTable)in#end" id="mapping_qualityTable">
+<!-- Table -->
+<table class="table">
+    <thead><tr>
+        <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        #if (!sampleLevel) <th>Library</th> #end
+        #for (field <- fields)
+            <th>${field.replaceAll("_", " ")}</th>
+        #end
+    </tr></thead>
+    <tbody>
+        #for (sample <- samples.toList.sorted)
+            #{
+                val libs = (libId, sampleLevel) match {
+                case (_, true) => List("")
+                case (Some(libId), _) => List(libId.toString)
+                case _ => summary.libraries(sample).toList
+                }
+            }#
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            #for (libId <- libs)
+                #if (libs.head != libId) <tr> #end
+                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
+                    #{
+                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
+
+                        val fieldValues = for (field <- fields) yield {
+                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse("N/A")
+                        }
+                    }#
+                    #for (value <- fieldValues)
+                        <td>${value}</td>
+                    #end
+                </tr>
+            #end
+        #end
+    </tbody>
+</table>
+
+</div>

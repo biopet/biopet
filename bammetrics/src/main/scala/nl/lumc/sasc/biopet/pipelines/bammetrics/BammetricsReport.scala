@@ -82,7 +82,9 @@ object BammetricsReport extends ReportBuilder {
         targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
         Map())),
       List(
-        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp")) ++
+        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
+        "Mapping Quality" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp", Map("showPlot" -> true)),
+        "Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp", Map("showPlot" -> true))) ++
         (if (insertsizeMetrics) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
         )
         else Nil) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
@@ -193,6 +195,62 @@ object BammetricsReport extends ReportBuilder {
       xlabel = Some("Insert size"),
       ylabel = Some("Reads"),
       title = Some("Insert size"),
+      removeZero = true).runLocal()
+  }
+
+  def mappingQualityPlot(outputDir: File,
+                     prefix: String,
+                     summary: Summary,
+                     libraryLevel: Boolean = false,
+                     sampleId: Option[String] = None,
+                     libId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+
+    def paths(name: String) = Map(
+      "mapping_quality" -> List("bammetrics", "stats", "bamstats", "mapping_quality", "value"),
+      name -> List("bammetrics", "stats", "bamstats", "mapping_quality", "count")
+    )
+
+    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
+      .map {
+        case (sample, lib) =>
+          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
+      }
+    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "mapping_quality"), "mapping_quality")
+
+    LinePlot(tsvFile, pngFile,
+      xlabel = Some("Mapping Quality"),
+      ylabel = Some("Reads"),
+      title = Some("Mapping Quality"),
+      removeZero = true).runLocal()
+  }
+
+  def clippingPlot(outputDir: File,
+                         prefix: String,
+                         summary: Summary,
+                         libraryLevel: Boolean = false,
+                         sampleId: Option[String] = None,
+                         libId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+
+    def paths(name: String) = Map(
+      "clipping" -> List("bammetrics", "stats", "bamstats", "clipping", "value"),
+      name -> List("bammetrics", "stats", "bamstats", "clipping", "count")
+    )
+
+    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
+      .map {
+        case (sample, lib) =>
+          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
+      }
+    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "clipping"), "clipping")
+
+    LinePlot(tsvFile, pngFile,
+      xlabel = Some("Clipping"),
+      ylabel = Some("Reads"),
+      title = Some("Clipping"),
       removeZero = true).runLocal()
   }
 
