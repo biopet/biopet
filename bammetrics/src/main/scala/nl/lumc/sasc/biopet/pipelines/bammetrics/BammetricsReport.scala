@@ -176,66 +176,17 @@ object BammetricsReport extends ReportBuilder {
                      libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    if (libraryLevel) {
-      tsvWriter.println((for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) yield s"$sample-$lib")
-        .mkString("library\t", "\t", ""))
-    } else {
-      sampleId match {
-        case Some(sample) => tsvWriter.println("\t" + sample)
-        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
+
+    def paths(name: String) = Map(
+      "insert_size" -> List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "insert_size"),
+      name -> List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "All_Reads.fr_count")
+    )
+
+    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
+      .map { case (sample, lib) =>
+        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
-    }
-
-    var map: Map[Int, Map[String, Int]] = Map()
-
-    def fill(sample: String, lib: Option[String]): Unit = {
-
-      val insertSize = new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "insert_size"),
-        summary, Some(sample), lib).value.getOrElse(List())
-      val counts = new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "All_Reads.fr_count"),
-        summary, Some(sample), lib).value.getOrElse(List())
-
-      (insertSize, counts) match {
-        case (l: List[_], l2: List[_]) =>
-          l.zip(l2).foreach(i => {
-            val insertSize = i._1.toString.toInt
-            val count = i._2.toString.toInt
-            val old = map.getOrElse(insertSize, Map())
-            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
-            else map += insertSize -> (old + (sample -> count))
-          })
-        case _ => throw new IllegalStateException("Must be a list")
-      }
-    }
-
-    if (libraryLevel) {
-      for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) fill(sample, Some(lib))
-    } else if (sampleId.isDefined) fill(sampleId.get, None)
-    else summary.samples.foreach(fill(_, None))
-
-    for ((insertSize, counts) <- map) {
-      tsvWriter.print(insertSize)
-      if (libraryLevel) {
-        for (
-          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-        ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
-      } else {
-        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
-          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
-        }
-      }
-      tsvWriter.println()
-    }
-
-    tsvWriter.close()
+    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "insert_size"), "insert_size")
 
     LinePlot(tsvFile, pngFile,
       xlabel = Some("Insert size"),
@@ -261,68 +212,17 @@ object BammetricsReport extends ReportBuilder {
                        libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    if (libraryLevel) {
-      tsvWriter.println((for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) yield s"$sample-$lib")
-        .mkString("library\t", "\t", ""))
-    } else {
-      sampleId match {
-        case Some(sample) => tsvWriter.println("\t" + sample)
-        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
+
+    def paths(name: String) = Map(
+      "coverage" -> List("bammetrics", "stats", "wgs", "histogram", "coverage"),
+      name -> List("bammetrics", "stats", "wgs", "histogram", "count")
+    )
+
+    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
+      .map { case (sample, lib) =>
+        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
-    }
-
-    var map: Map[Int, Map[String, Long]] = Map()
-
-    def fill(sample: String, lib: Option[String]): Unit = {
-
-      val insertSize = new SummaryValue(List("bammetrics", "stats", "wgs", "histogram", "coverage"),
-        summary, Some(sample), lib).value.getOrElse(List())
-      val counts = new SummaryValue(List("bammetrics", "stats", "wgs", "histogram", "count"),
-        summary, Some(sample), lib).value.getOrElse(List())
-
-      (insertSize, counts) match {
-        case (l: List[_], l2: List[_]) =>
-          l.zip(l2).foreach(i => {
-            val insertSize = i._1.toString.toInt
-            val count = i._2.toString.toLong
-            val old = map.getOrElse(insertSize, Map())
-            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
-            else map += insertSize -> (old + (sample -> count))
-          })
-        case _ => throw new IllegalStateException("Must be a list")
-      }
-    }
-
-    if (libraryLevel) {
-      for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) fill(sample, Some(lib))
-    } else if (sampleId.isDefined) fill(sampleId.get, None)
-    else summary.samples.foreach(fill(_, None))
-
-    for ((insertSize, counts) <- map) {
-      tsvWriter.print(insertSize)
-      if (libraryLevel) {
-        for (
-          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-        ) {
-          tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
-        }
-      } else {
-        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
-          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
-        }
-      }
-      tsvWriter.println()
-    }
-
-    tsvWriter.close()
+    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "coverage"), "coverage")
 
     LinePlot(tsvFile, pngFile,
       xlabel = Some("Coverage"),
@@ -348,74 +248,33 @@ object BammetricsReport extends ReportBuilder {
                        libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    if (libraryLevel) {
-      tsvWriter.println((for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) yield s"$sample-$lib")
-        .mkString("library\t", "\t", ""))
-    } else {
-      sampleId match {
-        case Some(sample) => tsvWriter.println("\t" + sample)
-        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
+
+    def paths(name: String) = Map(
+      "normalized_position" -> List("bammetrics", "stats", "rna", "histogram", "normalized_position"),
+      name -> List("bammetrics", "stats", "rna", "histogram", "All_Reads.normalized_coverage")
+    )
+
+    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
+      .map { case (sample, lib) =>
+        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
-    }
-
-    var map: Map[Int, Map[String, Double]] = Map()
-
-    def fill(sample: String, lib: Option[String]): Unit = {
-
-      val insertSize = new SummaryValue(List("bammetrics", "stats", "rna", "histogram", "normalized_position"),
-        summary, Some(sample), lib).value.getOrElse(List())
-      val counts = new SummaryValue(List("bammetrics", "stats", "rna", "histogram", "All_Reads.normalized_coverage"),
-        summary, Some(sample), lib).value.getOrElse(List())
-
-      (insertSize, counts) match {
-        case (l: List[_], l2: List[_]) =>
-          l.zip(l2).foreach(i => {
-            val insertSize = i._1.toString.toInt
-            val count = i._2.toString.toDouble
-            val old = map.getOrElse(insertSize, Map())
-            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
-            else map += insertSize -> (old + (sample -> count))
-          })
-        case _ => throw new IllegalStateException("Must be a list")
-      }
-    }
-
-    if (libraryLevel) {
-      for (
-        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-      ) fill(sample, Some(lib))
-    } else if (sampleId.isDefined) fill(sampleId.get, None)
-    else summary.samples.foreach(fill(_, None))
-
-    for ((insertSize, counts) <- map) {
-      tsvWriter.print(insertSize)
-      if (libraryLevel) {
-        for (
-          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
-        ) {
-          tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
-        }
-      } else {
-        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
-          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
-        }
-      }
-      tsvWriter.println()
-    }
-
-    tsvWriter.close()
+    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "normalized_position"), "normalized_position")
 
     LinePlot(tsvFile, pngFile,
       xlabel = Some("Relative position"),
       ylabel = Some("Coverage"),
       title = Some("Rna coverage"),
       removeZero = true).runLocal()
+  }
+
+  private def getSampleLibraries(summary: Summary,
+                                 sampleId: Option[String] = None,
+                                 LibId: Option[String] = None,
+                                 libraryLevel: Boolean = false): List[(String, Option[String])] = {
+    if (LibId.isDefined) require(sampleId.isDefined)
+    if (libraryLevel || LibId.isDefined)
+      for ((sample, libs) <- summary.libraries.toList; lib <- libs) yield (sample, Some(lib))
+    else for ((sample, libs) <- summary.libraries.toList) yield (sample, None)
   }
 
   def getTableFromSummary(summary: Summary,
@@ -431,8 +290,8 @@ object BammetricsReport extends ReportBuilder {
     pathValues
   }
 
-  def mergeTables(tables: List[Map[String, Array[Any]]],
-                  mergeColumn: String, defaultValue: Any = 0): Map[String, List[Any]] = {
+  def mergeTables(tables: Array[Map[String, Array[Any]]],
+                  mergeColumn: String, defaultValue: Any = 0): Map[String, Array[Any]] = {
     val keys = tables.flatMap(x => x(mergeColumn)).distinct
     (for (table <- tables; (columnKey, columnValues) <- table if columnKey != mergeColumn) yield {
       columnKey -> keys.map(x => table(mergeColumn).zip(columnValues).toMap.getOrElse(x, defaultValue))
