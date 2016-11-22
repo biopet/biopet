@@ -55,7 +55,7 @@
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#clippingTable">
             <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
         #end
-        <button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"> <a href="clipping.tsv">tsv file</a></i></button>
+      <a href="clipping.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
 
     </div>
 #end
