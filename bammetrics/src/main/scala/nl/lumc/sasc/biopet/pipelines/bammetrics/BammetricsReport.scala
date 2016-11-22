@@ -237,7 +237,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, new File(outputDir, "insertsize.png"),
+    LinePlot(tsvFile, pngFile,
       xlabel = Some("Insert size"),
       ylabel = Some("Reads"),
       title = Some("Insert size"),
@@ -324,7 +324,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, new File(outputDir, "wgs.png"),
+    LinePlot(tsvFile, pngFile,
       xlabel = Some("Coverage"),
       ylabel = Some("Bases"),
       title = Some("Whole genome coverage"),
@@ -411,10 +411,42 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    LinePlot(tsvFile, new File(outputDir, "rna.png"),
+    LinePlot(tsvFile, pngFile,
       xlabel = Some("Relative position"),
       ylabel = Some("Coverage"),
       title = Some("Rna coverage"),
       removeZero = true).runLocal()
+  }
+
+  def getTableFromSummary(summary: Summary,
+                          paths: Map[String, List[String]],
+                          sampleId: Option[String] = None,
+                          libId: Option[String] = None): Map[String, Array[Any]] = {
+    val pathValues: Map[String, Array[Any]] = paths.map { case (key, path) =>
+      val value = summary.getValueAsArray(sampleId, libId, path:_*)
+      require(value.isDefined, s"Sample: $sampleId, library: $libId on path: '${path.mkString(",")}' does not exist in summary")
+      key -> value.get
+    }
+    require(pathValues.map(_._2.size).toList.distinct == 1, s"Arrays in summary does not have the same number of values, $paths")
+    pathValues
+  }
+
+  def mergeTables(tables: List[Map[String, Array[Any]]],
+                  mergeColumn: String, defaultValue: Any = 0): Map[String, List[Any]] = {
+    val keys = tables.flatMap(x => x(mergeColumn)).distinct
+    (for (table <- tables; (columnKey, columnValues) <- table if columnKey != mergeColumn) yield {
+      columnKey -> keys.map(x => table(mergeColumn).zip(columnValues).toMap.getOrElse(x, defaultValue))
+    }).toMap + (mergeColumn -> keys)
+  }
+
+  def writeTableToTsv(tsvFile: File, table: Map[String, Array[Any]], firstColumn: String): Unit = {
+    require(table.map(_._2.size).toList.distinct == 1, "Not all values has the same number or rows")
+    val keys = table.keys.filterNot(_ == firstColumn).toList.sorted
+    val writer = new PrintWriter(tsvFile)
+    writer.println((firstColumn :: keys).mkString("\t"))
+    table(firstColumn).zipWithIndex.foreach { case (c, i) =>
+      writer.println((c :: keys.map(x => table(x)(i))).mkString("\t"))
+    }
+    writer.close()
   }
 }
