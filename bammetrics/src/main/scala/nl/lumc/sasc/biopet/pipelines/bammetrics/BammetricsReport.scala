@@ -199,11 +199,11 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def mappingQualityPlot(outputDir: File,
-                     prefix: String,
-                     summary: Summary,
-                     libraryLevel: Boolean = false,
-                     sampleId: Option[String] = None,
-                     libId: Option[String] = None): Unit = {
+                         prefix: String,
+                         summary: Summary,
+                         libraryLevel: Boolean = false,
+                         sampleId: Option[String] = None,
+                         libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -227,11 +227,11 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def clippingPlot(outputDir: File,
-                         prefix: String,
-                         summary: Summary,
-                         libraryLevel: Boolean = false,
-                         sampleId: Option[String] = None,
-                         libId: Option[String] = None): Unit = {
+                   prefix: String,
+                   summary: Summary,
+                   libraryLevel: Boolean = false,
+                   sampleId: Option[String] = None,
+                   libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -348,7 +348,7 @@ object BammetricsReport extends ReportBuilder {
         require(value.isDefined, s"Sample: $sampleId, library: $libId on path: '${path.mkString(",")}' does not exist in summary")
         key -> value.get
     }
-    require(pathValues.map(_._2.size).toList.distinct == 1, s"Arrays in summary does not have the same number of values, $paths")
+    require(pathValues.map(_._2.size).toList.distinct.size == 1, s"Arrays in summary does not have the same number of values, $paths")
     pathValues
   }
 
@@ -361,7 +361,7 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def writeTableToTsv(tsvFile: File, table: Map[String, Array[Any]], firstColumn: String): Unit = {
-    require(table.map(_._2.size).toList.distinct == 1, "Not all values has the same number or rows")
+    require(table.map(_._2.size).toList.distinct.size == 1, "Not all values has the same number or rows")
     val keys = table.keys.filterNot(_ == firstColumn).toList.sorted
     val writer = new PrintWriter(tsvFile)
     writer.println((firstColumn :: keys).mkString("\t"))
