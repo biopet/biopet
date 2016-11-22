@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
@@ -12,8 +12,8 @@ import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
-  * Created by pjvanthof on 18/11/2016.
-  */
+ * Created by pjvanthof on 18/11/2016.
+ */
 class BamStats(val root: Configurable) extends ToolCommandFunction with Reference with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.bamstats.BamStats
 
@@ -35,7 +35,7 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
   def getOutputFile(name: String, contig: Option[String] = None): File = {
     contig match {
       case Some(contig) => new File(outputDir, "contigs" + File.separator + contig + File.separator + name)
-      case _ => new File(outputDir, name)
+      case _            => new File(outputDir, name)
     }
   }
 
@@ -56,7 +56,6 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
     required("-R", reference) +
     optional("--binSize", binSize) +
     optional("--threadBinSize", threadBinSize)
-
 
   def summaryFiles: Map[String, File] = Map()
 

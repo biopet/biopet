@@ -183,8 +183,9 @@ object BammetricsReport extends ReportBuilder {
     )
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map { case (sample, lib) =>
-        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
+      .map {
+        case (sample, lib) =>
+          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
     writeTableToTsv(tsvFile, mergeTables(tables.toArray, "insert_size"), "insert_size")
 
@@ -219,8 +220,9 @@ object BammetricsReport extends ReportBuilder {
     )
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map { case (sample, lib) =>
-        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
+      .map {
+        case (sample, lib) =>
+          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
     writeTableToTsv(tsvFile, mergeTables(tables.toArray, "coverage"), "coverage")
 
@@ -255,8 +257,9 @@ object BammetricsReport extends ReportBuilder {
     )
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map { case (sample, lib) =>
-        getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
+      .map {
+        case (sample, lib) =>
+          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
       }
     writeTableToTsv(tsvFile, mergeTables(tables.toArray, "normalized_position"), "normalized_position")
 
@@ -281,10 +284,11 @@ object BammetricsReport extends ReportBuilder {
                           paths: Map[String, List[String]],
                           sampleId: Option[String] = None,
                           libId: Option[String] = None): Map[String, Array[Any]] = {
-    val pathValues: Map[String, Array[Any]] = paths.map { case (key, path) =>
-      val value = summary.getValueAsArray(sampleId, libId, path:_*)
-      require(value.isDefined, s"Sample: $sampleId, library: $libId on path: '${path.mkString(",")}' does not exist in summary")
-      key -> value.get
+    val pathValues: Map[String, Array[Any]] = paths.map {
+      case (key, path) =>
+        val value = summary.getValueAsArray(sampleId, libId, path: _*)
+        require(value.isDefined, s"Sample: $sampleId, library: $libId on path: '${path.mkString(",")}' does not exist in summary")
+        key -> value.get
     }
     require(pathValues.map(_._2.size).toList.distinct == 1, s"Arrays in summary does not have the same number of values, $paths")
     pathValues
@@ -303,8 +307,9 @@ object BammetricsReport extends ReportBuilder {
     val keys = table.keys.filterNot(_ == firstColumn).toList.sorted
     val writer = new PrintWriter(tsvFile)
     writer.println((firstColumn :: keys).mkString("\t"))
-    table(firstColumn).zipWithIndex.foreach { case (c, i) =>
-      writer.println((c :: keys.map(x => table(x)(i))).mkString("\t"))
+    table(firstColumn).zipWithIndex.foreach {
+      case (c, i) =>
+        writer.println((c :: keys.map(x => table(x)(i))).mkString("\t"))
     }
     writer.close()
   }
