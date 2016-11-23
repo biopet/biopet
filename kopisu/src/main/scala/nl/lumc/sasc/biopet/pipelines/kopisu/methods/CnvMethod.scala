@@ -36,7 +36,7 @@ trait CnvMethod extends QScript with SummaryQScript with Reference {
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any] = Map()
 
-  /** File to put in the summary for thie pipeline */
+  /** File to put in the summary for this pipeline */
   def summaryFiles: Map[String, File] = inputBams.map(x => s"inputbam_${x._1}" -> x._2) ++ cnvOutputFiles
 
   def init() = {}
