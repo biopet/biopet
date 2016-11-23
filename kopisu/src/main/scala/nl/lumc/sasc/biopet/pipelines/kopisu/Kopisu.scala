@@ -15,9 +15,9 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{CnmopsMethod, ConiferMethod, FreecMethod, XhmmMethod}
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ CnmopsMethod, ConiferMethod, FreecMethod, XhmmMethod }
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -75,7 +75,7 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
       add(method)
     }
 
-    xhmmMethod.foreach{ method =>
+    xhmmMethod.foreach { method =>
       method.inputBams = inputBams
       method.outputDir = new File(outputDir, "xhmm_methid")
     }

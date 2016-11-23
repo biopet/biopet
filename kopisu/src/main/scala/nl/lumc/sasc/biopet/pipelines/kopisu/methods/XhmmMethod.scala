@@ -6,8 +6,8 @@ import nl.lumc.sasc.biopet.extensions.xhmm._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
-  * Created by Sander Bollen on 23-11-16.
-  */
+ * Created by Sander Bollen on 23-11-16.
+ */
 class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
 
   def name = "xhmm"

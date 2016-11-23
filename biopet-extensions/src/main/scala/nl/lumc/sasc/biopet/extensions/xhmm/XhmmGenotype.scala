@@ -4,11 +4,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
-  * Created by Sander Bollen on 23-11-16.
-  */
+ * Created by Sander Bollen on 23-11-16.
+ */
 class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
 
   @Input
@@ -24,7 +24,7 @@ class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
   var r: File = _
 
   @Argument
-  var discoverParamsFile: File =  config("discover_params", namespace = "xhmm")
+  var discoverParamsFile: File = config("discover_params", namespace = "xhmm")
 
   def cmdLine = {
     executable + required("--genotype") +
@@ -35,7 +35,5 @@ class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
       required("-F", referenceFasta()) +
       required("-v", outputVcf)
   }
-
-
 
 }

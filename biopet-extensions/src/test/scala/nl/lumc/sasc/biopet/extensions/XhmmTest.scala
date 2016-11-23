@@ -9,8 +9,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by Sander Bollen on 23-11-16.
-  */
+ * Created by Sander Bollen on 23-11-16.
+ */
 class XhmmTest extends TestNGSuite with Matchers {
 
   @Test

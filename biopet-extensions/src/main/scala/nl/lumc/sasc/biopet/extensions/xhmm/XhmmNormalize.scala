@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.extensions.xhmm
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
-  * Created by Sander Bollen on 23-11-16.
-  */
+ * Created by Sander Bollen on 23-11-16.
+ */
 class XhmmNormalize(val root: Configurable) extends Xhmm {
 
   @Input

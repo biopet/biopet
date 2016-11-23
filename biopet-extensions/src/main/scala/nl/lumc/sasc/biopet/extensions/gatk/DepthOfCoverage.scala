@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 
 /**
-  * Created by Sander Bollen on 23-11-16.
-  */
+ * Created by Sander Bollen on 23-11-16.
+ */
 class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   def analysis_type = "DepthOfCoverage"
@@ -26,7 +26,7 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
     new File(out + "_summary")
   }
 
-  lazy val statisticsFile:File = {
+  lazy val statisticsFile: File = {
     new File(out + "_statistics")
   }
 
@@ -116,7 +116,6 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   @Argument(required = false)
   var printBinEndpointsAndExit: Boolean = false
-
 
   override def cmdLine = {
     super.cmdLine + required("--out", out) +
