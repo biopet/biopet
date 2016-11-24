@@ -87,7 +87,7 @@
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
 
                         val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("bamstats", "clipping", "general", field.toUpperCase)):_*).getOrElse("N/A")
+                            summary.getValue((prefixPath ::: List("bamstats", "clipping", "general", field)):_*).getOrElse("N/A")
                         }
                     }#
                     #for (value <- fieldValues)
