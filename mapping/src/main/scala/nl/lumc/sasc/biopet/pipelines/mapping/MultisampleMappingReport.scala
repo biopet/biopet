@@ -46,6 +46,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   def indexPage = {
 
     val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
+    val centrifugeExecuted = summary.getSampleValues("gearskraken", "stats", "centrifuge_report").values.forall(_.isDefined)
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
@@ -56,9 +57,15 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
-        (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+        (if (krakenExecuted) List("Dustbin analysis - Kraken" -> ReportPage(List(), List(
           "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map()))
+        else Nil) ++ (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_report")
+        )), Map())), List(
+          "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+            Map("summaryStatsTag" -> "centrifuge_unique_report")
+          )), Map("summaryModuleTag" -> "gearscentrifuge")))
         else Nil) ++
         List("Reference" -> ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
@@ -109,13 +116,20 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
+    val centrifugeExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "centrifuge_report").isDefined
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
 
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
-      (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+      (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+        Map("summaryStatsTag" -> "centrifuge_report")
+      )), Map())), List(
+        "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_unique_report")
+        )), Map("summaryModuleTag" -> "gearscentrifuge")))
+      else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ++
@@ -133,12 +147,19 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
+    val centrifugeExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "centrifuge_report").isDefined
     val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
 
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
-        (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+        (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_report")
+        )), Map())), List(
+          "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+            Map("summaryStatsTag" -> "centrifuge_unique_report")
+          )), Map("summaryModuleTag" -> "gearscentrifuge")))
+        else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map()))
         else Nil),
