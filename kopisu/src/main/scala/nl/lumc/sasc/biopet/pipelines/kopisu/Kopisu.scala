@@ -77,7 +77,7 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
 
     xhmmMethod.foreach { method =>
       method.inputBams = inputBams
-      method.outputDir = new File(outputDir, "xhmm_methid")
+      method.outputDir = new File(outputDir, "xhmm_method")
     }
 
     addSummaryJobs()
