@@ -105,19 +105,36 @@ object BamStats extends ToolCommand {
 
     stats.writeStatsToFiles(outputDir)
 
+    val clippingHistogram = tsvToMap(new File(outputDir, "clipping.tsv"))
+    val mappingQualityHistogram = tsvToMap(new File(outputDir, "mapping_quality.tsv"))
+
     val summary = Map(
       "flagstats" -> ConfigUtils.fileToConfigMap(new File(outputDir, "flagstats.summary.json")),
       "flagstats_per_contig" -> referenceDict.getSequences.map {
         c => c.getSequenceName -> ConfigUtils.fileToConfigMap(
           new File(outputDir, "contigs" + File.separator + c.getSequenceName + File.separator + "flagstats.summary.json"))
       }.toMap,
-      "mapping_quality" -> Map("histogram" ->tsvToMap(new File(outputDir, "mapping_quality.tsv"))),
-      "clipping" -> Map("histogram" -> tsvToMap(new File(outputDir, "clipping.tsv")))
+      "mapping_quality" -> Map("general" -> aggregateStats(mappingQualityHistogram), "histogram" -> mappingQualityHistogram),
+      "clipping" -> Map("general" -> aggregateStats(clippingHistogram), "histogram" -> clippingHistogram)
     )
 
     val summaryWriter = new PrintWriter(new File(outputDir, "bamstats.summary.json"))
     summaryWriter.println(ConfigUtils.mapToJson(summary).spaces2)
     summaryWriter.close()
+  }
+
+  def aggregateStats(table: Map[String, Array[Long]]): Map[String, Any] = {
+    val values = table("value")
+    val counts = table("counts")
+    val modal = values(counts.indexOf(counts.max))
+    val totalCounts = counts.sum
+    val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
+    val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) { case (a, b) =>
+      val total = a._1 + b._1._2
+      if (total >= totalCounts / 2) (total, a._2)
+      else (total, b._2)
+    }._2)
+    Map("min" -> values.min, "max" -> values.max, "median" -> median, "mean" -> mean, "modal" -> modal)
   }
 
   /**
@@ -224,16 +241,16 @@ object BamStats extends ToolCommand {
     stats
   }
 
-  def tsvToMap(tsvFile: File): Map[String, Array[Int]] = {
+  def tsvToMap(tsvFile: File): Map[String, Array[Long]] = {
     val reader = Source.fromFile(tsvFile)
     val it = reader.getLines()
     val header = it.next().split("\t")
-    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Int]()))
+    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Long]()))
     for (line <- it) {
       val values = line.split("\t")
       require(values.size == header.size, s"Line does not have the number of field as header: $line")
       for (array <- arrays) {
-        array._2._2.append(values(array._1).toInt)
+        array._2._2.append(values(array._1).toLong)
       }
     }
     reader.close()
