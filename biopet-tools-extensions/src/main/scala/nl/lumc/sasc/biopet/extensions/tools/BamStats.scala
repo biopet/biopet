@@ -4,14 +4,9 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
-import nl.lumc.sasc.biopet.tools.bamstats.BamStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
-
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
 
 /**
  * Created by pjvanthof on 18/11/2016.
