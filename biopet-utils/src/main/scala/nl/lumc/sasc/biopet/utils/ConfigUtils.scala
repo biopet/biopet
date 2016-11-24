@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.File
+import java.io.{File, PrintWriter}
 import java.util
 
 import argonaut.Argonaut._
@@ -151,6 +151,16 @@ object ConfigUtils extends Logging {
     val yaml = new Yaml()
     val a = yaml.load(scala.io.Source.fromFile(file).reader())
     ConfigUtils.any2map(a)
+  }
+
+  lazy val yaml = new Yaml()
+
+  def mapToYaml(map: Map[String, Any]) = yaml.dump(yaml.load(ConfigUtils.mapToJson(map).nospaces))
+
+  def mapToYamlFile(map: Map[String, Any], outputFile: File) = {
+    val writer = new PrintWriter(outputFile)
+    writer.println(mapToYaml(map))
+    writer.close()
   }
 
   /** Convert json to native scala map/values */
