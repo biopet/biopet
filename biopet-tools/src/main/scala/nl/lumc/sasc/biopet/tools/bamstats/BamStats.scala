@@ -14,18 +14,18 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand}
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, ToolCommand }
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.io.Source
 import scala.language.postfixOps
 
@@ -111,8 +111,9 @@ object BamStats extends ToolCommand {
     val summary = Map(
       "flagstats" -> ConfigUtils.fileToConfigMap(new File(outputDir, "flagstats.summary.json")),
       "flagstats_per_contig" -> referenceDict.getSequences.map {
-        c => c.getSequenceName -> ConfigUtils.fileToConfigMap(
-          new File(outputDir, "contigs" + File.separator + c.getSequenceName + File.separator + "flagstats.summary.json"))
+        c =>
+          c.getSequenceName -> ConfigUtils.fileToConfigMap(
+            new File(outputDir, "contigs" + File.separator + c.getSequenceName + File.separator + "flagstats.summary.json"))
       }.toMap,
       "mapping_quality" -> Map("general" -> aggregateStats(mappingQualityHistogram), "histogram" -> mappingQualityHistogram),
       "clipping" -> Map("general" -> aggregateStats(clippingHistogram), "histogram" -> clippingHistogram)
@@ -129,10 +130,11 @@ object BamStats extends ToolCommand {
     val modal = values(counts.indexOf(counts.max))
     val totalCounts = counts.sum
     val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
-    val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) { case (a, b) =>
-      val total = a._1 + b._1._2
-      if (total >= totalCounts / 2) (total, a._2)
-      else (total, b._2)
+    val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) {
+      case (a, b) =>
+        val total = a._1 + b._1._2
+        if (total >= totalCounts / 2) (total, a._2)
+        else (total, b._2)
     }._2)
     Map("min" -> values.min, "max" -> values.max, "median" -> median, "mean" -> mean, "modal" -> modal)
   }
