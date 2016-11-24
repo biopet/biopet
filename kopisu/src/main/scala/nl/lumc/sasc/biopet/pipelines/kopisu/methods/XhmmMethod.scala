@@ -94,6 +94,7 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     val genotype = new XhmmGenotype(this)
     genotype.inputXcnv = discover.outputXcnv
     genotype.inputMatrix = secondMatrix.outputMatrix
+    genotype.r = thirdMatrix.outputMatrix
     genotype.outputVcf = new File(xhmmDir, "xhmm.vcf")
     add(genotype)
 
