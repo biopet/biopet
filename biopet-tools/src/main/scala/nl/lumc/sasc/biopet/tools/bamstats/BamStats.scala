@@ -127,16 +127,19 @@ object BamStats extends ToolCommand {
   def aggregateStats(table: Map[String, Array[Long]]): Map[String, Any] = {
     val values = table("value")
     val counts = table("count")
-    val modal = values(counts.indexOf(counts.max))
-    val totalCounts = counts.sum
-    val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
-    val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) {
-      case (a, b) =>
-        val total = a._1 + b._1._2
-        if (total >= totalCounts / 2) (total, a._2)
-        else (total, b._2)
-    }._2)
-    Map("min" -> values.min, "max" -> values.max, "median" -> median, "mean" -> mean, "modal" -> modal)
+    require(values.size == counts)
+    if (values.nonEmpty) {
+      val modal = values(counts.indexOf(counts.max))
+      val totalCounts = counts.sum
+      val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
+      val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) {
+        case (a, b) =>
+          val total = a._1 + b._1._2
+          if (total >= totalCounts / 2) (total, a._2)
+          else (total, b._2)
+      }._2)
+      Map("min" -> values.min, "max" -> values.max, "median" -> median, "mean" -> mean, "modal" -> modal)
+    } else Map()
   }
 
   /**
