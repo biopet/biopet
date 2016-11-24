@@ -26,6 +26,8 @@ object XcnvToBed extends ToolCommand {
       map(x => XcnvBedLine(x(0), x(1), x(2))).
       filter(_.sample == commandArgs.sample).
       foreach(x => writer.write(x.toString))
+
+    writer.close()
   }
 
   case class XcnvBedLine(sample: String, cnvType: String, location: String) {
