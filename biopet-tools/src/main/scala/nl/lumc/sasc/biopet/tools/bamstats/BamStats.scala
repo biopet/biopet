@@ -126,7 +126,7 @@ object BamStats extends ToolCommand {
 
   def aggregateStats(table: Map[String, Array[Long]]): Map[String, Any] = {
     val values = table("value")
-    val counts = table("counts")
+    val counts = table("count")
     val modal = values(counts.indexOf(counts.max))
     val totalCounts = counts.sum
     val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
