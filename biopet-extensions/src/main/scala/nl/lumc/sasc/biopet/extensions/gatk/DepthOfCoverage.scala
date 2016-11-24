@@ -16,40 +16,44 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
   This tool creates several files with `out` as the root
    */
   @Output(fullName = "out", shortName = "o", doc = "File name base to which coverage metric should be written")
-  var out: String = _
+  var out: File = _
 
-  lazy val outFile: File = {
-    new File(out)
-  }
-
+  @Output
   lazy val summaryFile: File = {
     new File(out + "_summary")
   }
 
+  @Output
   lazy val statisticsFile: File = {
     new File(out + "_statistics")
   }
 
+  @Output
   lazy val intervalSummaryFile: File = {
     new File(out + "_interval_summary")
   }
 
+  @Output
   lazy val intervalStatisticsFile: File = {
     new File(out + "_interval_statistics")
   }
 
+  @Output
   lazy val geneSummaryFile: File = {
     new File(out + "_gene_summary")
   }
 
+  @Output
   lazy val geneStatisticsFile: File = {
     new File(out + "_gene_statistics")
   }
 
+  @Output
   lazy val cumulativeCoverageCountsFile: File = {
     new File(out + "_cumulative_coverage_counts")
   }
 
+  @Output
   lazy val cumulativeCoverageProportionsFile: File = {
     new File(out + "_cumulative_coverage_proportions")
   }

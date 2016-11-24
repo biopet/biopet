@@ -11,6 +11,6 @@ abstract class Xhmm extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", namespace = "xhmm", default = "xhmm")
 
-  def versionCommand = executable + "--version"
+  def versionCommand = executable + required("--version")
   def versionRegex = """xhmm (.*)""".r
 }
