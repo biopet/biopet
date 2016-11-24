@@ -4,6 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
+import nl.lumc.sasc.biopet.tools.bamstats.BamStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
@@ -40,6 +41,7 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
     }
   }
 
+  def bamstatsSummary: File = new File(outputDir, "bamstats.summary.json")
   def flagstatSummaryFile(contig: Option[String] = None): File = getOutputFile("flagstats.summary.json", contig)
   def mappingQualityFile(contig: Option[String] = None): File = getOutputFile("mapping_quality.tsv", contig)
   def clipingFile(contig: Option[String] = None): File = getOutputFile("clipping.tsv", contig)
@@ -60,30 +62,5 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
 
   def summaryFiles: Map[String, File] = Map()
 
-  def summaryStats: Map[String, Any] = Map(
-    "flagstats" -> ConfigUtils.fileToConfigMap(flagstatSummaryFile()),
-    "flagstats_per_contig" -> referenceDict.getSequences.map {
-      c => c.getSequenceName -> ConfigUtils.fileToConfigMap(flagstatSummaryFile(Some(c.getSequenceName)))
-    }.toMap,
-    "mapping_quality" -> BamStats.tsvToMap(mappingQualityFile()),
-    "clipping" -> BamStats.tsvToMap(clipingFile())
-  )
-}
-
-object BamStats {
-  def tsvToMap(tsvFile: File): Map[String, Array[Int]] = {
-    val reader = Source.fromFile(tsvFile)
-    val it = reader.getLines()
-    val header = it.next().split("\t")
-    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Int]()))
-    for (line <- it) {
-      val values = line.split("\t")
-      require(values.size == header.size, s"Line does not have the number of field as header: $line")
-      for (array <- arrays) {
-        array._2._2.append(values(array._1).toInt)
-      }
-    }
-    reader.close()
-    arrays.map(x => x._2._1 -> x._2._2.toArray).toMap
-  }
+  def summaryStats: Map[String, Any] = ConfigUtils.fileToConfigMap(bamstatsSummary)
 }

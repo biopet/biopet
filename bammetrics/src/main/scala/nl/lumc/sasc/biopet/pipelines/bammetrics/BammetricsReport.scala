@@ -208,8 +208,8 @@ object BammetricsReport extends ReportBuilder {
     val pngFile = new File(outputDir, prefix + ".png")
 
     def paths(name: String) = Map(
-      "mapping_quality" -> List("bammetrics", "stats", "bamstats", "mapping_quality", "value"),
-      name -> List("bammetrics", "stats", "bamstats", "mapping_quality", "count")
+      "mapping_quality" -> List("bammetrics", "stats", "bamstats", "mapping_quality", "histogram", "value"),
+      name -> List("bammetrics", "stats", "bamstats", "mapping_quality", "histogram", "count")
     )
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
@@ -236,8 +236,8 @@ object BammetricsReport extends ReportBuilder {
     val pngFile = new File(outputDir, prefix + ".png")
 
     def paths(name: String) = Map(
-      "clipping" -> List("bammetrics", "stats", "bamstats", "clipping", "value"),
-      name -> List("bammetrics", "stats", "bamstats", "clipping", "count")
+      "clipping" -> List("bammetrics", "stats", "bamstats", "clipping", "histogram", "value"),
+      name -> List("bammetrics", "stats", "bamstats", "clipping", "histogram", "count")
     )
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)

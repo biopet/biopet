@@ -14,19 +14,19 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.File
-import java.util.concurrent.TimeoutException
+import java.io.{File, PrintWriter}
 
-import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
+import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
-import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
+import scala.io.Source
 import scala.language.postfixOps
 
 /**
@@ -104,6 +104,20 @@ object BamStats extends ToolCommand {
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.toList)
 
     stats.writeStatsToFiles(outputDir)
+
+    val summary = Map(
+      "flagstats" -> ConfigUtils.fileToConfigMap(new File(outputDir, "flagstats.summary.json")),
+      "flagstats_per_contig" -> referenceDict.getSequences.map {
+        c => c.getSequenceName -> ConfigUtils.fileToConfigMap(
+          new File(outputDir, "contigs" + File.separator + c.getSequenceName + File.separator + "flagstats.summary.json"))
+      }.toMap,
+      "mapping_quality" -> Map("histogram" ->tsvToMap(new File(outputDir, "mapping_quality.tsv"))),
+      "clipping" -> Map("histogram" -> tsvToMap(new File(outputDir, "clipping.tsv")))
+    )
+
+    val summaryWriter = new PrintWriter(new File(outputDir, "bamstats.summary.json"))
+    summaryWriter.println(ConfigUtils.mapToJson(summary).spaces2)
+    summaryWriter.close()
   }
 
   /**
@@ -209,4 +223,21 @@ object BamStats extends ToolCommand {
     samReader.close()
     stats
   }
+
+  def tsvToMap(tsvFile: File): Map[String, Array[Int]] = {
+    val reader = Source.fromFile(tsvFile)
+    val it = reader.getLines()
+    val header = it.next().split("\t")
+    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Int]()))
+    for (line <- it) {
+      val values = line.split("\t")
+      require(values.size == header.size, s"Line does not have the number of field as header: $line")
+      for (array <- arrays) {
+        array._2._2.append(values(array._1).toInt)
+      }
+    }
+    reader.close()
+    arrays.map(x => x._2._1 -> x._2._2.toArray).toMap
+  }
+
 }
