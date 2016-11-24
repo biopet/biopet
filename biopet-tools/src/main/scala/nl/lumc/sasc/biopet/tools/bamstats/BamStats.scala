@@ -127,7 +127,7 @@ object BamStats extends ToolCommand {
   def aggregateStats(table: Map[String, Array[Long]]): Map[String, Any] = {
     val values = table("value")
     val counts = table("count")
-    require(values.size == counts)
+    require(values.size == counts.size)
     if (values.nonEmpty) {
       val modal = values(counts.indexOf(counts.max))
       val totalCounts = counts.sum
