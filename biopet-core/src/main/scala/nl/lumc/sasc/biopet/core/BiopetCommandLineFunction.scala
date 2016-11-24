@@ -249,6 +249,7 @@ object BiopetCommandLineFunction extends Logging {
           try {
             val buffer = new StringBuffer()
             val tempFile = File.createTempFile("which.", ".sh")
+            tempFile.deleteOnExit()
             val writer = new PrintWriter(tempFile)
             pre_commands.foreach(cmd => writer.println(cmd + " > /dev/null 2> /dev/null"))
             writer.println(s"which $executable")
