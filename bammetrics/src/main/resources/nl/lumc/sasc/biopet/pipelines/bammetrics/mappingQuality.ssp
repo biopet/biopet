@@ -10,7 +10,7 @@
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var outputDir: File %>
-<%@ var fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size")%>
+<%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
@@ -87,7 +87,7 @@
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
 
                         val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse("N/A")
+                            summary.getValue((prefixPath ::: List("bamstats", "clipping", "general", field.toUpperCase)):_*).getOrElse("N/A")
                         }
                     }#
                     #for (value <- fieldValues)
