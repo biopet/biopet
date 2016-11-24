@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu.methods
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
+import nl.lumc.sasc.biopet.extensions.tools.XcnvToBed
 import nl.lumc.sasc.biopet.extensions.xhmm._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -97,6 +98,17 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     genotype.r = thirdMatrix.outputMatrix
     genotype.outputVcf = new File(xhmmDir, "xhmm.vcf")
     add(genotype)
+
+    // create bed files
+    val bedDir = new File(xhmmDir, "beds")
+    val beds = inputBams.keys.map{ x =>
+      val z = new XcnvToBed(this)
+      z.inputXcnv = discover.outputXcnv
+      z.sample = x
+      z.outpuBed = new File(bedDir, s"$x.bed")
+      z
+    }
+    addAll(beds)
 
     addSummaryJobs()
 
