@@ -46,7 +46,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   def indexPage = {
 
     val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
-    val centrifugeExecuted = summary.getSampleValues("gearskraken", "stats", "centrifuge_report").values.forall(_.isDefined)
+    val centrifugeExecuted = summary.getSampleValues("gearscentrifuge", "stats", "centrifuge_report").values.forall(_.isDefined)
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
@@ -116,7 +116,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
-    val centrifugeExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "centrifuge_report").isDefined
+    val centrifugeExecuted = summary.getValue(Some(sampleId), None, "gearscentrifuge", "stats", "centrifuge_report").isDefined
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
 
@@ -147,7 +147,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
-    val centrifugeExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "centrifuge_report").isDefined
+    val centrifugeExecuted = summary.getValue(Some(sampleId), Some(libId), "gearscentrifuge", "stats", "centrifuge_report").isDefined
     val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
 
     ReportPage(
