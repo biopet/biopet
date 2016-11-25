@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
 
 import scala.collection.mutable
 import scala.io.Source
