@@ -129,7 +129,7 @@ object WriteDependencies extends Logging with Configurable {
     mainJobsFile.foreach { file =>
       val mainJobs = jobs.filter(_._2("main_job") == true).map {
         case (name, job) =>
-          name -> (job + ("depends_on_jobs" -> getMainDependencies(name, jobs)))
+          name -> getMainDependencies(name, jobs)
       }
 
       val writer = new PrintWriter(file)
@@ -158,6 +158,6 @@ object WriteDependencies extends Logging with Configurable {
         case true  => List(dep)
         case false => getMainDependencies(dep, jobsMap)
       }
-    }
+    }.distinct
   }
 }
