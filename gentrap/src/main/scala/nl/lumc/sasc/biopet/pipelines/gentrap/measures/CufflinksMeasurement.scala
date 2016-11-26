@@ -33,6 +33,7 @@ trait CufflinksMeasurement extends QScript with Measurement {
     val jobs = bamFiles.map {
       case (id, file) =>
         val cufflinks = makeCufflinksJob(id, file)
+        cufflinks.mainFunction = true
         add(cufflinks)
         id -> cufflinks
     }

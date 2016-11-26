@@ -38,6 +38,7 @@ class GearsSeqCount(val root: Configurable) extends QScript with BiopetQScript w
     val seqCount = new SageCountFastq(this)
     seqCount.input = fastqInput
     seqCount.output = countFile
+    seqCount.mainFunction = true
     add(seqCount)
   }
 }

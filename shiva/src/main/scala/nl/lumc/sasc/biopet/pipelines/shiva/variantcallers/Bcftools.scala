@@ -36,7 +36,9 @@ class Bcftools(val root: Configurable) extends Variantcaller {
     bt.v = true
     bt.c = true
 
-    add(mp | new FixMpileup(this) | bt > outputFile)
+    val pipe = mp | new FixMpileup(this) | bt > outputFile
+    pipe.mainFunction = true
+    add(pipe)
     add(Tabix(this, outputFile))
   }
 }

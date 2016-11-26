@@ -29,6 +29,7 @@ class UnifiedGenotyper(val root: Configurable) extends Variantcaller {
 
   def biopetScript() {
     val ug = gatk.UnifiedGenotyper(this, inputBams.values.toList, outputFile)
+    ug.mainFunction = true
     add(ug)
   }
 }

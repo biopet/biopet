@@ -60,6 +60,7 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
     flash.fastqR1 = fastqR1
     flash.fastqR2 = fastqR2
     flash.isIntermediate = (forwardPrimers ::: reversePrimers).nonEmpty
+    flash.mainFunction = true
     add(flash)
 
     if ((forwardPrimers ::: reversePrimers).nonEmpty) {
@@ -68,6 +69,7 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
       cutadapt.fastqOutput = this.combinedFastq
       cutadapt.statsOutput = swapExt(outputDir, cutadapt.fastqOutput, ".fastq.gz", ".stats")
       (forwardPrimers ::: reversePrimers).foreach(cutadapt.anywhere += _)
+      cutadapt.mainFunction = true
       add(cutadapt)
       addSummarizable(cutadapt, "cutadapt")
     }

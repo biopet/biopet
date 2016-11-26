@@ -34,6 +34,7 @@ class HaplotypeCallerAllele(val root: Configurable) extends Variantcaller {
     val hc = gatk.HaplotypeCaller(this, inputBams.values.toList, outputFile)
     hc.alleles = Some(alleles)
     hc.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
+    hc.mainFunction = true
     add(hc)
   }
 }

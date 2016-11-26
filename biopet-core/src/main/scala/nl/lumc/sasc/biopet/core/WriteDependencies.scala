@@ -14,11 +14,13 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
+import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
-import org.broadinstitute.gatk.queue.function.{ CommandLineFunction, QFunction }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import org.broadinstitute.gatk.queue.function.{CommandLineFunction, QFunction}
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -112,6 +114,7 @@ object WriteDependencies extends Logging with Configurable {
           case _                        => None
         }), "main_job" -> (f match {
           case cmd: BiopetCommandLineFunction => cmd.mainFunction
+          case _: WriteSummary                => true
           case _                              => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),

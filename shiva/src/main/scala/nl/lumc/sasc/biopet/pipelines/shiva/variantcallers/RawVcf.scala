@@ -40,7 +40,9 @@ class RawVcf(val root: Configurable) extends Variantcaller {
         val m2v = new MpileupToVcf(this)
         m2v.inputBam = bamFile
         m2v.output = new File(outputDir, sample + ".raw.vcf")
-        add(mp | m2v)
+        val pipe = mp | m2v
+        pipe.mainFunction = true
+        add(pipe)
 
         val vcfFilter = new VcfFilter(this) {
           override def configNamespace = "vcffilter"
@@ -52,6 +54,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
         }
         vcfFilter.inputVcf = m2v.output
         vcfFilter.outputVcf = new File(outputDir, bamFile.getName.stripSuffix(".bam") + ".raw.filter.vcf.gz")
+        vcfFilter.mainFunction = true
         add(vcfFilter)
         vcfFilter.outputVcf
     }
@@ -61,6 +64,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
     cv.out = outputFile
     cv.setKey = Some("null")
     cv.excludeNonVariants = !keepRefCalls
+    cv.mainFunction = true
     add(cv)
   }
 }

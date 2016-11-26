@@ -85,7 +85,10 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     this match {
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach(add(_))
+      case _ => reportClass.foreach { report =>
+        report.mainFunction = true
+        add(report)
+      }
     }
 
     logger.info("Running pre commands")

@@ -200,6 +200,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     if (chunking) {
       val fastSplitterR1 = new FastqSplitter(this)
+      fastSplitterR1.mainFunction = true
       fastSplitterR1.input = inputR1
       for ((chunkDir, fastqfile) <- chunks) fastSplitterR1.output :+= fastqfile._1
       fastSplitterR1.isIntermediate = true
@@ -207,6 +208,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
       if (paired) {
         val fastSplitterR2 = new FastqSplitter(this)
+        fastSplitterR2.mainFunction = true
         fastSplitterR2.input = inputR2.get
         for ((chunkDir, fastqfile) <- chunks) fastSplitterR2.output :+= fastqfile._2.get
         fastSplitterR2.isIntermediate = true
@@ -255,10 +257,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir, outputName + ".dedup.bam")
       val md = MarkDuplicates(this, bamFiles, bamFile)
+      md.mainFunction = true
       add(md)
       addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
       val mergeSamFile = MergeSamFiles(this, bamFiles, new File(outputDir, outputName + ".merge.bam"))
+      mergeSamFile.mainFunction = true
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
@@ -297,6 +301,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bwaAlnR1.fastq = R1
     bwaAlnR1.output = swapExt(output.getParent, output, ".bam", ".R1.sai")
     bwaAlnR1.isIntermediate = true
+    bwaAlnR1.mainFunction = true
     add(bwaAlnR1)
 
     val samFile: File = if (paired) {
@@ -304,6 +309,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       bwaAlnR2.fastq = R2.get
       bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
       bwaAlnR2.isIntermediate = true
+      bwaAlnR2.mainFunction = true
       add(bwaAlnR2)
 
       val bwaSampe = new BwaSampe(this)
@@ -314,6 +320,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       bwaSampe.r = getReadGroupBwa
       bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSampe.isIntermediate = true
+      bwaSampe.mainFunction = true
       add(bwaSampe)
 
       bwaSampe.output
@@ -324,6 +331,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       bwaSamse.r = getReadGroupBwa
       bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSamse.isIntermediate = true
+      bwaSamse.mainFunction = true
       add(bwaSamse)
 
       bwaSamse.output
@@ -331,6 +339,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val sortSam = SortSam(this, samFile, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    sortSam.mainFunction = true
     add(sortSam)
     sortSam.output
   }
@@ -346,6 +355,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val pipe = bwaCommand | sortSam
     pipe.isIntermediate = chunking || !skipMarkduplicates
     pipe.threadsCorrection = -1
+    pipe.mainFunction = true
     add(pipe)
     output
   }
@@ -362,6 +372,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
     val pipe = new BiopetFifoPipe(this, gsnapCommand :: ar._1 :: reorderSam :: Nil)
     pipe.threadsCorrection = -2
+    pipe.mainFunction = true
     add(pipe)
     ar._2
   }
@@ -387,6 +398,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val pipe = hisat2 | sortSam
     pipe.isIntermediate = chunking || !skipMarkduplicates
     pipe.threadsCorrection = 1
+    pipe.mainFunction = true
     add(pipe)
 
     output
@@ -402,6 +414,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.noConvertBam = false
     // and always keep input ordering
     tophat.keepFastaOrder = true
+    tophat.mainFunction = true
     add(tophat)
 
     // fix unmapped file coordinates
@@ -416,6 +429,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sorter = SortSam(this, fixer.outputSam, new File(tophat.outputDir, "unmapped_fixup.sorted.bam"))
     sorter.sortOrder = "coordinate"
     sorter.isIntermediate = true
+    sorter.mainFunction
     add(sorter)
 
     // merge with mapped file
@@ -456,9 +470,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     stampyCmd.sanger = true
     stampyCmd.output = this.swapExt(output.getParentFile, output, ".bam", ".sam")
     stampyCmd.isIntermediate = true
+    stampyCmd.mainFunction = true
     add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    sortSam.mainFunction = true
     add(sortSam)
     sortSam.output
   }
@@ -477,6 +493,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(bowtie.output, output)
     val pipe = new BiopetFifoPipe(this, (Some(bowtie) :: Some(ar._1) :: Nil).flatten)
     pipe.threadsCorrection = -1
+    pipe.mainFunction = true
     add(pipe)
     ar._2
   }
@@ -496,6 +513,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val pipe = bowtie2 | sortSam
     pipe.isIntermediate = chunking || !skipMarkduplicates
     pipe.threadsCorrection = -1
+    pipe.mainFunction = true
     add(pipe)
     output
   }
@@ -516,6 +534,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -3
     zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
     zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
+    pipe.mainFunction = true
     add(pipe)
     reorderSam.output
   }
@@ -528,6 +547,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     zcatR2.foreach(_._1.foreach(add(_)))
 
     val starCommand = Star._2pass(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
+    starCommand._2.foreach(_.mainFunction = true)
     addAll(starCommand._2)
     val ar = addAddOrReplaceReadGroups(starCommand._1, output)
     add(ar._1)

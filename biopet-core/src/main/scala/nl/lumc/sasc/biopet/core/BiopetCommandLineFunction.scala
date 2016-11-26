@@ -36,7 +36,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   var executable: String = _
 
-  def mainFunction = false
+  var mainFunction = false
 
   /** This is the default shell for drmaa jobs */
   def defaultRemoteCommand = "bash"

@@ -52,6 +52,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
     seqtk.output = new File(outputDir, input.getName + ".fasta")
     seqtk.A = true
     seqtk.isIntermediate = true
+    seqtk.mainFunction = true
     add(seqtk)
     seqtk.output
   }
@@ -71,6 +72,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
     krakenAnalysis.classifiedOut = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
     krakenAnalysis.unclassifiedOut = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
+    krakenAnalysis.mainFunction = true
     add(krakenAnalysis)
 
     outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
@@ -82,6 +84,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
     krakenReport.input = krakenAnalysis.output
     krakenReport.showZeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
+    krakenReport.mainFunction = true
     add(krakenReport)
 
     outputFiles += ("kraken_report_input" -> krakenReport.input)
@@ -91,6 +94,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
     krakenReportJSON.inputReport = krakenReport.output
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
     krakenReportJSON.skipNames = config("skipNames", default = false)
+    krakenReportJSON.mainFunction = true
     add(krakenReportJSON)
     addSummarizable(krakenReportJSON, "krakenreport")
 

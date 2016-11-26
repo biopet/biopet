@@ -41,6 +41,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
           sortSam.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
           sortSam.sortOrder = "queryname"
           sortSam.isIntermediate = true
+          sortSam.mainFunction = true
           add(sortSam)
           sortSam.output
         } else file
@@ -51,6 +52,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         job.output = new File(outputDir, s"$id.$name.counts")
         job.format = Option("bam")
         job.order = if (sortOnId) Some("name") else Some("pos")
+        job.mainFunction = true
         add(job)
         id -> job
     }

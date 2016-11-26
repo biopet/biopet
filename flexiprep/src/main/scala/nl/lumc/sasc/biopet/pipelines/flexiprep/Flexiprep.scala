@@ -113,6 +113,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (paired) outputFiles += ("fastq_input_R2" -> inputR2.get)
 
     fastqcR1 = Fastqc(this, inputR1, new File(outputDir, R1Name + ".fastqc/"))
+    fastqcR1.mainFunction = true
     add(fastqcR1)
     addSummarizable(fastqcR1, "fastqc_R1")
     outputFiles += ("fastqc_R1" -> fastqcR1.output)
@@ -132,6 +133,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     if (paired) {
       fastqcR2 = Fastqc(this, inputR2.get, new File(outputDir, R2Name + ".fastqc/"))
+      fastqcR2.mainFunction = true
       add(fastqcR2)
       addSummarizable(fastqcR2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqcR2.output)
@@ -228,6 +230,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       pipe.deps ::= fastqcR1.output
       pipe.deps ::= fastqcR2.output
       pipe.isIntermediate = !keepQcFastqFiles
+      pipe.mainFunction = true
       add(pipe)
 
       addSummarizable(fqSync, "fastq_sync")

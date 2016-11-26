@@ -76,6 +76,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
       val mergeSVcalls = new Pysvtools(this)
       mergeSVcalls.input = sampleVCFS.flatten
       mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
+      mergeSVcalls.mainFunction = true
       add(mergeSVcalls)
       outputMergedVCFbySample += (sample -> mergeSVcalls.output)
     }
@@ -84,6 +85,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     val mergeSVcallsProject = new Pysvtools(this)
     mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
     mergeSVcallsProject.output = outputMergedVCF
+    mergeSVcallsProject.mainFunction = true
     add(mergeSVcallsProject)
 
     // merging the VCF calls by project
@@ -104,14 +106,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = {
-    val callers: Set[String] = configCallers
-    //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
-    Map(
-      "final_mergedvcf" -> outputMergedVCF
-
-    )
-  }
+  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> outputMergedVCF)
 }
 
 object ShivaSvCalling extends PipelineCommand

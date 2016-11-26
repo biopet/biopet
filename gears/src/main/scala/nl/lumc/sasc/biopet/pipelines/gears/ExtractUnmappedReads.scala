@@ -56,6 +56,7 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     if (paired) samtoolsViewSelectUnmapped.f = List("12")
     else samtoolsViewSelectUnmapped.f = List("4")
     samtoolsViewSelectUnmapped.isIntermediate = true
+    samtoolsViewSelectUnmapped.mainFunction = true
     add(samtoolsViewSelectUnmapped)
 
     // start bam to fastq (only on unaligned reads) also extract the matesam
@@ -67,6 +68,7 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
       samToFastq.fastqUnpaired = fastqUnmappedSingletons
     }
     samToFastq.isIntermediate = !config("keep_unmapped_fastq", default = false).asBoolean
+    samToFastq.mainFunction = true
     add(samToFastq)
   }
 }
