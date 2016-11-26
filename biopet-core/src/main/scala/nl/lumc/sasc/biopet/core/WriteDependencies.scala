@@ -47,9 +47,10 @@ object WriteDependencies extends Logging with Configurable {
    * This method will generate a json file where information about job and file dependencies are stored
    *
    * @param functions This should be all functions that are given to the graph of Queue
-   * @param outputFile Json file to write dependencies to
+   * @param outputDir
+   * @param prefix prefix
    */
-  def writeDependencies(functions: Seq[QFunction], outputFile: File, mainJobsFile: Option[File] = None): Unit = {
+  def writeDependencies(functions: Seq[QFunction], outputDir: File, prefix: String): Unit = {
     logger.info("Start calculating dependencies")
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
@@ -126,17 +127,7 @@ object WriteDependencies extends Logging with Configurable {
           "fail_at_start" -> f.isFail)
     }.toIterator.toMap
 
-    mainJobsFile.foreach { file =>
-      val mainJobs = jobs.filter(_._2("main_job") == true).map {
-        case (name, job) =>
-          name -> getMainDependencies(name, jobs)
-      }
-
-      val writer = new PrintWriter(file)
-      writer.println(ConfigUtils.mapToJson(mainJobs).spaces2)
-      writer.close()
-    }
-
+    val outputFile = new File(outputDir, s"$prefix.deps.json")
     logger.info(s"Writing dependencies to: $outputFile")
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
@@ -144,6 +135,20 @@ object WriteDependencies extends Logging with Configurable {
       "files" -> files.values.par.map(_.getMap).toList
     )).spaces2)
     writer.close()
+
+    val jobsDeps = jobs.map(x => x._1 -> (x._2("depends_on_jobs")))
+    val jobsWriter = new PrintWriter(new File(outputDir, s"$prefix.jobs.json"))
+    jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
+    jobsWriter.close()
+
+    val mainJobs = jobs.filter(_._2("main_job") == true).map {
+      case (name, job) =>
+        name -> getMainDependencies(name, jobs)
+    }
+
+    val mainJobsWriter = new PrintWriter(new File(outputDir, s"$prefix.main_jobs.json"))
+    mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
+    mainJobsWriter.close()
 
     logger.info("done calculating dependencies")
   }
