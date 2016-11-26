@@ -121,7 +121,10 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
+    WriteDependencies.writeDependencies(functions,
+      new File(outputDir, s".log/${qSettings.runName}.deps.json"),
+      Some(new File(outputDir, s".log/${qSettings.runName}.mainJobs.json"))
+    )
 
     Logging.checkErrors()
     logger.info("Script complete without errors")

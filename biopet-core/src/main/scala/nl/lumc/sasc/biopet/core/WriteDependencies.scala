@@ -49,7 +49,7 @@ object WriteDependencies extends Logging with Configurable {
    * @param functions This should be all functions that are given to the graph of Queue
    * @param outputFile Json file to write dependencies to
    */
-  def writeDependencies(functions: Seq[QFunction], outputFile: File): Unit = {
+  def writeDependencies(functions: Seq[QFunction], outputFile: File, mainJobsFile: Option[File] = None): Unit = {
     logger.info("Start calculating dependencies")
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
@@ -126,14 +126,37 @@ object WriteDependencies extends Logging with Configurable {
           "fail_at_start" -> f.isFail)
     }.toIterator.toMap
 
+    mainJobsFile.foreach { file =>
+      val mainJobs = jobs.filter(_._2("main_job") == true).map { case (name, job) =>
+        name -> (job + ("depends_on_jobs" -> getMainDependencies(name, jobs)))
+      }
+
+      val writer = new PrintWriter(file)
+      writer.println(ConfigUtils.mapToJson(mainJobs).spaces2)
+      writer.close()
+    }
+
     logger.info(s"Writing dependencies to: $outputFile")
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
-      "jobs" -> jobs.toMap,
+      "jobs" -> jobs,
       "files" -> files.values.par.map(_.getMap).toList
     )).spaces2)
     writer.close()
 
     logger.info("done calculating dependencies")
+  }
+
+  def getMainDependencies(jobName: String, jobsMap: Map[String, Map[String, Any]]): List[String] = {
+    val job = jobsMap(jobName)
+    val dependencies = job("depends_on_jobs") match {
+      case l:List[_] => l.map(_.toString)
+    }
+    dependencies.flatMap { dep =>
+      jobsMap(dep)("main_job") match {
+        case true  => List(dep)
+        case false => getMainDependencies(dep, jobsMap)
+      }
+    }
   }
 }
