@@ -110,6 +110,9 @@ object WriteDependencies extends Logging with Configurable {
         name -> Map("command" -> (f match {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
+        }), "main_job" -> (f match {
+          case cmd: BiopetCommandLineFunction => cmd.mainFunction
+          case _                              => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
           "depends_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
