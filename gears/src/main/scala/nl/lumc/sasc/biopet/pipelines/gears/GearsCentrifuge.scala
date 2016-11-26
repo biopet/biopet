@@ -52,7 +52,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     centrifugeKreport.centrifugeOutputFiles :+= fifo
     centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
-    val pipe = new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo))))
+    val pipe = new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo)))
     pipe.mainFunction = true
     add(pipe)
 

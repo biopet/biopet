@@ -14,12 +14,12 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
-import org.broadinstitute.gatk.queue.function.{CommandLineFunction, QFunction}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import org.broadinstitute.gatk.queue.function.{ CommandLineFunction, QFunction }
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -127,8 +127,9 @@ object WriteDependencies extends Logging with Configurable {
     }.toIterator.toMap
 
     mainJobsFile.foreach { file =>
-      val mainJobs = jobs.filter(_._2("main_job") == true).map { case (name, job) =>
-        name -> (job + ("depends_on_jobs" -> getMainDependencies(name, jobs)))
+      val mainJobs = jobs.filter(_._2("main_job") == true).map {
+        case (name, job) =>
+          name -> (job + ("depends_on_jobs" -> getMainDependencies(name, jobs)))
       }
 
       val writer = new PrintWriter(file)
@@ -150,7 +151,7 @@ object WriteDependencies extends Logging with Configurable {
   def getMainDependencies(jobName: String, jobsMap: Map[String, Map[String, Any]]): List[String] = {
     val job = jobsMap(jobName)
     val dependencies = job("depends_on_jobs") match {
-      case l:List[_] => l.map(_.toString)
+      case l: List[_] => l.map(_.toString)
     }
     dependencies.flatMap { dep =>
       jobsMap(dep)("main_job") match {
