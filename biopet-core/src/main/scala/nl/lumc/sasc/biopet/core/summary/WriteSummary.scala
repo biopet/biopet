@@ -49,15 +49,19 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   //TODO: add more checksums types
 
   override def freezeFieldValues(): Unit = {
-    for (q <- qscript.summaryQScripts) deps :+= q.summaryFile
+    init()
+    super.freezeFieldValues()
+  }
+
+  def init(): Unit = {
+    for (q <- qscript.summaryQScripts)
+      deps :+= q.summaryFile
     for ((_, l) <- qscript.summarizables; s <- l) s match {
       case f: QFunction => deps :+= f.firstOutput
       case _            =>
     }
 
     jobOutputFile = new File(out.getParentFile, ".%s.%s.out".format(out.getName, analysisName))
-
-    super.freezeFieldValues()
   }
 
   /** Function to create summary */

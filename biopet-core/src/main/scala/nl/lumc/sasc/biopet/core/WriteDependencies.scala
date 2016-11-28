@@ -110,13 +110,13 @@ object WriteDependencies extends Logging with Configurable {
 
     val jobs = functionNames.par.map {
       case (f, name) =>
-        name -> Map("command" -> (f match {
+        name.toString -> Map("command" -> (f match {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
         }), "main_job" -> (f match {
-          case cmd: BiopetCommandLineFunction => cmd.mainFunction
+          case cmd: BiopetCommandLineFunction            => cmd.mainFunction
           case s: WriteSummary if s.qscript.root == null => true
-          case _                              => false
+          case _                                         => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
           "depends_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
@@ -140,7 +140,7 @@ object WriteDependencies extends Logging with Configurable {
     val jobsWriter = new PrintWriter(new File(outputDir, s"$prefix.jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    writeDotFile(jobsDeps, new File(outputDir, s"$prefix.jobs.dot"))
+    writeGraphvizFile(jobsDeps, new File(outputDir, s"$prefix.jobs.gv"))
 
     val mainJobs = jobs.filter(_._2("main_job") == true).map {
       case (name, job) =>
@@ -150,7 +150,7 @@ object WriteDependencies extends Logging with Configurable {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"$prefix.main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    writeDotFile(mainJobs, new File(outputDir, s"$prefix.main_jobs.dot"))
+    writeGraphvizFile(mainJobs, new File(outputDir, s"$prefix.main_jobs.gv"))
 
     logger.info("done calculating dependencies")
   }
@@ -168,10 +168,10 @@ object WriteDependencies extends Logging with Configurable {
     }.distinct
   }
 
-  def writeDotFile(jobs: Map[String, List[String]], outputFile: File): Unit = {
+  def writeGraphvizFile(jobs: Map[String, List[String]], outputFile: File): Unit = {
     val writer = new PrintWriter(outputFile)
-    writer. println("digraph graphname {")
-    jobs.foreach { case (a,b) => b.foreach(c => writer.println(s"  $c -> $a;"))}
+    writer.println("digraph graphname {")
+    jobs.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
     writer.println("}")
     writer.close()
   }

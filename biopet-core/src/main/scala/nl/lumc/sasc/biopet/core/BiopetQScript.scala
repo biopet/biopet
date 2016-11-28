@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
@@ -98,7 +98,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         f.beforeGraph()
         f.internalBeforeGraph()
         f.commandLine
-      case _ =>
+      case f: WriteSummary => f.init()
+      case _               =>
     }
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
