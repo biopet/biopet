@@ -65,7 +65,10 @@ class XhmmMatrix(val root: Configurable) extends Xhmm {
     if (inputExcludeSamples.nonEmpty && inputExcludeTargets.nonEmpty) {
       repeat("--excludeTargets", inputExcludeTargets) + repeat("--excludeSamples", inputExcludeSamples)
     } else if (centerData && zScoreData) {
-      conditional(centerData, "--centerData") + conditional(zScoreData, "--centerData") + required("--maxSdTargetRD", maxsdTargetRD)
+      conditional(centerData, "--centerData") +
+        required("--centerType", centerType) +
+        conditional(zScoreData, "--zScoreData") +
+        required("--maxSdTargetRD", maxsdTargetRD)
     } else {
       required("--minTargetSize", minTargetSize) +
         required("--maxTargetSize", maxTargetSize) +

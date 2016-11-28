@@ -38,6 +38,7 @@ class XhmmDiscover(val root: Configurable) extends Xhmm with Summarizable {
       required("-R", r) +
       required("-c", outputXcnv) +
       required("-a", outputXcnvAuxFile) +
+      required("-p", discoverParamsFile) +
       required("-s", xhmmAnalysisName)
   }
 
