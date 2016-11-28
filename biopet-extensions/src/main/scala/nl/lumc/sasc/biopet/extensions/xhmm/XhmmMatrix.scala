@@ -71,8 +71,8 @@ class XhmmMatrix(val root: Configurable) extends Xhmm {
         required("--maxTargetSize", maxTargetSize) +
         required("--minMeanTargetRD", minMeanTargetRD) +
         required("--maxMeanTargetRD", maxMeanTargetRD) +
-        required("--minMeanSampleRd", minMeanSampleRD) +
-        required("--maxMeanSampleRd", maxMeanSampleRD) +
+        required("--minMeanSampleRD", minMeanSampleRD) +
+        required("--maxMeanSampleRD", maxMeanSampleRD) +
         required("--maxSdSampleRD", maxSdSampleRD)
     }
 
@@ -82,8 +82,8 @@ class XhmmMatrix(val root: Configurable) extends Xhmm {
     executable + required("--matrix") +
       required("-r", inputMatrix) +
       required("-o", outputMatrix) +
-      optional("--excludedTargets", outputExcludedTargets) +
-      optional("--excludedSamples", outputExcludedSamples) + subCmdLine
+      optional("--outputExcludedTargets", outputExcludedTargets) +
+      optional("--outputExcludedSamples", outputExcludedSamples) + subCmdLine
   }
 
 }
