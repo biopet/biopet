@@ -123,6 +123,9 @@ object WriteDependencies extends Logging with Configurable {
           "output_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
           "outputs" -> outputFiles(f).toList,
           "inputs" -> f.inputs.toList,
+          "done_files" -> f.doneOutputs.toList,
+          "fail_files" -> f.failOutputs.toList,
+          "stdout_file" -> f.jobOutputFile,
           "done_at_start" -> f.isDone,
           "fail_at_start" -> f.isFail)
     }.toIterator.toMap
@@ -141,6 +144,7 @@ object WriteDependencies extends Logging with Configurable {
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
     writeGraphvizFile(jobsDeps, new File(outputDir, s"$prefix.jobs.gv"))
+    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"$prefix.compress.jobs.gv"))
 
     val mainJobs = jobs.filter(_._2("main_job") == true).map {
       case (name, job) =>
@@ -151,6 +155,7 @@ object WriteDependencies extends Logging with Configurable {
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
     writeGraphvizFile(mainJobs, new File(outputDir, s"$prefix.main_jobs.gv"))
+    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"$prefix.compress.main_jobs.gv"))
 
     logger.info("done calculating dependencies")
   }
@@ -166,6 +171,18 @@ object WriteDependencies extends Logging with Configurable {
         case false => getMainDependencies(dep, jobsMap)
       }
     }.distinct
+  }
+
+  val numberRegex = """(.*)_(\d*)$""".r
+  def compressOnType(jobs: Map[String, List[String]]): Map[String, List[String]] = {
+    val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
+      job match {
+        case numberRegex(name, number) => (name, dep match {
+          case numberRegex(name, number) => name
+        })
+      }
+    }
+    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
   }
 
   def writeGraphvizFile(jobs: Map[String, List[String]], outputFile: File): Unit = {
