@@ -41,7 +41,7 @@ object XcnvToBed extends ToolCommand {
       val chr = locs(0)
       val start = locs(1).split("-")(0)
       val stop = locs(1).split("-")(1)
-      s"$chr\t$start\t$stop\t$cnv"
+      s"$chr\t$start\t$stop\t$cnv\n"
     }
   }
 
