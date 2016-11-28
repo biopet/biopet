@@ -101,7 +101,7 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
 
     // create bed files
     val bedDir = new File(xhmmDir, "beds")
-    val beds = inputBams.keys.map{ x =>
+    val beds = inputBams.keys.map { x =>
       val z = new XcnvToBed(this)
       z.inputXcnv = discover.outputXcnv
       z.sample = x

@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import nl.lumc.sasc.biopet.tools.VepNormalizer.Args
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -8,15 +8,14 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 import scala.io.Source
 
 /**
-  * Created by Sander Bollen on 24-11-16.
-  */
+ * Created by Sander Bollen on 24-11-16.
+ */
 object XcnvToBed extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = new OptParser()
       .parse(args, Args())
       .getOrElse(throw new IllegalArgumentException)
-
 
     val writer = new BufferedWriter(new FileWriter(commandArgs.outputBed))
     Source.fromFile(commandArgs.inputXcnv).
@@ -46,7 +45,7 @@ object XcnvToBed extends ToolCommand {
     }
   }
 
-  case class Args(inputXcnv: File = null, outputBed: File = null , sample: String = null) extends AbstractArgs
+  case class Args(inputXcnv: File = null, outputBed: File = null, sample: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     head("Convert a sample track within an XHMM XCNV file to a BED track. Fourt column indicates deletion (-1), normal (0) or duplication (1) of region")
@@ -58,12 +57,12 @@ object XcnvToBed extends ToolCommand {
     } text {
       "Input XCNV file"
     }
-    opt[File]('O', "Output") required() valueName "<bed>" action { (x,c) =>
+    opt[File]('O', "Output") required () valueName "<bed>" action { (x, c) =>
       c.copy(outputBed = x)
     } text {
       "Output BED file"
     }
-    opt[String]('S', "Sample") required() action { (x,c) =>
+    opt[String]('S', "Sample") required () action { (x, c) =>
       c.copy(sample = x)
     } text {
       "The sample which to select"
