@@ -14,18 +14,18 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import nl.lumc.sasc.biopet.utils.ToolCommand
-import scala.collection.mutable
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
 
+import scala.collection.mutable
 import scala.io.Source
 
 /**
  * This tool can convert a tsv to a json file
  */
-object SamplesTsvToJson extends ToolCommand {
+object SamplesTsvToConfig extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil,
                   tagFiles: List[File] = Nil,
                   outputFile: Option[File] = None) extends AbstractArgs
@@ -39,7 +39,10 @@ object SamplesTsvToJson extends ToolCommand {
     }
     opt[File]('o', "outputFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
-    }
+    } text """
+             |When the extension is .yml or .yaml the output is in yaml format, otherwise it is in json.
+             |When no extension is given the output goes to stdout as yaml.
+           """.stripMargin
   }
 
   /** Executes SamplesTsvToJson */
@@ -47,14 +50,16 @@ object SamplesTsvToJson extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    val jsonString = stringFromInputs(cmdArgs.inputFiles, cmdArgs.tagFiles)
+    val configMap = stringFromInputs(cmdArgs.inputFiles, cmdArgs.tagFiles)
     cmdArgs.outputFile match {
+      case Some(file) if file.getName.endsWith(".yml") || file.getName.endsWith(".yaml") =>
+        ConfigUtils.mapToYamlFile(configMap, file)
       case Some(file) => {
         val writer = new PrintWriter(file)
-        writer.println(jsonString)
+        writer.println(ConfigUtils.mapToJson(configMap).spaces2)
         writer.close()
       }
-      case _ => println(jsonString)
+      case _ => println(ConfigUtils.mapToYaml(configMap))
     }
   }
 
@@ -94,11 +99,11 @@ object SamplesTsvToJson extends ToolCommand {
     librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
   }
 
-  def stringFromInputs(inputs: List[File], tagsInputs: List[File]): String = {
+  def stringFromInputs(inputs: List[File], tagsInputs: List[File]): Map[String, Any] = {
     val map = inputs.map(f => mapFromFile(f))
       .foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     val tags = tagsInputs.map(f => mapFromFile(f, tags = true))
       .foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
-    mapToJson(mergeMaps(map, tags)).spaces2
+    mergeMaps(map, tags)
   }
 }
