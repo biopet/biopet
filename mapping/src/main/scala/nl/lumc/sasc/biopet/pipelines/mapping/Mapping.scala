@@ -19,11 +19,11 @@ import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie, Bowtie2}
+import nl.lumc.sasc.biopet.extensions.bwa.{BwaAln, BwaMem, BwaSampe, BwaSamse}
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
+import nl.lumc.sasc.biopet.extensions.picard.{AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam}
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -31,6 +31,7 @@ import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
+import nl.lumc.sasc.biopet.utils.textToSize
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -163,10 +164,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       if (numberChunks.isEmpty) {
         if (config.contains("numberchunks")) numberChunks = config("numberchunks", default = None)
         else {
-          val chunkSize: Int = config("chunksize", 1 << 30)
+          val chunkSize: String = config("chunksize", default = "5G")
           val filesize = if (inputR1.getName.endsWith(".gz") || inputR1.getName.endsWith(".gzip")) inputR1.length * 3
           else inputR1.length
-          numberChunks = Option(ceil(filesize.toDouble / chunkSize).toInt)
+          numberChunks = Option(ceil(filesize.toDouble / textToSize(chunkSize)).toInt)
         }
       }
       logger.debug("Chunks: " + numberChunks.getOrElse(1))

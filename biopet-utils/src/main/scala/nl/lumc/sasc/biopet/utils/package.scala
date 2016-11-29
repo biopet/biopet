@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet
 
 import scala.util.{ Failure, Success, Try }
+import scala.math._
 
 /**
  * General utility functions.
@@ -28,6 +29,15 @@ package object utils {
 
   /** Regular expression for matching entire decimal numbers (compatible with the scientific notation) */
   val isDecimal = """^([-+]?\d*\.?\d+(?:[eE][-+]?[0-9]+)?)$""".r
+
+  def textToSize(text: String): Long = {
+    text.last match {
+      case 'g' | 'G' => ((1L << 30) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case 'm' | 'M' => ((1L << 20) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case 'k' | 'K' => ((1L << 10) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case _         => text.toLong
+    }
+  }
 
   /**
    * Tries to convert the given string with the given conversion functions recursively.
