@@ -44,6 +44,7 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   var minAP: Option[Int] = config("min_ap")
   var homoFraction: Option[Double] = config("homoFraction")
   var ploidy: Option[Int] = config("ploidy")
+  var refCalls: Boolean = config("ref_calls", default = false)
   var sample: String = _
   var reference: String = _
 
@@ -72,6 +73,7 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
     optional("--minAP", minAP) +
     optional("--homoFraction", homoFraction) +
     optional("--ploidy", ploidy) +
+    conditional(refCalls, "--refCalls") +
     required("--sample", sample) +
     (if (inputAsStdin) "" else required("-I", inputMpileup))
 }
