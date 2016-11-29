@@ -27,7 +27,7 @@ import scala.math.{ floor, round }
 
 object MpileupToVcf extends ToolCommand {
   case class Args(input: File = null, output: File = null, sample: String = null, minDP: Int = 8, minAP: Int = 2,
-                  homoFraction: Double = 0.8, ploidy: Int = 2, seqError: Double = 0.005) extends AbstractArgs
+                  homoFraction: Double = 0.8, ploidy: Int = 2, seqError: Double = 0.005, refCalls: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") valueName "<file>" action { (x, c) =>
@@ -53,6 +53,9 @@ object MpileupToVcf extends ToolCommand {
     }
     opt[Double]("seqError") action { (x, c) =>
       c.copy(seqError = x)
+    }
+    opt[Unit]("refCalls") action { (x, c) =>
+      c.copy(refCalls = true)
     }
   }
 
@@ -172,7 +175,7 @@ object MpileupToVcf extends ToolCommand {
         case _       =>
       }
 
-      if (alt.nonEmpty) {
+      if (alt.nonEmpty || commandArgs.refCalls) {
         val ad = for (ad <- format("AD").toString.split(",")) yield ad.toInt
         var left = reads - dels
         val gt = ArrayBuffer[Int]()
