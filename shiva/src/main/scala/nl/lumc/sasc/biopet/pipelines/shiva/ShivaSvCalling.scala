@@ -76,7 +76,6 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
       val mergeSVcalls = new Pysvtools(this)
       mergeSVcalls.input = sampleVCFS.flatten
       mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
-      mergeSVcalls.mainFunction = true
       add(mergeSVcalls)
       outputMergedVCFbySample += (sample -> mergeSVcalls.output)
     }
@@ -85,7 +84,6 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     val mergeSVcallsProject = new Pysvtools(this)
     mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
     mergeSVcallsProject.output = outputMergedVCF
-    mergeSVcallsProject.mainFunction = true
     add(mergeSVcallsProject)
 
     // merging the VCF calls by project

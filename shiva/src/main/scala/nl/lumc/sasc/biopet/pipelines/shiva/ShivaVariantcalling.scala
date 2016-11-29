@@ -106,27 +106,22 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
       if (normalize && decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         vtNormalize.isIntermediate = true
-        vtNormalize.mainFunction = true
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
-        vtDecompose.mainFunction = true
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
-        vtNormalize.mainFunction = true
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
         vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
-        vtDecompose.mainFunction = true
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else cv.variant :+= TaggedFile(caller.outputFile, caller.name)
     }
-    cv.mainFunction = true
     add(cv)
 
     addStats(finalFile, "final")

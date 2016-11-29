@@ -29,7 +29,6 @@ class HaplotypeCaller(val root: Configurable) extends Variantcaller {
 
   def biopetScript() {
     val hc = gatk.HaplotypeCaller(this, inputBams.values.toList, outputFile)
-    hc.mainFunction = true
     add(hc)
   }
 }

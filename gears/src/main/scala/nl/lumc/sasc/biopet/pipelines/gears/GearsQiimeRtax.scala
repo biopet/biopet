@@ -60,7 +60,6 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     slfR1.input :+= fastqR1
     slfR1.outputDir = new File(outputDir, "split_libraries_fastq_R1")
     sampleId.foreach(slfR1.sampleIds :+= _)
-    slfR1.mainFunction = true
     add(slfR1)
 
     lazy val slfR2 = fastqR2.map { file =>
@@ -75,7 +74,6 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     val pickOtus = new PickOtus(this)
     pickOtus.inputFasta = slfR1.outputSeqs
     pickOtus.outputDir = new File(outputDir, "pick_otus")
-    pickOtus.mainFunction = true
     add(pickOtus)
 
     val pickRepSet = new PickRepSet(this)
@@ -85,7 +83,6 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     pickRepSet.outputFasta = Some(new File(repSetOutputDir, slfR1.outputSeqs.getName))
     pickRepSet.logFile = Some(new File(repSetOutputDir, slfR1.outputSeqs.getName
       .stripSuffix(".fasta").stripSuffix(".fa").stripSuffix(".fna") + ".log"))
-    pickRepSet.mainFunction = true
     add(pickRepSet)
 
     val assignTaxonomy = new AssignTaxonomy(this)
@@ -94,7 +91,6 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     assignTaxonomy.inputFasta = pickRepSet.outputFasta.get
     assignTaxonomy.read1SeqsFp = Some(slfR1.outputSeqs)
     assignTaxonomy.read2SeqsFp = slfR2.map(_.outputSeqs)
-    assignTaxonomy.mainFunction = true
     add(assignTaxonomy)
   }
 }

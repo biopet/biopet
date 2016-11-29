@@ -75,7 +75,6 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
       samtoolsView.output = preProcessBam.get
       samtoolsView.b = true
       samtoolsView.h = true
-      samtoolsView.mainFunction = true
       add(samtoolsView)
 
       val bamMetricsFilter = BamMetrics(qscript, preProcessBam.get, new File(sampleDir, "metrics-filter"), sampleId = Some(sampleId))
@@ -95,7 +94,6 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
       macs2.name = Some(sampleId)
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
-      macs2.mainFunction = true
       add(macs2)
     }
   }
@@ -133,7 +131,6 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
         macs2.name = Some(sampleId + "_VS_" + controlId)
         macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
         macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
-        macs2.mainFunction = true
         add(macs2)
       }
     }

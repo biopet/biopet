@@ -35,7 +35,6 @@ class BaseCounts(val root: Configurable) extends QScript with Measurement with A
         baseCounter.outputDir = new File(outputDir, id)
         baseCounter.prefix = id
         baseCounter.refFlat = annotationRefFlat()
-        baseCounter.mainFunction = true
         add(baseCounter)
         id -> baseCounter
     }

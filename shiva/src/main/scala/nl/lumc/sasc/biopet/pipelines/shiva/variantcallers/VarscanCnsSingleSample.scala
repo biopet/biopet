@@ -62,7 +62,6 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
 
       val variantcallingJob = mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf
       variantcallingJob.threadsCorrection = -2
-      variantcallingJob.mainFunction = true
       add(variantcallingJob)
       add(Tabix(this, sampleVcf))
 
@@ -74,7 +73,6 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
     cv.out = outputFile
     cv.setKey = Some("null")
     cv.excludeNonVariants = true
-    cv.mainFunction = true
     add(cv)
   }
 }

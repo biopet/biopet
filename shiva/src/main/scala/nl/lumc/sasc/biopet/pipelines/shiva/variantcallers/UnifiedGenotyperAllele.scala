@@ -33,7 +33,6 @@ class UnifiedGenotyperAllele(val root: Configurable) extends Variantcaller {
     val ug = gatk.UnifiedGenotyper(this, inputBams.values.toList, outputFile)
     ug.alleles = Some(alleles)
     ug.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
-    ug.mainFunction = true
     add(ug)
   }
 }

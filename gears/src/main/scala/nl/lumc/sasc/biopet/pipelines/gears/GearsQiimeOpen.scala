@@ -51,13 +51,11 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
     splitLib.input :+= fastqInput
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
     sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
-    splitLib.mainFunction = true
     add(splitLib)
 
     val openReference = new PickOpenReferenceOtus(this)
     openReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
     openReference.outputDir = new File(outputDir, "pick_open_reference_otus")
-    openReference.mainFunction = true
     add(openReference)
     _otuMap = openReference.otuMap
     _otuTable = openReference.otuTable

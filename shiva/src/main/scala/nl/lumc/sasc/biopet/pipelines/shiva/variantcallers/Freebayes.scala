@@ -29,7 +29,6 @@ class Freebayes(val root: Configurable) extends Variantcaller {
     fb.bamfiles = inputBams.values.toList
     fb.outputVcf = new File(outputDir, namePrefix + ".freebayes.vcf")
     val pipe = fb | new Bgzip(this) > outputFile
-    pipe.mainFunction = true
     add(pipe)
 
     add(Tabix.apply(this, outputFile))

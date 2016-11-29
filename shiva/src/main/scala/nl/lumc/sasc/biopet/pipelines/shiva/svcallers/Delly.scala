@@ -43,7 +43,6 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DEL"
         delly.isIntermediate = true
         delly.outputvcf = new File(dellyDir, sample + ".delly.del.vcf")
-        delly.mainFunction = true
         add(delly)
 
         catVariants.variant :+= delly.outputvcf
@@ -54,7 +53,6 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DUP"
         delly.isIntermediate = true
         delly.outputvcf = new File(dellyDir, sample + ".delly.dup.vcf")
-        delly.mainFunction = true
         add(delly)
 
         catVariants.variant :+= delly.outputvcf
@@ -65,7 +63,6 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "INV"
         delly.isIntermediate = true
         delly.outputvcf = new File(dellyDir, sample + ".delly.inv.vcf")
-        delly.mainFunction = true
         add(delly)
 
         catVariants.variant :+= delly.outputvcf
@@ -76,7 +73,6 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "TRA"
         delly.isIntermediate = true
         delly.outputvcf = new File(dellyDir, sample + ".delly.tra.vcf")
-        delly.mainFunction = true
         add(delly)
 
         catVariants.variant :+= delly.outputvcf
@@ -84,13 +80,11 @@ class Delly(val root: Configurable) extends SvCaller {
 
       if (catVariants.variant.isEmpty) Logging.addError("At least 1 SV-type should be selected for Delly")
 
-      catVariants.mainFunction = true
       add(catVariants)
 
       val compressedVCF = new SortVcf(this)
       compressedVCF.input = catVariants.outputFile
       compressedVCF.output = catVariants.outputFile + ".gz"
-      compressedVCF.mainFunction = true
       add(compressedVCF)
 
       addVCF(sample, compressedVCF.output)

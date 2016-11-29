@@ -22,6 +22,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for md5sum */
 class Md5sum(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  mainFunction = false
+
   @Input(doc = "Input")
   var input: File = _
 

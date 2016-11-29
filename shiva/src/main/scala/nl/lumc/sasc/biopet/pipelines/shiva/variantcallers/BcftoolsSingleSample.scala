@@ -39,7 +39,6 @@ class BcftoolsSingleSample(val root: Configurable) extends Variantcaller {
       bt.output = new File(outputDir, sample + ".vcf.gz")
 
       val pipe = mp | new FixMpileup(this) | bt
-      pipe.mainFunction = true
       add(pipe)
       add(Tabix(this, bt.output))
       bt.output
@@ -50,7 +49,6 @@ class BcftoolsSingleSample(val root: Configurable) extends Variantcaller {
       bcfmerge.input = sampleVcfs
       bcfmerge.output = outputFile
       bcfmerge.O = Some("z")
-      bcfmerge.mainFunction = true
       add(bcfmerge)
     } else add(Ln.apply(this, sampleVcfs.head, outputFile))
     add(Tabix(this, outputFile))

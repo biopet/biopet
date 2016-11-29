@@ -217,12 +217,10 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
   def addIndelRealign(inputBam: File, dir: File, isIntermediate: Boolean): File = {
     val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
     realignerTargetCreator.isIntermediate = true
-    realignerTargetCreator.mainFunction = true
     add(realignerTargetCreator)
 
     val indelRealigner = IndelRealigner(this, inputBam, realignerTargetCreator.out, dir)
     indelRealigner.isIntermediate = isIntermediate
-    indelRealigner.mainFunction = true
     add(indelRealigner)
 
     indelRealigner.out
@@ -233,7 +231,6 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
     if (baseRecalibrator.knownSites.isEmpty) return inputBam
-    baseRecalibrator.mainFunction = true
     add(baseRecalibrator)
 
     if (config("use_analyze_covariates", default = true).asBoolean) {
@@ -247,7 +244,6 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
     printReads.BQSR = Some(baseRecalibrator.out)
     printReads.isIntermediate = isIntermediate
-    printReads.mainFunction = true
     add(printReads)
 
     printReads.out
