@@ -17,7 +17,9 @@ class XhmmMergeGatkDepths(val root: Configurable) extends Xhmm {
   var output: File = _
 
   def cmdLine = {
-    executable + required("--mergeGATKdepths") + repeat("--GATKdepths", gatkDepthsFiles) + required("-o", output)
+    executable + required("--mergeGATKdepths") +
+      repeat("--GATKdepths", gatkDepthsFiles) +
+      required("-o", output)
   }
 
 }

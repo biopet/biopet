@@ -23,8 +23,15 @@ class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
   @Input
   var r: File = _
 
-  @Argument
-  var discoverParamsFile: File = config("discover_params", namespace = "xhmm")
+  @Input
+  var f: File = _
+
+  override def beforeGraph() = {
+    super.beforeGraph()
+    if (f == null) {
+      f = referenceFasta()
+    }
+  }
 
   def cmdLine = {
     executable + required("--genotype") +
@@ -32,7 +39,7 @@ class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
       required("-r", inputMatrix) +
       required("-R", r) +
       required("-g", inputXcnv) +
-      required("-F", referenceFasta()) +
+      required("-F", f) +
       required("-v", outputVcf)
   }
 

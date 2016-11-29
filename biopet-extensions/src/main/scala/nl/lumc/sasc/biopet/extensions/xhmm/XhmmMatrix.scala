@@ -28,37 +28,26 @@ class XhmmMatrix(val root: Configurable) extends Xhmm {
   @Input(required = false)
   var inputExcludeSamples: List[File] = Nil
 
-  @Argument
-  var minTargetSize: Int = config("min_target_size", namespace = "xhmm", default = 10)
+  var minTargetSize: Int = config("min_target_size", namespace = "xhmm_matrix", default = 10)
 
-  @Argument
-  var maxTargetSize: Int = config("max_target_size", namespace = "xhmm", default = 10000)
+  var maxTargetSize: Int = config("max_target_size", namespace = "xhmm_matrix", default = 10000)
 
-  @Argument
-  var minMeanTargetRD: Int = config("min_mean_target_rd", namespace = "xhmm", default = 10)
+  var minMeanTargetRD: Int = config("min_mean_target_rd", namespace = "xhmm_matrix", default = 10)
 
-  @Argument
-  var maxMeanTargetRD: Int = config("max_mean_target_rd", namespace = "xhmm", default = 500)
+  var maxMeanTargetRD: Int = config("max_mean_target_rd", namespace = "xhmm_matrix", default = 500)
 
-  @Argument
-  var minMeanSampleRD: Int = config("min_mean_sample_rd", namespace = "xhmm", default = 25)
+  var minMeanSampleRD: Int = config("min_mean_sample_rd", namespace = "xhmm_matrix", default = 25)
 
-  @Argument
-  var maxMeanSampleRD: Int = config("max_mean_sample_rd", namespace = "xhmm", default = 200)
+  var maxMeanSampleRD: Int = config("max_mean_sample_rd", namespace = "xhmm_matrix", default = 200)
 
-  @Argument
-  var maxSdSampleRD: Int = config("max_sd_sample_rd", namespace = "xhmm", default = 150)
+  var maxSdSampleRD: Int = config("max_sd_sample_rd", namespace = "xhmm_matrix", default = 150)
 
-  @Argument
-  var maxsdTargetRD: Int = config("max_sd_target_rd", namespace = "xhmm", default = 30)
+  var maxsdTargetRD: Int = config("max_sd_target_rd", namespace = "xhmm_matrix", default = 30)
 
-  @Argument
   var centerData: Boolean = false
 
-  @Argument
   var centerType: String = "sample"
 
-  @Argument
   var zScoreData: Boolean = false
 
   private def subCmdLine = {

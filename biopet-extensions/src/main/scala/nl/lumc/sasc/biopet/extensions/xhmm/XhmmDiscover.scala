@@ -22,15 +22,20 @@ class XhmmDiscover(val root: Configurable) extends Xhmm with Summarizable {
   @Input
   var r: File = _
 
-  @Argument
-  var discoverParamsFile: File = config("discover_params", namespace = "xhmm")
+  private var _outputXcnvAuxFile: File = _
 
-  private lazy val outputXcnvAuxFile: File = {
-    new File(outputXcnv.getAbsolutePath + ".aux")
-  }
+  @Output
+  var outputXcnvAuxFile = _outputXcnvAuxFile
 
-  @Argument
   var xhmmAnalysisName: String = _
+
+  override def beforeGraph() = {
+    super.beforeGraph()
+    if (outputXcnv == null) {
+      throw new IllegalStateException("Must set output file")
+    }
+    _outputXcnvAuxFile = new File(outputXcnv.getAbsolutePath + ".aux")
+  }
 
   def cmdLine = {
     executable + required("--discover") +

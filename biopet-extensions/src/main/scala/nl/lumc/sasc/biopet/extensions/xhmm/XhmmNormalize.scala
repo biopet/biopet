@@ -19,11 +19,9 @@ class XhmmNormalize(val root: Configurable) extends Xhmm {
   @Output
   var normalizeOutput: File = _
 
-  @Argument
-  var normalizeMethod: String = config("normalize_method", namespace = "xhmm", default = "PVE_mean")
+  var normalizeMethod: String = config("normalize_method", namespace = "xhmm_normalize", default = "PVE_mean")
 
-  @Argument
-  var pveFactor: Float = config("pve_mean_factor", namespace = "xhmm", default = 0.7)
+  var pveFactor: Float = config("pve_mean_factor", namespace = "xhmm_normalize", default = 0.7)
 
   def cmdLine = {
     executable + required("--normalize") +
