@@ -44,68 +44,47 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
   @Output
   var cumulativeCoverageProportionsFile = _cumulativeCoverageProportionsFile
 
-  @Argument(required = false)
-  var calculateCoveraOverGenes: Option[File] = None
+  var calculateCoverageOverGenes: Option[File] = config("calculate_coverage_over_genes", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var countType: Option[String] = None
+  var countType: Option[String] = config("count_type", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var maxBaseQuality: Option[Int] = None
+  var maxBaseQuality: Option[Int] = config("max_base_quality", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var maxMappingQuality: Option[Int] = None
+  var maxMappingQuality: Option[Int] = config("max_mapping_quality", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var minBaseQuality: Option[Int] = None
+  var minBaseQuality: Option[Int] = config("min_base_quality", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var minMappingQuality: Option[Int] = None
+  var minMappingQuality: Option[Int] = config("min_mapping_quality", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var outputFormat: Option[String] = None
+  var outputFormat: Option[String] = config("output_format", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var partitionType: Option[String] = None
+  var partitionType: Option[String] = config("partition_type", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var omitDepthOutputAtEachBase: Boolean = false
+  var omitDepthOutputAtEachBase: Boolean = config("omit_depth_output_at_each_base", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var omitIntervalStatistics: Boolean = false
+  var omitIntervalStatistics: Boolean = config("omit_interval_statistics", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var omitLocusTable: Boolean = false
+  var omitLocusTable: Boolean = config("omit_locus_table", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var omitPerSampleStats: Boolean = false
+  var omitPerSampleStats: Boolean = config("omit_per_sample_stats", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var printBaseCounts: Boolean = false
+  var printBaseCounts: Boolean = config("print_base_counts", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var nBins: Option[Int] = None
+  var nBins: Option[Int] = config("n_bins", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var start: Option[Int] = None
+  var start: Option[Int] = config("start", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var stop: Option[Int] = None
+  var stop: Option[Int] = config("stop", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var summaryCoverageThreshold: Option[Int] = None
+  var summaryCoverageThreshold: Option[Int] = config("summary_coverage_threshold", namespace = "depth_of_coverage", default = None)
 
-  @Argument(required = false)
-  var ignoreDeletionSites: Boolean = false
+  var ignoreDeletionSites: Boolean = config("ignore_deletion_sites", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var includeDeletions: Boolean = false
+  var includeDeletions: Boolean = config("include_deletions", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var includeRefNSites: Boolean = false
+  var includeRefNSites: Boolean = config("include_RefNSites", namespace = "depth_of_coverage", default = false)
 
-  @Argument(required = false)
-  var printBinEndpointsAndExit: Boolean = false
+  var printBinEndpointsAndExit: Boolean = config("print_bin_endpoint_and_exit", namespace = "depth_of_coverage" , default = false)
 
   override def beforeGraph() = {
     super.beforeGraph()
@@ -124,7 +103,7 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   override def cmdLine = {
     super.cmdLine + required("--out", out) +
-      optional("--calculateCoverageOverGenes", calculateCoveraOverGenes) +
+      optional("--calculateCoverageOverGenes", calculateCoverageOverGenes) +
       optional("--countType", countType) +
       optional("--maxBaseQuality", maxBaseQuality) +
       optional("--maxMappingQuality", maxMappingQuality) +
