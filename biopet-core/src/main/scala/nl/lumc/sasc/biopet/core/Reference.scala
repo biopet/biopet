@@ -18,6 +18,7 @@ import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.utils.{ LazyCheck, BamUtils, ConfigUtils, FastaUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, Logging }
 
@@ -55,6 +56,12 @@ trait Reference extends Configurable {
   override def subPath = {
     referenceConfigPath ::: super.subPath
   }
+
+  lazy val geneAnnotationVersion: Option[String] = config("gene_annotation_name")
+  lazy val geneAnnotationSubPath = geneAnnotationVersion.map(x => List("gene_annotations", x)).getOrElse(Nil)
+  lazy val dbsnpVersion: Option[Int] = config("dbsnp_version")
+  lazy val dbsnpSubPath: List[String] = dbsnpVersion.map(x => List("dbsnp_annotations", x.toString)).getOrElse(Nil)
+  def dbsnpVcfFile: Option[File] = config("dbsnp_vcf", extraSubPath = dbsnpSubPath)
 
   /** Returns the reference config path */
   def referenceConfigPath = {

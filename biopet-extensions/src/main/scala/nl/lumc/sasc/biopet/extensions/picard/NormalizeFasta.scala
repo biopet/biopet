@@ -16,50 +16,31 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-/** Extension for picard SortVcf */
-class SortVcf(val root: Configurable) extends Picard with Reference {
-  javaMainClass = new picard.vcf.SortVcf().getClass.getName
+/**
+ * Created by sajvanderzeeuw on 6-10-15.
+ */
+class NormalizeFasta(val root: Configurable) extends Picard {
 
-  @Input(doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)", required = true)
+  javaMainClass = new picard.reference.NormalizeFasta().getClass.getName
+
+  @Input(doc = "The input fasta file", required = true)
   var input: File = _
 
-  @Output(doc = "Output VCF to be written.", required = true)
+  @Output(doc = "The output fasta file", required = true)
   var output: File = _
 
-  @Input(doc = "Sequence dictionary to use", required = true)
-  var sequenceDictionary: File = _
+  val lineLength: Int = config("line_length")
 
-  @Output
-  private var outputIndex: File = _
+  val truncateSequenceNameAtWhitespace: Boolean = config("truncate_sequence_name_at_whitespace", default = false)
 
-  override val dictRequired = true
-
-  override def beforeGraph(): Unit = {
-    super.beforeGraph()
-    if (output.getName.endsWith(".vcf.gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
-    if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
-    if (sequenceDictionary == null) sequenceDictionary = referenceDictFile
-  }
-
-  /** Returns command to execute */
   override def cmdLine = super.cmdLine +
     (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
     else required("INPUT=", input, spaceSeparated = false)) +
     (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
     else required("OUTPUT=", output, spaceSeparated = false)) +
-    required("SEQUENCE_DICTIONARY=", sequenceDictionary, spaceSeparated = false)
-}
-
-object SortVcf {
-  /** Returns default SortSam */
-  def apply(root: Configurable, input: File, output: File): SortVcf = {
-    val sortVcf = new SortVcf(root)
-    sortVcf.input = input
-    sortVcf.output = output
-    sortVcf
-  }
+    required("LINE_LENGTH=", lineLength, spaceSeparated = false) +
+    conditional(truncateSequenceNameAtWhitespace, "TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=TRUE")
 }
