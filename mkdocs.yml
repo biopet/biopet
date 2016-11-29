@@ -21,7 +21,7 @@ pages:
     - Toucan (Annotation): 'pipelines/toucan.md'
 - Tools:
     - AnnotateVcfWithBed: 'tools/AnnotateVcfWithBed.md'
-    - SamplesTsvToJson: 'tools/SamplesTsvToConfig.md'
+    - SamplesTsvToConfig: 'tools/SamplesTsvToConfig.md'
     - BedToInterval: 'tools/bedtointerval.md'
     - BastyGenerateFasta: 'tools/BastyGenerateFasta.md'
     - BedToInterval: 'tools/bedtointerval.md'
