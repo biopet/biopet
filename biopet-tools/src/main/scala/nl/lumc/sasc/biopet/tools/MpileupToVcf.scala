@@ -191,7 +191,7 @@ object MpileupToVcf extends ToolCommand {
           }
           left -= ad(max)
         }
-        writer.println(Array(chr, pos, ".", ref.toUpperCase, (if (alt.nonEmpty) alt.mkString(",") else "<REF>"), ".", ".", info.mkString(";"),
+        writer.println(Array(chr, pos, ".", ref.toUpperCase, if (alt.nonEmpty) alt.mkString(",") else "<REF>", ".", ".", info.mkString(";"),
           "GT:" + format.keys.mkString(":"), gt.sortWith(_ < _).mkString("/") + ":" + format.values.mkString(":")
         ).mkString("\t"))
       }
