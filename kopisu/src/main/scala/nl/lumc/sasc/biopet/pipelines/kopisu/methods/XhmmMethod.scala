@@ -13,15 +13,25 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
 
   def name = "xhmm"
 
-  private var targets: Option[File] = None
+  private var targets: File = config("amplicon_bed")
   val xhmmDir = new File(outputDir, "xhmm")
 
-  override def init() = {
-    super.init()
-    targets = config("amplicon_bed")
-    if (targets.isEmpty) {
-      throw new IllegalStateException("You must provide a BED file in key 'amplicon_bed' in your config to use XHMM")
-    }
+  override def fixedValues: Map[String, Any] = {
+    super.fixedValues ++ Map(
+      "depth_of_coverage" -> Map(
+        "downsampling_type" -> "BY_SAMPLE",
+        "downsample_to_coverage" -> 5000,
+        "omit_depth_output_at_each_base" -> true,
+        "omit_locus_table" -> true,
+        "min_base_quality" -> 0,
+        "min_mapping_quality" -> 20,
+        "start" -> 1,
+        "stop" -> 5000,
+        "n_bins" -> 200,
+        "include_ref_n_sites" -> true,
+        "count_type" -> "COUNT_FRAGMENTS"
+        )
+    )
   }
 
   def biopetScript() = {
@@ -117,19 +127,8 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
   private def depthOfCoverage(bamFile: File): DepthOfCoverage = {
     val dp = new DepthOfCoverage(this)
     dp.input_file = List(bamFile)
-    dp.intervals = targets.toList
-    dp.downsampling_type = Some("BY_SAMPLE")
-    dp.downsample_to_coverage = 5000
+    dp.intervals = List(targets)
     dp.out = swapExt(xhmmDir, bamFile, ".bam", ".dcov")
-    dp.omitDepthOutputAtEachBase = true
-    dp.omitLocusTable = true
-    dp.minBaseQuality = 0
-    dp.minMappingQuality = 20
-    dp.start = 1
-    dp.stop = 5000
-    dp.nBins = 200
-    dp.includeRefNSites = true
-    dp.countType = Some("COUNT_FRAGMENTS")
     dp
   }
 

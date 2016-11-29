@@ -82,7 +82,7 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   var includeDeletions: Boolean = config("include_deletions", namespace = "depth_of_coverage", default = false)
 
-  var includeRefNSites: Boolean = config("include_RefNSites", namespace = "depth_of_coverage", default = false)
+  var includeRefNSites: Boolean = config("include_ref_n_sites", namespace = "depth_of_coverage", default = false)
 
   var printBinEndpointsAndExit: Boolean = config("print_bin_endpoint_and_exit", namespace = "depth_of_coverage" , default = false)
 
