@@ -150,7 +150,8 @@ object ConfigUtils extends Logging {
   def yamlToMap(file: File): Map[String, Any] = {
     val yaml = new Yaml()
     val a = yaml.load(scala.io.Source.fromFile(file).reader())
-    ConfigUtils.any2map(a)
+    if (a == null) throw new IllegalStateException(s"File '$file' is an empty file")
+    else ConfigUtils.any2map(a)
   }
 
   /** Convert json to native scala map/values */
