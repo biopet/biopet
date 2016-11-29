@@ -234,6 +234,7 @@ object TestGearsSingle {
   bam.deleteOnExit()
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "centrifuge" -> Map("exe" -> "test", "centrifuge_index" -> "test"),
     "centrifugekreport" -> Map("exe" -> "test"),

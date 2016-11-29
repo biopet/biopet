@@ -63,6 +63,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
   /** Returns the extension to make the report */
   def reportClass: Option[ReportBuilderExtension] = None
 
+  val skipWriteDependencies: Boolean = config("skip_write_dependencies", default = false)
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -122,7 +124,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    WriteDependencies.writeDependencies(functions, new File(outputDir, ".log"), qSettings.runName)
+    if (!skipWriteDependencies) WriteDependencies.writeDependencies(functions, new File(outputDir, ".log"), qSettings.runName)
 
     Logging.checkErrors()
     logger.info("Script complete without errors")

@@ -198,6 +198,7 @@ object ShivaSvCallingTest {
   copyFile("ref.fa.fai")
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "cache" -> true,

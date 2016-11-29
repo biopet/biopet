@@ -112,6 +112,7 @@ object KopisuTest {
   Files.touch(new File(controlDir, "test.txt"))
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),

@@ -119,6 +119,7 @@ object TinyCapTest {
   Files.touch(annotationRefflat)
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "reference_fasta" -> (referenceFasta.getAbsolutePath),
     "bowtie_index" -> (bowtieIndex.getAbsolutePath),

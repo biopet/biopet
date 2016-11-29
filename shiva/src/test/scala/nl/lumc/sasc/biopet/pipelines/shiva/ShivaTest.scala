@@ -191,6 +191,7 @@ object ShivaTest {
   copyFile("ref.fa.fai")
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",

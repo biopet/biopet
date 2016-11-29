@@ -184,6 +184,7 @@ object MultisampleMappingTestTrait {
   copyFile("empty.sam")
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",
