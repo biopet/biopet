@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedWriter, File, FileWriter }
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import nl.lumc.sasc.biopet.tools.VepNormalizer.Args
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -17,14 +17,14 @@ object XcnvToBed extends ToolCommand {
       .parse(args, Args())
       .getOrElse(throw new IllegalArgumentException)
 
-    val writer = new BufferedWriter(new FileWriter(commandArgs.outputBed))
+    val writer = new PrintWriter(commandArgs.outputBed)
     Source.fromFile(commandArgs.inputXcnv).
       getLines().
       filter(!_.startsWith("SAMPLE")).
       map(x => x.split("\t")).
       map(x => XcnvBedLine(x(0), x(1), x(2))).
       filter(_.sample == commandArgs.sample).
-      foreach(x => writer.write(x.toString))
+      foreach(x => writer.println(x.toString))
 
     writer.close()
   }
@@ -41,7 +41,7 @@ object XcnvToBed extends ToolCommand {
       val chr = locs(0)
       val start = locs(1).split("-")(0)
       val stop = locs(1).split("-")(1)
-      s"$chr\t$start\t$stop\t$cnv\n"
+      s"$chr\t$start\t$stop\t$cnv"
     }
   }
 
