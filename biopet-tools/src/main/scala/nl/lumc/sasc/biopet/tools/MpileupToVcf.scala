@@ -69,6 +69,7 @@ object MpileupToVcf extends ToolCommand {
 
     val writer = new PrintWriter(commandArgs.output)
     writer.println("##fileformat=VCFv4.1")
+    writer.println("##ALT=<ID=REF,Description=\"Placeholder if location has no ALT alleles\">")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
     writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency, for each ALT allele, in the same order as listed\">")
     writer.println("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
@@ -190,7 +191,7 @@ object MpileupToVcf extends ToolCommand {
           }
           left -= ad(max)
         }
-        writer.println(Array(chr, pos, ".", ref.toUpperCase, alt.mkString(","), ".", ".", info.mkString(";"),
+        writer.println(Array(chr, pos, ".", ref.toUpperCase, (if (alt.nonEmpty) alt.mkString(",") else "<REF>"), ".", ".", info.mkString(";"),
           "GT:" + format.keys.mkString(":"), gt.sortWith(_ < _).mkString("/") + ":" + format.values.mkString(":")
         ).mkString("\t"))
       }
