@@ -40,8 +40,8 @@ object SamplesTsvToConfig extends ToolCommand {
     opt[File]('o', "outputFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
     } text """
-             |When extension is .yml or .yaml the output is in yaml format, otherwise in json.
-             |When not given the output goes to stdout as yaml.
+             |When the extension is .yml or .yaml the output is in yaml format, otherwise it is in json.
+             |When no extension is given the output goes to stdout as yaml.
            """.stripMargin
   }
 
