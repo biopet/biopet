@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions.xhmm
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 
 /**
  * Created by Sander Bollen on 23-11-16.

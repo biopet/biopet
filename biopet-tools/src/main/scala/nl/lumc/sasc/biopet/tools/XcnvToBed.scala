@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
+import java.io.{ BufferedWriter, File, FileWriter, PrintWriter }
 
 import nl.lumc.sasc.biopet.tools.VepNormalizer.Args
 import nl.lumc.sasc.biopet.utils.ToolCommand

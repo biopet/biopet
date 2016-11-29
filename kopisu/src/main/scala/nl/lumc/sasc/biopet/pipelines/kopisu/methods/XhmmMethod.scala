@@ -30,7 +30,7 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
         "n_bins" -> 200,
         "include_ref_n_sites" -> true,
         "count_type" -> "COUNT_FRAGMENTS"
-        )
+      )
     )
   }
 

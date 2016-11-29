@@ -20,11 +20,11 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   private var _summaryFile: File = _
   private var _statisticsFile: File = _
-  private var _intervalSummaryFile: File =  _
+  private var _intervalSummaryFile: File = _
   private var _intervalStatisticsFile: File = _
   private var _geneSummaryFile: File = _
   private var _geneStatisticsFile: File = _
-  private var _cumulativeCoverageCountsFile: File =  _
+  private var _cumulativeCoverageCountsFile: File = _
   private var _cumulativeCoverageProportionsFile: File = _
 
   @Output
@@ -84,7 +84,7 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
 
   var includeRefNSites: Boolean = config("include_ref_n_sites", namespace = "depth_of_coverage", default = false)
 
-  var printBinEndpointsAndExit: Boolean = config("print_bin_endpoint_and_exit", namespace = "depth_of_coverage" , default = false)
+  var printBinEndpointsAndExit: Boolean = config("print_bin_endpoint_and_exit", namespace = "depth_of_coverage", default = false)
 
   override def beforeGraph() = {
     super.beforeGraph()
@@ -93,11 +93,11 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
     }
     _summaryFile = new File(out + ".sample_summary")
     _statisticsFile = new File(out + ".sample_statistics")
-    _intervalSummaryFile =  new File(out + ".sample_interval_summary")
+    _intervalSummaryFile = new File(out + ".sample_interval_summary")
     _intervalStatisticsFile = new File(out + ".sample_interval_statistics")
     _geneSummaryFile = new File(out + ".sample_gene_summary")
     _geneStatisticsFile = new File(out + ".sample_gene_statistics")
-    _cumulativeCoverageCountsFile =  new File(out + ".sample_cumulative_coverage_counts")
+    _cumulativeCoverageCountsFile = new File(out + ".sample_cumulative_coverage_counts")
     _cumulativeCoverageProportionsFile = new File(out + ".sample_cumulative_coverage_proportions")
   }
 
