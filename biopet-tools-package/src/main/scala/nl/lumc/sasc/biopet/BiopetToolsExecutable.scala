@@ -40,7 +40,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.MpileupToVcf,
     nl.lumc.sasc.biopet.tools.PrefixFastq,
     nl.lumc.sasc.biopet.tools.SageCountFastq,
-    nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
+    nl.lumc.sasc.biopet.tools.SamplesTsvToConfig,
     nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.SquishBed,
     nl.lumc.sasc.biopet.tools.SummaryToTsv,
