@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Created by Sander Bollen on 23-11-16.
@@ -44,6 +44,7 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
   @Output
   var cumulativeCoverageProportionsFile = _cumulativeCoverageProportionsFile
 
+  @Input(required = false)
   var calculateCoverageOverGenes: Option[File] = config("calculate_coverage_over_genes", namespace = "depth_of_coverage", default = None)
 
   var countType: Option[String] = config("count_type", namespace = "depth_of_coverage", default = None)
@@ -124,5 +125,15 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
       conditional(includeDeletions, "--includeDeletions") +
       conditional(includeRefNSites, "--includeRefNSites") +
       conditional(printBinEndpointsAndExit, "--printBinEndPointsAndExit")
+  }
+}
+
+object DepthOfCoverage {
+  def apply(root: Configurable, bamFile: List[File], outFile: File, targets: List[File]): DepthOfCoverage = {
+    val dp = new DepthOfCoverage(root)
+    dp.input_file = bamFile
+    dp.intervals = targets
+    dp.out = outFile
+    dp
   }
 }

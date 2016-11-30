@@ -35,7 +35,9 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
   }
 
   def biopetScript() = {
-    val depths = inputBams.map(keyValuePair => depthOfCoverage(keyValuePair._2)).toList
+    val depths = inputBams.map { keyValuePair =>
+      DepthOfCoverage(this, List(keyValuePair._2), swapExt(xhmmDir, ".bam", ".dcov"), List(targets))
+    }.toList
     addAll(depths)
 
     // merging of gatk depths files

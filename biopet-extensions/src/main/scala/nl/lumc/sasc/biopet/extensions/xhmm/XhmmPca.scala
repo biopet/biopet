@@ -13,7 +13,7 @@ class XhmmPca(val root: Configurable) extends Xhmm {
   @Input
   var inputMatrix: File = _
 
-  @Output
+  @Output(required = true)
   var pcaFile: File = _
 
   def cmdLine = {
