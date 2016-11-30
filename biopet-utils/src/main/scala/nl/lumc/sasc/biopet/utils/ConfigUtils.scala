@@ -211,6 +211,7 @@ object ConfigUtils extends Logging {
       case Some(x)      => anyToJson(x)
       case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
       case l: List[_]   => Json.array(l.map(anyToJson): _*)
+      case l: Array[_]  => Json.array(l.map(anyToJson): _*)
       case b: Boolean   => Json.jBool(b)
       case n: Int       => Json.jNumberOrString(n)
       case n: Double    => Json.jNumberOrString(n)

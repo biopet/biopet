@@ -49,3 +49,24 @@ class LinePlot(val root: Configurable) extends Rscript {
     title.map(Seq("--title", _)).getOrElse(Seq()) ++
     (if (removeZero) Seq("--removeZero", "true") else Seq())
 }
+
+object LinePlot {
+  def apply(inputTsv: File,
+            outputFile: File,
+            root: Configurable = null,
+            xlabel: Option[String] = None,
+            ylabel: Option[String] = None,
+            width: Int = 1200,
+            removeZero: Boolean = false,
+            title: Option[String] = None): LinePlot = {
+    val plot = new LinePlot(root)
+    plot.input = inputTsv
+    plot.output = outputFile
+    plot.xlabel = xlabel
+    plot.ylabel = ylabel
+    plot.width = Some(width)
+    plot.removeZero = removeZero
+    plot.title = title
+    plot
+  }
+}

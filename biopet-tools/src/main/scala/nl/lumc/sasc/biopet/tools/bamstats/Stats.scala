@@ -31,7 +31,7 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
                  _3_ClippingHistogram: Histogram[Int] = new Histogram[Int]()) {
 
   flagstat.loadDefaultFunctions()
-  flagstat.loadQualityFunctions(1, 0)
+  flagstat.loadQualityFunctions()
   flagstat.loadOrientationFunctions
 
   /** This will add an other [[Stats]] inside `this` */

@@ -10,7 +10,7 @@
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var outputDir: File %>
-<%@ var fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size")%>
+<%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
@@ -30,38 +30,37 @@
     <div class="col-md-6">
         <p>
         #if (sampleId.isDefined && libId.isDefined)
-            This plot shows the insert size distribution for all libraries combined in sample <b>${sampleId}</b>.
+            This plot shows the mapping quality distribution for all libraries combined in sample <b>${sampleId}</b>.
         #elseif(sampleId.isDefined)
-            This plot shows the insert size distribution for the libraries of sample <b>${sampleId}</b>.
+            This plot shows the mapping quality distribution for the libraries of sample <b>${sampleId}</b>.
         #else
-            This plot shows the insert size distribution for each of the <b>${samples.size}</b> samples.
+            This plot shows the mapping quality distribution for each of the <b>${samples.size}</b> samples.
         #end
-        <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
         </p>
     </div>
     </div>
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
 
     <div class="panel-body">
-    <img src="insertsize.png" class="img-responsive" />
+    <img src="mapping_quality.png" class="img-responsive" />
     </div>
     <div class="panel-footer">
         #if (showTable)
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">
-                <i class="glyphicon glyphicon-eye-close"></i>Hide table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#mapping_qualityTable">
+                <i class="glyphicon glyphicon-eye-close"></i> Hide table</button>
         #else
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">
-            <i class="glyphicon glyphicon-eye-open"></i>Show table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#mapping_qualityTable">
+            <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
         #end
-      <a href="insertsize.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i>TSV file</button></a>
+    <a href="mapping_quality.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
 
     </div>
 #end
 
-<div class="panel-body collapse #if (showTable)in#end" id="insertsizeTable">
+<div class="panel-body collapse #if (showTable)in#end" id="mapping_qualityTable">
 <!-- Table -->
 <table class="table">
     <thead><tr>
@@ -88,7 +87,7 @@
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
 
                         val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse("N/A")
+                            summary.getValue((prefixPath ::: List("bamstats", "mapping_quality", "general", field)):_*).getOrElse("N/A")
                         }
                     }#
                     #for (value <- fieldValues)
