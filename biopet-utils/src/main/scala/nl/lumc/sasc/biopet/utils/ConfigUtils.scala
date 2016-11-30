@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import java.util
 
 import argonaut.Argonaut._
