@@ -139,7 +139,10 @@ object WriteDependencies extends Logging with Configurable {
     )).spaces2)
     writer.close()
 
-    val jobsDeps = jobs.map(x => x._1 -> (x._2("depends_on_jobs").asInstanceOf[List[String]]))
+    val jobsDeps = jobs.map(x => x._1 -> (x._2("depends_on_jobs") match {
+      case l: List[_] => l.map(_.toString)
+      case _ => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
+    }))
     val jobsWriter = new PrintWriter(new File(outputDir, s"$prefix.jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
