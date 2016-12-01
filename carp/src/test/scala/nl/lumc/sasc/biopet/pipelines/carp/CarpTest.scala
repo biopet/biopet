@@ -117,6 +117,7 @@ object CarpTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),

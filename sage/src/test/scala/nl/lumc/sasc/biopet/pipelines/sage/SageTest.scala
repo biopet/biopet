@@ -131,6 +131,7 @@ object SageTest {
   copyFile("ref.fa.fai")
 
   val config: Map[String, Any] = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "output_dir" -> outputDir.getAbsolutePath,
     "fastqc" -> Map("exe" -> "test"),

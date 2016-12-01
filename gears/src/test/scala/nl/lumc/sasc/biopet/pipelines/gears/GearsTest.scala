@@ -113,6 +113,7 @@ object GearsTest {
   Files.touch(bam)
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),

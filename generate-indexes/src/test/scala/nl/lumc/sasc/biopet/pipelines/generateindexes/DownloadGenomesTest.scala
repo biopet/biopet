@@ -141,7 +141,9 @@ object DownloadGenomesTest {
   val outputDir = Files.createTempDir()
   outputDir.deleteOnExit()
 
-  val config = Map("output_dir" -> outputDir,
+  val config = Map(
+    "skip_write_dependencies" -> true,
+    "output_dir" -> outputDir,
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "hisat2build" -> Map("exe" -> "test"),

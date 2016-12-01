@@ -114,6 +114,7 @@ object BamMetricsTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "refFlat" -> "bla.refFlat",
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "samtools" -> Map("exe" -> "test"),

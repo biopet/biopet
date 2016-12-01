@@ -51,7 +51,8 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     centrifugeKreport.centrifugeOutputFiles :+= fifo
     centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
-    add(new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo))))
+    val pipe = new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo)))
+    add(pipe)
 
     val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = centrifugeKreport.output

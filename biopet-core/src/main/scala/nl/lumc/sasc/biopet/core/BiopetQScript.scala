@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
@@ -63,6 +63,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
   /** Returns the extension to make the report */
   def reportClass: Option[ReportBuilderExtension] = None
 
+  val skipWriteDependencies: Boolean = config("skip_write_dependencies", default = false)
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -85,7 +87,9 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     this match {
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach(add(_))
+      case _ => reportClass.foreach { report =>
+        add(report)
+      }
     }
 
     logger.info("Running pre commands")
@@ -95,7 +99,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         f.beforeGraph()
         f.internalBeforeGraph()
         f.commandLine
-      case _ =>
+      case f: WriteSummary => f.init()
+      case _               =>
     }
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
@@ -118,7 +123,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
+    if (!skipWriteDependencies) WriteDependencies.writeDependencies(functions, new File(outputDir, ".log"), qSettings.runName)
 
     Logging.checkErrors()
     logger.info("Script complete without errors")

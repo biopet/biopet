@@ -30,6 +30,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 class SeqStat(val root: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.SeqStat
 
+  mainFunction = false
+
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
   var input: File = null
 

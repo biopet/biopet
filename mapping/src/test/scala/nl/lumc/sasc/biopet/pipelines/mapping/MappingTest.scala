@@ -128,6 +128,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
   }
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "db" -> "test",
     "bowtie_index" -> (outputDir + File.separator + "ref"),
