@@ -262,11 +262,15 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (fastq_R1.length > 1) {
       val zcat = new Zcat(this)
       zcat.input = fastq_R1
-      add(zcat | new Gzip(this) > fastqR1Qc)
+      val cmdR1 = zcat | new Gzip(this) > fastqR1Qc
+      cmdR1.isIntermediate = !keepQcFastqFiles
+      add(cmdR1)
       if (paired) {
         val zcat = new Zcat(this)
         zcat.input = fastq_R2
-        add(zcat | new Gzip(this) > fastqR2Qc.get)
+        val cmdR2 = zcat | new Gzip(this) > fastqR2Qc.get
+        cmdR2.isIntermediate = !keepQcFastqFiles
+        add(cmdR2)
       }
     }
 
