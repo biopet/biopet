@@ -57,7 +57,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     for (q <- qscript.summaryQScripts)
       deps :+= q.summaryFile
     for ((_, l) <- qscript.summarizables; s <- l) s match {
-      case f: QFunction => try {
+      case f: QFunction if qscript.functions.contains(f) => try {
         deps :+= f.firstOutput
       } catch {
         case e: NullPointerException => logger.warn("Queue values are not init")

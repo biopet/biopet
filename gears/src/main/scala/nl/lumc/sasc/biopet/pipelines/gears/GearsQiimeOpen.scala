@@ -51,6 +51,7 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
     splitLib.input :+= fastqInput
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
     sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
+    splitLib.isIntermediate = true
     add(splitLib)
 
     val openReference = new PickOpenReferenceOtus(this)
