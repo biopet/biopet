@@ -152,7 +152,7 @@ Shiva furthermore supports three modes. The default and recommended option is `m
 During this mode, all bam files will be simultaneously called in one big VCF file. It will work with any number of samples.
 
 On top of that, Shiva provides two separate modes that only work with a single sample.
-Those are not recommend, but may be useful to those who need to validate replicates.
+Those are not recommended, but may be useful to those who need to validate replicates.
 
 Mode `single_sample_variantcalling` calls a single sample as a merged bam file.
 I.e., it will merge all libraries in one bam file, then calls on that.
@@ -166,6 +166,57 @@ The config for these therefore is:
 | shiva | multisample_variantcalling | Boolean | true | Default, multisample calling |
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |
 | shiva | library_variantcalling | Boolean | false | Not-recommended, single sample, per library |
+
+## CNV calling 
+
+In addition to standard variant calling, Shiva also supports CNV calling. 
+One can enable this option by setting the `cnv_calling` config option to `true`.
+
+For CNV calling, Shiva supports three methods, each with different use cases: 
+ 
+ * FreeC: Use for WGS or Exomes. For WGS, a control sample set is not required
+ * Cn.mops: Use for Exomes. Must be used on a set of samples, preferably with N>20. Do not use on low-coverage samples.
+ * XHMM: Use for Exomes or targeted approach. Number of target regions _must_ be larger than the amount of samples. Use with N >= 40.
+ 
+All three methods can be run concurrently. However, we do not yet provide any merging of calls, since output formats vary widely.
+ 
+To use any of these methods, you must enable them in the config. 
+The options to do so are as follows:
+
+| namespace | Name | Type | Default | Function | 
+| --------- | ---- | ---- | ------- | -------- |
+| kopisu | use_freec_method | Boolean | true | Enable Freec |
+| kopisu | use_cnmops_method | Boolean | false | Enable Cn.mops
+| kopisu | use_xhmm_method | Boolean | false | Enable XHMM | 
+
+### Freec 
+
+TODO
+
+### Cn.mops
+
+TODO
+
+
+### XHMM 
+
+When using the XHMM method, one _must_ provide a target bed file. 
+XHMM cannot work without it. 
+Additionally, the XHMM method requires the path a parameters file for XHMM. 
+Please see the XHMM website for what this file should contain.
+ 
+This means the following config values are required:
+
+| Namespace | Name | Type | Default | Meaning |
+| --------- | ---- | ---- | ------- | ------- |
+| - | amplicon_bed | path | - | Path to target bed file |
+| xhmm | discover_params | path | - | Path to XHMM params file |
+
+It is recommended you use at least 40 samples with this method. 
+One should also have more _covered_ target regions than there are samples.
+This means this method is not suited for very small target kits. 
+
+Please note that it is _not_ possible to run this method without GATK dependencies. 
 
 
 **Config example**
@@ -187,6 +238,21 @@ variantcallers:
     - haplotypecaller
     - unifiedgenotyper
     - haplotypecaller_gvcf
+```
+
+**Additional XHMM example**
+
+```yaml
+shiva:
+    cnv_calling: true
+kopisu:
+    use_cnmops_method: false
+    use_freec_method: false
+    use_xhmm_method: true
+amplicon_bed: <path_to_bed>
+xhmm:
+    discover_params: <path_to_file>
+    exe: <path_to_executable>
 ```
 
 ## References
