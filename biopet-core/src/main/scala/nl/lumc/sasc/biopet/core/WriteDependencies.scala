@@ -50,6 +50,7 @@ object WriteDependencies extends Logging with Configurable {
    * @param outputDir
    */
   def writeDependencies(functions: Seq[QFunction], outputDir: File): Unit = {
+    outputDir.mkdirs()
     logger.info("Start calculating dependencies")
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
