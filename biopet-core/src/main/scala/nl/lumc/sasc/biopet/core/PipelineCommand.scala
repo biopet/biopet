@@ -73,15 +73,14 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
       }
     }
 
-    val logFile = {
-      val pipelineName = this.getClass.getSimpleName.toLowerCase.split("""\$""").head
-      val pipelineConfig = globalConfig.map.getOrElse(pipelineName, Map()).asInstanceOf[Map[String, Any]]
-      val pipelineOutputDir = new File(globalConfig.map.getOrElse("output_dir", pipelineConfig.getOrElse("output_dir", "./")).toString)
-      BiopetQScript.checkOutputDir(pipelineOutputDir)
-      val logDir: File = new File(pipelineOutputDir, ".log")
-      logDir.mkdirs()
-      new File(logDir, "biopet." + BiopetQCommandLine.timestamp + ".log")
-    }
+    val pipelineName = this.getClass.getSimpleName.toLowerCase.split("""\$""").head
+    val pipelineConfig = globalConfig.map.getOrElse(pipelineName, Map()).asInstanceOf[Map[String, Any]]
+    val pipelineOutputDir = new File(globalConfig.map.getOrElse("output_dir", pipelineConfig.getOrElse("output_dir", "./")).toString)
+    BiopetQScript.checkOutputDir(pipelineOutputDir)
+    val logDir: File = new File(pipelineOutputDir, ".log" + File.separator + BiopetQCommandLine.timestamp)
+    logDir.mkdirs()
+
+    val logFile = new File(logDir, "biopet.log")
 
     val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
     Logging.logger.addAppender(a)
@@ -90,7 +89,7 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     argv ++= Array("-S", pipeline)
     argv ++= args
     if (!args.contains("--log_to_file") && !args.contains("-log")) {
-      argv ++= List("--log_to_file", new File(logFile.getParentFile, "queue." + BiopetQCommandLine.timestamp + ".log").getAbsolutePath)
+      argv ++= List("--log_to_file", new File(logDir, "queue.log").getAbsolutePath)
     }
     if (!args.contains("-retry") && !args.contains("--retry_failed")) {
       val retry: Int = globalConfig(pipelineName, Nil, "retry", default = 5)

@@ -171,4 +171,6 @@ object BiopetQScript {
     require(outputDir.getAbsoluteFile.canRead, s"No premision to read outputdir: $outputDir")
     require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")
   }
+
+
 }
