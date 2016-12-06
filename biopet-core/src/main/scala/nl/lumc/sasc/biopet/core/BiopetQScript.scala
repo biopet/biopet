@@ -104,7 +104,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       case _               =>
     }
 
-    val logDir = new File(outputDir, ".log" + File.separator + BiopetQCommandLine.timestamp)
+    val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(new File(logDir, "config"))

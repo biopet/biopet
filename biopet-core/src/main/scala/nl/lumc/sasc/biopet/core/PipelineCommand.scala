@@ -77,7 +77,7 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     val pipelineConfig = globalConfig.map.getOrElse(pipelineName, Map()).asInstanceOf[Map[String, Any]]
     val pipelineOutputDir = new File(globalConfig.map.getOrElse("output_dir", pipelineConfig.getOrElse("output_dir", "./")).toString)
     BiopetQScript.checkOutputDir(pipelineOutputDir)
-    val logDir: File = new File(pipelineOutputDir, ".log" + File.separator + BiopetQCommandLine.timestamp)
+    val logDir: File = new File(pipelineOutputDir, ".log" + File.separator + pipelineName + "." + BiopetQCommandLine.timestamp)
     logDir.mkdirs()
 
     val logFile = new File(logDir, "biopet.log")
