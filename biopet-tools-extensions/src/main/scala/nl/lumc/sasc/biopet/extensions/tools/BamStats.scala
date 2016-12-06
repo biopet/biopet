@@ -43,6 +43,7 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
 
   override def beforeGraph() {
     super.beforeGraph()
+    deps :+= bamFile.getAbsolutePath.replaceAll(".bam$", ".bai")
     jobOutputFile = new File(outputDir, ".bamstats.out")
     if (reference == null) reference = referenceFasta()
   }
