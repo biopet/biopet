@@ -17,9 +17,6 @@ The pipeline accepts ```.fastq & .bam``` files as input.
     * Freebayes
     * Bcftools
     * Samtools
-* [FreeC](http://boevalab.com/FREEC/)
-* [cn.mops](http://bioconductor.org/packages/release/bioc/html/cn.mops.html)
-* [XHMM](http://atgu.mgh.harvard.edu/xhmm/tutorial.shtml)
 
 ----
 
@@ -175,58 +172,8 @@ The config for these therefore is:
 In addition to standard variant calling, Shiva also supports CNV calling. 
 One can enable this option by setting the `cnv_calling` config option to `true`.
 
-For CNV calling, Shiva supports three methods, each with different use cases: 
- 
- * FreeC: Use for WGS or Exomes. For WGS, a control sample set is not required
- * Cn.mops: Use for Exomes. Must be used on a set of samples, preferably with N>20. Do not use on low-coverage samples.
- * XHMM: Use for Exomes or targeted approach. Number of target regions _must_ be larger than the amount of samples. Use with N >= 40.
- 
-All three methods can be run concurrently. However, we do not yet provide any merging of calls, since output formats vary widely.
- 
-To use any of these methods, you must enable them in the config. 
-The options to do so are as follows:
-
-| namespace | Name | Type | Default | Function | 
-| --------- | ---- | ---- | ------- | -------- |
-| kopisu | use_freec_method | Boolean | true | Enable Freec |
-| kopisu | use_cnmops_method | Boolean | false | Enable Cn.mops
-| kopisu | use_xhmm_method | Boolean | false | Enable XHMM | 
-
-### Freec 
-
-TODO
-
-### Cn.mops
-
-TODO
-
-
-### XHMM 
-
-When using the XHMM method, one _must_ provide a target bed file. 
-XHMM cannot work without it. 
-Additionally, the XHMM method requires the path a parameters file for XHMM. 
-Please see the XHMM website for what this file should contain.
- 
-This means the following config values are required:
-
-| Namespace | Name | Type | Default | Meaning |
-| --------- | ---- | ---- | ------- | ------- |
-| - | amplicon_bed | path | - | Path to target bed file |
-| xhmm | discover_params | path | - | Path to XHMM params file |
-
-It is recommended you use at least 40 samples with this method. 
-One should also have more _covered_ target regions than there are samples.
-This means this method is not suited for very small target kits. 
-
-Please note that it is _not_ possible to run this method without GATK dependencies. 
-
-Additional optional config values:
-
-| Namespace | Name | Type | Default | Meaning | 
-| --------- | ---- | ---- | ------- | ------- |
-| xhmm_normalize | normalize_method | String | PVE_mean | The normalization method to use |
-| xhmm_normalize | pve_mean_factor | Float | 0.7 |  Factor for PVE mean normaliation |
+For CNV calling Shiva uses the [Kopisu](kopisu.md) as a module. 
+Please see the documentation for Kopisu.  
 
 
 ## Example configs 
@@ -251,7 +198,7 @@ variantcallers:
     - haplotypecaller_gvcf
 ```
 
-**Additional XHMM example**
+**Additional XHMM CNV calling example**
 
 ```yaml
 shiva:
