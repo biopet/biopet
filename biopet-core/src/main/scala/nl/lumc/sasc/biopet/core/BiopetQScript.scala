@@ -16,13 +16,14 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
+import nl.lumc.sasc.biopet.core.summary.{SummaryQScript, WriteSummary}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
+import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.queue.{ QScript, QSettings }
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.broadinstitute.gatk.queue.function.QFunction
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import org.broadinstitute.gatk.queue.util.{Logging => GatkLogging}
 
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
@@ -123,7 +124,9 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    if (!skipWriteDependencies) WriteDependencies.writeDependencies(functions, new File(outputDir, ".log"), qSettings.runName)
+    if (!skipWriteDependencies) WriteDependencies.writeDependencies(
+      functions,
+      new File(outputDir, ".log" + File.separator + BiopetQCommandLine.timestamp + File.separator + "graph"))
 
     Logging.checkErrors()
     logger.info("Script complete without errors")
