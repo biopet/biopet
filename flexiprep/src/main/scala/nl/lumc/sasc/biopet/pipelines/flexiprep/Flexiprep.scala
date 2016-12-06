@@ -14,12 +14,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq }
+import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, SeqStat, ValidateFastq}
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
@@ -206,8 +206,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
-      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
-        override def configNamespace = "qc-cmd"
+      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) with Summarizable {
+        override def configNamespace = "qc_cmd"
 
         override def beforeGraph(): Unit = {
           fqSync.beforeGraph()
@@ -223,11 +223,20 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
           commands.foreach(addPipeJob)
           super.beforeCmd()
         }
+
+        /** Must return files to store into summary */
+        def summaryFiles: Map[String, File] = Map()
+
+        /** Must returns stats to store into summary */
+        def summaryStats: Any = Map()
+
+        override def summaryDeps = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
       }
 
       pipe.deps ::= fastqcR1.output
       pipe.deps ::= fastqcR2.output
       pipe.isIntermediate = !keepQcFastqFiles
+      addSummarizable(pipe, "qc_cmd")
       add(pipe)
 
       addSummarizable(fqSync, "fastq_sync")

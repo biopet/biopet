@@ -42,4 +42,6 @@ trait Summarizable {
   def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     throw new IllegalStateException("Merge can not have same key by default")
   }
+
+  def summaryDeps: List[File] = Nil
 }

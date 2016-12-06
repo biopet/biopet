@@ -65,6 +65,8 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
   def summaryStats = Map()
 
+  override def summaryDeps = trim.map(_.summaryDeps).toList.flatten ::: super.summaryDeps
+
   override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
     clip match {
       case Some(job) => qscript.addSummarizable(job, s"clipping_$read")
