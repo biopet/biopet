@@ -17,6 +17,9 @@ The pipeline accepts ```.fastq & .bam``` files as input.
     * Freebayes
     * Bcftools
     * Samtools
+* [FreeC](http://boevalab.com/FREEC/)
+* [cn.mops](http://bioconductor.org/packages/release/bioc/html/cn.mops.html)
+* [XHMM](http://atgu.mgh.harvard.edu/xhmm/tutorial.shtml)
 
 ----
 
@@ -219,6 +222,7 @@ This means this method is not suited for very small target kits.
 Please note that it is _not_ possible to run this method without GATK dependencies. 
 
 
+## Example configs 
 **Config example**
 
 ``` yaml
