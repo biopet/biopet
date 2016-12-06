@@ -221,6 +221,13 @@ This means this method is not suited for very small target kits.
 
 Please note that it is _not_ possible to run this method without GATK dependencies. 
 
+Additional optional config values:
+
+| Namespace | Name | Type | Default | Meaning | 
+| --------- | ---- | ---- | ------- | ------- |
+| xhmm_normalize | normalize_method | String | PVE_mean | The normalization method to use |
+| xhmm_normalize | pve_mean_factor | Float | 0.7 |  Factor for PVE mean normaliation |
+
 
 ## Example configs 
 **Config example**
