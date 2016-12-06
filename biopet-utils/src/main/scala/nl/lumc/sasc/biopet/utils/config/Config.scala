@@ -189,7 +189,7 @@ class Config(protected var _map: Map[String, Any],
     } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
-  def writeReport(id: String, directory: File): Unit = {
+  def writeReport(directory: File): Unit = {
     directory.mkdirs()
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
@@ -205,7 +205,7 @@ class Config(protected var _map: Map[String, Any],
     }
 
     def writeMapToJsonFile(map: Map[String, Any], name: String): Unit = {
-      val file = new File(directory, id + "." + name + ".json")
+      val file = new File(directory, name + ".json")
       val writer = new PrintWriter(file)
       writer.write(ConfigUtils.mapToJson(map).spaces2)
       writer.close()
