@@ -14,6 +14,7 @@ pages:
     - Flexiprep (QC): 'pipelines/flexiprep.md'
     - Gears (Metagenome): 'pipelines/gears.md'
     - Gentrap (RNA-seq): 'pipelines/gentrap.md'
+    - Kopisu (CNV Calling): 'pipelines/kopisu.md'
     - Mapping (Alignment): 'pipelines/mapping.md'
     - Sage: 'pipelines/sage.md'
     - Shiva (variantcalling): 'pipelines/shiva.md'

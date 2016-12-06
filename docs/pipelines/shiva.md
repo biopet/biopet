@@ -152,7 +152,7 @@ Shiva furthermore supports three modes. The default and recommended option is `m
 During this mode, all bam files will be simultaneously called in one big VCF file. It will work with any number of samples.
 
 On top of that, Shiva provides two separate modes that only work with a single sample.
-Those are not recommend, but may be useful to those who need to validate replicates.
+Those are not recommended, but may be useful to those who need to validate replicates.
 
 Mode `single_sample_variantcalling` calls a single sample as a merged bam file.
 I.e., it will merge all libraries in one bam file, then calls on that.
@@ -167,7 +167,16 @@ The config for these therefore is:
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |
 | shiva | library_variantcalling | Boolean | false | Not-recommended, single sample, per library |
 
+## CNV calling 
 
+In addition to standard variant calling, Shiva also supports CNV calling. 
+One can enable this option by setting the `cnv_calling` config option to `true`.
+
+For CNV calling Shiva uses the [Kopisu](kopisu.md) as a module. 
+Please see the documentation for Kopisu.  
+
+
+## Example configs 
 **Config example**
 
 ``` yaml
@@ -187,6 +196,21 @@ variantcallers:
     - haplotypecaller
     - unifiedgenotyper
     - haplotypecaller_gvcf
+```
+
+**Additional XHMM CNV calling example**
+
+```yaml
+shiva:
+    cnv_calling: true
+kopisu:
+    use_cnmops_method: false
+    use_freec_method: false
+    use_xhmm_method: true
+amplicon_bed: <path_to_bed>
+xhmm:
+    discover_params: <path_to_file>
+    exe: <path_to_executable>
 ```
 
 ## References
