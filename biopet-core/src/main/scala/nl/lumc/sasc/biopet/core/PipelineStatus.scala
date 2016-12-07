@@ -55,7 +55,7 @@ object PipelineStatus extends ToolCommand {
     val jobsRunning = jobs
       .filterNot(x => jobDone(x._1))
       .filterNot(x => jobFailed(x._1))
-        .filter(_._2.stdoutFile.exists()).map(_._1).toList
+      .filter(_._2.stdoutFile.exists()).map(_._1).toList
 
     val jobsDeps = jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
       case l: List[_] => l.map(_.toString)
@@ -127,9 +127,10 @@ object PipelineStatus extends ToolCommand {
       .filterNot(jobDone)
       .filterNot(jobsRunning.contains)
       .foreach(x => writer.println(s"  $x [color = orange]"))
-    jobsRunning
-      .filter(jobsDeps.contains)
-      .foreach(x => writer.println(s"  $x [color = blue]"))
+    jobs
+      .filter(x => jobsDeps.contains(x._1))
+      .filter(_._2.intermediate)
+      .foreach(x => writer.println(s"  ${x._1} [style = dashed]"))
     jobsDeps.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
     writer.println("}")
     writer.close()
