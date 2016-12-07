@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by pjvan_thof on 9/22/15.
  */
-class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetCommandLineFunction with Summarizable {
+class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) extends BiopetCommandLineFunction with Summarizable {
 
   val flexiprep = root match {
     case f: Flexiprep => f
@@ -41,14 +41,21 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
   var compress = true
 
-  var read: String = _
-
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 3
 
   val seqtk = new SeqtkSeq(root)
   var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(root, fastqc)) else None
-  var trim: Option[Sickle] = None
+  var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
+    val sickle = new Sickle(root)
+    sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+    sickle.inputR1 = clip match {
+      case Some(c) => c.fastqOutput
+      case _       => seqtk.output
+    }
+    Some(sickle)
+  } else None
+
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
     val gzip = Gzip(root)
     gzip.output = output
@@ -121,17 +128,10 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       } else None
     } else None
 
-    trim = if (!flexiprep.skipTrim) {
-      val sickle = new Sickle(root)
-      sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-      sickle.inputR1 = clip match {
-        case Some(c) => c.fastqOutput
-        case _       => seqtk.output
-      }
-      sickle.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
-      addPipeJob(sickle)
-      Some(sickle)
-    } else None
+    trim.foreach { t =>
+      t.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
+      addPipeJob(t)
+    }
 
     val outputFile = (clip, trim) match {
       case (_, Some(t)) => t.outputR1

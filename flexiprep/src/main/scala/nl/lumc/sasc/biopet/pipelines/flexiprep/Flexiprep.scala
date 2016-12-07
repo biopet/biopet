@@ -14,12 +14,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, SampleLibraryTag}
-import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, SeqStat, ValidateFastq}
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq }
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
@@ -179,9 +179,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     var R1 = R1_in
     var R2 = R2_in
 
-    val qcCmdR1 = new QcCommand(this, fastqcR1)
+    val qcCmdR1 = new QcCommand(this, fastqcR1, "R1")
     qcCmdR1.input = R1_in
-    qcCmdR1.read = "R1"
     qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
     else fastqR1Qc
     qcCmdR1.deps :+= fastqcR1.output
@@ -189,10 +188,9 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     addSummarizable(qcCmdR1, "qc_command_R1")
 
     if (paired) {
-      val qcCmdR2 = new QcCommand(this, fastqcR2)
+      val qcCmdR2 = new QcCommand(this, fastqcR2, "R2")
       qcCmdR2.input = R2_in.get
       qcCmdR2.output = new File(outDir, fastqR2Qc.get.getName.stripSuffix(".gz"))
-      qcCmdR2.read = "R2"
       addSummarizable(qcCmdR2, "qc_command_R2")
 
       qcCmdR1.compress = false
