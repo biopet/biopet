@@ -141,8 +141,18 @@ object PipelineStatus extends ToolCommand {
   }
 
   def jobsDone(jobs: Map[String, Job]): Map[String, Boolean] = {
-    val f = jobs.map(x => x._1 -> x._2.isDone)
-    f.map(x => x._1 -> Await.result(x._2, Duration.Inf))
+    val f = jobs.map(x => x._2 -> x._2.isDone)
+    val dones = f.map(x => x._1 -> Await.result(x._2, Duration.Inf))
+    val f2 = f.map(x => x._1 -> x._2.map{ d =>
+      if (d || !x._1.intermediate) d
+      else upstreamJobDone(x._1, dones, jobs)
+    })
+    f2.map(x => x._1.name -> Await.result(x._2, Duration.Inf))
+  }
+
+  private def upstreamJobDone(job: Job, dones: Map[Job, Boolean], allJobs: Map[String, Job]): Boolean = {
+    job.outputUsedByJobs.map(allJobs)
+      .exists(x => dones(x) || (x.intermediate && upstreamJobDone(x, dones, allJobs)))
   }
 
   def jobsFailed(jobs: Map[String, Job]): Map[String, Boolean] = {
@@ -161,7 +171,7 @@ object PipelineStatus extends ToolCommand {
     def stdoutFile = new File(ConfigUtils.any2string(map("stdout_file")))
 
     def outputsFiles = ConfigUtils.any2fileList(map("outputs"))
-    def InputFiles = ConfigUtils.any2fileList(map("inputs"))
+    def inputFiles = ConfigUtils.any2fileList(map("inputs"))
 
     def mainJob = ConfigUtils.any2boolean(map("main_job"))
     def intermediate = ConfigUtils.any2boolean(map("intermediate"))
