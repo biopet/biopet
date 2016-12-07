@@ -50,6 +50,13 @@ object PipelineStatus extends ToolCommand {
 
     val jobs = ConfigUtils.any2map(deps("jobs")).map(x => x._1 -> new Job(x._1, ConfigUtils.any2map(x._2)))
 
+    val jobDone = jobsDone(jobs)
+    val jobFailed = jobsFailed(jobs)
+    val jobsRunning = jobs
+      .filterNot(x => jobDone(x._1))
+      .filterNot(x => jobFailed(x._1))
+        .filter(_._2.stdoutFile.exists()).map(_._1).toList
+
     val jobsDeps = jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
       case l: List[_] => l.map(_.toString)
       case _          => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
@@ -57,8 +64,8 @@ object PipelineStatus extends ToolCommand {
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"))
-    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"))
+    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsRunning, jobs)
+    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsRunning, jobs)
 
     val mainJobs = jobs.filter(_._2.mainJob == true).map {
       case (name, job) =>
@@ -68,8 +75,8 @@ object PipelineStatus extends ToolCommand {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"))
-    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"))
+    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsRunning, jobs)
+    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsRunning, jobs)
 
     //print(jobsDone(jobs).mkString("\n"))
 
@@ -100,16 +107,45 @@ object PipelineStatus extends ToolCommand {
     set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
   }
 
-  def writeGraphvizFile(jobs: Map[String, List[String]], outputFile: File): Unit = {
+  def writeGraphvizFile(jobsDeps: Map[String, List[String]], outputFile: File,
+                        jobDone: Map[String, Boolean],
+                        jobFailed: Map[String, Boolean],
+                        jobsRunning:  List[String],
+                        jobs: Map[String, Job]): Unit = {
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
-    jobs.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
+    jobDone
+      .filter(x => jobsDeps.contains(x._1))
+      .filter(_._2)
+      .foreach(x => writer.println(s"  ${x._1} [color = green]"))
+    jobFailed
+      .filter(x => jobsDeps.contains(x._1))
+      .filter(_._2)
+      .foreach(x => writer.println(s"  ${x._1} [color = red]"))
+    jobsReadyStart(jobs, jobDone)
+      .filter(jobsDeps.contains)
+      .filterNot(jobDone)
+      .filterNot(jobsRunning.contains)
+      .foreach(x => writer.println(s"  $x [color = orange]"))
+    jobsRunning
+      .filter(jobsDeps.contains)
+      .foreach(x => writer.println(s"  $x [color = blue]"))
+    jobsDeps.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
     writer.println("}")
     writer.close()
   }
 
+  def jobsReadyStart(jobs: Map[String, Job], jobsDone: Map[String, Boolean]): List[String] = {
+    jobs.filter(_._2.dependsOnJobs.forall(jobsDone)).map(_._1).toList
+  }
+
   def jobsDone(jobs: Map[String, Job]): Map[String, Boolean] = {
     val f = jobs.map(x => x._1 -> x._2.isDone)
+    f.map(x => x._1 -> Await.result(x._2, Duration.Inf))
+  }
+
+  def jobsFailed(jobs: Map[String, Job]): Map[String, Boolean] = {
+    val f = jobs.map(x => x._1 -> x._2.isFailed)
     f.map(x => x._1 -> Await.result(x._2, Duration.Inf))
   }
 
