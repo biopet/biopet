@@ -49,10 +49,6 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
   var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
     val sickle = new Sickle(root)
     sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-    sickle.inputR1 = clip match {
-      case Some(c) => c.fastqOutput
-      case _       => seqtk.output
-    }
     Some(sickle)
   } else None
 
@@ -130,6 +126,10 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
 
     trim.foreach { t =>
       t.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
+      t.inputR1 = clip match {
+        case Some(c) => c.fastqOutput
+        case _       => seqtk.output
+      }
       addPipeJob(t)
     }
 
