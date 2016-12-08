@@ -48,9 +48,9 @@ object WriteDependencies extends Logging with Configurable {
    *
    * @param functions This should be all functions that are given to the graph of Queue
    * @param outputDir
-   * @param prefix prefix
    */
-  def writeDependencies(functions: Seq[QFunction], outputDir: File, prefix: String): Unit = {
+  def writeDependencies(functions: Seq[QFunction], outputDir: File): Unit = {
+    outputDir.mkdirs()
     logger.info("Start calculating dependencies")
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
@@ -130,7 +130,7 @@ object WriteDependencies extends Logging with Configurable {
           "fail_at_start" -> f.isFail)
     }.toIterator.toMap
 
-    val outputFile = new File(outputDir, s"$prefix.deps.json")
+    val outputFile = new File(outputDir, s"deps.json")
     logger.info(s"Writing dependencies to: $outputFile")
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
@@ -143,22 +143,22 @@ object WriteDependencies extends Logging with Configurable {
       case l: List[_] => l.map(_.toString)
       case _          => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
     }))
-    val jobsWriter = new PrintWriter(new File(outputDir, s"$prefix.jobs.json"))
+    val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    writeGraphvizFile(jobsDeps, new File(outputDir, s"$prefix.jobs.gv"))
-    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"$prefix.compress.jobs.gv"))
+    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"))
+    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"))
 
     val mainJobs = jobs.filter(_._2("main_job") == true).map {
       case (name, job) =>
         name -> getMainDependencies(name, jobs)
     }
 
-    val mainJobsWriter = new PrintWriter(new File(outputDir, s"$prefix.main_jobs.json"))
+    val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    writeGraphvizFile(mainJobs, new File(outputDir, s"$prefix.main_jobs.gv"))
-    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"$prefix.compress.main_jobs.gv"))
+    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"))
+    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"))
 
     logger.info("done calculating dependencies")
   }

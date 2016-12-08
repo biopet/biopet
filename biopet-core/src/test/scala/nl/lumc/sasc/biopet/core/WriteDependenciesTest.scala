@@ -39,15 +39,14 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDeps: Unit = {
+  def testDeps(): Unit = {
     val tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
-    val prefix = "test"
-    val outputFile = new File(tempDir, s"$prefix.deps.json")
+    val outputFile = new File(tempDir, s"deps.json")
     outputFile.deleteOnExit()
     val func1 = Qfunc(file1 :: Nil, file2 :: Nil)
     val func2 = Qfunc(file2 :: Nil, file3 :: Nil)
-    WriteDependencies.writeDependencies(func1 :: func2 :: Nil, tempDir, prefix)
+    WriteDependencies.writeDependencies(func1 :: func2 :: Nil, tempDir)
     val deps = ConfigUtils.fileToConfigMap(outputFile)
     deps("jobs") shouldBe a[Map[_, _]]
     val jobs = deps("jobs").asInstanceOf[Map[String, Map[String, Any]]]
@@ -55,7 +54,7 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
 
     deps("files") shouldBe a[List[_]]
     val files = deps("files").asInstanceOf[List[Map[String, Any]]]
-    val paths = files.map(x => x.get("path")).flatten
+    val paths = files.flatMap(x => x.get("path"))
     assert(paths.contains(file1.toString))
     assert(paths.contains(file2.toString))
     assert(paths.contains(file3.toString))

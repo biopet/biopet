@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
+import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -103,8 +104,10 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       case _               =>
     }
 
+    val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
+
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
-      globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
+      globalConfig.writeReport(new File(logDir, "config"))
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, output directory cannot be created")
 
     logger.info("Checking input files")
@@ -123,7 +126,9 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    if (!skipWriteDependencies) WriteDependencies.writeDependencies(functions, new File(outputDir, ".log"), qSettings.runName)
+    if (!skipWriteDependencies) WriteDependencies.writeDependencies(
+      functions,
+      new File(logDir, "graph"))
 
     Logging.checkErrors()
     logger.info("Script complete without errors")
@@ -171,4 +176,5 @@ object BiopetQScript {
     require(outputDir.getAbsoluteFile.canRead, s"No premision to read outputdir: $outputDir")
     require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")
   }
+
 }
