@@ -115,9 +115,10 @@ object PipelineStatus extends ToolCommand {
     val totalFailed = jobFailed.size
     val totalPending = totalJobs - jobsStart.size - jobDone.size - jobFailed.size
 
+    futures.foreach(x => Await.ready(x, Duration.Inf))
+
     logger.info(s"Total job: ${totalJobs}, Pending: ${totalPending}, Ready to run / running: ${totalStart}, Done: ${totalDone}, Failed ${totalFailed}")
 
-    futures.foreach(x => Await.ready(x, Duration.Inf))
     if (follow) {
       Thread.sleep(refreshTime * 1000)
       writePipelineStatus(deps, outputDir, jobDone, jobFailed, follow)
@@ -155,7 +156,7 @@ object PipelineStatus extends ToolCommand {
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
-                        plots: Boolean): Future[Unit] = Future {
+                        png: Boolean = true, svg: Boolean = false): Future[Unit] = Future {
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
     jobDone
@@ -176,12 +177,12 @@ object PipelineStatus extends ToolCommand {
     writer.println("}")
     writer.close()
 
-    writeGvToPlot(outputFile)
+    writeGvToPlot(outputFile, png, svg)
   }
 
-  def writeGvToPlot(input: File): Unit = {
-    Process(Seq("dot", "-Tpng", "-O", input.getAbsolutePath)).run()
-    Process(Seq("dot", "-Tsvg", "-O", input.getAbsolutePath)).run()
+  def writeGvToPlot(input: File, png: Boolean = true, svg: Boolean = true): Unit = {
+    if (png) Process(Seq("dot", "-Tpng", "-O", input.getAbsolutePath)).run().exitValue()
+    if (svg) Process(Seq("dot", "-Tsvg", "-O", input.getAbsolutePath)).run().exitValue()
   }
 
   def jobsReadyStart(deps: Deps, jobsDone: Set[String]): Set[String] = {
