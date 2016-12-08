@@ -139,7 +139,7 @@ object WriteDependencies extends Logging with Configurable {
     )).spaces2)
     writer.close()
 
-    PipelineStatus.writePipelineStatus(outputFile, outputDir)
+    PipelineStatus.writePipelineStatus(PipelineStatus.readDepsFile(outputFile), outputDir)
     logger.info("done calculating dependencies")
   }
 
