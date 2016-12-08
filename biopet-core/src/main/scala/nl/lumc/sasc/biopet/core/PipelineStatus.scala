@@ -1,17 +1,17 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.sys.process.Process
 
 /**
-  * Created by pjvan_thof on 7-12-16.
-  */
+ * Created by pjvan_thof on 7-12-16.
+ */
 object PipelineStatus extends ToolCommand {
   case class Args(pipelineDir: File = null,
                   depsFile: Option[File] = None,
@@ -191,7 +191,7 @@ object PipelineStatus extends ToolCommand {
   def jobsDone(deps: Deps, alreadyDone: Set[String] = Set()): Set[String] = {
     val f = deps.jobs.filterNot(x => alreadyDone.contains(x._1)).map(x => x._2 -> x._2.isDone)
     val dones = f.map(x => x._1 -> Await.result(x._2, Duration.Inf)).filter(_._2).map(_._1.name).toSet ++ alreadyDone
-    val f2 = f.map(x => x._1 -> x._2.map{ d =>
+    val f2 = f.map(x => x._1 -> x._2.map { d =>
       if (d || !x._1.intermediate) d
       else upstreamJobDone(x._1, dones, deps)
     })
