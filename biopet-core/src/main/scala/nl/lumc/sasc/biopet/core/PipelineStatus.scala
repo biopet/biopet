@@ -65,10 +65,6 @@ object PipelineStatus extends ToolCommand {
 
     val jobDone = jobsDone(deps)
     val jobFailed = jobsFailed(deps)
-    val jobsRunning = deps.jobs
-      .filterNot(x => jobDone(x._1))
-      .filterNot(x => jobFailed(x._1))
-      .filter(_._2.stdoutFile.exists()).map(_._1).toList
 
     val jobsDeps = deps.jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
       case l: List[_] => l.map(_.toString)
@@ -77,8 +73,8 @@ object PipelineStatus extends ToolCommand {
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsRunning, deps)
-    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsRunning, deps)
+    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, deps)
+    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, deps)
 
     val mainJobs = deps.jobs.filter(_._2.mainJob == true).map {
       case (name, job) =>
@@ -88,8 +84,8 @@ object PipelineStatus extends ToolCommand {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsRunning, deps)
-    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsRunning, deps)
+    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, deps)
+    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, deps)
 
     //print(jobsDone(jobs).mkString("\n"))
 
@@ -123,7 +119,6 @@ object PipelineStatus extends ToolCommand {
   def writeGraphvizFile(jobsDeps: Map[String, List[String]], outputFile: File,
                         jobDone: Set[String],
                         jobFailed: Set[String],
-                        jobsRunning:  List[String],
                         deps: Deps): Unit = {
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
@@ -134,9 +129,8 @@ object PipelineStatus extends ToolCommand {
       .filter(x => jobsDeps.contains(x))
       .foreach(x => writer.println(s"  $x [color = red]"))
     jobsReadyStart(deps.jobs, jobDone)
-      .filter(jobsDeps.contains)
-      .filterNot(jobDone)
-      .filterNot(jobsRunning.contains)
+      .filter(x => jobsDeps.contains(x))
+      .filterNot(jobDone.contains)
       .foreach(x => writer.println(s"  $x [color = orange]"))
     deps.jobs
       .filter(x => jobsDeps.contains(x._1))
@@ -147,8 +141,8 @@ object PipelineStatus extends ToolCommand {
     writer.close()
   }
 
-  def jobsReadyStart(jobs: Map[String, Job], jobsDone: Set[String]): List[String] = {
-    jobs.filter(_._2.dependsOnJobs.forall(jobsDone)).map(_._1).toList
+  def jobsReadyStart(jobs: Map[String, Job], jobsDone: Set[String]): Set[String] = {
+    jobs.filter(_._2.dependsOnJobs.forall(jobsDone)).map(_._1).toSet
   }
 
   def jobsDone(deps: Deps): Set[String] = {
