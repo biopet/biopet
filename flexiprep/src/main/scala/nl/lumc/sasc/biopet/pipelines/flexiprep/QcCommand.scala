@@ -89,6 +89,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
     require(read != null)
     deps ::= input
     outputFiles :+= output
+    trim.foreach(outputFiles :+= _.outputStats)
   }
 
   override def beforeCmd(): Unit = {
