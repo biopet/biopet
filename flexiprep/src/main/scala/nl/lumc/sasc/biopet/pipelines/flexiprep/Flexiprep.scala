@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -179,9 +179,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     var R1 = R1_in
     var R2 = R2_in
 
-    val qcCmdR1 = new QcCommand(this, fastqcR1)
+    val qcCmdR1 = new QcCommand(this, fastqcR1, "R1")
     qcCmdR1.input = R1_in
-    qcCmdR1.read = "R1"
     qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
     else fastqR1Qc
     qcCmdR1.deps :+= fastqcR1.output
@@ -189,10 +188,9 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     addSummarizable(qcCmdR1, "qc_command_R1")
 
     if (paired) {
-      val qcCmdR2 = new QcCommand(this, fastqcR2)
+      val qcCmdR2 = new QcCommand(this, fastqcR2, "R2")
       qcCmdR2.input = R2_in.get
       qcCmdR2.output = new File(outDir, fastqR2Qc.get.getName.stripSuffix(".gz"))
-      qcCmdR2.read = "R2"
       addSummarizable(qcCmdR2, "qc_command_R2")
 
       qcCmdR1.compress = false
@@ -206,8 +204,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
-      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
-        override def configNamespace = "qc-cmd"
+      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) with Summarizable {
+        override def configNamespace = "qc_cmd"
 
         override def beforeGraph(): Unit = {
           fqSync.beforeGraph()
@@ -223,11 +221,20 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
           commands.foreach(addPipeJob)
           super.beforeCmd()
         }
+
+        /** Must return files to store into summary */
+        def summaryFiles: Map[String, File] = Map()
+
+        /** Must returns stats to store into summary */
+        def summaryStats: Any = Map()
+
+        override def summaryDeps = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
       }
 
       pipe.deps ::= fastqcR1.output
       pipe.deps ::= fastqcR2.output
       pipe.isIntermediate = !keepQcFastqFiles
+      addSummarizable(pipe, "qc_cmd")
       add(pipe)
 
       addSummarizable(fqSync, "fastq_sync")

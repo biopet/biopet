@@ -94,6 +94,8 @@ class FastqSync(val root: Configurable) extends ToolCommandFunction with Summari
     )
   }
 
+  override def summaryDeps = outputStats :: super.summaryDeps
+
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
       case (v1: Int, v2: Int) => v1 + v2

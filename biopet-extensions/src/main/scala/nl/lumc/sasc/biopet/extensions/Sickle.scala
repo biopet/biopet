@@ -84,6 +84,8 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
       (if (outputAsStsout) "" else " > " + required(outputStats))
   }
 
+  override def summaryDeps = outputStats :: super.summaryDeps
+
   /** returns stats map for summary */
   def summaryStats: Map[String, Any] = {
     // regex for single run
