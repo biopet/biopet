@@ -18,31 +18,31 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
   @Output(fullName = "out", shortName = "o", doc = "File name base to which coverage metric should be written")
   var out: File = _
 
+  @Output
   private var _summaryFile: File = _
+  @Output
   private var _statisticsFile: File = _
+  @Output
   private var _intervalSummaryFile: File = _
+  @Output
   private var _intervalStatisticsFile: File = _
+  @Output
   private var _geneSummaryFile: File = _
+  @Output
   private var _geneStatisticsFile: File = _
+  @Output
   private var _cumulativeCoverageCountsFile: File = _
+  @Output
   private var _cumulativeCoverageProportionsFile: File = _
 
-  @Output
-  var summaryFile = _summaryFile
-  @Output
-  var statisticsFile = _statisticsFile
-  @Output
-  var intervalSummaryFile = _intervalSummaryFile
-  @Output
-  var intervalStatisticsFile = _intervalStatisticsFile
-  @Output
-  var geneSummaryFile = _geneSummaryFile
-  @Output
-  var geneStatisticsFile = _geneStatisticsFile
-  @Output
-  var culumativeCoverageCountsFile = _cumulativeCoverageCountsFile
-  @Output
-  var cumulativeCoverageProportionsFile = _cumulativeCoverageProportionsFile
+  def summaryFile = new File(out + ".sample_summary")
+  def statisticsFile = new File(out + ".sample_statistics")
+  def intervalSummaryFile = new File(out + ".sample_interval_summary")
+  def intervalStatisticsFile = new File(out + ".sample_interval_statistics")
+  def geneSummaryFile = new File(out + ".sample_gene_summary")
+  def geneStatisticsFile = new File(out + ".sample_gene_statistics")
+  def cumulativeCoverageCountsFile = new File(out + ".sample_cumulative_coverage_counts")
+  def cumulativeCoverageProportionsFile = new File(out + ".sample_cumulative_coverage_proportions")
 
   @Input(required = false)
   var calculateCoverageOverGenes: Option[File] = config("calculate_coverage_over_genes", namespace = "depth_of_coverage", default = None)
@@ -92,14 +92,14 @@ class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
     if (out == null) {
       throw new IllegalStateException("You must set the <out> variable")
     }
-    _summaryFile = new File(out + ".sample_summary")
-    _statisticsFile = new File(out + ".sample_statistics")
-    _intervalSummaryFile = new File(out + ".sample_interval_summary")
-    _intervalStatisticsFile = new File(out + ".sample_interval_statistics")
-    _geneSummaryFile = new File(out + ".sample_gene_summary")
-    _geneStatisticsFile = new File(out + ".sample_gene_statistics")
-    _cumulativeCoverageCountsFile = new File(out + ".sample_cumulative_coverage_counts")
-    _cumulativeCoverageProportionsFile = new File(out + ".sample_cumulative_coverage_proportions")
+    _summaryFile = summaryFile
+    _statisticsFile = statisticsFile
+    _intervalSummaryFile = intervalSummaryFile
+    _intervalStatisticsFile = intervalStatisticsFile
+    _geneSummaryFile = geneSummaryFile
+    _geneStatisticsFile = geneStatisticsFile
+    _cumulativeCoverageCountsFile = cumulativeCoverageCountsFile
+    _cumulativeCoverageProportionsFile = cumulativeCoverageProportionsFile
   }
 
   override def cmdLine = {
