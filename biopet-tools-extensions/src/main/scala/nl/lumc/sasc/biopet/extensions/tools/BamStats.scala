@@ -59,4 +59,6 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
   def summaryFiles: Map[String, File] = Map()
 
   def summaryStats: Map[String, Any] = ConfigUtils.fileToConfigMap(bamstatsSummary)
+
+  override def summaryDeps: List[File] = bamstatsSummary :: super.summaryDeps
 }
