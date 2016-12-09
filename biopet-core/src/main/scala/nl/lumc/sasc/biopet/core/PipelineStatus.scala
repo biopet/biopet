@@ -18,7 +18,8 @@ object PipelineStatus extends ToolCommand {
                   outputDir: File = null,
                   follow: Boolean = false,
                   refreshTime: Int = 30,
-                  plots: Boolean = true) extends AbstractArgs
+                  complate_plots: Boolean = false,
+                  compressPlots: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('d', "pipelineDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -36,9 +37,12 @@ object PipelineStatus extends ToolCommand {
     opt[Int]("refresh") maxOccurs 1 action { (x, c) =>
       c.copy(refreshTime = x)
     } text "Time to check again, default set on 30 seconds"
-    opt[Unit]("skipPlots") maxOccurs 1 action { (x, c) =>
-      c.copy(plots = false)
-    } text "This will follow a run"
+    opt[Unit]("complete_plots") maxOccurs 1 action { (x, c) =>
+      c.copy(complate_plots = true)
+    } text "Add complete plots, this is disabled because of preformence"
+    opt[Unit]("skipCompressPlots") maxOccurs 1 action { (x, c) =>
+      c.copy(compressPlots = false)
+    } text "Disable default plots"
   }
 
   def main(args: Array[String]): Unit = {
@@ -49,7 +53,8 @@ object PipelineStatus extends ToolCommand {
 
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
     val deps = readDepsFile(depsFile)
-    writePipelineStatus(deps, cmdArgs.outputDir, follow = cmdArgs.follow, refreshTime = cmdArgs.refreshTime, plots = cmdArgs.plots)
+    writePipelineStatus(deps, cmdArgs.outputDir, follow = cmdArgs.follow, refreshTime = cmdArgs.refreshTime,
+      plots = cmdArgs.complate_plots, compressPlots = cmdArgs.compressPlots)
     logger.info("Done")
   }
 
@@ -80,7 +85,8 @@ object PipelineStatus extends ToolCommand {
                           alreadyFailed: Set[String] = Set(),
                           follow: Boolean = false,
                           refreshTime: Int = 30,
-                          plots: Boolean = true): Unit = {
+                          plots: Boolean = false,
+                          compressPlots: Boolean = true): Unit = {
 
     val jobDone = jobsDone(deps)
     val jobFailed = jobsFailed(deps, jobDone)
@@ -95,8 +101,8 @@ object PipelineStatus extends ToolCommand {
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots)
-    futures :+= writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots)
+    futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
+    futures :+= writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots)
 
     val mainJobs = deps.jobs.filter(_._2.mainJob == true).map {
       case (name, job) =>
@@ -106,8 +112,8 @@ object PipelineStatus extends ToolCommand {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots)
-    futures :+= writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots)
+    futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
+    futures :+= writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots)
 
     val totalJobs = deps.jobs.size
     val totalStart = jobsStart.size
@@ -156,7 +162,7 @@ object PipelineStatus extends ToolCommand {
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
-                        png: Boolean = true, svg: Boolean = false): Future[Unit] = Future {
+                        png: Boolean = true, svg: Boolean = true): Future[Unit] = Future {
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
     jobDone
