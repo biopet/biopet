@@ -22,10 +22,10 @@ class XhmmDiscover(val root: Configurable) extends Xhmm with Summarizable {
   @Input
   var r: File = _
 
+  @Output
   private var _outputXcnvAuxFile: File = _
 
-  @Output
-  var outputXcnvAuxFile = _outputXcnvAuxFile
+  def outputXcnvAuxFile = new File(outputXcnv.getAbsolutePath + ".aux")
 
   var xhmmAnalysisName: String = _
 
@@ -34,7 +34,7 @@ class XhmmDiscover(val root: Configurable) extends Xhmm with Summarizable {
     if (outputXcnv == null) {
       throw new IllegalStateException("Must set output file")
     }
-    _outputXcnvAuxFile = new File(outputXcnv.getAbsolutePath + ".aux")
+    _outputXcnvAuxFile = outputXcnvAuxFile
   }
 
   def cmdLine = {
