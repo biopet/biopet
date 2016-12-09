@@ -62,7 +62,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         case f: QFunction if qscript.functions.contains(f) => try {
           deps :+= f.firstOutput
         } catch {
-          case e: NullPointerException => logger.warn("Queue values are not init")
+          case e: NullPointerException => logger.debug("Queue values are not initialized")
         }
         case _ =>
       }
