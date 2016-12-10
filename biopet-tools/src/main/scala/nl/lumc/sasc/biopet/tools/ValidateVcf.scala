@@ -61,6 +61,6 @@ object ValidateVcf extends ToolCommand {
 
     vcfReader.close()
 
-    logger.info("No error found")
+    logger.info("Done")
   }
 }
