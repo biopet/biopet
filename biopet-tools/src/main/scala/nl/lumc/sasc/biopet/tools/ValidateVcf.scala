@@ -45,9 +45,11 @@ object ValidateVcf extends ToolCommand {
           s"contig in vcf file is not on reference: ${contig}")
         val start = record.getStart
         val end = record.getEnd
-        require(regions.chrRecords(contig).exists(_.overlapWith(BedRecord("contig", start, start))),
+        val contigStart = regions.chrRecords(contig).head.start
+        val contigEnd = regions.chrRecords(contig).head.end
+        require(start >= contigStart && start <= contigEnd,
           s"Position does not exist on reference: ${contig}:$start")
-        if (end != start) require(regions.chrRecords(contig).exists(_.overlapWith(BedRecord("contig", end, end))),
+        if (end != start) require(end >= contigStart && end <= contigEnd,
           s"Position does not exist on reference: ${contig}:$end")
         require(start <= end, "End is higher then Start, this should not be possible")
       }
