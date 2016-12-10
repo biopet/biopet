@@ -56,7 +56,7 @@ object ValidateVcf extends ToolCommand {
     } catch {
       case e: IllegalArgumentException =>
         if (cmdArgs.failOnError) throw e
-        else logger.warn(e.getMessage)
+        else logger.error(e.getMessage)
     }
 
     vcfReader.close()
