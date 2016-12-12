@@ -40,10 +40,10 @@ object PipelineStatus extends ToolCommand {
     opt[Unit]("completePlots") maxOccurs 1 action { (x, c) =>
       c.copy(complatePlots = true)
     } text "Add complete plots, this is disabled because of performance. " +
-      "Complete plots does show each job separated while compressed plots colapse all jobs of the same type together."
+      "Complete plots does show each job separated, while compressed plots collapse all jobs of the same type together."
     opt[Unit]("skipCompressPlots") maxOccurs 1 action { (x, c) =>
       c.copy(compressPlots = false)
-    } text "Disable compressed plots, default compressed plots are enabled."
+    } text "Disable compressed plots. By default compressed plots are enabled."
   }
 
   def main(args: Array[String]): Unit = {
