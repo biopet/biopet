@@ -23,10 +23,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /** Wrapper for the bgzip command */
 class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
 
-  @Input(doc = "Input files", required = true)
+  @Input(doc = "Input files", required = !inputAsStdin)
   var input: List[File] = Nil
 
-  @Output(doc = "Compressed output file", required = true)
+  @Output(doc = "Compressed output file", required = !outputAsStsout)
   var output: File = null
 
   var f: Boolean = config("f", default = false)
