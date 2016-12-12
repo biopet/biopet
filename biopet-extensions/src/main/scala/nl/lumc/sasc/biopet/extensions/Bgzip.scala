@@ -35,8 +35,8 @@ class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (input.isEmpty && !inputAsStdin) Logging.addError("Input is missing in Bgzip")
-    if (output == null && !outputAsStsout) Logging.addError("Output is missing in Bgzip")
+    if (input.isEmpty && !inputAsStdin) Logging.addError("Input is missing for Bgzip")
+    if (output == null && !outputAsStsout) Logging.addError("Output is missing for Bgzip")
   }
 
   def cmdLine = required(executable) +
