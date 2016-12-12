@@ -36,7 +36,7 @@ object ValidateVcf extends ToolCommand {
 
     val regions = BedRecordList.fromReference(cmdArgs.reference)
 
-    val vcfReader = new VCFFileReader(cmdArgs.inputVcf, true)
+    val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
 
     try {
       for (record <- vcfReader.iterator()) {
