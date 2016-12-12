@@ -139,60 +139,8 @@ object WriteDependencies extends Logging with Configurable {
     )).spaces2)
     writer.close()
 
-    val jobsDeps = jobs.map(x => x._1 -> (x._2("depends_on_jobs") match {
-      case l: List[_] => l.map(_.toString)
-      case _          => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
-    }))
-    val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
-    jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
-    jobsWriter.close()
-    writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"))
-    writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"))
-
-    val mainJobs = jobs.filter(_._2("main_job") == true).map {
-      case (name, job) =>
-        name -> getMainDependencies(name, jobs)
-    }
-
-    val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
-    mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
-    mainJobsWriter.close()
-    writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"))
-    writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"))
-
+    PipelineStatus.writePipelineStatus(PipelineStatus.readDepsFile(outputFile), outputDir)
     logger.info("done calculating dependencies")
   }
 
-  def getMainDependencies(jobName: String, jobsMap: Map[String, Map[String, Any]]): List[String] = {
-    val job = jobsMap(jobName)
-    val dependencies = job("depends_on_jobs") match {
-      case l: List[_] => l.map(_.toString)
-    }
-    dependencies.flatMap { dep =>
-      jobsMap(dep)("main_job") match {
-        case true  => List(dep)
-        case false => getMainDependencies(dep, jobsMap)
-      }
-    }.distinct
-  }
-
-  val numberRegex = """(.*)_(\d*)$""".r
-  def compressOnType(jobs: Map[String, List[String]]): Map[String, List[String]] = {
-    val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
-      job match {
-        case numberRegex(name, number) => (name, dep match {
-          case numberRegex(name, number) => name
-        })
-      }
-    }
-    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
-  }
-
-  def writeGraphvizFile(jobs: Map[String, List[String]], outputFile: File): Unit = {
-    val writer = new PrintWriter(outputFile)
-    writer.println("digraph graphname {")
-    jobs.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
-    writer.println("}")
-    writer.close()
-  }
 }
