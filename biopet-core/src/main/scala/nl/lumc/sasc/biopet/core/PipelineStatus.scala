@@ -18,7 +18,7 @@ object PipelineStatus extends ToolCommand {
                   outputDir: File = null,
                   follow: Boolean = false,
                   refreshTime: Int = 30,
-                  complate_plots: Boolean = false,
+                  complatePlots: Boolean = false,
                   compressPlots: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -37,12 +37,13 @@ object PipelineStatus extends ToolCommand {
     opt[Int]("refresh") maxOccurs 1 action { (x, c) =>
       c.copy(refreshTime = x)
     } text "Time to check again, default set on 30 seconds"
-    opt[Unit]("complete_plots") maxOccurs 1 action { (x, c) =>
-      c.copy(complate_plots = true)
-    } text "Add complete plots, this is disabled because of preformence"
+    opt[Unit]("completePlots") maxOccurs 1 action { (x, c) =>
+      c.copy(complatePlots = true)
+    } text "Add complete plots, this is disabled because of performance. " +
+      "Complete plots does show each job separated while compressed plots colapse all jobs of the same type together."
     opt[Unit]("skipCompressPlots") maxOccurs 1 action { (x, c) =>
       c.copy(compressPlots = false)
-    } text "Disable default plots"
+    } text "Disable compressed plots, default compressed plots are enabled."
   }
 
   def main(args: Array[String]): Unit = {
@@ -54,7 +55,7 @@ object PipelineStatus extends ToolCommand {
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
     val deps = readDepsFile(depsFile)
     writePipelineStatus(deps, cmdArgs.outputDir, follow = cmdArgs.follow, refreshTime = cmdArgs.refreshTime,
-      plots = cmdArgs.complate_plots, compressPlots = cmdArgs.compressPlots)
+      plots = cmdArgs.complatePlots, compressPlots = cmdArgs.compressPlots)
     logger.info("Done")
   }
 
@@ -153,6 +154,7 @@ object PipelineStatus extends ToolCommand {
         })
       }
     }
+    // This will collapse a Set[(String, String)] to a Map[String, List[String]]
     set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
   }
 
