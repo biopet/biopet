@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Wrapper for the bgzip command */
 class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
@@ -35,8 +35,8 @@ class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (input.isEmpty && ! inputAsStdin) Logging.addError("Input is missing in Bgzip")
-    if (output == null && ! outputAsStsout) Logging.addError("Output is missing in Bgzip")
+    if (input.isEmpty && !inputAsStdin) Logging.addError("Input is missing in Bgzip")
+    if (output == null && !outputAsStsout) Logging.addError("Output is missing in Bgzip")
   }
 
   def cmdLine = required(executable) +
