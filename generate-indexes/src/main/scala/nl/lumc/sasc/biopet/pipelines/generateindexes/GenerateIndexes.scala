@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.generateindexes
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
-import nl.lumc.sasc.biopet.extensions.{ Ln, Star }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Star }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2Build
@@ -44,9 +44,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
     var outputConfig: Map[String, Any] = Map("reference_fasta" -> fastaFile)
     val configDeps = new ListBuffer[File]()
 
+    val bgzipFasta = new File(fastaFile.getAbsolutePath + ".gz")
+    add(fastaFile :<: new Bgzip(this) > bgzipFasta)
+    add(SamtoolsFaidx(this, bgzipFasta))
+
     val faidx = SamtoolsFaidx(this, fastaFile)
     add(faidx)
-    configDeps += faidx.output
+    faidx.output.foreach(configDeps += _)
 
     val createDict = new CreateSequenceDictionary(this)
     createDict.reference = fastaFile
@@ -59,10 +63,10 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
     def createLinks(dir: File): File = {
       val newFastaFile = new File(dir, fastaFile.getName)
-      val newFai = new File(dir, faidx.output.getName)
+      val newFai = new File(dir, faidx.output.head.getName)
       val newDict = new File(dir, createDict.output.getName)
 
-      add(Ln(this, faidx.output, newFai))
+      add(Ln(this, faidx.output.head, newFai))
       add(Ln(this, createDict.output, newDict))
       val lnFasta = Ln(this, fastaFile, newFastaFile)
       lnFasta.deps ++= List(newFai, newDict)
