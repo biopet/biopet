@@ -118,13 +118,13 @@ object BammetricsReport extends ReportBuilder {
     tsvWriter.println("\tMapped\tDuplicates\tUnmapped\tSecondary")
 
     def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
-      val mapped = new SummaryValue(List("bammetrics", "stats", "biopet_flagstat", "Mapped"),
+      val mapped = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "Mapped"),
         summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val duplicates = new SummaryValue(List("bammetrics", "stats", "biopet_flagstat", "Duplicates"),
+      val duplicates = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "Duplicates"),
         summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val total = new SummaryValue(List("bammetrics", "stats", "biopet_flagstat", "All"),
+      val total = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "All"),
         summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val secondary = new SummaryValue(List("bammetrics", "stats", "biopet_flagstat", "NotPrimaryAlignment"),
+      val secondary = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "NotPrimaryAlignment"),
         summary, Some(sample), lib).value.getOrElse(0).toString.toLong
       val sb = new StringBuffer()
       if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
