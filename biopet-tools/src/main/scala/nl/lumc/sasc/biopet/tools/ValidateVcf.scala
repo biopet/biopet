@@ -4,13 +4,13 @@ import java.io.File
 
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvanthof on 10/12/2016.
-  */
+ * Created by pjvanthof on 10/12/2016.
+ */
 object ValidateVcf extends ToolCommand {
   case class Args(inputVcf: File = null,
                   reference: File = null,

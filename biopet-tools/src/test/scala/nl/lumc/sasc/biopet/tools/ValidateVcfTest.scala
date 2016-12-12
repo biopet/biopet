@@ -7,8 +7,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 12-12-16.
-  */
+ * Created by pjvan_thof on 12-12-16.
+ */
 class ValidateVcfTest extends TestNGSuite with Matchers {
 
   private def resourcePath(p: String): String =
