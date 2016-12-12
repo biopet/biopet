@@ -17,20 +17,27 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** Wrapper for the bgzip command */
 class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
 
-  @Input(doc = "Input files", required = !inputAsStdin)
+  @Input(doc = "Input files", required = false)
   var input: List[File] = Nil
 
-  @Output(doc = "Compressed output file", required = !outputAsStsout)
+  @Output(doc = "Compressed output file", required = false)
   var output: File = null
 
   var f: Boolean = config("f", default = false)
   executable = config("exe", default = "bgzip", freeVar = false)
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (input.isEmpty && ! inputAsStdin) Logging.addError("Input is missing in Bgzip")
+    if (output == null && ! outputAsStsout) Logging.addError("Output is missing in Bgzip")
+  }
 
   def cmdLine = required(executable) +
     conditional(f, "-f") +
