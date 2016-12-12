@@ -26,5 +26,4 @@ class ValidateVcfTest extends TestNGSuite with Matchers {
       ValidateVcf.main(Array("-i", resourcePath("/chrQ_wrong_contig.vcf"), "-R", resourcePath("/fake_chrQ.fa"), "--disableFail"))
     }
   }
-
 }
