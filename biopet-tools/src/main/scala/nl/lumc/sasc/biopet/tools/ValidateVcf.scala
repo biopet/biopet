@@ -25,7 +25,7 @@ object ValidateVcf extends ToolCommand {
     } text "Reference fasta to check vcf file against"
     opt[Unit]("disableFail") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(failOnError = false)
-    } text "Disable failing, tool still stops at the first error but exitcode 0 is given"
+    } text "Do not fail on error. The tool will still exit when encountering an error, but will do so with exit code 0"
   }
 
   def main(args: Array[String]): Unit = {
@@ -42,16 +42,16 @@ object ValidateVcf extends ToolCommand {
       for (record <- vcfReader.iterator()) {
         val contig = record.getContig
         require(regions.chrRecords.contains(contig),
-          s"contig in vcf file is not on reference: ${contig}")
+          s"The following contig in the vcf file does not exist in the reference: ${contig}")
         val start = record.getStart
         val end = record.getEnd
         val contigStart = regions.chrRecords(contig).head.start
         val contigEnd = regions.chrRecords(contig).head.end
         require(start >= contigStart && start <= contigEnd,
-          s"Position does not exist on reference: ${contig}:$start")
+          s"The following position does not exist on reference: ${contig}:$start")
         if (end != start) require(end >= contigStart && end <= contigEnd,
-          s"Position does not exist on reference: ${contig}:$end")
-        require(start <= end, "End is higher then Start, this should not be possible")
+          s"The following position does not exist on reference: ${contig}:$end")
+        require(start <= end, "End location of variant is larger than start position. This should not be possible")
       }
     } catch {
       case e: IllegalArgumentException =>
