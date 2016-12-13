@@ -59,3 +59,13 @@ trait RibosomalRefFlat extends BiopetQScript with Reference { qscript: QScript =
     file
   })
 }
+
+trait AnnotationBed extends BiopetQScript with Reference { qscript: QScript =>
+  /** Bed reference file */
+  lazy val annotationBed: File = {
+    val file: File = config("annotation_bed", freeVar = true, extraSubPath = geneAnnotationSubPath)
+    inputFiles :+ InputFile(file, config("annotation_bed_md5", freeVar = true, extraSubPath = geneAnnotationSubPath))
+    file
+  }
+}
+
