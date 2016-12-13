@@ -36,6 +36,8 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   var executable: String = _
 
+  var mainFunction = true
+
   /** This is the default shell for drmaa jobs */
   def defaultRemoteCommand = "bash"
   private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
@@ -81,7 +83,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
     this match {
       case r: Reference =>
-        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.dictRequired) deps :+= r.referenceDictFile
         if (r.faiRequired) deps :+= r.referenceFai
         deps = deps.distinct
       case _ =>
@@ -225,7 +227,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
       cmdLine +
       stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
       stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
-    addJobReportBinding("command", cmd)
     cmd
   }
 

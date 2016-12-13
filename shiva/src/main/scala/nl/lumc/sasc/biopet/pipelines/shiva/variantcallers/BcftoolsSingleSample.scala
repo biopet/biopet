@@ -38,7 +38,8 @@ class BcftoolsSingleSample(val root: Configurable) extends Variantcaller {
       bt.c = true
       bt.output = new File(outputDir, sample + ".vcf.gz")
 
-      add(mp | new FixMpileup(this) | bt)
+      val pipe = mp | new FixMpileup(this) | bt
+      add(pipe)
       add(Tabix(this, bt.output))
       bt.output
     }

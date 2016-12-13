@@ -115,6 +115,7 @@ object FlexiprepTest {
   Files.touch(r2Zipped)
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),

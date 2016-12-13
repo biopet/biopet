@@ -75,6 +75,7 @@ object GwasTestTest {
   }
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> reference.toString,
     "phenotype_file" -> phenotypeFile.toString,
     "output_dir" -> outputDir,

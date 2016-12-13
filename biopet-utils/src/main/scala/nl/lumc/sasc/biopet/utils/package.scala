@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet
 
 import scala.util.{ Failure, Success, Try }
+import scala.math._
 
 /**
  * General utility functions.
@@ -28,6 +29,15 @@ package object utils {
 
   /** Regular expression for matching entire decimal numbers (compatible with the scientific notation) */
   val isDecimal = """^([-+]?\d*\.?\d+(?:[eE][-+]?[0-9]+)?)$""".r
+
+  def textToSize(text: String): Long = {
+    text.last match {
+      case 'g' | 'G' => ((1L << 30) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case 'm' | 'M' => ((1L << 20) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case 'k' | 'K' => ((1L << 10) * text.stripSuffix("g").stripSuffix("G").toDouble).toLong
+      case _         => text.toLong
+    }
+  }
 
   /**
    * Tries to convert the given string with the given conversion functions recursively.
@@ -63,5 +73,31 @@ package object utils {
     case isDecimal(f)  => tryToConvert(f, x => x.toDouble, x => BigDecimal(x))
     case _ if fallBack => Try(raw)
     case _             => Try(throw new Exception(s"Can not extract number from string $raw"))
+  }
+
+  val semanticVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
+
+  /**
+   * Check whether a version string is a semantic version.
+   *
+   * @param version version string
+   * @return boolean
+   */
+  def isSemanticVersion(version: String): Boolean = getSemanticVersion(version).isDefined
+
+  case class SemanticVersion(major: Int, minor: Int, patch: Int, build: Option[String] = None)
+  /**
+   * Check whether a version string is a semantic version.
+   * Note: the toInt calls here are only safe because the regex only matches numbers
+   *
+   * @param version version string
+   * @return SemanticVersion case class
+   */
+  def getSemanticVersion(version: String) = {
+    version match {
+      case semanticVersionRegex(major, minor, patch, build) =>
+        Some(SemanticVersion(major.toInt, minor.toInt, patch.toInt, Option(build).map(x => x.stripPrefix("-"))))
+      case _ => None
+    }
   }
 }

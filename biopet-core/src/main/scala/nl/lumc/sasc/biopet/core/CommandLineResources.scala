@@ -40,16 +40,22 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def defaultResidentFactor: Double = 1.2
   var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
+  val useSge: Boolean = config("use_sge", default = true)
+
   var residentFactor: Double = config("resident_factor", default = defaultResidentFactor)
 
   private var _coreMemory: Double = 2.0
   def coreMemory = _coreMemory
 
+  /** This value is for SGE and is defined in seconds */
+  protected val maxWalltimeLimit: Option[Int] = config("max_walltime_limit")
+
   var retry = 0
 
   override def freezeFieldValues(): Unit = {
     setResources()
-    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
+    if (useSge && vmem.isDefined) jobResourceRequests :+= s"h_vmem=${vmem.get}"
+    if (useSge && maxWalltimeLimit.isDefined) jobResourceRequests :+= s"h_rt=${maxWalltimeLimit.get}"
     super.freezeFieldValues()
   }
 

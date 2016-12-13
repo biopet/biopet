@@ -25,13 +25,14 @@ class SamtoolsFaidx(val root: Configurable) extends Samtools {
   var input: File = _
 
   @Output(doc = "output File")
-  private var _output: File = _
+  private var _output: List[File] = Nil
 
   def output = _output
 
   override def beforeGraph: Unit = {
     super.beforeGraph
-    _output = new File(input.getParentFile, input.getName + ".fai")
+    _output = List(new File(input.getAbsolutePath + ".fai"))
+    if (input.getName.endsWith(".gz")) _output :+= new File(input.getAbsolutePath + ".gzi")
   }
 
   /** Returns command to execute */
@@ -42,7 +43,8 @@ object SamtoolsFaidx {
   def apply(root: Configurable, input: File): SamtoolsFaidx = {
     val faidx = new SamtoolsFaidx(root)
     faidx.input = input
-    faidx._output = new File(input.getParentFile, input.getName + ".fai")
+    faidx._output = List(new File(input.getAbsolutePath + ".fai"))
+    if (input.getName.endsWith(".gz")) faidx._output :+= new File(input.getAbsolutePath + ".gzi")
     faidx
   }
 }

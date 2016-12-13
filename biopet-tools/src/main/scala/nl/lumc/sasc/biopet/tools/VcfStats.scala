@@ -20,7 +20,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
@@ -330,7 +330,7 @@ object VcfStats extends ToolCommand {
     writeField(stats, "general", cmdArgs.outputDir)
     for (field <- adInfoTags.distinct.par) {
       writeField(stats, field, infoOutputDir)
-      for (line <- new FastaSequenceFile(cmdArgs.referenceFile, true).getSequenceDictionary.getSequences) {
+      for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
         val chr = line.getSequenceName
         writeField(stats, field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
@@ -341,7 +341,7 @@ object VcfStats extends ToolCommand {
     writeGenotypeField(stats, samples, "general", cmdArgs.outputDir, prefix = "genotype")
     for (field <- adGenotypeTags.distinct.par) {
       writeGenotypeField(stats, samples, field, genotypeOutputDir)
-      for (line <- new FastaSequenceFile(cmdArgs.referenceFile, true).getSequenceDictionary.getSequences) {
+      for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
         val chr = line.getSequenceName
         writeGenotypeField(stats, samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
       }

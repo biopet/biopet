@@ -56,12 +56,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
 
-  lazy val enableScatter: Boolean = config("enable_scatter", default = {
-    val ref = new FastaSequenceFile(referenceFasta(), true)
-    val refLength = ref.getSequenceDictionary.getReferenceLength
-    ref.close()
-    refLength > minScatterGenomeSize
-  })
+  lazy val enableScatter: Boolean = config("enable_scatter", default = referenceDict.getReferenceLength > minScatterGenomeSize)
 
   def sampleInfo: Map[String, Map[String, Any]] = root match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }

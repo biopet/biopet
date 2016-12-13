@@ -18,7 +18,7 @@ import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.picard._
-import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.extensions.tools.BamStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
@@ -77,7 +77,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     bammetrics.functions.count(_.isInstanceOf[CollectMultipleMetrics]) shouldBe 1
     bammetrics.functions.count(_.isInstanceOf[CalculateHsMetrics]) shouldBe (if (amplicon) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectTargetedPcrMetrics]) shouldBe (if (amplicon) 1 else 0)
-    bammetrics.functions.count(_.isInstanceOf[BiopetFlagstat]) shouldBe 1
+    bammetrics.functions.count(_.isInstanceOf[BamStats]) shouldBe 1
   }
 
   // remove temporary run directory all tests in the class have been run
@@ -114,6 +114,7 @@ object BamMetricsTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "refFlat" -> "bla.refFlat",
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "samtools" -> Map("exe" -> "test"),

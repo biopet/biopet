@@ -32,6 +32,8 @@ import scala.io.Source
 class VcfStats(val root: Configurable) extends ToolCommandFunction with Summarizable with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfStats
 
+  mainFunction = false
+
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 

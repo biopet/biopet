@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
-import nl.lumc.sasc.biopet.tools.SamplesTsvToJson._
+import nl.lumc.sasc.biopet.tools.SamplesTsvToConfig._
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite

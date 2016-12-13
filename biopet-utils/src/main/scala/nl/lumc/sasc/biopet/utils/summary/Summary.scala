@@ -78,6 +78,11 @@ class Summary(file: File) {
     }
   }
 
+  /** Get value on nested path with prefix depending is sampleId and/or libId is None or not */
+  def getValueAsArray(sampleId: Option[String], libId: Option[String], path: String*): Option[Array[Any]] = {
+    this.getValue(sampleId, libId, path: _*).map(ConfigUtils.any2list(_).toArray)
+  }
+
   /**
    * Get values for all libraries on a given path
    * @param path path to of value
