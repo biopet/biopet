@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import scala.io.Source
 
 /**
- * This class checks md5sums and give an exit code 1 when md5sum is not the same
+ * This class checks results of [[nl.lumc.sasc.biopet.tools.ValidateVcf]] and aborts the pipeline when a error was been found
  *
  * Created by pjvanthof on 16/08/15.
  */
