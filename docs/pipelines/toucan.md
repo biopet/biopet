@@ -55,6 +55,27 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
 }
 ~~~
 
+Multiple global configurations
+------------------------------
+
+It's possible to make a global config with multiple version of cache / vep in there. This way a user only need to supply the `vep_version` config value.
+
+Gloabl config:
+``` yaml
+vep_settings:
+  86:
+    vep_script: <path_to_exe>
+    dir: <path_to_cache>
+  75:
+    vep_script: <path_to_exe>
+    dir: <path_to_cache>
+```
+
+User config:
+``` yaml
+vep_version: 75 or 86
+```
+
 Varda
 -----
 Annotation with a [Varda](http://varda.readthedocs.org/en/latest/) database instance is possible.
