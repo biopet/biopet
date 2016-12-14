@@ -48,7 +48,10 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def coreMemory = _coreMemory
 
   /** This value is for SGE and is defined in seconds */
-  wallTime = config("max_walltime_limit")
+  wallTime = config("max_walltime")
+
+  /** This value is specific for slurm */
+  qualityOfSerice = config("quality_of_serice")
 
   var retry = 0
 
