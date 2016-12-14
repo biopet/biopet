@@ -14,6 +14,7 @@
  */
 package nl.lumc.sasc.biopet
 
+import nl.lumc.sasc.biopet.core.PipelineStatus
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutableMain extends BiopetExecutable {
@@ -41,5 +42,5 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes
   )
 
-  def tools: List[MainCommand] = BiopetToolsExecutable.tools
+  def tools: List[MainCommand] = PipelineStatus :: BiopetToolsExecutable.tools
 }
