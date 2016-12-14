@@ -48,14 +48,19 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def coreMemory = _coreMemory
 
   /** This value is for SGE and is defined in seconds */
-  protected val maxWalltimeLimit: Option[Int] = config("max_walltime_limit")
+  wallTime = config("max_walltime")
+
+  /** This value is specific for slurm */
+  qualityOfSerice = config("quality_of_serice")
 
   var retry = 0
 
   override def freezeFieldValues(): Unit = {
     setResources()
-    if (useSge && vmem.isDefined) jobResourceRequests :+= s"h_vmem=${vmem.get}"
-    if (useSge && maxWalltimeLimit.isDefined) jobResourceRequests :+= s"h_rt=${maxWalltimeLimit.get}"
+    if (useSge) {
+      vmem.foreach(v => jobResourceRequests :+= s"h_vmem=$v")
+      wallTime.foreach(t => jobResourceRequests :+= s"h_rt=$t")
+    }
     super.freezeFieldValues()
   }
 
