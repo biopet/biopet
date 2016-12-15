@@ -93,9 +93,13 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** Readgroup predicted insert size */
   protected var predictedInsertsize: Option[Int] = config("predicted_insertsize")
 
+  val keepFinalBamFile: Boolean = config("keep_final_bamfile", default = true)
+
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
+  def finalBamFile: File = if (skipMarkduplicates){
+    new File(outputDir, outputName + ".bam")
+  } else new File(outputDir, outputName + ".dedup.bam")
 
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
@@ -255,11 +259,13 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var bamFile = bamFiles.head
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir, outputName + ".dedup.bam")
-      val md = MarkDuplicates(this, bamFiles, bamFile)
+      val md = MarkDuplicates(this, bamFiles, finalBamFile)
+      md.isIntermediate = !keepFinalBamFile
       add(md)
       addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, new File(outputDir, outputName + ".merge.bam"))
+      val mergeSamFile = MergeSamFiles(this, bamFiles, finalBamFile)
+      mergeSamFile.isIntermediate = !keepFinalBamFile
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
@@ -270,9 +276,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       addSummaryQScript(bamMetrics)
     }
 
-    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
-    add(Ln(this, bamFile, finalBamFile))
-    outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
+//    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, new File(outputDir, outputName + ".dedup.bam"), ".bam", ".bai")))
+//    add(Ln(this, bamFile, new File(outputDir, outputName + ".dedup.bam")))
+    outputFiles += ("finalBamFile" -> finalBamFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {
       val gears = new GearsSingle(this)
@@ -331,7 +337,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     }
 
     val sortSam = SortSam(this, samFile, output)
-    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    sortSam.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(sortSam)
     sortSam.output
   }
@@ -345,7 +351,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = bwaCommand | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     pipe.threadsCorrection = -1
     add(pipe)
     output
@@ -363,6 +369,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
     val pipe = new BiopetFifoPipe(this, gsnapCommand :: ar._1 :: reorderSam :: Nil)
     pipe.threadsCorrection = -2
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(pipe)
     ar._2
   }
@@ -386,7 +393,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = hisat2 | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     pipe.threadsCorrection = 1
     add(pipe)
 
@@ -430,9 +437,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val reorderSam = new ReorderSam(this)
     reorderSam.input = mergeSamFile.output
     reorderSam.output = swapExt(output.getParent, output, ".merge.bam", ".reordered.bam")
+    reorderSam.isIntermediate = true
     add(reorderSam)
 
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
+    ar._1.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(ar._1)
     ar._2
   }
@@ -459,7 +468,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     stampyCmd.isIntermediate = true
     add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
-    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    sortSam.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(sortSam)
     sortSam.output
   }
@@ -478,6 +487,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(bowtie.output, output)
     val pipe = new BiopetFifoPipe(this, (Some(bowtie) :: Some(ar._1) :: Nil).flatten)
     pipe.threadsCorrection = -1
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(pipe)
     ar._2
   }
@@ -495,7 +505,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = bowtie2 | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     pipe.threadsCorrection = -1
     add(pipe)
     output
@@ -517,6 +527,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -3
     zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
     zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
+    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(pipe)
     reorderSam.output
   }
@@ -531,6 +542,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val starCommand = Star._2pass(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
     addAll(starCommand._2)
     val ar = addAddOrReplaceReadGroups(starCommand._1, output)
+    ar._1.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
     add(ar._1)
     ar._2
   }
@@ -547,7 +559,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addOrReplaceReadGroups.RGSM = sampleId.get
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
-    if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
+    addOrReplaceReadGroups.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
 
     (addOrReplaceReadGroups, addOrReplaceReadGroups.output)
   }
