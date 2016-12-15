@@ -102,7 +102,12 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
       lazy val mapping = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
-        val m = new Mapping(qscript)
+        val m = new Mapping(qscript) {
+          override def configNamespace = "mapping"
+          override def defaults: Map[String, Any] = super.defaults ++
+            Map("keep_final_bamfile" -> !(samples(sampleId).libraries.size > 1 ||
+              preProcessBam.map(_ != bamFile).getOrElse(false)))
+        }
         m.sampleId = Some(sampleId)
         m.libId = Some(libId)
         m.outputDir = libDir
