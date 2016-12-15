@@ -14,15 +14,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
+import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
 
 /**
  * This is a trait for the Shiva pipeline
@@ -175,6 +179,8 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
   override def addMultiSampleJobs() = {
     super.addMultiSampleJobs()
 
+    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta())).getOrElse(Nil))
+
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
@@ -251,4 +257,23 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
 }
 
 /** This object give a default main method to the pipelines */
-object Shiva extends PipelineCommand
+object Shiva extends PipelineCommand {
+
+  // This is used to only execute 1 validation per vcf file
+  private var validateVcfSeen: Set[(File, File)] = Set()
+
+  def makeValidateVcfJobs(root: Configurable, vcfFile: File, referenceFile: File): List[QFunction] = {
+    if (validateVcfSeen.contains((vcfFile, referenceFile))) Nil
+    else {
+      validateVcfSeen ++= Set((vcfFile, referenceFile))
+      val validateVcf = new ValidateVcf(root)
+      validateVcf.inputVcf = vcfFile
+      validateVcf.reference = referenceFile
+
+      val checkValidateVcf = new CheckValidateVcf
+      checkValidateVcf.inputLogFile = validateVcf.jobOutputFile
+
+      List(validateVcf, checkValidateVcf)
+    }
+  }
+}
