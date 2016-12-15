@@ -97,19 +97,19 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = if (skipMarkduplicates){
+  def finalBamFile: File = if (skipMarkduplicates) {
     new File(outputDir, outputName + ".bam")
   } else new File(outputDir, outputName + ".dedup.bam")
 
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
-  override def defaults = Map(
+  override def defaults: Map[String, Any] = Map(
     "gsnap" -> Map("batch" -> 4),
     "star" -> Map("outsamunmapped" -> "Within")
   )
 
-  override def fixedValues = Map(
+  override def fixedValues: Map[String, Any] = Map(
     "gsnap" -> Map("format" -> "sam"),
     "bowtie" -> Map("sam" -> true)
   )
@@ -276,8 +276,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       addSummaryQScript(bamMetrics)
     }
 
-//    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, new File(outputDir, outputName + ".dedup.bam"), ".bam", ".bai")))
-//    add(Ln(this, bamFile, new File(outputDir, outputName + ".dedup.bam")))
+    //    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, new File(outputDir, outputName + ".dedup.bam"), ".bam", ".bai")))
+    //    add(Ln(this, bamFile, new File(outputDir, outputName + ".dedup.bam")))
     outputFiles += ("finalBamFile" -> finalBamFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {

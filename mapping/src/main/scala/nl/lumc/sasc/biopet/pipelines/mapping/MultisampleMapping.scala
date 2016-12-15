@@ -83,10 +83,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     "merge_strategy" -> mergeStrategy.toString)
 
   def makeSample(id: String) = new Sample(id)
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
     def makeLibrary(id: String) = new Library(id)
-    class Library(libId: String) extends AbstractLibrary(libId) {
+    class Library(libId: String) extends AbstractLibrary(libId) { lib =>
 
       /** By default the bams files are put in the summary, more files can be added here */
       def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
@@ -101,11 +101,11 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
-      lazy val mapping = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
-        val m = new Mapping(qscript) {
+      lazy val mapping: Option[Mapping] = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
+        val m: Mapping = new Mapping(qscript) {
           override def configNamespace = "mapping"
           override def defaults: Map[String, Any] = super.defaults ++
-            Map("keep_final_bamfile" -> !(samples(sampleId).libraries.size > 1 ||
+            Map("keep_final_bamfile" -> !(samples(lib.sampleId).libraries.size > 1 ||
               preProcessBam.map(_ != bamFile).getOrElse(false)))
         }
         m.sampleId = Some(sampleId)
@@ -114,14 +114,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         Some(m)
       } else None
 
-      def bamFile = mapping match {
+      def bamFile: Option[File] = mapping match {
         case Some(m)                 => Some(m.finalBamFile)
         case _ if inputBam.isDefined => Some(new File(libDir, s"$sampleId-$libId.bam"))
         case _                       => None
       }
 
       /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
-      def preProcessBam = bamFile
+      def preProcessBam: Option[File] = bamFile
 
       /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
       def addJobs(): Unit = {
