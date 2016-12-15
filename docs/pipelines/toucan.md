@@ -58,7 +58,7 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
 Multiple global configurations
 ------------------------------
 
-It's possible to make a global config with multiple version of cache / vep in there. This way a user only need to supply the `vep_version` config value.
+It's possible to make a global config with multiple version of cache / vep in there. This way a user only needs to supply the `vep_version` config value.
 
 Gloabl config:
 ``` yaml
