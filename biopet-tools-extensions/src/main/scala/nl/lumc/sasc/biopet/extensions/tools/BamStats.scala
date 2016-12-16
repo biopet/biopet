@@ -3,10 +3,10 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvanthof on 18/11/2016.
