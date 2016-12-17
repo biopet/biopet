@@ -43,4 +43,6 @@ object BiopetExecutableMain extends BiopetExecutable {
   )
 
   def tools: List[MainCommand] = PipelineStatus :: BiopetToolsExecutable.tools
+
+  def templates: List[MainCommand] = List()
 }

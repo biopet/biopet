@@ -52,4 +52,6 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.VepNormalizer,
     nl.lumc.sasc.biopet.tools.WipeReads,
     nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly)
+
+  def templates: List[MainCommand] = List()
 }
