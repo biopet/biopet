@@ -183,7 +183,7 @@ object Reference {
     val species = Question.string("species",
       description = Some(if (globalSpecies.nonEmpty)
         s"""Species found in general config:
-           |- ${globalSpecies.keys.mkString("\n- ")}
+           |- ${globalSpecies.keys.toList.sorted.mkString("\n- ")}
            |$warn
            |""".stripMargin else s"No references found in global config. $warn"))
 
@@ -191,7 +191,7 @@ object Reference {
     val referenceName = Question.string("reference_name",
       description = Some(if (globalReferences.nonEmpty)
         s"""Reference for $species found in general config:
-            |- ${globalReferences.keys.mkString("\n- ")}
+            |- ${globalReferences.keys.toList.sorted.mkString("\n- ")}
             |$warn
             |""".stripMargin else s"No references found in global config. $warn"))
 
