@@ -2,7 +2,8 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.{ Question, ToolCommand }
+import nl.lumc.sasc.biopet.utils.config.Config
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Question, ToolCommand}
 
 /**
   * Created by pjvanthof on 17/12/2016.
@@ -27,7 +28,9 @@ trait TemplateTool extends ToolCommand {
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val standard: Map[String, Any] = Map("output_dir" -> Question.askValue("Output directory", validation = List(isAbsolutePath, parentIsWritable)))
-    pipelineMap(standard, cmdArgs.expert)
+    val config = pipelineMap(standard, cmdArgs.expert)
+
+    println(ConfigUtils.mapToYaml(config))
   }
 
   def pipelineMap(map: Map[String, Any], expert: Boolean): Map[String, Any]
