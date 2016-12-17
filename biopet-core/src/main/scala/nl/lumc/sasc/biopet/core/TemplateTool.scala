@@ -27,7 +27,7 @@ trait TemplateTool extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    val standard: Map[String, Any] = Map("output_dir" -> Question.askValue("Output directory", validation = List(isAbsolutePath, parentIsWritable)))
+    val standard: Map[String, Any] = Map("output_dir" -> Question.string("Output directory", validation = List(isAbsolutePath, parentIsWritable)))
     val config = pipelineMap(standard, cmdArgs.expert)
 
     println(ConfigUtils.mapToYaml(config))

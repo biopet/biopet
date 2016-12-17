@@ -180,7 +180,7 @@ object Reference {
   def askReference: Map[String, Any] = {
     val warn = "It's possible to select something else but be aware of installing all fasta / index files required by a pipeline."
     val globalSpecies = Config.global.defaults.getOrElse("references", Map()).asInstanceOf[Map[String, Any]]
-    val species = Question.askValue("species",
+    val species = Question.string("species",
       description = Some(if (globalSpecies.nonEmpty)
         s"""Species found in general config:
            |- ${globalSpecies.keys.mkString("\n- ")}
@@ -188,7 +188,7 @@ object Reference {
            |""".stripMargin else s"No references found in global config. $warn"))
 
     val globalReferences = globalSpecies.getOrElse(species, Map()).asInstanceOf[Map[String, Any]]
-    val referenceName = Question.askValue("reference_name",
+    val referenceName = Question.string("reference_name",
       description = Some(if (globalReferences.nonEmpty)
         s"""Reference for $species found in general config:
             |- ${globalReferences.keys.mkString("\n- ")}
@@ -197,7 +197,7 @@ object Reference {
 
     val reference = globalReferences.getOrElse(referenceName, Map()).asInstanceOf[Map[String, Any]]
     val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
-      Some(Question.askValue("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
+      Some(Question.string("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
         description = Some(s"No fasta file found for $species -> $referenceName")))
     }
 
