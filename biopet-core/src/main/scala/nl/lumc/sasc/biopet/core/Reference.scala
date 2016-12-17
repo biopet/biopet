@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.{ LazyCheck, BamUtils, ConfigUtils, FastaUtils, Logging }
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, Logging }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.utils._
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 
 import scala.collection.JavaConversions._
 
@@ -176,5 +175,31 @@ object Reference {
       checked += dict
       if (!dict.exists()) Logging.addError("Reference is missing a dict file")
     }
+  }
+
+  def askReference: Map[String, Any] = {
+    val globalSpecies: Map[String, Any] = Config.global.defaults.getOrElse("references", Map()).asInstanceOf
+    val species = Question.askValue("species",
+      description = Some(if (globalSpecies.nonEmpty)
+        s"""Species found in general config:
+           |- ${globalSpecies.keys.mkString("\n- ")}
+           |It's possible to select something else but be aware of installing all fasta/indexes required by a pipeline
+           |""".stripMargin else ""))
+
+    val globalReferences: Map[String, Any] = globalSpecies.getOrElse(species, Map()).asInstanceOf
+    val referenceName = Question.askValue("reference_name",
+      description = Some(if (globalReferences.nonEmpty)
+        s"""Reference for $species found in general config:
+            |- ${globalReferences.keys.mkString("\n- ")}
+            |It's possible to select something else but be aware of installing all indexes required by a pipeline
+            |""".stripMargin else ""))
+
+    val reference: Map[String, Any] = globalReferences.getOrElse(referenceName, Map()).asInstanceOf
+    val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
+      Some(Question.askValue("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
+        description = Some(s"No fasta file found for $species -> $referenceName")))
+    }
+
+    Map("species" -> species, "reference_name" -> referenceName) ++ referenceFasta.map("reference_fasta" -> _)
   }
 }
