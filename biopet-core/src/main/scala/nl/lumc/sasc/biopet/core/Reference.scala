@@ -178,23 +178,24 @@ object Reference {
   }
 
   def askReference: Map[String, Any] = {
-    val globalSpecies: Map[String, Any] = Config.global.defaults.getOrElse("references", Map()).asInstanceOf
+    val warn = "It's possible to select something else but be aware of installing all fasta / index files required by a pipeline."
+    val globalSpecies = Config.global.defaults.getOrElse("references", Map()).asInstanceOf[Map[String, Any]]
     val species = Question.askValue("species",
       description = Some(if (globalSpecies.nonEmpty)
         s"""Species found in general config:
            |- ${globalSpecies.keys.mkString("\n- ")}
-           |It's possible to select something else but be aware of installing all fasta/indexes required by a pipeline
-           |""".stripMargin else ""))
+           |$warn
+           |""".stripMargin else s"No references found in global config. $warn"))
 
-    val globalReferences: Map[String, Any] = globalSpecies.getOrElse(species, Map()).asInstanceOf
+    val globalReferences = globalSpecies.getOrElse(species, Map()).asInstanceOf[Map[String, Any]]
     val referenceName = Question.askValue("reference_name",
       description = Some(if (globalReferences.nonEmpty)
         s"""Reference for $species found in general config:
             |- ${globalReferences.keys.mkString("\n- ")}
-            |It's possible to select something else but be aware of installing all indexes required by a pipeline
-            |""".stripMargin else ""))
+            |$warn
+            |""".stripMargin else s"No references found in global config. $warn"))
 
-    val reference: Map[String, Any] = globalReferences.getOrElse(referenceName, Map()).asInstanceOf
+    val reference = globalReferences.getOrElse(referenceName, Map()).asInstanceOf[Map[String, Any]]
     val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
       Some(Question.askValue("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
         description = Some(s"No fasta file found for $species -> $referenceName")))
