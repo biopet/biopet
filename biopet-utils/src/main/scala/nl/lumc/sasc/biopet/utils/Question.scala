@@ -61,8 +61,8 @@ object Question {
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name > ")
     (Console.readLine.split(",").toList.map(_.trim), default) match {
-      case (Nil, Some(d)) => d
-      case (Nil, None) =>
+      case (List(""), Some(d)) => d
+      case (List(""), None) =>
         println("ERROR: Value is required")
         list(name, default, description, posibleValues, validation)
       case (a, _) =>

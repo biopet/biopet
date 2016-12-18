@@ -74,16 +74,16 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
   val callers: List[Variantcaller] = {
     (for (name <- configCallers) yield {
-      if (!callersList.exists(_.name == name))
-        Logging.addError(s"variantcaller '$name' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
-      callersList.find(_.name == name)
+      if (!ShivaVariantcalling.callersList(this).exists(_.name == name))
+        Logging.addError(s"variantcaller '$name' does not exist, possible to use: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+      ShivaVariantcalling.callersList(this).find(_.name == name)
     }).flatten.toList.sortBy(_.prio)
   }
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
     require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
+    require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
     cv.out = finalFile
@@ -159,19 +159,6 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     }
   }
 
-  /** Will generate all available variantcallers */
-  protected def callersList: List[Variantcaller] =
-    new HaplotypeCallerGvcf(this) ::
-      new HaplotypeCallerAllele(this) ::
-      new UnifiedGenotyperAllele(this) ::
-      new UnifiedGenotyper(this) ::
-      new HaplotypeCaller(this) ::
-      new Freebayes(this) ::
-      new RawVcf(this) ::
-      new Bcftools(this) ::
-      new BcftoolsSingleSample(this) ::
-      new VarscanCnsSingleSample(this) :: Nil
-
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
 
@@ -188,4 +175,17 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
   }
 }
 
-object ShivaVariantcalling extends PipelineCommand
+object ShivaVariantcalling extends PipelineCommand {
+  /** Will generate all available variantcallers */
+  protected[shiva] def callersList(root: Configurable): List[Variantcaller] =
+  new HaplotypeCallerGvcf(root) ::
+    new HaplotypeCallerAllele(root) ::
+    new UnifiedGenotyperAllele(root) ::
+    new UnifiedGenotyper(root) ::
+    new HaplotypeCaller(root) ::
+    new Freebayes(root) ::
+    new RawVcf(root) ::
+    new Bcftools(root) ::
+    new BcftoolsSingleSample(root) ::
+    new VarscanCnsSingleSample(root) :: Nil
+}
