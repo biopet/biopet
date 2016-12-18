@@ -21,7 +21,7 @@ object Shiva extends TemplateTool {
     map ++ Reference.askReference ++
       Map(
         "variantcallers" -> Question.list("Variantcallers", posibleValues = possibleVariantcallers,
-          default = Some(List("unifiedgenotyper", "haplotypecaller_gvcf", "haplotypecaller"))),
+          default = Some(List("haplotypecaller_gvcf", "haplotypecaller"))),
         "use_indel_realigner" -> Question.boolean("use_indel_realigner", default = Some(true)),
         "use_base_recalibration" -> Question.boolean("use_base_recalibration", default = Some(true))
       )
