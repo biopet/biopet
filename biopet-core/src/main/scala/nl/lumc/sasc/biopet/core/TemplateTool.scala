@@ -37,7 +37,7 @@ trait TemplateTool extends ToolCommand {
 
   def pipelineMap(map: Map[String, Any], expert: Boolean): Map[String, Any]
 
-  val sampleConfigs: List[File] = Nil
+  lazy val sampleConfigs: List[File] = Nil
 
 }
 
