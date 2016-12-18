@@ -122,8 +122,8 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)
-    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
-    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
+    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads) threads else 1))
+    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads) threads else 1)) + "G")
   }
 
 }
