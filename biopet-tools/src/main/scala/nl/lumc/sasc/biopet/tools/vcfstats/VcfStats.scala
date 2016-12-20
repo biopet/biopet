@@ -12,17 +12,15 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.{ File, FileOutputStream, PrintWriter }
 
-import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -108,86 +106,6 @@ object VcfStats extends ToolCommand {
       x => if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
     } text s"""Create a wiggle track with bin size <binSize> for any of the following genotype fields:
         |${genotypeWiggleOptions.mkString(", ")}""".stripMargin
-  }
-
-  /**
-   * Class to store sample to sample compare stats
-   * @param genotypeOverlap Number of genotypes match with other sample
-   * @param alleleOverlap Number of alleles also found in other sample
-   */
-  case class SampleToSampleStats(var genotypeOverlap: Int = 0,
-                                 var alleleOverlap: Int = 0) {
-    /** Add an other class */
-    def +=(other: SampleToSampleStats) {
-      this.genotypeOverlap += other.genotypeOverlap
-      this.alleleOverlap += other.alleleOverlap
-    }
-  }
-
-  /**
-   * class to store all sample relative stats
-   * @param genotypeStats Stores all genotype relative stats
-   * @param sampleToSample Stores sample to sample compare stats
-   */
-  case class SampleStats(genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
-                         sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()) {
-    /** Add an other class */
-    def +=(other: SampleStats): Unit = {
-      for ((key, value) <- other.sampleToSample) {
-        if (this.sampleToSample.contains(key)) this.sampleToSample(key) += value
-        else this.sampleToSample(key) = value
-      }
-      for ((chr, chrMap) <- other.genotypeStats; (field, fieldMap) <- chrMap) {
-        if (!this.genotypeStats.contains(chr)) genotypeStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
-        val thisField = this.genotypeStats(chr).get(field)
-        if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
-        else this.genotypeStats(chr) += field -> fieldMap
-      }
-    }
-  }
-
-  /**
-   * General stats class to store vcf stats
-   * @param generalStats Stores are general stats
-   * @param samplesStats Stores all sample/genotype specific stats
-   */
-  case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
-                   samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
-    /** Add an other class */
-    def +=(other: Stats): Stats = {
-      for ((key, value) <- other.samplesStats) {
-        if (this.samplesStats.contains(key)) this.samplesStats(key) += value
-        else this.samplesStats(key) = value
-      }
-      for ((chr, chrMap) <- other.generalStats; (field, fieldMap) <- chrMap) {
-        if (!this.generalStats.contains(chr)) generalStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
-        val thisField = this.generalStats(chr).get(field)
-        if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
-        else this.generalStats(chr) += field -> fieldMap
-      }
-      this
-    }
-  }
-
-  /** Merge m2 into m1 */
-  def mergeStatsMap(m1: mutable.Map[Any, Int], m2: mutable.Map[Any, Int]): Unit = {
-    for (key <- m2.keySet)
-      m1(key) = m1.getOrElse(key, 0) + m2(key)
-  }
-
-  /** Merge m2 into m1 */
-  def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]],
-                          m2: Map[String, Map[String, Map[Any, Int]]]): Unit = {
-    for ((chr, chrMap) <- m2; (field, fieldMap) <- chrMap) {
-      if (m1.contains(chr)) {
-        if (m1(chr).contains(field)) {
-          for ((key, value) <- fieldMap) {
-            if (m1(chr)(field).contains(key)) m1(chr)(field)(key) += value
-            else m1(chr)(field)(key) = value
-          }
-        } else m1(chr)(field) = mutable.Map(fieldMap.toList: _*)
-      } else m1(chr) = mutable.Map(field -> mutable.Map(fieldMap.toList: _*))
-    }
   }
 
   protected var cmdArgs: Args = _
@@ -283,9 +201,9 @@ object VcfStats extends ToolCommand {
 
           val query = reader.query(interval.getContig, interval.getStart, interval.getEnd)
           if (!query.hasNext) {
-            mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
+            Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
             for (sample <- samples) yield {
-              mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats, fillGenotype(adGenotypeTags))
+              Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats, fillGenotype(adGenotypeTags))
             }
             chunkCounter += 1
           }
@@ -293,10 +211,10 @@ object VcfStats extends ToolCommand {
           for (
             record <- query if record.getStart <= interval.getEnd
           ) {
-            mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+            Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
             for (sample1 <- samples) yield {
               val genotype = record.getGenotype(sample1)
-              mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
+              Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
               for (sample2 <- samples) {
                 val genotype2 = record.getGenotype(sample2)
                 if (genotype.getAlleles == genotype2.getAlleles)
