@@ -93,7 +93,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** Readgroup predicted insert size */
   protected var predictedInsertsize: Option[Int] = config("predicted_insertsize")
 
-  val keepFinalBamFile: Boolean = config("keep_final_bamfile", default = true)
+  val keepFinalBamFile: Boolean = config("keep_final_bam_file", default = true)
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
@@ -276,8 +276,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       addSummaryQScript(bamMetrics)
     }
 
-    //    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, new File(outputDir, outputName + ".dedup.bam"), ".bam", ".bai")))
-    //    add(Ln(this, bamFile, new File(outputDir, outputName + ".dedup.bam")))
     outputFiles += ("finalBamFile" -> finalBamFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {
