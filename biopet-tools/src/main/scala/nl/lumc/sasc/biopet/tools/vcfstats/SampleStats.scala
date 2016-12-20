@@ -19,7 +19,7 @@ case class SampleStats(genotypeStats: mutable.Map[String, mutable.Map[String, mu
     for ((chr, chrMap) <- other.genotypeStats; (field, fieldMap) <- chrMap) {
       if (!this.genotypeStats.contains(chr)) genotypeStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
       val thisField = this.genotypeStats(chr).get(field)
-      if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
+      if (thisField.isDefined) Stats.mergeStatsMap(thisField.get, fieldMap)
       else this.genotypeStats(chr) += field -> fieldMap
     }
   }
