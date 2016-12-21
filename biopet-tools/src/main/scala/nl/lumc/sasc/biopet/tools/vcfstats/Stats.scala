@@ -1,6 +1,10 @@
 package nl.lumc.sasc.biopet.tools.vcfstats
 
+import java.io.{File, PrintWriter}
+
 import scala.collection.mutable
+
+import nl.lumc.sasc.biopet.utils.sortAnyAny
 
 /**
   * General stats class to store vcf stats
@@ -24,6 +28,49 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
     }
     this
   }
+
+  /** Function to write 1 specific general field */
+  def writeField(field: String, outputDir: File, prefix: String = "", chr: String = "total"): File = {
+    val file = (prefix, chr) match {
+      case ("", "total") => new File(outputDir, field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+    }
+
+    val data = this.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
+
+    file.getParentFile.mkdirs()
+    val writer = new PrintWriter(file)
+    writer.println("value\tcount")
+    for (key <- data.keySet.toList.sortWith(sortAnyAny)) {
+      writer.println(key + "\t" + data(key))
+    }
+    writer.close()
+    file
+  }
+
+  /** Function to write 1 specific genotype field */
+  def writeGenotypeField(samples: List[String], field: String, outputDir: File,
+                                   prefix: String = "", chr: String = "total"): Unit = {
+    val file = (prefix, chr) match {
+      case ("", "total") => new File(outputDir, field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+    }
+
+    file.getParentFile.mkdirs()
+    val writer = new PrintWriter(file)
+    writer.println(samples.mkString(field + "\t", "\t", ""))
+    val keySet = (for (sample <- samples) yield this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
+    for (key <- keySet.toList.sortWith(sortAnyAny)) {
+      val values = for (sample <- samples) yield this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
+      writer.println(values.mkString(key + "\t", "\t", ""))
+    }
+    writer.close()
+  }
+
 }
 
 object Stats {

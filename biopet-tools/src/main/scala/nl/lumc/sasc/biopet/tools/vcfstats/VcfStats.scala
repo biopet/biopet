@@ -14,19 +14,23 @@
  */
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{ File, FileOutputStream, PrintWriter }
+import java.io.{File, FileOutputStream, PrintWriter}
 
 import htsjdk.samtools.util.Interval
-import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
+import htsjdk.variant.variantcontext.{Allele, Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.Random
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
 
 /**
  * This tool will generate statistics from a vcf file
@@ -73,7 +77,7 @@ object VcfStats extends ToolCommand {
     } validate {
       x => if (x == null) failure("Output directory required") else success
     } text "Path to directory for output (required)"
-    opt[File]('i', "intervals") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('i', "intervals") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(intervals = Some(x))
     } text "Path to interval (BED) file (optional)"
     opt[String]("infoTag") unbounded () valueName "<tag>" action { (x, c) =>
@@ -191,7 +195,7 @@ object VcfStats extends ToolCommand {
     }
 
     // Triple for loop to not keep all bins in memory
-    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList.par) yield {
+    val statsFutures = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList) yield Future {
       val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
           val reader = new VCFFileReader(cmdArgs.inputFile, true)
@@ -229,8 +233,8 @@ object VcfStats extends ToolCommand {
           if (cmdArgs.writeBinStats) {
             val binOutputDir = new File(cmdArgs.outputDir, "bins" + File.separator + interval.getContig)
 
-            writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
-            writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
+            stats.writeGenotypeField(samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+            stats.writeField("general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
           }
 
           status(chunkCounter, interval)
@@ -239,36 +243,37 @@ object VcfStats extends ToolCommand {
         binStats.toList.fold(createStats)(_ += _)
       }
       chunkStats.toList.fold(createStats)(_ += _)
-    }).toList.fold(createStats)(_ += _)
+    })
+    val stats = statsFutures.foldLeft(createStats) { case (a,b) => a += Await.result(b, Duration.Inf) }
 
     logger.info("Done reading vcf records")
 
     // Writing info fields to tsv files
     val infoOutputDir = new File(cmdArgs.outputDir, "infotags")
-    writeField(stats, "general", cmdArgs.outputDir)
+    stats.writeField("general", cmdArgs.outputDir)
     for (field <- adInfoTags.distinct.par) {
-      writeField(stats, field, infoOutputDir)
+      stats.writeField(field, infoOutputDir)
       for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
         val chr = line.getSequenceName
-        writeField(stats, field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
+        stats.writeField(field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
 
     // Write genotype field to tsv files
     val genotypeOutputDir = new File(cmdArgs.outputDir, "genotypetags")
-    writeGenotypeField(stats, samples, "general", cmdArgs.outputDir, prefix = "genotype")
+    stats.writeGenotypeField(samples, "general", cmdArgs.outputDir, prefix = "genotype")
     for (field <- adGenotypeTags.distinct.par) {
-      writeGenotypeField(stats, samples, field, genotypeOutputDir)
+      stats.writeGenotypeField(samples, field, genotypeOutputDir)
       for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
         val chr = line.getSequenceName
-        writeGenotypeField(stats, samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
+        stats.writeGenotypeField(samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
 
     // Write sample distributions to tsv files
     val sampleDistributionsOutputDir = new File(cmdArgs.outputDir, "sample_distributions")
     for (field <- sampleDistributions) {
-      writeField(stats, "SampleDistribution-" + field, sampleDistributionsOutputDir)
+      stats.writeField("SampleDistribution-" + field, sampleDistributionsOutputDir)
     }
 
     // Write general wiggle tracks
@@ -535,64 +540,6 @@ object VcfStats extends ToolCommand {
     }
 
     Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
-  }
-
-  /** Function to write 1 specific genotype field */
-  protected def writeGenotypeField(stats: Stats, samples: List[String], field: String, outputDir: File,
-                                   prefix: String = "", chr: String = "total"): Unit = {
-    val file = (prefix, chr) match {
-      case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
-      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
-    }
-
-    file.getParentFile.mkdirs()
-    val writer = new PrintWriter(file)
-    writer.println(samples.mkString(field + "\t", "\t", ""))
-    val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
-    for (key <- keySet.toList.sortWith(sortAnyAny)) {
-      val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
-      writer.println(values.mkString(key + "\t", "\t", ""))
-    }
-    writer.close()
-
-    //FIXME: plotting of thise value is broken
-    //plotLine(file)
-  }
-
-  /** Function to write 1 specific general field */
-  protected def writeField(stats: Stats, field: String, outputDir: File, prefix: String = "", chr: String = "total"): File = {
-    val file = (prefix, chr) match {
-      case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
-      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
-    }
-
-    val data = stats.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
-
-    file.getParentFile.mkdirs()
-    val writer = new PrintWriter(file)
-    writer.println("value\tcount")
-    for (key <- data.keySet.toList.sortWith(sortAnyAny)) {
-      writer.println(key + "\t" + data(key))
-    }
-    writer.close()
-    file
-  }
-
-  /** Function to sort Any values */
-  def sortAnyAny(a: Any, b: Any): Boolean = {
-    a match {
-      case ai: Int =>
-        b match {
-          case bi: Int    => ai < bi
-          case bi: Double => ai < bi
-          case _          => a.toString < b.toString
-        }
-      case _ => a.toString < b.toString
-    }
   }
 
   /** Function to write sample to sample compare tsv's / heatmaps */
