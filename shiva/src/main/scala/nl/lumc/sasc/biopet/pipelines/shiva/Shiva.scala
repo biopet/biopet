@@ -181,7 +181,7 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
   override def addMultiSampleJobs() = {
     super.addMultiSampleJobs()
 
-    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta())).getOrElse(Nil))
+    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
 
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
@@ -264,16 +264,18 @@ object Shiva extends PipelineCommand {
   // This is used to only execute 1 validation per vcf file
   private var validateVcfSeen: Set[(File, File)] = Set()
 
-  def makeValidateVcfJobs(root: Configurable, vcfFile: File, referenceFile: File): List[QFunction] = {
+  def makeValidateVcfJobs(root: Configurable, vcfFile: File, referenceFile: File, outputDir: File): List[QFunction] = {
     if (validateVcfSeen.contains((vcfFile, referenceFile))) Nil
     else {
       validateVcfSeen ++= Set((vcfFile, referenceFile))
       val validateVcf = new ValidateVcf(root)
       validateVcf.inputVcf = vcfFile
       validateVcf.reference = referenceFile
+      validateVcf.jobOutputFile = new File(outputDir, vcfFile.getAbsolutePath + ".validateVcf.out")
 
       val checkValidateVcf = new CheckValidateVcf
       checkValidateVcf.inputLogFile = validateVcf.jobOutputFile
+      checkValidateVcf.jobOutputFile = new File(outputDir, vcfFile.getAbsolutePath + ".checkValidateVcf.out")
 
       List(validateVcf, checkValidateVcf)
     }

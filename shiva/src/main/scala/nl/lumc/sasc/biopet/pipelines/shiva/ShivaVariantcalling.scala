@@ -85,7 +85,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
-    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta())).getOrElse(Nil))
+    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
 
     val cv = new CombineVariants(qscript)
     cv.out = finalFile
