@@ -27,4 +27,26 @@ class VcfUtilsTest extends TestNGSuite with Matchers {
     VcfUtils.isCompoundNoCall(completeNoCall) shouldBe false
   }
 
+  @Test
+  def testAlleleOverlap(): Unit = {
+
+    val a1 = Allele.create("G")
+    val a2 = Allele.create("A")
+
+    VcfUtils.alleleOverlap(List(a1, a1), List(a1, a1)) shouldBe 2
+    VcfUtils.alleleOverlap(List(a2, a2), List(a2, a2)) shouldBe 2
+    VcfUtils.alleleOverlap(List(a1, a2), List(a1, a2)) shouldBe 2
+    VcfUtils.alleleOverlap(List(a1, a2), List(a2, a1)) shouldBe 2
+    VcfUtils.alleleOverlap(List(a2, a1), List(a1, a2)) shouldBe 2
+    VcfUtils.alleleOverlap(List(a2, a1), List(a2, a1)) shouldBe 2
+
+    VcfUtils.alleleOverlap(List(a1, a2), List(a1, a1)) shouldBe 1
+    VcfUtils.alleleOverlap(List(a2, a1), List(a1, a1)) shouldBe 1
+    VcfUtils.alleleOverlap(List(a1, a1), List(a1, a2)) shouldBe 1
+    VcfUtils.alleleOverlap(List(a1, a1), List(a2, a1)) shouldBe 1
+
+    VcfUtils.alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
+    VcfUtils.alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
+  }
+
 }

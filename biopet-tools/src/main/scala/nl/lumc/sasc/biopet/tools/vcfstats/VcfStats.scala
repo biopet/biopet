@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.{File, FileOutputStream, PrintWriter}
 
 import htsjdk.samtools.util.Interval
-import htsjdk.variant.variantcontext.{Allele, Genotype, VariantContext}
+import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand, VcfUtils}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -30,7 +30,7 @@ import scala.util.Random
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 /**
  * This tool will generate statistics from a vcf file
@@ -223,7 +223,7 @@ object VcfStats extends ToolCommand {
                 val genotype2 = record.getGenotype(sample2)
                 if (genotype.getAlleles == genotype2.getAlleles)
                   stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-                stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+                stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils.alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
               }
             }
             chunkCounter += 1
@@ -332,20 +332,6 @@ object VcfStats extends ToolCommand {
     value.collect { case x => x.split("\t")(index) }
   }
 
-  /** Give back the number of alleles that overlap */
-  def alleleOverlap(g1: List[Allele], g2: List[Allele], start: Int = 0): Int = {
-    if (g1.isEmpty) start
-    else {
-      val found = g2.contains(g1.head)
-      val g2tail = if (found) {
-        val index = g2.indexOf(g1.head)
-        g2.drop(index + 1) ++ g2.take(index)
-      } else g2
-
-      alleleOverlap(g1.tail, g2tail, if (found) start + 1 else start)
-    }
-  }
-
   protected[tools] def fillGeneral(additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
@@ -355,7 +341,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    buffer += "QUAL" -> Map("not set" -> 1)
+    addToBuffer("QUAL", "not set", false)
 
     addToBuffer("SampleDistribution-Het", "not set", found = false)
     addToBuffer("SampleDistribution-HetNonRef", "not set", found = false)
@@ -464,10 +450,10 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    buffer += "DP" -> Map("not set" -> 1)
-    buffer += "GQ" -> Map("not set" -> 1)
+    addToBuffer("DP", "not set", false)
+    addToBuffer("GQ", "not set", false)
 
-    addToBuffer("general", "Total", found = true)
+    addToBuffer("general", "Total", false)
     addToBuffer("general", "Het", false)
     addToBuffer("general", "HetNonRef", false)
     addToBuffer("general", "Hom", false)

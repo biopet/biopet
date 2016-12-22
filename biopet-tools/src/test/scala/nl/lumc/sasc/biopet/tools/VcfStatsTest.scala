@@ -104,28 +104,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testAlleleOverlap(): Unit = {
-
-    val a1 = Allele.create("G")
-    val a2 = Allele.create("A")
-
-    alleleOverlap(List(a1, a1), List(a1, a1)) shouldBe 2
-    alleleOverlap(List(a2, a2), List(a2, a2)) shouldBe 2
-    alleleOverlap(List(a1, a2), List(a1, a2)) shouldBe 2
-    alleleOverlap(List(a1, a2), List(a2, a1)) shouldBe 2
-    alleleOverlap(List(a2, a1), List(a1, a2)) shouldBe 2
-    alleleOverlap(List(a2, a1), List(a2, a1)) shouldBe 2
-
-    alleleOverlap(List(a1, a2), List(a1, a1)) shouldBe 1
-    alleleOverlap(List(a2, a1), List(a1, a1)) shouldBe 1
-    alleleOverlap(List(a1, a1), List(a1, a2)) shouldBe 1
-    alleleOverlap(List(a1, a1), List(a2, a1)) shouldBe 1
-
-    alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
-    alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
-  }
-
-  @Test
   def testMergeStatsMap = {
     val m1: mutable.Map[Any, Int] = mutable.Map("a" -> 1)
     val m2: mutable.Map[Any, Int] = mutable.Map("b" -> 2)
