@@ -8,8 +8,8 @@ import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
 import nl.lumc.sasc.biopet.utils.Question
 
 /**
-  * Created by pjvanthof on 17/12/2016.
-  */
+ * Created by pjvanthof on 17/12/2016.
+ */
 object Shiva extends TemplateTool {
 
   override lazy val sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
@@ -30,6 +30,6 @@ object Shiva extends TemplateTool {
       "variantcallers" -> variantCallers,
       "use_indel_realigner" -> useIndelRealigner,
       "use_base_recalibration" -> useBaseRecalibration
-      )
+    )
   }
 }

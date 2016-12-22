@@ -2,12 +2,12 @@ package nl.lumc.sasc.biopet.pipelines.mapping.template
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Reference, TemplateTool}
+import nl.lumc.sasc.biopet.core.{ Reference, TemplateTool }
 import nl.lumc.sasc.biopet.utils.Question
 
 /**
-  * Created by pjvanthof on 17/12/2016.
-  */
+ * Created by pjvanthof on 17/12/2016.
+ */
 object MultiSampleMapping extends TemplateTool {
 
   override lazy val sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
@@ -19,10 +19,10 @@ object MultiSampleMapping extends TemplateTool {
     val referenceConfig = map ++ Reference.askReference
 
     val aligner = if (map.contains("aligner")) map("aligner").toString
-    else  Question.string("Aligner", posibleValues = possibleAligners, default = Some("bwa-mem"))
+    else Question.string("Aligner", posibleValues = possibleAligners, default = Some("bwa-mem"))
 
     referenceConfig ++ Map(
       "aligner" -> aligner
-      )
+    )
   }
 }

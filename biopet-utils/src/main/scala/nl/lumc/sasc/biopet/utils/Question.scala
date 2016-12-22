@@ -1,8 +1,8 @@
 package nl.lumc.sasc.biopet.utils
 
 /**
-  * Created by pjvanthof on 16/12/2016.
-  */
+ * Created by pjvanthof on 16/12/2016.
+ */
 object Question {
 
   def string(name: String,
@@ -31,8 +31,8 @@ object Question {
   }
 
   def boolean(name: String,
-             default: Option[Boolean] = None,
-             description: Option[String] = None): Boolean = {
+              default: Option[Boolean] = None,
+              description: Option[String] = None): Boolean = {
     description.foreach(println)
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name (y/n) > ")

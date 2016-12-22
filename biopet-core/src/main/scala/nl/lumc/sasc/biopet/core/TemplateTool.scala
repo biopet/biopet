@@ -4,11 +4,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Question, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Question, ToolCommand }
 
 /**
-  * Created by pjvanthof on 17/12/2016.
-  */
+ * Created by pjvanthof on 17/12/2016.
+ */
 trait TemplateTool extends ToolCommand {
   import TemplateTool._
   case class Args(expert: Boolean = false) extends AbstractArgs
@@ -20,10 +20,10 @@ trait TemplateTool extends ToolCommand {
   }
 
   /**
-    * Program will split fastq file in multiple fastq files
-    *
-    * @param args the command line arguments
-    */
+   * Program will split fastq file in multiple fastq files
+   *
+   * @param args the command line arguments
+   */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
@@ -84,7 +84,7 @@ object TemplateTool {
           val sizes = configs.map(new Summary(_)).map(x => (x.samples.size, x.libraries.map(_._2.size).sum))
           val samples = sizes.map(_._1).sum
           val libs = sizes.map(_._2).sum
-          val mergedConfig = new Summary(configs.foldLeft(Map[String, Any]())((a,b) => ConfigUtils.mergeMaps(a, b)))
+          val mergedConfig = new Summary(configs.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, b)))
           val mergesSamples = mergedConfig.samples.size
           val mergesLibraries = mergedConfig.libraries.map(_._2.size).sum
           if (mergesSamples != samples) println("WARNING: Overlapping samples detected")

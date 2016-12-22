@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.utils._
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 
 import scala.collection.JavaConversions._
 
@@ -185,7 +185,8 @@ object Reference {
         s"""Species found in general config:
            |- ${globalSpecies.keys.toList.sorted.mkString("\n- ")}
            |$warn
-           |""".stripMargin else s"No references found in global config. $warn"))
+           |""".stripMargin
+      else s"No references found in global config. $warn"))
 
     val globalReferences = globalSpecies.getOrElse(species, Map()).asInstanceOf[Map[String, Any]]
     val referenceName = Question.string("reference_name",
@@ -193,7 +194,8 @@ object Reference {
         s"""Reference for $species found in general config:
             |- ${globalReferences.keys.toList.sorted.mkString("\n- ")}
             |$warn
-            |""".stripMargin else s"No references found in global config. $warn"))
+            |""".stripMargin
+      else s"No references found in global config. $warn"))
 
     val reference = globalReferences.getOrElse(referenceName, Map()).asInstanceOf[Map[String, Any]]
     val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
