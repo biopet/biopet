@@ -45,6 +45,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SquishBed,
     nl.lumc.sasc.biopet.tools.SummaryToTsv,
     nl.lumc.sasc.biopet.tools.ValidateFastq,
+    nl.lumc.sasc.biopet.tools.ValidateVcf,
     nl.lumc.sasc.biopet.tools.VcfFilter,
     nl.lumc.sasc.biopet.tools.VcfStats,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
