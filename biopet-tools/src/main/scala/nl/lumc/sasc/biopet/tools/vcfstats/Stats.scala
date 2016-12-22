@@ -33,9 +33,9 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   def writeField(field: String, outputDir: File, prefix: String = "", chr: String = "total"): File = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
-      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
+      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     val data = this.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
@@ -50,14 +50,24 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
     file
   }
 
+  /** Function to write 1 specific general field */
+  def writeField(field: String, chr: String = "total"): Map[String, Array[Any]] = {
+
+    val data = this.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
+    val rows = for (key <- data.keySet.toArray.sortWith(sortAnyAny)) yield {
+      (key, data(key))
+    }
+    Map("value" -> rows.map(_._1), "count" -> rows.map(_._2))
+  }
+
   /** Function to write 1 specific genotype field */
   def writeGenotypeField(samples: List[String], field: String, outputDir: File,
-                                   prefix: String = "", chr: String = "total"): Unit = {
+                         prefix: String = "", chr: String = "total"): Unit = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
-      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
+      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     file.getParentFile.mkdirs()
@@ -71,6 +81,16 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
     writer.close()
   }
 
+  /** Function to write 1 specific genotype field */
+  def writeGenotypeField(samples: List[String], field: String, chr: String = "total"): Map[String, Map[String, Any]] = {
+    val keySet = (for (sample <- samples) yield this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
+
+    (for (sample <- samples) yield sample -> {
+      keySet.map(key =>
+        key.toString -> this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[String, Int]]()).getOrElse(field, Map[String, Int]()).getOrElse(key.toString, 0)
+      ).toMap
+    }).toMap
+  }
 }
 
 object Stats {
