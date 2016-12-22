@@ -195,7 +195,7 @@ object VcfStats extends ToolCommand {
     }
 
     // Triple for loop to not keep all bins in memory
-    val statsFutures = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList) yield Future {
+    val statsFutures = for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList) yield Future {
       val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
           val reader = new VCFFileReader(cmdArgs.inputFile, true)
@@ -243,7 +243,7 @@ object VcfStats extends ToolCommand {
         binStats.toList.fold(createStats)(_ += _)
       }
       chunkStats.toList.fold(createStats)(_ += _)
-    })
+    }
     val stats = statsFutures.foldLeft(createStats) { case (a,b) => a += Await.result(b, Duration.Inf) }
 
     logger.info("Done reading vcf records")
