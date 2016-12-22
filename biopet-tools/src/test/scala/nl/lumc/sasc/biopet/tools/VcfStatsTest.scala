@@ -19,11 +19,12 @@ import java.nio.file.{Files, Paths}
 
 import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
+import nl.lumc.sasc.biopet.tools.vcfstats.{SampleStats, SampleToSampleStats, Stats, VcfStats}
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+import nl.lumc.sasc.biopet.utils.sortAnyAny
 
 import scala.collection.mutable
 
@@ -129,18 +130,18 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val m1: mutable.Map[Any, Int] = mutable.Map("a" -> 1)
     val m2: mutable.Map[Any, Int] = mutable.Map("b" -> 2)
 
-    mergeStatsMap(m1, m2)
+    Stats.mergeStatsMap(m1, m2)
 
     m1 should equal(mutable.Map("a" -> 1, "b" -> 2))
 
     val m3: mutable.Map[Any, Int] = mutable.Map(1 -> 500)
     val m4: mutable.Map[Any, Int] = mutable.Map(6 -> 125)
 
-    mergeStatsMap(m3, m4)
+    Stats.mergeStatsMap(m3, m4)
 
     m3 should equal(mutable.Map(1 -> 500, 6 -> 125))
 
-    mergeStatsMap(m1, m3)
+    Stats.mergeStatsMap(m1, m3)
 
     m1 should equal(mutable.Map("a" -> 1, "b" -> 2, 1 -> 500, 6 -> 125))
   }
@@ -152,7 +153,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val m2: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
       Map("nested" -> Map("b" -> 2)))
 
-    mergeNestedStatsMap(m1, m2)
+    Stats.mergeNestedStatsMap(m1, m2)
 
     m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2))))
 
@@ -161,13 +162,13 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val m4: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
       Map("nestedd" -> Map(6 -> 125)))
 
-    mergeNestedStatsMap(m3, m4)
+    Stats.mergeNestedStatsMap(m3, m4)
 
     m3 should equal(mutable.Map("test" -> mutable.Map("nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
 
     val m5 = m3.toMap.map(x => x._1 -> x._2.toMap.map(y => y._1 -> y._2.toMap))
 
-    mergeNestedStatsMap(m1, m5)
+    Stats.mergeNestedStatsMap(m1, m5)
 
     m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2),
       "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))

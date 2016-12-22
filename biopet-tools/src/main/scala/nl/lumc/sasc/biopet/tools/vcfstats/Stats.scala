@@ -51,7 +51,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   }
 
   /** Function to write 1 specific general field */
-  def writeField(field: String, chr: String = "total"): Map[String, Array[Any]] = {
+  def writeField2(field: String, chr: String = "total"): Map[String, Array[Any]] = {
 
     val data = this.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
     val rows = for (key <- data.keySet.toArray.sortWith(sortAnyAny)) yield {
@@ -82,7 +82,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   }
 
   /** Function to write 1 specific genotype field */
-  def writeGenotypeField(samples: List[String], field: String, chr: String = "total"): Map[String, Map[String, Any]] = {
+  def writeGenotypeField2(samples: List[String], field: String, chr: String = "total"): Map[String, Map[String, Any]] = {
     val keySet = (for (sample <- samples) yield this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
 
     (for (sample <- samples) yield sample -> {
