@@ -82,10 +82,10 @@ object VcfStats extends ToolCommand {
     } text "Path to interval (BED) file (optional)"
     opt[String]("infoTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(infoTags = x :: c.infoTags)
-    } text "Summarize these info tags. Default is all tags"
+    } text s"Summarize these info tags. Default is (${defaultInfoFields.mkString(", ")})"
     opt[String]("genotypeTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(genotypeTags = x :: c.genotypeTags)
-    } text "Summarize these genotype tags. Default is all tags"
+    } text s"Summarize these genotype tags. Default is (${defaultGenotypeFields.mkString(", ")})"
     opt[Unit]("allInfoTags") unbounded () action { (x, c) =>
       c.copy(allInfoTags = true)
     } text "Summarize all info tags. Default false"
