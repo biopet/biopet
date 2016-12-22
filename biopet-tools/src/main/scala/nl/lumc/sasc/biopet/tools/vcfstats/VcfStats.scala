@@ -370,7 +370,7 @@ object VcfStats extends ToolCommand {
     addToBuffer("SampleDistribution-Filtered", "not set", found = false)
     addToBuffer("SampleDistribution-Variant", "not set", found = false)
 
-    addToBuffer("general", "Total", found = true)
+    addToBuffer("general", "Total", false)
     addToBuffer("general", "Biallelic", false)
     addToBuffer("general", "ComplexIndel", false)
     addToBuffer("general", "Filtered", false)
