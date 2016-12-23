@@ -87,28 +87,40 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
 
     (for (sample <- samples) yield sample -> {
       keySet.map(key =>
-        key.toString -> this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[String, Int]]()).getOrElse(field, Map[String, Int]()).getOrElse(key.toString, 0)
-      ).toMap
+        key.toString -> this.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).get(key)
+      ).filter(_._2.isDefined).toMap
     }).toMap
   }
 
   /** This will generate stats for one contig */
-  def getContigStats(contig: String, samples: List[String], genotypeFields:  List[String], infoFields: List[String]): Map[String, Any] = {
+  def getContigStats(contig: String,
+                     samples: List[String],
+                     genotypeFields:  List[String] = Nil,
+                     infoFields: List[String] = Nil,
+                     sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(
       "genotype" -> genotypeFields.map(f => f -> getGenotypeField(samples, f, contig)).toMap,
-      "info" -> infoFields.map(f => f -> getField(f, contig))
+      "info" -> infoFields.map(f => f -> getField(f, contig)).toMap,
+      "sample_distributions" -> sampleDistributions.map(f => f -> getField("SampleDistribution-" + f, contig)).toMap
     )
   }
 
   /** This will generate stats for total */
-  def getTotalStats(samples: List[String], genotypeFields:  List[String], infoFields: List[String]) =
-    getContigStats("total", samples, genotypeFields, infoFields)
+  def getTotalStats(samples: List[String],
+                    genotypeFields:  List[String] = Nil,
+                    infoFields: List[String] = Nil,
+                    sampleDistributions: List[String] = Nil) =
+    getContigStats("total", samples, genotypeFields, infoFields, sampleDistributions)
 
   /** This will generate stats for total and contigs separated */
-  def getAllStats(contigs: List[String], samples: List[String], genotypeFields:  List[String], infoFields: List[String]): Map[String, Any] = {
+  def getAllStats(contigs: List[String],
+                  samples: List[String],
+                  genotypeFields:  List[String] = Nil,
+                  infoFields: List[String] = Nil,
+                  sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(
-      "contigs" -> contigs.map(c => c -> getContigStats(c, samples, genotypeFields, infoFields)).toMap,
-      "total" -> getTotalStats(samples, genotypeFields, infoFields)
+      "contigs" -> contigs.map(c => c -> getContigStats(c, samples, genotypeFields, infoFields, sampleDistributions)).toMap,
+      "total" -> getTotalStats(samples, genotypeFields, infoFields, sampleDistributions)
     )
   }
 }

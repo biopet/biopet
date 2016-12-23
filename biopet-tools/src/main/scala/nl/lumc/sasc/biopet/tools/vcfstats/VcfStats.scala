@@ -20,14 +20,13 @@ import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand, VcfUtils}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 import scala.sys.process.{Process, ProcessLogger}
 import scala.util.Random
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -248,33 +247,10 @@ object VcfStats extends ToolCommand {
 
     logger.info("Done reading vcf records")
 
-    // Writing info fields to tsv files
-    val infoOutputDir = new File(cmdArgs.outputDir, "infotags")
-    stats.writeField("general", cmdArgs.outputDir)
-    for (field <- adInfoTags.distinct.par) {
-      stats.writeField(field, infoOutputDir)
-      for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
-        val chr = line.getSequenceName
-        stats.writeField(field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
-      }
-    }
-
-    // Write genotype field to tsv files
-    val genotypeOutputDir = new File(cmdArgs.outputDir, "genotypetags")
-    stats.writeGenotypeField(samples, "general", cmdArgs.outputDir, prefix = "genotype")
-    for (field <- adGenotypeTags.distinct.par) {
-      stats.writeGenotypeField(samples, field, genotypeOutputDir)
-      for (line <- FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences) {
-        val chr = line.getSequenceName
-        stats.writeGenotypeField(samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
-      }
-    }
-
-    // Write sample distributions to tsv files
-    val sampleDistributionsOutputDir = new File(cmdArgs.outputDir, "sample_distributions")
-    for (field <- sampleDistributions) {
-      stats.writeField("SampleDistribution-" + field, sampleDistributionsOutputDir)
-    }
+    val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "all.json"))
+    val json = ConfigUtils.mapToJson(stats.getAllStats(FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences.map(_.getSequenceName).toList, samples, adGenotypeTags, adInfoTags, sampleDistributions))
+    allWriter.println(json.spaces2)
+    allWriter.close()
 
     // Write general wiggle tracks
     for (field <- cmdArgs.generalWiggle) {
@@ -379,7 +355,7 @@ object VcfStats extends ToolCommand {
     val skipTags = List("QUAL", "general")
 
     for (tag <- additionalTags if !skipTags.contains(tag)) {
-      addToBuffer(tag, 0, found = false)
+      addToBuffer(tag, "not set", found = false)
     }
 
     Map("total" -> buffer.toMap)
@@ -395,7 +371,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    buffer += "QUAL" -> Map(Math.round(record.getPhredScaledQual) -> 1)
+    addToBuffer("QUAL", Math.round(record.getPhredScaledQual), true)
 
     addToBuffer("SampleDistribution-Het", record.getGenotypes.count(genotype => genotype.isHet), found = true)
     addToBuffer("SampleDistribution-HetNonRef", record.getGenotypes.count(genotype => genotype.isHetNonRef), found = true)
@@ -410,7 +386,7 @@ object VcfStats extends ToolCommand {
     addToBuffer("SampleDistribution-Filtered", record.getGenotypes.count(genotype => genotype.isFiltered), found = true)
     addToBuffer("SampleDistribution-Variant", record.getGenotypes.count(genotype => genotype.isHetNonRef || genotype.isHet || genotype.isHomVar), found = true)
 
-    addToBuffer("general", "Total", found = true)
+    addToBuffer("general", "Total", true)
     addToBuffer("general", "Biallelic", record.isBiallelic)
     addToBuffer("general", "ComplexIndel", record.isComplexIndel)
     addToBuffer("general", "Filtered", record.isFiltered)
