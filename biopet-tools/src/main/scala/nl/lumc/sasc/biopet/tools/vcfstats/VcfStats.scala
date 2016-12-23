@@ -247,7 +247,7 @@ object VcfStats extends ToolCommand {
 
     logger.info("Done reading vcf records")
 
-    val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "all.json"))
+    val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
     val json = ConfigUtils.mapToJson(stats.getAllStats(FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences.map(_.getSequenceName).toList, samples, adGenotypeTags, adInfoTags, sampleDistributions))
     allWriter.println(json.spaces2)
     allWriter.close()
