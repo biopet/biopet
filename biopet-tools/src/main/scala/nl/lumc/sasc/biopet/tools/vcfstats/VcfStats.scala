@@ -249,7 +249,7 @@ object VcfStats extends ToolCommand {
 
     val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
     val json = ConfigUtils.mapToJson(stats.getAllStats(FastaUtils.getCachedDict(cmdArgs.referenceFile).getSequences.map(_.getSequenceName).toList, samples, adGenotypeTags, adInfoTags, sampleDistributions))
-    allWriter.println(json.spaces2)
+    allWriter.println(json.nospaces)
     allWriter.close()
 
     // Write general wiggle tracks

@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
 import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.tryToParseNumber
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, tryToParseNumber}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.io.Source
@@ -42,10 +42,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
   protected var index: File = null
 
   @Output
-  protected var generalStats: File = null
-
-  @Output
-  protected var genotypeStats: File = null
+  protected var statsFile: File = null
 
   override def defaultCoreMemory = 3.0
   override def defaultThreads = 3
@@ -67,8 +64,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
   /** Set output dir and a output file */
   def setOutputDir(dir: File): Unit = {
     outputDir = dir
-    generalStats = new File(dir, "general.tsv")
-    genotypeStats = new File(dir, "genotype-general.tsv")
+    statsFile = new File(dir, "stats.json")
     jobOutputFile = new File(dir, ".vcfstats.out")
   }
 
@@ -84,35 +80,10 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     optional("--intervals", intervals)
 
   /** Returns general stats to the summary */
-  def summaryStats: Map[String, Any] = {
-    Map("info" -> (for (
-      line <- Source.fromFile(generalStats).getLines().toList.tail;
-      values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
-    ) yield values(0) -> tryToParseNumber(values(1)).getOrElse(None)
-    ).toMap)
-  }
+  def summaryStats: Map[String, Any] = ConfigUtils.fileToConfigMap(statsFile)
 
   /** return only general files to summary */
   def summaryFiles: Map[String, File] = Map(
-    "general_stats" -> generalStats,
-    "genotype_stats" -> genotypeStats
+    "stats" -> statsFile
   )
-
-  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
-    val data = Source.fromFile(genotypeStats).getLines().map(_.split("\t")).toArray
-
-    for (s <- 1 until data(0).size) {
-      val sample = data(0)(s)
-      val stats = Map("genotype" -> (for (f <- 1 until data.length) yield {
-        data(f)(0) -> tryToParseNumber(data(f)(s)).getOrElse(None)
-      }).toMap)
-
-      val sum = new Summarizable {
-        override def summaryFiles: Map[String, File] = Map()
-        override def summaryStats: Map[String, Any] = stats
-      }
-
-      qscript.addSummarizable(sum, name, Some(sample))
-    }
-  }
 }
