@@ -47,6 +47,11 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   private def changeScript(file: File): Unit = {
     val lines = Source.fromFile(file).getLines().toList
     val writer = new PrintWriter(file)
+    remoteCommand match {
+      case "bash" => writer.println("#!/bin/bash")
+      case "sh"   => writer.println("#!/bin/sh")
+      case _      => writer.println(s"#!$remoteCommand")
+    }
     writer.println("set -eubf")
     writer.println("set -o pipefail")
     lines.foreach(writer.println)
@@ -66,8 +71,9 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
       changeScript(new File(jt.getArgs.head.toString))
       jt.setRemoteCommand(remoteCommand)
     case ps: ProcessSettings =>
-      changeScript(new File(ps.getCommand.tail.head))
-      ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
+      changeScript(new File(ps.getCommand.last))
+      if (ps.getCommand.head != "srun")
+        ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
   }
 
   /**
