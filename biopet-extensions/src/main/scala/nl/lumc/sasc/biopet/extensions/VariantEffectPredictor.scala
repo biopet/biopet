@@ -30,6 +30,12 @@ import scala.io.Source
  */
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
 
+  lazy val vepVersion = new LazyCheck({
+    val s: Option[String] = config("vep_version")
+    s
+  })
+  vepVersion()
+
   executable = config("exe", namespace = "perl", default = "perl")
   var vepScript: String = config("vep_script")
 
@@ -39,13 +45,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   @Output(doc = "output file", required = true)
   var output: File = null
 
-  lazy val vepConfig = new LazyCheck({
-    val s: Option[String] = config("vep_config")
-    s
-  })
-
   override def subPath = {
-    if (vepConfig.isSet) super.subPath ++ vepConfig()
+    if (vepVersion.isSet) super.subPath ++ List("vep_settings") ++ vepVersion()
     else super.subPath
   }
 

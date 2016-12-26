@@ -14,15 +14,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
+import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
 
 /**
  * This is a trait for the Shiva pipeline
@@ -81,6 +85,8 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
           logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
         c && br.knownSites.nonEmpty
       }
+
+      override def keepFinalBamfile = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
 
       override def preProcessBam = if (useIndelRealigner && useBaseRecalibration)
         bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
@@ -175,6 +181,8 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
   override def addMultiSampleJobs() = {
     super.addMultiSampleJobs()
 
+    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
+
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
@@ -251,4 +259,25 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
 }
 
 /** This object give a default main method to the pipelines */
-object Shiva extends PipelineCommand
+object Shiva extends PipelineCommand {
+
+  // This is used to only execute 1 validation per vcf file
+  private var validateVcfSeen: Set[(File, File)] = Set()
+
+  def makeValidateVcfJobs(root: Configurable, vcfFile: File, referenceFile: File, outputDir: File): List[QFunction] = {
+    if (validateVcfSeen.contains((vcfFile, referenceFile))) Nil
+    else {
+      validateVcfSeen ++= Set((vcfFile, referenceFile))
+      val validateVcf = new ValidateVcf(root)
+      validateVcf.inputVcf = vcfFile
+      validateVcf.reference = referenceFile
+      validateVcf.jobOutputFile = new File(outputDir, vcfFile.getAbsolutePath + ".validateVcf.out")
+
+      val checkValidateVcf = new CheckValidateVcf
+      checkValidateVcf.inputLogFile = validateVcf.jobOutputFile
+      checkValidateVcf.jobOutputFile = new File(outputDir, vcfFile.getAbsolutePath + ".checkValidateVcf.out")
+
+      List(validateVcf, checkValidateVcf)
+    }
+  }
+}
