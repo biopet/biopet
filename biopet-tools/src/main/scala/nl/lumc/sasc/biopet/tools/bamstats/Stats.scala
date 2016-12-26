@@ -58,4 +58,17 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
     this._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
     this._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
   }
+
+  def toSummaryMap = {
+    Map(
+      "flagstats" -> flagstat.toSummaryMap,
+      "mapping_quality" -> mappingQualityHistogram.toSummaryMap,
+      "insert_size" -> insertSizeHistogram.toSummaryMap,
+      "clipping" -> clippingHistogram.toSummaryMap,
+      "left_clipping" -> leftClippingHistogram.toSummaryMap,
+      "right_clipping" -> rightClippingHistogram.toSummaryMap,
+      "5_prime_clipping" -> _5_ClippingHistogram.toSummaryMap,
+      "3_prime_clipping" -> _3_ClippingHistogram.toSummaryMap
+    )
+  }
 }

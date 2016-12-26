@@ -98,12 +98,21 @@ object BamStats extends ToolCommand {
    */
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
-      processContig(contig, bamFile, binSize, threadBinSize, outputDir)
-    }
+      contig.chr -> processContig(contig, bamFile, binSize, threadBinSize, outputDir)
+    }.toList
 
-    val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.toList)
+    val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
-    stats.writeStatsToFiles(outputDir)
+    val statsWriter = new PrintWriter(new File(outputDir, "stats.json"))
+    val statsMap = Map(
+      "total" -> stats.toSummaryMap,
+      "contigs" -> contigsFutures.map(x => x._1 -> x._2.value.get.get.toSummaryMap).toMap
+    )
+    statsWriter.println(ConfigUtils.mapToJson(statsMap).spaces2)
+    statsWriter.close()
+    //stats.writeStatsToFiles(outputDir)
+
+    // FIXME: getting aggregated stats
 
     val clippingHistogram = tsvToMap(new File(outputDir, "clipping.tsv"))
     val mappingQualityHistogram = tsvToMap(new File(outputDir, "mapping_quality.tsv"))
@@ -157,11 +166,7 @@ object BamStats extends ToolCommand {
       .grouped((region.length.toDouble / binSize).ceil.toInt / (region.length.toDouble / threadBinSize).ceil.toInt)
       .map(scatters => processThread(scatters, bamFile))
       .toList
-    val stats = waitOnFutures(scattersFutures, Some(region.chr))
-    val contigDir = new File(outputDir, "contigs" + File.separator + region.chr)
-    contigDir.mkdirs()
-    stats.writeStatsToFiles(contigDir)
-    stats
+    waitOnFutures(scattersFutures, Some(region.chr))
   }
 
   /**

@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.{ File, PrintWriter }
+import nl.lumc.sasc.biopet.utils.sortAnyAny
 
 import scala.collection.mutable
 
@@ -47,6 +48,11 @@ class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T
     writer.println("value\tcount")
     counts.keys.toList.sorted.foreach(x => writer.println(s"$x\t${counts(x)}"))
     writer.close()
+  }
+
+  def toSummaryMap = {
+    val values = counts.keySet.toList.sortWith(sortAnyAny)
+    Map("values" -> values, "counts" -> values.map(counts(_)))
   }
 
   override def equals(other: Any): Boolean = {
