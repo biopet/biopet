@@ -6,7 +6,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvanthof on 18/11/2016.
@@ -36,6 +36,9 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
     }
   }
 
+  @Output
+  private var outputFiles: List[File] = Nil
+
   def bamstatsSummary: File = new File(outputDir, "bamstats.summary.json")
   def flagstatSummaryFile(contig: Option[String] = None): File = getOutputFile("flagstats.summary.json", contig)
   def mappingQualityFile(contig: Option[String] = None): File = getOutputFile("mapping_quality.tsv", contig)
@@ -44,6 +47,10 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
   override def beforeGraph() {
     super.beforeGraph()
     deps :+= new File(bamFile.getAbsolutePath.replaceAll(".bam$", ".bai"))
+    outputFiles :+= bamstatsSummary
+    outputFiles :+= flagstatSummaryFile()
+    outputFiles :+= mappingQualityFile()
+    outputFiles :+= clipingFile()
     jobOutputFile = new File(outputDir, ".bamstats.out")
     if (reference == null) reference = referenceFasta()
   }
