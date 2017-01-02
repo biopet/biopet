@@ -1,17 +1,17 @@
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import scala.collection.mutable
 
 import nl.lumc.sasc.biopet.utils.sortAnyAny
 
 /**
-  * General stats class to store vcf stats
-  *
-  * @param generalStats Stores are general stats
-  * @param samplesStats Stores all sample/genotype specific stats
-  */
+ * General stats class to store vcf stats
+ *
+ * @param generalStats Stores are general stats
+ * @param samplesStats Stores all sample/genotype specific stats
+ */
 case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
                  samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
   /** Add an other class */
@@ -33,9 +33,9 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   def writeField(field: String, outputDir: File, prefix: String = "", chr: String = "total"): File = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     val data = this.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
@@ -65,9 +65,9 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
                          prefix: String = "", chr: String = "total"): Unit = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     file.getParentFile.mkdirs()
@@ -95,7 +95,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   /** This will generate stats for one contig */
   def getContigStats(contig: String,
                      samples: List[String],
-                     genotypeFields:  List[String] = Nil,
+                     genotypeFields: List[String] = Nil,
                      infoFields: List[String] = Nil,
                      sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(
@@ -107,7 +107,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
 
   /** This will generate stats for total */
   def getTotalStats(samples: List[String],
-                    genotypeFields:  List[String] = Nil,
+                    genotypeFields: List[String] = Nil,
                     infoFields: List[String] = Nil,
                     sampleDistributions: List[String] = Nil) =
     getContigStats("total", samples, genotypeFields, infoFields, sampleDistributions)
@@ -115,7 +115,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   /** This will generate stats for total and contigs separated */
   def getAllStats(contigs: List[String],
                   samples: List[String],
-                  genotypeFields:  List[String] = Nil,
+                  genotypeFields: List[String] = Nil,
                   infoFields: List[String] = Nil,
                   sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(

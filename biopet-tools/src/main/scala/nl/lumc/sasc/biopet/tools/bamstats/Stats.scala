@@ -62,13 +62,13 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
   def toSummaryMap = {
     Map(
       "flagstats" -> flagstat.toSummaryMap,
-      "mapping_quality" -> mappingQualityHistogram.toSummaryMap,
-      "insert_size" -> insertSizeHistogram.toSummaryMap,
-      "clipping" -> clippingHistogram.toSummaryMap,
-      "left_clipping" -> leftClippingHistogram.toSummaryMap,
-      "right_clipping" -> rightClippingHistogram.toSummaryMap,
-      "5_prime_clipping" -> _5_ClippingHistogram.toSummaryMap,
-      "3_prime_clipping" -> _3_ClippingHistogram.toSummaryMap
+      "mapping_quality" -> Map("histrogram" -> mappingQualityHistogram.toSummaryMap, "general" -> mappingQualityHistogram.aggregateStats),
+      "insert_size" -> Map("histrogram" -> insertSizeHistogram.toSummaryMap, "general" -> insertSizeHistogram.aggregateStats),
+      "clipping" -> Map("histrogram" -> clippingHistogram.toSummaryMap, "general" -> clippingHistogram.aggregateStats),
+      "left_clipping" -> Map("histrogram" -> leftClippingHistogram.toSummaryMap, "general" -> leftClippingHistogram.aggregateStats),
+      "right_clipping" -> Map("histrogram" -> rightClippingHistogram.toSummaryMap, "general" -> rightClippingHistogram.aggregateStats),
+      "5_prime_clipping" -> Map("histrogram" -> _5_ClippingHistogram.toSummaryMap, "general" -> _5_ClippingHistogram.aggregateStats),
+      "3_prime_clipping" -> Map("histrogram" -> _3_ClippingHistogram.toSummaryMap, "general" -> _3_ClippingHistogram.aggregateStats)
     )
   }
 }

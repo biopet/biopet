@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import scala.collection.mutable
 
 /**
-  * class to store all sample relative stats
-  *
-  * @param genotypeStats Stores all genotype relative stats
-  * @param sampleToSample Stores sample to sample compare stats
-  */
+ * class to store all sample relative stats
+ *
+ * @param genotypeStats Stores all genotype relative stats
+ * @param sampleToSample Stores sample to sample compare stats
+ */
 case class SampleStats(genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
                        sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()) {
   /** Add an other class */

@@ -15,11 +15,10 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
-import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.{SampleStats, SampleToSampleStats, Stats, VcfStats}
+import nl.lumc.sasc.biopet.tools.vcfstats.{ SampleStats, SampleToSampleStats, Stats, VcfStats }
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite

@@ -103,52 +103,18 @@ object BamStats extends ToolCommand {
 
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
-    val statsWriter = new PrintWriter(new File(outputDir, "stats.json"))
+    val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
+    val totalStats = stats.toSummaryMap
     val statsMap = Map(
-      "total" -> stats.toSummaryMap,
+      "total" -> totalStats,
       "contigs" -> contigsFutures.map(x => x._1 -> x._2.value.get.get.toSummaryMap).toMap
     )
-    statsWriter.println(ConfigUtils.mapToJson(statsMap).spaces2)
+    statsWriter.println(ConfigUtils.mapToJson(statsMap).nospaces)
     statsWriter.close()
-    //stats.writeStatsToFiles(outputDir)
-
-    // FIXME: getting aggregated stats
-
-    val clippingHistogram = tsvToMap(new File(outputDir, "clipping.tsv"))
-    val mappingQualityHistogram = tsvToMap(new File(outputDir, "mapping_quality.tsv"))
-
-    val summary = Map(
-      "flagstats" -> ConfigUtils.fileToConfigMap(new File(outputDir, "flagstats.summary.json")),
-      "flagstats_per_contig" -> referenceDict.getSequences.map {
-        c =>
-          c.getSequenceName -> ConfigUtils.fileToConfigMap(
-            new File(outputDir, "contigs" + File.separator + c.getSequenceName + File.separator + "flagstats.summary.json"))
-      }.toMap,
-      "mapping_quality" -> Map("general" -> aggregateStats(mappingQualityHistogram), "histogram" -> mappingQualityHistogram),
-      "clipping" -> Map("general" -> aggregateStats(clippingHistogram), "histogram" -> clippingHistogram)
-    )
 
     val summaryWriter = new PrintWriter(new File(outputDir, "bamstats.summary.json"))
-    summaryWriter.println(ConfigUtils.mapToJson(summary).spaces2)
+    summaryWriter.println(ConfigUtils.mapToJson(totalStats).nospaces)
     summaryWriter.close()
-  }
-
-  def aggregateStats(table: Map[String, Array[Long]]): Map[String, Any] = {
-    val values = table("value")
-    val counts = table("count")
-    require(values.size == counts.size)
-    if (values.nonEmpty) {
-      val modal = values(counts.indexOf(counts.max))
-      val totalCounts = counts.sum
-      val mean: Double = values.zip(counts).map(x => x._1 * x._2).sum.toDouble / totalCounts
-      val median: Long = values(values.zip(counts).zipWithIndex.sortBy(_._1._1).foldLeft((0L, 0)) {
-        case (a, b) =>
-          val total = a._1 + b._1._2
-          if (total >= totalCounts / 2) (total, a._2)
-          else (total, b._2)
-      }._2)
-      Map("min" -> values.min, "max" -> values.max, "median" -> median, "mean" -> mean, "modal" -> modal)
-    } else Map()
   }
 
   /**

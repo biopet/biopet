@@ -14,22 +14,22 @@
  */
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{File, FileOutputStream, PrintWriter}
+import java.io.{ File, FileOutputStream, PrintWriter }
 
 import htsjdk.samtools.util.Interval
-import htsjdk.variant.variantcontext.{Genotype, VariantContext}
+import htsjdk.variant.variantcontext.{ Genotype, VariantContext }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, ToolCommand, VcfUtils }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
-import scala.sys.process.{Process, ProcessLogger}
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 /**
  * This tool will generate statistics from a vcf file
@@ -243,7 +243,7 @@ object VcfStats extends ToolCommand {
       }
       chunkStats.toList.fold(createStats)(_ += _)
     }
-    val stats = statsFutures.foldLeft(createStats) { case (a,b) => a += Await.result(b, Duration.Inf) }
+    val stats = statsFutures.foldLeft(createStats) { case (a, b) => a += Await.result(b, Duration.Inf) }
 
     logger.info("Done reading vcf records")
 

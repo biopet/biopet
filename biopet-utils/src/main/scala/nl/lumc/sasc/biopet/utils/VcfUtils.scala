@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 import java.util
 
-import htsjdk.variant.variantcontext.{Allele, Genotype, VariantContext}
-import htsjdk.variant.vcf.{VCFFileReader, VCFFilterHeaderLine, VCFHeader}
+import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFFilterHeaderLine, VCFHeader }
 
 import scala.collection.JavaConversions._
 

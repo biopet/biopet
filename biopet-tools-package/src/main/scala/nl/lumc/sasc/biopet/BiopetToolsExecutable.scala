@@ -15,7 +15,7 @@
 package nl.lumc.sasc.biopet
 
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
-import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
+import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetToolsExecutable extends BiopetExecutable {
 
