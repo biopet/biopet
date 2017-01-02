@@ -32,15 +32,17 @@ class BamStatsTest extends TestNGSuite with Matchers {
     outputDir.deleteOnExit()
     BamStats.main(Array("-b", BamStatsTest.pairedBam01.getAbsolutePath, "-o", outputDir.getAbsolutePath))
 
-    new File(outputDir, "flagstats") should exist
-    new File(outputDir, "flagstats.summary.json") should exist
-    new File(outputDir, "mapping_quality.tsv") should exist
-    new File(outputDir, "insert_size.tsv") should exist
-    new File(outputDir, "clipping.tsv") should exist
-    new File(outputDir, "left_clipping.tsv") should exist
-    new File(outputDir, "right_clipping.tsv") should exist
-    new File(outputDir, "5_prime_clipping.tsv") should exist
-    new File(outputDir, "3_prime_clipping.tsv") should exist
+    new File(outputDir, "bamstats.json") should exist
+    new File(outputDir, "bamstats.summary.json") should exist
+    new File(outputDir, "flagstats") shouldNot exist
+    new File(outputDir, "flagstats.summary.json") shouldNot exist
+    new File(outputDir, "mapping_quality.tsv") shouldNot exist
+    new File(outputDir, "insert_size.tsv") shouldNot exist
+    new File(outputDir, "clipping.tsv") shouldNot exist
+    new File(outputDir, "left_clipping.tsv") shouldNot exist
+    new File(outputDir, "right_clipping.tsv") shouldNot exist
+    new File(outputDir, "5_prime_clipping.tsv") shouldNot exist
+    new File(outputDir, "3_prime_clipping.tsv") shouldNot exist
   }
 }
 
