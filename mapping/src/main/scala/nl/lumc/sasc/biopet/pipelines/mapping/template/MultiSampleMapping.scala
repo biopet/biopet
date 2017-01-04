@@ -20,9 +20,11 @@ object MultiSampleMapping extends TemplateTool {
 
     val aligner = if (map.contains("aligner")) map("aligner").toString
     else Question.string("Aligner", posibleValues = possibleAligners, default = Some("bwa-mem"))
+    val mappingToGears = Question.string("Aligner", posibleValues = List("none", "all", "unmapped"), default = Some("none"))
 
     referenceConfig ++ Map(
-      "aligner" -> aligner
+      "aligner" -> aligner,
+      "mapping_to_gears" -> mappingToGears
     )
   }
 }
