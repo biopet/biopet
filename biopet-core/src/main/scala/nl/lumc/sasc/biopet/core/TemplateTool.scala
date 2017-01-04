@@ -1,10 +1,9 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Question, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Question, ToolCommand }
 
 import scala.io.Source
 
@@ -58,7 +57,7 @@ trait TemplateTool extends ToolCommand {
       case Some(f) => f
       case _ => sys.env.get("BIOPET_SCRIPT_TEMPLATE") match {
         case Some(file) => new File(file)
-        case _ => throw new IllegalArgumentException("No template found on argument or 'BIOPET_SCRIPT_TEMPLATE'")
+        case _          => throw new IllegalArgumentException("No template found on argument or 'BIOPET_SCRIPT_TEMPLATE'")
       }
     }
 

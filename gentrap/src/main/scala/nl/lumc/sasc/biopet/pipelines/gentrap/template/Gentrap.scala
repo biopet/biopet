@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.template
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.TemplateTool
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ExpMeasures, StrandProtocol}
+import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ ExpMeasures, StrandProtocol }
 import nl.lumc.sasc.biopet.pipelines.mapping.template.MultiSampleMapping
 import nl.lumc.sasc.biopet.pipelines.shiva.template.Shiva
 import nl.lumc.sasc.biopet.utils._
@@ -43,10 +43,10 @@ object Gentrap extends TemplateTool {
       "strand_protocol" -> strandProtocol,
       "annotation_refflat" -> annotationRefFlat
     ) ++ (if (Question.boolean("Call variants")) {
-      val variantCallers = Question.list("Variantcallers", posibleValues = Shiva.possibleVariantcallers,
-        default = Some(List("varscan_cns_singlesample")))
+        val variantCallers = Question.list("Variantcallers", posibleValues = Shiva.possibleVariantcallers,
+          default = Some(List("varscan_cns_singlesample")))
 
-      Map("call_variants" -> true, "variantcallers" -> variantCallers)
-    } else Map("call_variants" -> false))
+        Map("call_variants" -> true, "variantcallers" -> variantCallers)
+      } else Map("call_variants" -> false))
   }
 }

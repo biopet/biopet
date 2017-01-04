@@ -46,6 +46,7 @@ object BiopetExecutableMain extends BiopetExecutable {
 
   def templates: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.mapping.template.MultiSampleMapping,
-    nl.lumc.sasc.biopet.pipelines.shiva.template.Shiva
+    nl.lumc.sasc.biopet.pipelines.shiva.template.Shiva,
+    nl.lumc.sasc.biopet.pipelines.gentrap.template.Gentrap
   )
 }
