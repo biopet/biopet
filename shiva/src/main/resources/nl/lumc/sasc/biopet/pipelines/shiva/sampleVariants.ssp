@@ -77,7 +77,7 @@
     #for (sample <- samples.toList.sorted)
     <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
         #for (field <- fields)
-        <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", vcfstatsKey, "genotype", field)}</td>
+        <td>${summary.getValue("shivavariantcalling", "stats", vcfstatsKey, "total", "genotype", "general", sample, field)}</td>
         #end
     </tr>
     #end
