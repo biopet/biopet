@@ -12,7 +12,9 @@ import nl.lumc.sasc.biopet.utils.Question
  */
 object Shiva extends TemplateTool {
 
-  override lazy val sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
+  def pipelineName = "Shiva"
+
+  override def sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
 
   def possibleVariantcallers: List[String] = {
     ShivaVariantcalling.callersList(null).map(_.name)

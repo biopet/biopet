@@ -10,7 +10,9 @@ import nl.lumc.sasc.biopet.utils.Question
  */
 object MultiSampleMapping extends TemplateTool {
 
-  override lazy val sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
+  def pipelineName = "MultiSampleMapping"
+
+  override def sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
 
   def possibleAligners = List("bwa-mem", "bwa-aln", "bowtie", "bowtie2", "gsnap", "hisat2",
     "tophat", "stampy", "star", "star-2pass")

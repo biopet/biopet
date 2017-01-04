@@ -13,7 +13,9 @@ import nl.lumc.sasc.biopet.utils._
  */
 object Gentrap extends TemplateTool {
 
-  override lazy val sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
+  def pipelineName = "Gentrap"
+
+  override def sampleConfigs: List[File] = TemplateTool.askSampleConfigs()
 
   def pipelineMap(map: Map[String, Any], expert: Boolean): Map[String, Any] = {
     val aligner = Question.string("Aligner", posibleValues = MultiSampleMapping.possibleAligners,

@@ -1,22 +1,36 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Question, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Question, ToolCommand}
+
+import scala.io.Source
 
 /**
  * Created by pjvanthof on 17/12/2016.
  */
 trait TemplateTool extends ToolCommand {
   import TemplateTool._
-  case class Args(expert: Boolean = false) extends AbstractArgs
+  case class Args(outputConfig: File = null,
+                  runScript: Option[File] = None,
+                  expert: Boolean = false,
+                  template: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[Unit]("expert") valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputConfig") required () valueName "<file>" action { (x, c) =>
+      c.copy(outputConfig = x)
+    } text "Path to output config"
+    opt[File]('s', "outputScript") valueName "<file>" action { (x, c) =>
+      c.copy(runScript = Some(x))
+    } text "Path to output script"
+    opt[File]('t', "template") valueName "<file>" action { (x, c) =>
+      c.copy(template = Some(x))
+    } text "Path to template, default it try to fetch this from 'BIOPET_SCRIPT_TEMPLATE'"
+    opt[Unit]("expert") action { (x, c) =>
       c.copy(expert = true)
-    } text "Path to input file"
+    }
   }
 
   /**
@@ -28,16 +42,41 @@ trait TemplateTool extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
+    cmdArgs.runScript.foreach(writeScript(_, cmdArgs.outputConfig, sampleConfigs, cmdArgs.template))
+
     val standard: Map[String, Any] = Map("output_dir" -> Question.string("Output directory",
       validation = List(isAbsolutePath, parentIsWritable)))
     val config = pipelineMap(standard, cmdArgs.expert)
 
-    println(ConfigUtils.mapToYaml(config))
+    val configWriter = new PrintWriter(cmdArgs.outputConfig)
+    configWriter.println(ConfigUtils.mapToYaml(config))
+    configWriter.close()
   }
+
+  def writeScript(outputFile: File, config: File, samples: List[File], t: Option[File]): Unit = {
+    val template = t match {
+      case Some(f) => f
+      case _ => sys.env.get("BIOPET_SCRIPT_TEMPLATE") match {
+        case Some(file) => new File(file)
+        case _ => throw new IllegalArgumentException("No template found on argument or 'BIOPET_SCRIPT_TEMPLATE'")
+      }
+    }
+
+    val templateReader = Source.fromFile(template)
+    val scriptWriter = new PrintWriter(outputFile)
+
+    val biopetArgs: String = (config :: samples).map(_.getAbsolutePath).mkString("-config ", " \\\n-config ", "")
+    templateReader.getLines().mkString("\n").format(pipelineName, biopetArgs).foreach(scriptWriter.print)
+    templateReader.close()
+    scriptWriter.close()
+    outputFile.setExecutable(true, false)
+  }
+
+  def pipelineName: String
 
   def pipelineMap(map: Map[String, Any], expert: Boolean): Map[String, Any]
 
-  lazy val sampleConfigs: List[File] = Nil
+  def sampleConfigs: List[File] = Nil
 
 }
 
