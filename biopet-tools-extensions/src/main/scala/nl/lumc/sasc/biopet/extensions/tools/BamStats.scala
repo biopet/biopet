@@ -40,17 +40,11 @@ class BamStats(val root: Configurable) extends ToolCommandFunction with Referenc
   private var outputFiles: List[File] = Nil
 
   def bamstatsSummary: File = new File(outputDir, "bamstats.summary.json")
-  def flagstatSummaryFile(contig: Option[String] = None): File = getOutputFile("flagstats.summary.json", contig)
-  def mappingQualityFile(contig: Option[String] = None): File = getOutputFile("mapping_quality.tsv", contig)
-  def clipingFile(contig: Option[String] = None): File = getOutputFile("clipping.tsv", contig)
 
   override def beforeGraph() {
     super.beforeGraph()
     deps :+= new File(bamFile.getAbsolutePath.replaceAll(".bam$", ".bai"))
     outputFiles :+= bamstatsSummary
-    outputFiles :+= flagstatSummaryFile()
-    outputFiles :+= mappingQualityFile()
-    outputFiles :+= clipingFile()
     jobOutputFile = new File(outputDir, ".bamstats.out")
     if (reference == null) reference = referenceFasta()
   }
