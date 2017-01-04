@@ -171,7 +171,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
           val chunkSize: String = config("chunksize", default = "5G")
           val filesize = if (inputR1.getName.endsWith(".gz") || inputR1.getName.endsWith(".gzip")) inputR1.length * 3
           else inputR1.length
-          numberChunks = Option(ceil(filesize.toDouble / textToSize(chunkSize)).toInt)
+          numberChunks = Some(ceil(filesize.toDouble / textToSize(chunkSize)).toInt)
+          if (numberChunks == Some(0)) numberChunks = Some(1)
         }
       }
       logger.debug("Chunks: " + numberChunks.getOrElse(1))
