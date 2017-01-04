@@ -20,7 +20,7 @@ object MultiSampleMapping extends TemplateTool {
 
     val aligner = if (map.contains("aligner")) map("aligner").toString
     else Question.string("Aligner", posibleValues = possibleAligners, default = Some("bwa-mem"))
-    val mappingToGears = Question.string("Aligner", posibleValues = List("none", "all", "unmapped"), default = Some("none"))
+    val mappingToGears = Question.string("Reads to process in metagenomics pipeline", posibleValues = List("none", "all", "unmapped"), default = Some("none"))
 
     referenceConfig ++ Map(
       "aligner" -> aligner,

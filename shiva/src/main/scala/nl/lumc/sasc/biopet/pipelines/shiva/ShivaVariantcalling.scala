@@ -179,7 +179,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
 object ShivaVariantcalling extends PipelineCommand {
   /** Will generate all available variantcallers */
-  protected[shiva] def callersList(root: Configurable): List[Variantcaller] =
+  protected[pipelines] def callersList(root: Configurable): List[Variantcaller] =
     new HaplotypeCallerGvcf(root) ::
       new HaplotypeCallerAllele(root) ::
       new UnifiedGenotyperAllele(root) ::
