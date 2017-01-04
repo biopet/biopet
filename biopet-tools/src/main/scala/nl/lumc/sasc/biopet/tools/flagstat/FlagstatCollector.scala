@@ -204,7 +204,7 @@ class FlagstatCollector {
   def toSummaryMap = {
     val sortedKeys = names.keys.toArray.sorted
     sortedKeys.map(x => names(x) -> totalCounts(x)).toMap ++
-    Map("cross_counts" -> crossCounts)
+      Map("cross_counts" -> crossCounts)
   }
 
   def +=(other: FlagstatCollector): FlagstatCollector = {
