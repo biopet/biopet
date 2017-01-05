@@ -26,10 +26,10 @@ trait TemplateTool extends ToolCommand {
     } text "Path to output script"
     opt[File]('t', "template") valueName "<file>" action { (x, c) =>
       c.copy(template = Some(x))
-    } text "Path to template, default it try to fetch this from 'BIOPET_SCRIPT_TEMPLATE'"
+    } text "Path to template. By default it will try to fetch this from the ENV value 'BIOPET_SCRIPT_TEMPLATE'"
     opt[Unit]("expert") action { (x, c) =>
       c.copy(expert = true)
-    }
+    } text "This enables expert options / questions"
   }
 
   /**
@@ -100,10 +100,10 @@ object TemplateTool {
       println(s"$parent does not exist")
       false
     } else if (!parent.canRead) {
-      println(s"No premision to read $parent")
+      println(s"No permission to read $parent")
       false
     } else if (!parent.canWrite) {
-      println(s"No premision to write $parent")
+      println(s"No permission to write $parent")
       false
     } else true
   }
