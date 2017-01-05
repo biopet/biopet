@@ -136,7 +136,7 @@ class BamMetrics(val root: Configurable) extends QScript
         ampBedToInterval.isIntermediate = true
         add(ampBedToInterval)
 
-        val chsMetrics = CalculateHsMetrics(this, inputBam,
+        val chsMetrics = CollectHsMetrics(this, inputBam,
           List(ampIntervals), ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(chsMetrics)
         addSummarizable(chsMetrics, "hs_metrics")
