@@ -178,7 +178,7 @@ object Reference {
   }
 
   def askReference: Map[String, Any] = {
-    val warn = "It's possible to select something else but be aware of installing all fasta / index files required by a pipeline."
+    val warn = "If you use a non-standard reference, please make sure that you have generated all required indexes for this reference"
     val globalSpecies = Config.global.defaults.getOrElse("references", Map()).asInstanceOf[Map[String, Any]]
     val species = Question.string("species",
       description = Some(if (globalSpecies.nonEmpty)
