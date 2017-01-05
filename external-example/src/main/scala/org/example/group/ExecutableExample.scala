@@ -30,4 +30,6 @@ object ExecutableExample extends BiopetExecutable {
 
   /** This list defines the (biopet)tools that are usable from the executable */
   def tools: List[MainCommand] = Nil
+
+  def templates: List[MainCommand] = List()
 }

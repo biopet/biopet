@@ -65,22 +65,20 @@ object ConfigUtils extends Logging {
    */
   def mergeMaps(map1: Map[String, Any], map2: Map[String, Any],
                 resolveConflict: (Any, Any, String) => Any = (m1, m2, key) => m1): Map[String, Any] = {
-    var newMap: Map[String, Any] = Map()
-    for (key <- map1.keySet.++(map2.keySet)) {
-      if (!map2.contains(key)) newMap += (key -> map1(key))
-      else if (!map1.contains(key)) newMap += (key -> map2(key))
+    (for (key <- map1.keySet.++(map2.keySet)) yield {
+      if (!map2.contains(key)) (key -> map1(key))
+      else if (!map1.contains(key)) (key -> map2(key))
       else {
         map1(key) match {
           case m1: Map[_, _] =>
             map2(key) match {
-              case m2: Map[_, _] => newMap += (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
-              case _             => newMap += (key -> map1(key))
+              case m2: Map[_, _] => (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
+              case _             => (key -> map1(key))
             }
-          case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
+          case _ => (key -> resolveConflict(map1(key), map2(key), key))
         }
       }
-    }
-    newMap
+    }).toMap
   }
 
   /**

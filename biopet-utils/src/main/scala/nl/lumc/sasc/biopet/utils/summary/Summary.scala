@@ -23,8 +23,9 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * Created by pjvan_thof on 3/26/15.
  */
-class Summary(file: File) {
-  val map = ConfigUtils.fileToConfigMap(file)
+class Summary(val map: Map[String, Any]) {
+
+  def this(file: File) = this(ConfigUtils.fileToConfigMap(file))
 
   /** List of all samples in the summary */
   lazy val samples: Set[String] = {
