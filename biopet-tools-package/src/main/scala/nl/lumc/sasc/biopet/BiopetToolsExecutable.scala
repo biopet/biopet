@@ -14,7 +14,6 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetToolsExecutable extends BiopetExecutable {
@@ -48,7 +47,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.ValidateFastq,
     nl.lumc.sasc.biopet.tools.ValidateVcf,
     nl.lumc.sasc.biopet.tools.VcfFilter,
-    VcfStats,
+    nl.lumc.sasc.biopet.tools.vcfstats.VcfStats,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfWithVcf,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
