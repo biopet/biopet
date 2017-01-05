@@ -107,7 +107,7 @@ object BamStats extends ToolCommand {
     val totalStats = stats.toSummaryMap
     val statsMap = Map(
       "total" -> totalStats,
-      "contigs" -> contigsFutures.map(x => x._1 -> x._2.value.get.get.toSummaryMap).toMap
+      "contigs" -> contigsFutures.map(x => x._1 -> Await.result(x._2, Duration.Zero).toSummaryMap).toMap
     )
     statsWriter.println(ConfigUtils.mapToJson(statsMap).nospaces)
     statsWriter.close()
