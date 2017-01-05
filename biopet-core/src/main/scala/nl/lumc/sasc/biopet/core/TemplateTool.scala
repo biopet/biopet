@@ -118,15 +118,23 @@ object TemplateTool {
       else {
         val files = configFile :: currentList
         if (files.size > 1) {
-          val configs = files.map(ConfigUtils.fileToConfigMap(_))
-          val sizes = configs.map(new Summary(_)).map(x => (x.samples.size, x.libraries.map(_._2.size).sum))
-          val samples = sizes.map(_._1).sum
-          val libs = sizes.map(_._2).sum
-          val mergedConfig = new Summary(configs.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, b)))
+          val configs = files.map(f => new Summary(ConfigUtils.fileToConfigMap(f)))
+          val sizes = configs.map(x => (x.samples.size, x.libraries.map(_._2.size).sum))
+          val samples = configs.flatMap(_.samples.toList)
+          val libs = configs.flatMap(_.libraries.flatMap { case (s, libs) => libs.toList.map(l => (s, l)) })
+          val mergedConfig = new Summary(configs.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, b.map)))
           val mergesSamples = mergedConfig.samples.size
           val mergesLibraries = mergedConfig.libraries.map(_._2.size).sum
-          if (mergesSamples != samples) println("WARNING: Overlapping samples detected")
-          if (mergesLibraries != libs) println("WARNING: Overlapping libraries detected")
+          if (mergesSamples != samples.size) {
+            val overlappingSamples = samples.groupBy(s1 => samples.count(s2 => s1 == s2)).filter(_._1 > 1).flatMap(_._2).toList.distinct
+            println("WARNING: Overlapping samples detected:")
+            overlappingSamples.foreach(s => println(s"  - $s"))
+          }
+          if (mergesLibraries != libs.size) {
+            val overlappingLibs = libs.groupBy(l1 => libs.count(l2 => l1 == l2)).filter(_._1 > 1).flatMap(_._2).toList.distinct
+            println("WARNING: Overlapping libraries detected")
+            overlappingLibs.foreach(l => println(s"  - ${l._1} -> ${l._2}"))
+          }
           println(s"$mergesSamples samples found in merged config with in total $mergesLibraries libraries")
           if (Question.boolean("Is this correct?")) files
           else {
