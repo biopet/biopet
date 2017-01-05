@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 import java.util
 
-import htsjdk.variant.variantcontext.{ Genotype, VariantContext }
-import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader, VCFFilterHeaderLine }
+import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFFilterHeaderLine, VCFHeader }
 
 import scala.collection.JavaConversions._
 
@@ -148,5 +148,19 @@ object VcfUtils {
    */
   def isCompoundNoCall(genotype: Genotype): Boolean = {
     genotype.isCalled && genotype.getAlleles.exists(_.isNoCall) && genotype.getAlleles.exists(_.isReference)
+  }
+
+  /** Give back the number of alleles that overlap */
+  def alleleOverlap(g1: List[Allele], g2: List[Allele], start: Int = 0): Int = {
+    if (g1.isEmpty) start
+    else {
+      val found = g2.contains(g1.head)
+      val g2tail = if (found) {
+        val index = g2.indexOf(g1.head)
+        g2.drop(index + 1) ++ g2.take(index)
+      } else g2
+
+      alleleOverlap(g1.tail, g2tail, if (found) start + 1 else start)
+    }
   }
 }
