@@ -201,6 +201,12 @@ class FlagstatCollector {
     buffer.toString()
   }
 
+  def toSummaryMap = {
+    val sortedKeys = names.keys.toArray.sorted
+    sortedKeys.map(x => names(x) -> totalCounts(x)).toMap ++
+      Map("cross_counts" -> crossCounts)
+  }
+
   def +=(other: FlagstatCollector): FlagstatCollector = {
     require(this.names == other.names)
     //require(this.functions == other.functions)

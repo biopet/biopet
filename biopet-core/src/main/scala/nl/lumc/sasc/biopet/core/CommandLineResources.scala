@@ -111,6 +111,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filterNot(_.contains("h_vmem="))
     if (retry > 0) logger.info("Auto raise memory on retry")
     retry += 1
+    waitBeforeJob = waitBeforeJob.map(_ + (retry * 10))
     this.freezeFieldValues()
   }
 

@@ -319,6 +319,11 @@ object VcfFilter extends ToolCommand {
    * @return true if filter passed
    */
   def mustHaveVariant(record: VariantContext, samples: List[String]): Boolean = {
+    samples.foreach { s =>
+      if (!record.getSampleNames.toList.contains(s)) {
+        throw new IllegalArgumentException(s"Sample name $s does not exist in VCF file")
+      }
+    }
     !samples.map(record.getGenotype).exists(a => a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a))
   }
 
