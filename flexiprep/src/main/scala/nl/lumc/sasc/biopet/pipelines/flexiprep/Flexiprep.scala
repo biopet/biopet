@@ -204,7 +204,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
-      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) with Summarizable {
+      val pipe = new BiopetFifoPipe(this, fqSync :: qcCmdR1.jobs ::: qcCmdR2.jobs) with Summarizable {
         override def configNamespace = "qc_cmd"
 
         override def beforeGraph(): Unit = {
@@ -233,6 +233,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
       pipe.deps ::= fastqcR1.output
       pipe.deps ::= fastqcR2.output
+      pipe.deps ::= R1_in
+      pipe.deps ::= R2_in.get
       pipe.isIntermediate = !keepQcFastqFiles
       addSummarizable(pipe, "qc_cmd")
       add(pipe)
