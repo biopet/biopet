@@ -18,9 +18,8 @@ import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.{ LazyCheck, BamUtils, ConfigUtils, FastaUtils, Logging }
+import nl.lumc.sasc.biopet.utils._
 import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, Logging }
 
 import scala.collection.JavaConversions._
 
@@ -176,5 +175,34 @@ object Reference {
       checked += dict
       if (!dict.exists()) Logging.addError("Reference is missing a dict file")
     }
+  }
+
+  def askReference: Map[String, Any] = {
+    val warn = "If you use a non-standard reference, please make sure that you have generated all required indexes for this reference"
+    val globalSpecies = Config.global.defaults.getOrElse("references", Map()).asInstanceOf[Map[String, Any]]
+    val species = Question.string("species",
+      description = Some(if (globalSpecies.nonEmpty)
+        s"""Species found in general config:
+           |- ${globalSpecies.keys.toList.sorted.mkString("\n- ")}
+           |$warn
+           |""".stripMargin
+      else s"No references found in global config. $warn"))
+
+    val globalReferences = globalSpecies.getOrElse(species, Map()).asInstanceOf[Map[String, Any]]
+    val referenceName = Question.string("reference_name",
+      description = Some(if (globalReferences.nonEmpty)
+        s"""Reference for $species found in general config:
+            |- ${globalReferences.keys.toList.sorted.mkString("\n- ")}
+            |$warn
+            |""".stripMargin
+      else s"No references found in global config. $warn"))
+
+    val reference = globalReferences.getOrElse(referenceName, Map()).asInstanceOf[Map[String, Any]]
+    val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
+      Some(Question.string("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
+        description = Some(s"No fasta file found for $species -> $referenceName")))
+    }
+
+    Map("species" -> species, "reference_name" -> referenceName) ++ referenceFasta.map("reference_fasta" -> _)
   }
 }
