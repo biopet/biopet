@@ -153,8 +153,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     require(inputR1 != null, "Missing inputR1 on mapping module")
     require(sampleId.isDefined, "Missing sample ID on mapping module")
     require(libId.isDefined, "Missing library ID on mapping module")
-    if (inputR1.exists() && inputR1.length() == 0) Logging.addError(s"Input R1 is a empty file: $inputR1")
-    inputR2.foreach(r => if (r.exists() && r.length() == 0) Logging.addError(s"Input R2 is a empty file: $r"))
+    if (inputR1.exists() && inputR1.length() == 0) logger.warn(s"Input R1 is a empty file: $inputR1")
+    inputR2.foreach(r => if (r.exists() && r.length() == 0) logger.warn(s"Input R2 is a empty file: $r"))
 
     inputFiles :+= new InputFile(inputR1)
     inputR2.foreach(inputFiles :+= new InputFile(_))
