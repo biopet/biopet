@@ -80,8 +80,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
     else {
-      paired = inputR2.isDefined
-
       inputFiles :+= new InputFile(inputR1)
       inputR2.foreach(inputFiles :+= new InputFile(_))
 
@@ -89,6 +87,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       inputR2.foreach { fileR2 =>
         paired = true
         R2Name = getUncompressedFileName(fileR2)
+        if (fileR2 == inputR1) Logging.addError(s"R1 and R2 for $sampleId -> $libId are the same")
       }
     }
   }
