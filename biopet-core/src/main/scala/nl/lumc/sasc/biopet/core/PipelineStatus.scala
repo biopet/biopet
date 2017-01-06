@@ -148,14 +148,14 @@ object PipelineStatus extends ToolCommand {
   val numberRegex = """(.*)_(\d*)$""".r
   def compressOnType(jobs: Map[String, List[String]]): Map[String, List[String]] = {
     val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
-      job match {
-        case numberRegex(name, number) => (name, dep match {
-          case numberRegex(name, number) => name
-        })
-      }
+      (compressedName(job)._1, compressedName(dep)._1)
     }
     // This will collapse a Set[(String, String)] to a Map[String, List[String]]
     set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
+  }
+
+  def compressedName(jobName: String) = jobName match {
+      case numberRegex(name, number) =>  (name, number.toInt)
   }
 
   def writeGraphvizFile(jobsDeps: Map[String, List[String]],
@@ -171,12 +171,20 @@ object PipelineStatus extends ToolCommand {
 
     graph.foreach { case (job, jobDeps) =>
       // Writing color of node
-      if (jobDone.contains(job)) writer.println(s"  $job [color = green]")
-      else if (jobFailed.contains(job)) writer.println(s"  $job [color = red]")
-      else if (jobsStart.contains(job)) writer.println(s"  $job [color = orange]")
+      val compressTotal = if (compress) Some(deps.jobs.keys.count(compressedName(_)._1 == job)) else None
+      val compressDone = if (compress) Some(jobDone.count(compressedName(_)._1 == job)) else None
+      val compressFailed = if (compress) Some(jobFailed.count(compressedName(_)._1 == job)) else None
+      val compressStart = if (compress) Some(jobsStart.count(compressedName(_)._1 == job)) else None
+      val compressIntermediate = if (compress) Some(deps.jobs.filter(x => x._2.intermediate)
+        .count(x => compressedName(x._1)._1 == job)) else None
+
+      if (jobDone.contains(job) || compress && compressTotal == compressDone) writer.println(s"  $job [color = green]")
+      else if (jobFailed.contains(job) || compress && compressTotal == compressFailed) writer.println(s"  $job [color = red]")
+      else if (jobsStart.contains(job) || compress && compressTotal == compressStart) writer.println(s"  $job [color = orange]")
 
       // Dashed lined for intermediate jobs
-      if (deps.jobs.contains(job) && deps.jobs(job).intermediate) writer.println(s"  $job [style = dashed]")
+      if ((deps.jobs.contains(job) && deps.jobs(job).intermediate) || (compress && compressTotal == compressIntermediate))
+        writer.println(s"  $job [style = dashed]")
 
       // Writing Node deps
       jobDeps.foreach(c => writer.println(s"  $c -> $job;"))
