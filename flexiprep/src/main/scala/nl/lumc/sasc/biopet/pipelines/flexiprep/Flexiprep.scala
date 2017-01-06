@@ -137,13 +137,11 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
 
     val seqstatR1 = SeqStat(this, inputR1, outputDir)
-    seqstatR1.isIntermediate = true
     add(seqstatR1)
     addSummarizable(seqstatR1, "seqstat_R1")
 
     if (paired) {
       val seqstatR2 = SeqStat(this, inputR2.get, outputDir)
-      seqstatR2.isIntermediate = true
       add(seqstatR2)
       addSummarizable(seqstatR2, "seqstat_R2")
     }
