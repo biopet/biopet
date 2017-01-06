@@ -75,7 +75,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     bammetrics.functions.count(_.isInstanceOf[CollectRnaSeqMetrics]) shouldBe (if (rna) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectWgsMetrics]) shouldBe (if (wgs) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectMultipleMetrics]) shouldBe 1
-    bammetrics.functions.count(_.isInstanceOf[CalculateHsMetrics]) shouldBe (if (amplicon) 1 else 0)
+    bammetrics.functions.count(_.isInstanceOf[CollectHsMetrics]) shouldBe (if (amplicon) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectTargetedPcrMetrics]) shouldBe (if (amplicon) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[BamStats]) shouldBe 1
   }

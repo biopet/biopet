@@ -39,14 +39,16 @@ class Impute2Vcf(val root: Configurable) extends QScript with BiopetQScript with
   val phenotypeFile: File = config("phenotype_file")
 
   val inputGens: List[GensInput] = config("input_gens", default = Nil).asList.map {
-    case value: Map[String, Any] =>
-      GensInput(new File(value("genotypes").toString),
-        value.get("info").map(x => new File(x.toString)),
-        value("contig").toString)
-    case value: util.LinkedHashMap[String, _] =>
-      GensInput(new File(value.get("genotypes").toString),
-        value.toMap.get("info").map(x => new File(x.toString)),
-        value.get("contig").toString)
+    case value: Map[_, _] =>
+      val map = value.map(x => x._1.toString -> x._2)
+      GensInput(new File(map("genotypes").toString),
+        map.get("info").map(x => new File(x.toString)),
+        map("contig").toString)
+    case value: util.LinkedHashMap[_, _] =>
+      val map = value.map(x => x._1.toString -> x._2)
+      GensInput(new File(map("genotypes").toString),
+        map.get("info").map(x => new File(x.toString)),
+        map("contig").toString)
     case _ => throw new IllegalArgumentException
   } ++ (specsFile match {
     case Some(file) => Impute2Vcf.imputeSpecsToGensInput(file, config("validate_specs", default = true))
