@@ -103,7 +103,7 @@ object PipelineStatus extends ToolCommand {
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
     futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
-    futures :+= writeGraphvizFile(compressOnType(jobsDeps), new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots)
+    futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots, compress = true)
 
     val mainJobs = deps.jobs.filter(_._2.mainJob == true).map {
       case (name, job) =>
@@ -114,7 +114,7 @@ object PipelineStatus extends ToolCommand {
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
     futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
-    futures :+= writeGraphvizFile(compressOnType(mainJobs), new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots)
+    futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots, compress = true)
 
     val totalJobs = deps.jobs.size
     val totalStart = jobsStart.size
@@ -164,24 +164,23 @@ object PipelineStatus extends ToolCommand {
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
-                        png: Boolean = true, svg: Boolean = true): Future[Unit] = Future {
+                        png: Boolean = true, svg: Boolean = true, compress: Boolean = false): Future[Unit] = Future {
+    val graph = if (compress) compressOnType(jobsDeps) else jobsDeps
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
-    jobDone
-      .filter(x => jobsDeps.contains(x))
-      .foreach(x => writer.println(s"  $x [color = green]"))
-    jobFailed
-      .filter(x => jobsDeps.contains(x))
-      .foreach(x => writer.println(s"  $x [color = red]"))
-    jobsStart
-      .filter(x => jobsDeps.contains(x))
-      .diff(jobDone)
-      .foreach(x => writer.println(s"  $x [color = orange]"))
-    deps.jobs
-      .filter(x => jobsDeps.contains(x._1))
-      .filter(_._2.intermediate)
-      .foreach(x => writer.println(s"  ${x._1} [style = dashed]"))
-    jobsDeps.foreach { case (a, b) => b.foreach(c => writer.println(s"  $c -> $a;")) }
+
+    graph.foreach { case (job, jobDeps) =>
+      // Writing color of node
+      if (jobDone.contains(job)) writer.println(s"  $job [color = green]")
+      else if (jobFailed.contains(job)) writer.println(s"  $job [color = red]")
+      else if (jobsStart.contains(job)) writer.println(s"  $job [color = orange]")
+
+      // Dashed lined for intermediate jobs
+      if (deps.jobs.contains(job) && deps.jobs(job).intermediate) writer.println(s"  $job [style = dashed]")
+
+      // Writing Node deps
+      jobDeps.foreach(c => writer.println(s"  $c -> $job;"))
+    }
     writer.println("}")
     writer.close()
 
