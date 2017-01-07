@@ -75,8 +75,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Function that's need to be executed before the script is accessed */
   def init() {
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
-    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on flexiprep module")
-    if (libId == null || libId == None) Logging.addError("Missing library ID on flexiprep module")
+    if (sampleId == null || sampleId.isEmpty) Logging.addError("Missing sample ID on flexiprep module")
+    if (libId == null || libId.isEmpty) Logging.addError("Missing library ID on flexiprep module")
 
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
     else {
