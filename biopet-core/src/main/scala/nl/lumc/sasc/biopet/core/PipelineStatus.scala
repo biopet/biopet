@@ -155,7 +155,7 @@ object PipelineStatus extends ToolCommand {
   }
 
   def compressedName(jobName: String) = jobName match {
-      case numberRegex(name, number) =>  (name, number.toInt)
+    case numberRegex(name, number) => (name, number.toInt)
   }
 
   def writeGraphvizFile(jobsDeps: Map[String, List[String]],
@@ -169,25 +169,48 @@ object PipelineStatus extends ToolCommand {
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
 
-    graph.foreach { case (job, jobDeps) =>
-      // Writing color of node
-      val compressTotal = if (compress) Some(deps.jobs.keys.count(compressedName(_)._1 == job)) else None
-      val compressDone = if (compress) Some(jobDone.count(compressedName(_)._1 == job)) else None
-      val compressFailed = if (compress) Some(jobFailed.count(compressedName(_)._1 == job)) else None
-      val compressStart = if (compress) Some(jobsStart.count(compressedName(_)._1 == job)) else None
-      val compressIntermediate = if (compress) Some(deps.jobs.filter(x => x._2.intermediate)
-        .count(x => compressedName(x._1)._1 == job)) else None
+    graph.foreach {
+      case (job, jobDeps) =>
+        // Writing color of node
+        val compressTotal = if (compress) Some(deps.jobs.keys.filter(compressedName(_)._1 == job)) else None
+        val compressDone = if (compress) Some(jobDone.filter(compressedName(_)._1 == job)) else None
+        val compressFailed = if (compress) Some(jobFailed.filter(compressedName(_)._1 == job)) else None
+        val compressStart = if (compress) Some(jobsStart.filter(compressedName(_)._1 == job)) else None
+        val compressIntermediate = if (compress) Some(deps.jobs.filter(x => compressedName(x._1)._1 == job).forall(_._2.intermediate)) else None
 
-      if (jobDone.contains(job) || compress && compressTotal == compressDone) writer.println(s"  $job [color = green]")
-      else if (jobFailed.contains(job) || compress && compressTotal == compressFailed) writer.println(s"  $job [color = red]")
-      else if (jobsStart.contains(job) || compress && compressTotal == compressStart) writer.println(s"  $job [color = orange]")
+        if (compress) {
+          val pend = compressTotal.get.size - compressFailed.get.filterNot(compressStart.get.contains(_)).size - compressStart.get.size - compressDone.get.size
+          writer.println(s"""  $job [label = "$job
+        |Total: ${compressTotal.get.size}
+        |Fail: ${compressFailed.get.size}
+        |Pend:${pend}
+        |Start/run: ${compressStart.get.filterNot(compressFailed.get.contains(_)).size}
+        |Done: ${compressDone.get.size}"]""".stripMargin)
+        }
 
-      // Dashed lined for intermediate jobs
-      if ((deps.jobs.contains(job) && deps.jobs(job).intermediate) || (compress && compressTotal == compressIntermediate))
-        writer.println(s"  $job [style = dashed]")
+        if (jobDone.contains(job) || compress && compressTotal == compressDone) writer.println(s"  $job [color = green]")
+        else if (jobFailed.contains(job) || compress && compressFailed.get.nonEmpty) writer.println(s"  $job [color = red]")
+        else if (jobsStart.contains(job) || compress && compressTotal == compressStart) writer.println(s"  $job [color = orange]")
 
-      // Writing Node deps
-      jobDeps.foreach(c => writer.println(s"  $c -> $job;"))
+        // Dashed lined for intermediate jobs
+        if ((deps.jobs.contains(job) && deps.jobs(job).intermediate) || (compressIntermediate == Some(true)))
+          writer.println(s"  $job [style = dashed]")
+
+        // Writing Node deps
+        jobDeps.foreach { dep =>
+          if (compress) {
+            val depsNames = deps.jobs.filter(x => compressedName(x._1)._1 == dep)
+              .filter(_._2.outputUsedByJobs.exists(x => compressedName(x)._1 == job))
+              .map(x => x._1 -> x._2.outputUsedByJobs.filter(x => compressedName(x)._1 == job))
+            val total = depsNames.size
+            val done = depsNames.map(x => x._2.exists(y => jobDone.contains(x._1))).count(_ == true).toFloat / total
+            val fail = depsNames.map(x => x._2.exists(y => jobFailed.contains(x._1))).count(_ == true).toFloat / total
+            val start = (depsNames.map(x => x._2.exists(y => jobsStart.contains(x._1))).count(_ == true).toFloat / total) - fail
+            if (total > 0) writer.println(s"""  $dep -> $job [color="red;%f:orange;%f:green;%f:black;%f"];"""
+              .format(fail, start, done, 1.0f - done - fail - start))
+            else writer.println(s"  $dep -> $job;")
+          } else writer.println(s"  $dep -> $job;")
+        }
     }
     writer.println("}")
     writer.close()
