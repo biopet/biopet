@@ -31,7 +31,7 @@ CNRoutput <- opt$cnr
 windowLength <- opt$wl
 bamFile <- args
 
-BAMFiles <- strsplit(c(bamFile), " ")[[1]]
+BAMFiles <- bamFile
 bamDataRanges <- tryCatch(
     {
         getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=windowLength, parallel=opt$threads)
