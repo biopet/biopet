@@ -50,21 +50,33 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
     require(jobsGvLines.exists(_.contains("cat_1 -> gzip_1")))
     require(jobsGvLines.exists(_.contains("gzip_1 -> zcat_1")))
     require(jobsGvLines.forall(!_.contains("cat_1 -> zcat_1")))
+    require(jobsGvLines.exists(_.contains("cat_1 [style = dashed]")))
+    require(jobsGvLines.forall(!_.contains("gzip_1 [style = dashed]")))
+    require(jobsGvLines.forall(!_.contains("zcat_1 [style = dashed]")))
 
     val mainJobsGvLines = getLinesFromFile(mainJobsGvFile)
     require(mainJobsGvLines.exists(_.contains("cat_1 -> zcat_1")))
     require(mainJobsGvLines.forall(!_.contains("cat_1 -> gzip_1")))
     require(mainJobsGvLines.forall(!_.contains("gzip_1 -> zcat_1")))
+    require(mainJobsGvLines.exists(_.contains("cat_1 [style = dashed]")))
+    require(mainJobsGvLines.forall(!_.contains("gzip_1 [style = dashed]")))
+    require(mainJobsGvLines.forall(!_.contains("zcat_1 [style = dashed]")))
 
     val compressJobsGvLines = getLinesFromFile(compressJobsGvFile)
     require(compressJobsGvLines.exists(_.contains("cat -> gzip")))
     require(compressJobsGvLines.exists(_.contains("gzip -> zcat")))
     require(compressJobsGvLines.forall(!_.contains("cat -> zcat")))
+    require(compressJobsGvLines.exists(_.contains("cat [style = dashed]")))
+    require(compressJobsGvLines.forall(!_.contains("gzip [style = dashed]")))
+    require(compressJobsGvLines.forall(!_.contains("zcat [style = dashed]")))
 
     val compressMainJobsGvLines = getLinesFromFile(compressMainJobsGvFile)
     require(compressMainJobsGvLines.exists(_.contains("cat -> zcat")))
     require(compressMainJobsGvLines.forall(!_.contains("cat -> gzip")))
     require(compressMainJobsGvLines.forall(!_.contains("gzip -> zcat")))
+    require(compressMainJobsGvLines.exists(_.contains("cat [style = dashed]")))
+    require(compressMainJobsGvLines.forall(!_.contains("gzip [style = dashed]")))
+    require(compressMainJobsGvLines.forall(!_.contains("zcat [style = dashed]")))
 
   }
 
@@ -143,7 +155,7 @@ object PipelineStatusTest {
        |      "depends_on_jobs" : [
        |        "cat_1"
        |      ],
-       |      "intermediate" : true,
+       |      "intermediate" : false,
        |      "done_files" : [
        |        "$outputDir/.file.out.gz.done",
        |        "$outputDir/..file.out.gz.Gzip.out.done"
@@ -173,7 +185,7 @@ object PipelineStatusTest {
        |      "depends_on_jobs" : [
        |        
        |      ],
-       |      "intermediate" : false,
+       |      "intermediate" : true,
        |      "done_files" : [
        |        "$outputDir/.file.out.done",
        |        "$outputDir/..file.out.Cat.out.done"
@@ -192,7 +204,7 @@ object PipelineStatusTest {
        |      ],
        |      "exists_at_start" : false,
        |      "pipeline_input" : false,
-       |      "intermediate" : false
+       |      "intermediate" : true
        |    },
        |    {
        |      "output_jobs" : [
