@@ -97,7 +97,6 @@ object PipelineStatus extends ToolCommand {
 
     val jobsDeps = deps.jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
       case l: List[_] => l.map(_.toString)
-      case _          => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
     }))
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
