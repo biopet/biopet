@@ -184,7 +184,7 @@ object PipelineStatus extends ToolCommand {
         |Total: ${compressTotal.get.size}
         |Fail: ${compressFailed.get.size}
         |Pend:${pend}
-        |Start/run: ${compressStart.get.filterNot(compressFailed.get.contains(_)).size}
+        |Run: ${compressStart.get.filterNot(compressFailed.get.contains(_)).size}
         |Done: ${compressDone.get.size}"]""".stripMargin)
         }
 
