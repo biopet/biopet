@@ -14,20 +14,20 @@ import nl.lumc.sasc.biopet.utils.IoUtils._
   */
 class PipelineStatusTest extends TestNGSuite with Matchers {
   @Test
-  def testDefault: Unit = {
+  def testDefault(): Unit = {
     val outputDir = Files.createTempDir()
     outputDir.deleteOnExit()
-    PipelineStatusTest.writeDeps(outputDir)
+    PipelineStatusTest.writeDepsToDir(outputDir)
 
     PipelineStatus.main(Array("-o", outputDir.toString, "-d", outputDir.toString))
     checkOutput(outputDir)
   }
 
   @Test
-  def testDepsFileArg: Unit = {
+  def testDepsFileArg(): Unit = {
     val outputDir = Files.createTempDir()
     outputDir.deleteOnExit()
-    val depsfile = PipelineStatusTest.writeDeps(outputDir)
+    val depsfile = PipelineStatusTest.writeDepsToDir(outputDir)
 
     PipelineStatus.main(Array("-o", outputDir.toString, "-d", outputDir.toString, "--depsFile", depsfile.toString))
     checkOutput(outputDir)
@@ -80,6 +80,20 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
 
   }
 
+  @Test
+  def testDeps(): Unit = {
+    val depsFile = File.createTempFile("deps.", ".json")
+    PipelineStatusTest.writeDeps(depsFile, new File("/tmp"))
+    val deps = PipelineStatus.readDepsFile(depsFile)
+
+    deps.jobs.size shouldBe 3
+    deps.files.length shouldBe 5
+
+    deps.jobs("gzip_1").stdoutFile shouldBe new File("/tmp/.file.out.gz.Gzip.out")
+    deps.jobs("gzip_1").outputsFiles shouldBe List(new File("/tmp/file.out.gz"), new File("/tmp/.file.out.gz.Gzip.out"))
+    deps.jobs("gzip_1").inputFiles shouldBe List(new File("/tmp/file.out"))
+    deps.jobs("gzip_1").doneAtStart shouldBe false
+  }
 }
 
 object PipelineStatusTest {
@@ -88,17 +102,21 @@ object PipelineStatusTest {
     val Failed, Done, Pending = Value
   }
 
-  def writeDeps(outputDir: File): File = {
+  def writeDepsToDir(outputDir: File): File = {
     require(outputDir.exists())
     val depsFile = new File(outputDir, ".log/test.1234567890/graph/deps.json")
     depsFile.getParentFile.mkdirs()
-    val writer = new PrintWriter(depsFile)
-    writer.println(defaultDeps(outputDir))
-    writer.close()
+    writeDeps(depsFile, outputDir)
     depsFile
   }
 
-  def defaultDeps(outputDir: File) =
+  def writeDeps(depsFile: File, outputDir: File): Unit = {
+    val writer = new PrintWriter(depsFile)
+    writer.println(defaultDeps(outputDir))
+    writer.close()
+  }
+
+  def defaultDeps(outputDir: File): String =
     s"""
        |{
        |  "jobs" : {

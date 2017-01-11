@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 
 import scala.io.Source
 
@@ -72,11 +72,11 @@ object IoUtils {
     }
 
   /**
-    * This return the contends of a file as a List[String]
-    *
-    * @param file
-    * @return
-    */
+   * This return the contends of a file as a List[String]
+   *
+   * @param file
+   * @return
+   */
   def getLinesFromFile(file: File): List[String] = {
     val reader = Source.fromFile(file)
     val lines = reader.getLines().toList
