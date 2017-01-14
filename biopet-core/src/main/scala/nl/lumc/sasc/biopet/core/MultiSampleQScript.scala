@@ -141,9 +141,15 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
     /** returns a set with library names or throws error when not found */
     protected def libIds: Set[String] = {
-      val ids = ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      val ids: Set[String] = try {
+        ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      } catch {
+        case e: IllegalStateException if e.getMessage == "Value is not a map: library" =>
+          Logging.addError("libraries is not a map")
+          Set("placeholder")
+      }
       if (ids.isEmpty) {
-        throw new IllegalStateException(s"No libraries found in config for sample $sampleId")
+        Logging.addError(s"No libraries found in config for sample $sampleId")
       }
       ids
     }
