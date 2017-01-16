@@ -177,4 +177,52 @@ object BiopetQScript {
     require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")
   }
 
+  def safeInputs(function: QFunction): Seq[File] = {
+    try {
+      function.inputs
+    } catch {
+      case e: NullPointerException => Seq()
+    }
+  }
+
+  def safeOutputs(function: QFunction): Seq[File] = {
+    try {
+      function.outputs
+    } catch {
+      case e: NullPointerException => Seq()
+    }
+  }
+
+  def safeDoneFiles(function: QFunction): Seq[File] = {
+    try {
+      function.doneOutputs
+    } catch {
+      case e: NullPointerException => Seq()
+    }
+  }
+
+  def safeFailFiles(function: QFunction): Seq[File] = {
+    try {
+      function.failOutputs
+    } catch {
+      case e: NullPointerException => Seq()
+    }
+  }
+
+  def safeIsDone(function: QFunction): Boolean = {
+    try {
+      function.isDone
+    } catch {
+      case e: NullPointerException => false
+    }
+  }
+
+  def safeIsFail(function: QFunction): Boolean = {
+    try {
+      function.isFail
+    } catch {
+      case e: NullPointerException => false
+    }
+  }
+
 }

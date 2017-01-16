@@ -146,12 +146,12 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       } catch {
         case e: IllegalStateException if e.getMessage == "Value is not a map: library" =>
           Logging.addError("libraries is not a map")
-          Set("placeholder")
+          Set()
       }
       if (ids.isEmpty) {
         Logging.addError(s"No libraries found in config for sample $sampleId")
-      }
-      ids
+        Set("placeholder")
+      } else ids
     }
 
     /** Name overules the one from qscript */
