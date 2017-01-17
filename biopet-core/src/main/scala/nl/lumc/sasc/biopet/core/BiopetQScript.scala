@@ -177,51 +177,51 @@ object BiopetQScript {
     require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")
   }
 
-  def safeInputs(function: QFunction): Seq[File] = {
+  def safeInputs(function: QFunction): Option[Seq[File]] = {
     try {
-      function.inputs
+      Some(function.inputs)
     } catch {
-      case e: NullPointerException => Seq()
+      case e: NullPointerException => None
     }
   }
 
-  def safeOutputs(function: QFunction): Seq[File] = {
+  def safeOutputs(function: QFunction): Option[Seq[File]] = {
     try {
-      function.outputs
+      Some(function.outputs)
     } catch {
-      case e: NullPointerException => Seq()
+      case e: NullPointerException => None
     }
   }
 
-  def safeDoneFiles(function: QFunction): Seq[File] = {
+  def safeDoneFiles(function: QFunction): Option[Seq[File]] = {
     try {
-      function.doneOutputs
+      Some(function.doneOutputs)
     } catch {
-      case e: NullPointerException => Seq()
+      case e: NullPointerException => None
     }
   }
 
-  def safeFailFiles(function: QFunction): Seq[File] = {
+  def safeFailFiles(function: QFunction): Option[Seq[File]] = {
     try {
-      function.failOutputs
+      Some(function.failOutputs)
     } catch {
-      case e: NullPointerException => Seq()
+      case e: NullPointerException => None
     }
   }
 
-  def safeIsDone(function: QFunction): Boolean = {
+  def safeIsDone(function: QFunction): Option[Boolean] = {
     try {
-      function.isDone
+      Some(function.isDone)
     } catch {
-      case e: NullPointerException => false
+      case e: NullPointerException => None
     }
   }
 
-  def safeIsFail(function: QFunction): Boolean = {
+  def safeIsFail(function: QFunction): Option[Boolean] = {
     try {
-      function.isFail
+      Some(function.isFail)
     } catch {
-      case e: NullPointerException => false
+      case e: NullPointerException => None
     }
   }
 
