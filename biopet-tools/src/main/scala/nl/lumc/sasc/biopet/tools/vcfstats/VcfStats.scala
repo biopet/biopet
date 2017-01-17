@@ -566,6 +566,8 @@ object VcfStats extends ToolCommand {
       }
     } catch {
       case e: IOException =>
+        logger.warn("Failed: " + command)
+        logger.debug(e)
     }
   }
 }
