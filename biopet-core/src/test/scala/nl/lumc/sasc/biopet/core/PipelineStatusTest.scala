@@ -8,6 +8,7 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 import PipelineStatusTest.Status
 import nl.lumc.sasc.biopet.utils.IoUtils._
+import org.apache.commons.io.FileUtils
 
 /**
   * Created by pjvan_thof on 10-1-17.
@@ -16,21 +17,23 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
   @Test
   def testDefault(): Unit = {
     val outputDir = Files.createTempDir()
-    outputDir.deleteOnExit()
     PipelineStatusTest.writeDepsToDir(outputDir)
 
     PipelineStatus.main(Array("-o", outputDir.toString, "-d", outputDir.toString))
     checkOutput(outputDir)
+
+    FileUtils.deleteDirectory(outputDir)
   }
 
   @Test
   def testDepsFileArg(): Unit = {
     val outputDir = Files.createTempDir()
-    outputDir.deleteOnExit()
     val depsfile = PipelineStatusTest.writeDepsToDir(outputDir)
 
     PipelineStatus.main(Array("-o", outputDir.toString, "-d", outputDir.toString, "--depsFile", depsfile.toString))
     checkOutput(outputDir)
+
+    FileUtils.deleteDirectory(outputDir)
   }
 
   def checkOutput(outputDir: File,
@@ -83,6 +86,7 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
   @Test
   def testDeps(): Unit = {
     val depsFile = File.createTempFile("deps.", ".json")
+    depsFile.deleteOnExit()
     PipelineStatusTest.writeDeps(depsFile, new File("/tmp"))
     val deps = PipelineStatus.readDepsFile(depsFile)
 
