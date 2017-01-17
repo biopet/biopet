@@ -97,7 +97,6 @@ object PipelineStatus extends ToolCommand {
 
     val jobsDeps = deps.jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
       case l: List[_] => l.map(_.toString)
-      case _          => throw new IllegalStateException("Value 'depends_on_jobs' is not a list")
     }))
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
@@ -151,7 +150,7 @@ object PipelineStatus extends ToolCommand {
       (compressedName(job)._1, compressedName(dep)._1)
     }
     // This will collapse a Set[(String, String)] to a Map[String, List[String]]
-    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList)
+    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList) ++ jobs.filter(_._2.isEmpty).map(job => compressedName(job._1)._1 -> Nil)
   }
 
   def compressedName(jobName: String) = jobName match {
