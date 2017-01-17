@@ -145,7 +145,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
       } catch {
         case e: IllegalStateException if e.getMessage == "Value is not a map: library" =>
-          Logging.addError("libraries is not a map")
+          Logging.addError("libraries for samples are not formatted correctly")
           Set()
       }
       if (ids.isEmpty) {
