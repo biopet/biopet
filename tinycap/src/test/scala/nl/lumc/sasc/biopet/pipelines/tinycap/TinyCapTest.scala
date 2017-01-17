@@ -129,6 +129,7 @@ object TinyCapTest {
     "annotation_refflat" -> annotationRefflat,
 
     "md5sum" -> Map("exe" -> "test"),
+    "rscript" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
