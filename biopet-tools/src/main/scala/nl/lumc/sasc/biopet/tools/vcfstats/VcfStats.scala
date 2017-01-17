@@ -14,22 +14,22 @@
  */
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{ File, FileOutputStream, PrintWriter }
+import java.io.{File, FileOutputStream, IOException, PrintWriter}
 
 import htsjdk.samtools.util.Interval
-import htsjdk.variant.variantcontext.{ Genotype, VariantContext }
+import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, ToolCommand, VcfUtils }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand, VcfUtils}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 /**
  * This tool will generate statistics from a vcf file
@@ -557,11 +557,15 @@ object VcfStats extends ToolCommand {
     val command: String = "Rscript " + file + " " + args.mkString(" ")
 
     logger.info("Starting: " + command)
-    val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
-    if (process.exitValue() == 0) logger.info("Done: " + command)
-    else {
-      logger.warn("Failed: " + command)
-      if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
+    try {
+      val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
+      if (process.exitValue() == 0) logger.info("Done: " + command)
+      else {
+        logger.warn("Failed: " + command)
+        if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
+      }
+    } catch {
+      case e: IOException =>
     }
   }
 }
