@@ -204,6 +204,7 @@ object ShivaTest {
     "fastqc" -> Map("exe" -> "test"),
     "input_alleles" -> "test",
     "variantcallers" -> "raw",
+    "rscript" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

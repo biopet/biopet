@@ -14,9 +14,10 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
+import java.io._
 
 import scala.io.Source
+import scala.sys.process.Process
 
 /**
  * This object contains generic io methods
@@ -82,5 +83,14 @@ object IoUtils {
     val lines = reader.getLines().toList
     reader.close()
     lines
+  }
+
+  def executableExist(exe: String): Boolean = {
+    try {
+      val process = Process(Seq(exe)).run()
+      true
+    } catch {
+      case e: IOException => false
+    }
   }
 }
