@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import com.google.common.io.Files
 import org.scalatest.Matchers
@@ -11,8 +11,8 @@ import nl.lumc.sasc.biopet.utils.IoUtils._
 import org.apache.commons.io.FileUtils
 
 /**
-  * Created by pjvan_thof on 10-1-17.
-  */
+ * Created by pjvan_thof on 10-1-17.
+ */
 class PipelineStatusTest extends TestNGSuite with Matchers {
   @Test
   def testDefault(): Unit = {
