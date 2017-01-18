@@ -158,14 +158,14 @@ class BamMetrics(val root: Configurable) extends QScript
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.sam"),
         minOverlap = config("strict_intersect_overlap", default = 1.0))
       val biopetFlagstatStrict = BiopetFlagstat(this, biStrict.output, targetDir)
-      addSummarizable(biopetFlagstatStrict, targetName + "_biopet_flagstat_strict")
+      addSummarizable(biopetFlagstatStrict, targetName + "_flagstats_strict")
       add(new BiopetFifoPipe(this, List(biStrict, biopetFlagstatStrict)))
 
       val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.sam"),
         minOverlap = config("loose_intersect_overlap", default = 0.01))
       val biopetFlagstatLoose = BiopetFlagstat(this, biLoose.output, targetDir)
-      addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
+      addSummarizable(biopetFlagstatLoose, targetName + "_flagstats_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
       val sortedBed = BamMetrics.sortedbedCache.getOrElse(intervals.bed, {
