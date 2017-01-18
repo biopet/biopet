@@ -90,18 +90,13 @@ object WriteDependencies extends Logging with Configurable {
 
     val files: mutable.Map[File, QueueFile] = mutable.Map()
 
-    def outputFiles(function: QFunction) = {
-      if (function.jobErrorFile == null) function.outputs :+ function.jobOutputFile
-      else function.outputs :+ function.jobOutputFile :+ function.jobErrorFile
-    }
-
     for (function <- functions) {
-      for (input <- function.inputs) {
+      for (input <- BiopetQScript.safeInputs(function).getOrElse(Seq())) {
         val file = files.getOrElse(input, QueueFile(input))
         file.addInputJob(function)
         files += input -> file
       }
-      for (output <- outputFiles(function)) {
+      for (output <- BiopetQScript.safeOutputs(function).getOrElse(Seq())) {
         val file = files.getOrElse(output, QueueFile(output))
         file.addOutputJob(function)
         files += output -> file
@@ -118,16 +113,16 @@ object WriteDependencies extends Logging with Configurable {
           case s: WriteSummary if s.qscript.root == null => true
           case _                                         => false
         }), "intermediate" -> f.isIntermediate,
-          "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
-          "depends_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
-          "output_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
-          "outputs" -> outputFiles(f).toList,
-          "inputs" -> f.inputs.toList,
-          "done_files" -> f.doneOutputs.toList,
-          "fail_files" -> f.failOutputs.toList,
+          "depends_on_intermediate" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
+          "depends_on_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
+          "output_used_by_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).inputJobNames).distinct,
+          "outputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
+          "inputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
+          "done_files" -> BiopetQScript.safeDoneFiles(f).getOrElse(Seq()).toList,
+          "fail_files" -> BiopetQScript.safeFailFiles(f).getOrElse(Seq()).toList,
           "stdout_file" -> f.jobOutputFile,
-          "done_at_start" -> f.isDone,
-          "fail_at_start" -> f.isFail)
+          "done_at_start" -> BiopetQScript.safeIsDone(f),
+          "fail_at_start" -> BiopetQScript.safeIsFail(f))
     }.toIterator.toMap
 
     val outputFile = new File(outputDir, s"deps.json")
