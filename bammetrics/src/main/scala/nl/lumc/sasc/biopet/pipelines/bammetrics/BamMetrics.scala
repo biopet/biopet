@@ -150,6 +150,10 @@ class BamMetrics(val root: Configurable) extends QScript
     }
 
     // Create stats and coverage plot for each bed/interval file
+    val allIntervalNames = (roiIntervals ++ ampIntervals).map(_.bed.getName)
+    if (allIntervalNames.size != allIntervalNames.toSet.size) {
+      logger.warn("There are multiple region files with the same name. Metric values might get overwritten")
+    }
     for (intervals <- roiIntervals ++ ampIntervals) {
       val targetName = intervals.bed.getName.stripSuffix(".bed")
       val targetDir = new File(outputDir, targetName)
