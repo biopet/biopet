@@ -31,8 +31,10 @@ node('local') {
         }
 
     } catch (e) {
-        currentBuild.result = "FAILED"
-        slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
+        if(currentBuild.result != null && !"FAILED".equals(currentBuild.result)) {
+            currentBuild.result = "FAILED"
+        }
+        slackSend (color: '#FF0000', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
 
         throw e
     }
