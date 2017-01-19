@@ -24,6 +24,7 @@
     <version>0.8.0-SNAPSHOT</version>
     
     <modules>
+        <module>gatk</module>
         <module>biopet-package</module>
         <module>bam2wig</module>
         <module>bammetrics</module>
