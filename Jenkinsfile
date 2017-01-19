@@ -1,6 +1,4 @@
 node('local') {
-    properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'https://git.lumc.nl/'], pipelineTriggers([[$class: 'GitHubPushTrigger']])])
-
     try {
 
         stage('Init') {
