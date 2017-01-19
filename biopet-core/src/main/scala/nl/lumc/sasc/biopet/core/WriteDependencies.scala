@@ -101,6 +101,9 @@ object WriteDependencies extends Logging with Configurable {
         file.addOutputJob(function)
         files += output -> file
       }
+      val file = files.getOrElse(function.jobOutputFile, QueueFile(function.jobOutputFile))
+      file.addOutputJob(function)
+      files += function.jobOutputFile -> file
     }
 
     val jobs = functionNames.par.map {
