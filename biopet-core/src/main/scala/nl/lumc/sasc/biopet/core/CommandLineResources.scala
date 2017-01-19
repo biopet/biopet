@@ -48,14 +48,19 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def coreMemory = _coreMemory
 
   /** This value is for SGE and is defined in seconds */
-  protected val maxWalltimeLimit: Option[Int] = config("max_walltime_limit")
+  wallTime = config("max_walltime")
+
+  /** This value is specific for slurm */
+  qualityOfSerice = config("quality_of_serice")
 
   var retry = 0
 
   override def freezeFieldValues(): Unit = {
     setResources()
-    if (useSge && vmem.isDefined) jobResourceRequests :+= s"h_vmem=${vmem.get}"
-    if (useSge && maxWalltimeLimit.isDefined) jobResourceRequests :+= s"h_rt=${maxWalltimeLimit.get}"
+    if (useSge) {
+      vmem.foreach(v => jobResourceRequests :+= s"h_vmem=$v")
+      wallTime.foreach(t => jobResourceRequests :+= s"h_rt=$t")
+    }
     super.freezeFieldValues()
   }
 
@@ -106,6 +111,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filterNot(_.contains("h_vmem="))
     if (retry > 0) logger.info("Auto raise memory on retry")
     retry += 1
+    waitBeforeJob = waitBeforeJob.map(_ + (retry * 10))
     this.freezeFieldValues()
   }
 
@@ -117,8 +123,8 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)
-    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
-    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
+    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads) threads else 1))
+    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads) threads else 1)) + "G")
   }
 
 }

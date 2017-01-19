@@ -1,0 +1,3 @@
+[submodule "gatk"]
+	path = gatk
+	url = https://github.com/biopet/gatk.git
