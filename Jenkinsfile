@@ -20,10 +20,10 @@ node('local') {
         }
 
         stage('Report tests') {
-            junit 'target/surefire-reports/*.xml'
+            junit '*/target/surefire-reports/*.xml'
         }
 
-        if(currentBuild.result != null && !"SUCCESS".equals(currentBuild.result)) {
+        if(currentBuild.result == null || "SUCCESS".equals(currentBuild.result)) {
             currentBuild.result = "SUCCESS"
             slackSend (color: '#00FF00', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
         } else {
@@ -31,7 +31,7 @@ node('local') {
         }
 
     } catch (e) {
-        if(currentBuild.result != null && !"FAILED".equals(currentBuild.result)) {
+        if(currentBuild.result = null || "FAILED".equals(currentBuild.result)) {
             currentBuild.result = "FAILED"
         }
         slackSend (color: '#FF0000', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
