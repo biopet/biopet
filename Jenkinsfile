@@ -31,7 +31,7 @@ node('local') {
         }
 
     } catch (e) {
-        if(currentBuild.result = null || "FAILED".equals(currentBuild.result)) {
+        if(currentBuild.result == null || "FAILED".equals(currentBuild.result)) {
             currentBuild.result = "FAILED"
         }
         slackSend (color: '#FF0000', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
