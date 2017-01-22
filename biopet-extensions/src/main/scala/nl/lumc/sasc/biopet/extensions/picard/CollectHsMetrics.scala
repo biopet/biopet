@@ -22,8 +22,8 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CalculateHsMetrics */
-class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
-  javaMainClass = new picard.analysis.directed.CalculateHsMetrics().getClass.getName
+class CollectHsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+  javaMainClass = new picard.analysis.directed.CollectHsMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = _
@@ -72,14 +72,14 @@ class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizabl
   def summaryStats: Any = Picard.getMetrics(output).getOrElse(Map())
 }
 
-object CalculateHsMetrics {
+object CollectHsMetrics {
   /** Returns default CalculateHsMetrics */
   def apply(root: Configurable,
             input: File,
             baitIntervals: List[File],
             targetIntervals: List[File],
-            outputDir: File): CalculateHsMetrics = {
-    val calculateHsMetrics = new CalculateHsMetrics(root)
+            outputDir: File): CollectHsMetrics = {
+    val calculateHsMetrics = new CollectHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals
     calculateHsMetrics.targetIntervals = targetIntervals

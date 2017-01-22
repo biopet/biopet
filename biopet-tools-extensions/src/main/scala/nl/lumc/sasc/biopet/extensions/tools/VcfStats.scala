@@ -16,11 +16,10 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable }
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, tryToParseNumber }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
@@ -31,7 +30,7 @@ import scala.io.Source
  * Created by pjvan_thof on 1/10/15.
  */
 class VcfStats(val root: Configurable) extends ToolCommandFunction with Summarizable with Reference {
-  def toolObject = VcfStats
+  def toolObject = nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
 
   mainFunction = false
 

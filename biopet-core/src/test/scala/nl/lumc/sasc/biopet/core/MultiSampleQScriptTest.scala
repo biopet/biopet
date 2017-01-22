@@ -15,11 +15,12 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
-import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -121,7 +122,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
   @Test
   def testNoLibSample(): Unit = {
-    an[IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(noLibSample :: Nil))
+    an[IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(Map("output_dir" -> ".") :: noLibSample :: Nil).script())
   }
 }
 
@@ -203,6 +204,9 @@ object MultiSampleQScriptTest {
   def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
     new QScript with MultiSampleQScript { qscript =>
 
+      qSettings = new QSettings()
+      qSettings.runName = "test"
+
       override val onlySamples = only
 
       var buffer = new ListBuffer[String]()
@@ -272,7 +276,7 @@ object MultiSampleQScriptTest {
       def summaryFiles: Map[String, File] = Map()
 
       /** Name of summary output file */
-      def summaryFile: File = null
+      def summaryFile: File = new File("./summary.json")
 
       /** Init for pipeline */
       def init(): Unit = {

@@ -49,7 +49,7 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     // the filtered and centered matrix
     val firstMatrix = new XhmmMatrix(this)
     firstMatrix.inputMatrix = merged.output
-    firstMatrix.outputMatrix = swapExt(merged.output, ".depths.data", ".filtered_centered.data")
+    firstMatrix.outputMatrix = swapExt(xhmmDir, merged.output, ".depths.data", ".filtered_centered.data")
     firstMatrix.minTargetSize = 10
     firstMatrix.maxTargetSize = 10000
     firstMatrix.minMeanTargetRD = 10
@@ -57,21 +57,21 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     firstMatrix.minMeanSampleRD = 25
     firstMatrix.maxMeanSampleRD = 200
     firstMatrix.maxSdSampleRD = 150
-    firstMatrix.outputExcludedSamples = Some(swapExt(merged.output, ".depths.data", ".filtered.samples.txt"))
-    firstMatrix.outputExcludedTargets = Some(swapExt(merged.output, ".depths.data", ".filtered.targets.txt"))
+    firstMatrix.outputExcludedSamples = Some(swapExt(xhmmDir, merged.output, ".depths.data", ".filtered.samples.txt"))
+    firstMatrix.outputExcludedTargets = Some(swapExt(xhmmDir, merged.output, ".depths.data", ".filtered.targets.txt"))
     add(firstMatrix)
 
     // pca generation
     val pca = new XhmmPca(this)
     pca.inputMatrix = firstMatrix.outputMatrix
-    pca.pcaFile = swapExt(firstMatrix.outputMatrix, ".filtered_centered.data", ".rd_pca.data")
+    pca.pcaFile = swapExt(xhmmDir, firstMatrix.outputMatrix, ".filtered_centered.data", ".rd_pca.data")
     add(pca)
 
     // normalization
     val normalize = new XhmmNormalize(this)
     normalize.inputMatrix = firstMatrix.outputMatrix
     normalize.pcaFile = pca.pcaFile
-    normalize.normalizeOutput = swapExt(firstMatrix.outputMatrix, ".filtered_centered.data", ".normalized.data")
+    normalize.normalizeOutput = swapExt(xhmmDir, firstMatrix.outputMatrix, ".filtered_centered.data", ".normalized.data")
     add(normalize)
 
     // normalized & filtered matrix
@@ -81,9 +81,9 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     secondMatrix.centerType = "sample"
     secondMatrix.zScoreData = true
     secondMatrix.maxsdTargetRD = 30
-    secondMatrix.outputExcludedTargets = Some(swapExt(normalize.normalizeOutput, ".data", ".filtered.targets.txt"))
-    secondMatrix.outputExcludedSamples = Some(swapExt(normalize.normalizeOutput, ".data", ".filtered.samples.txt"))
-    secondMatrix.outputMatrix = swapExt(normalize.normalizeOutput, ".data", "filtered.data")
+    secondMatrix.outputExcludedTargets = Some(swapExt(xhmmDir, normalize.normalizeOutput, ".data", ".filtered.targets.txt"))
+    secondMatrix.outputExcludedSamples = Some(swapExt(xhmmDir, normalize.normalizeOutput, ".data", ".filtered.samples.txt"))
+    secondMatrix.outputMatrix = swapExt(xhmmDir, normalize.normalizeOutput, ".data", "filtered.data")
     add(secondMatrix)
 
     // re-synced matrix
@@ -91,7 +91,7 @@ class XhmmMethod(val root: Configurable) extends CnvMethod with Reference {
     thirdMatrix.inputMatrix = merged.output
     thirdMatrix.inputExcludeSamples = List(firstMatrix.outputExcludedSamples, secondMatrix.outputExcludedSamples).flatten
     thirdMatrix.inputExcludeTargets = List(firstMatrix.outputExcludedTargets, secondMatrix.outputExcludedTargets).flatten
-    thirdMatrix.outputMatrix = swapExt(merged.output, ".depths.data", ".same_filtered.data")
+    thirdMatrix.outputMatrix = swapExt(xhmmDir, merged.output, ".depths.data", ".same_filtered.data")
     add(thirdMatrix)
 
     // discovering cnvs

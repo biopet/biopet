@@ -345,8 +345,7 @@ object BammetricsReport extends ReportBuilder {
     val pathValues: Map[String, Array[Any]] = paths.map {
       case (key, path) =>
         val value = summary.getValueAsArray(sampleId, libId, path: _*)
-        require(value.isDefined, s"Sample: $sampleId, library: $libId on path: '${path.mkString(",")}' does not exist in summary")
-        key -> value.get
+        key -> value.getOrElse(Array())
     }
     require(pathValues.map(_._2.size).toList.distinct.size == 1, s"Arrays in summary does not have the same number of values, $paths")
     pathValues

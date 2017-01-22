@@ -30,9 +30,12 @@ trait BiopetExecutable extends Logging {
 
   def tools: List[MainCommand]
 
+  def templates: List[MainCommand]
+
   val modules: Map[String, List[MainCommand]] = Map(
     "pipeline" -> pipelines,
-    "tool" -> tools)
+    "tool" -> tools,
+    "template" -> templates)
 
   /**
    * @param args the command line arguments

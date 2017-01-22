@@ -47,11 +47,11 @@ class Config(protected var _map: Map[String, Any],
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
           if (file.exists) {
-            logger.info("Loading config file: " + file)
+            logger.debug("Loading config file: " + file)
             loadConfigFile(file, default)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
         }
-      case _ => logger.info(valueName + " value not found, no global config is loaded")
+      case _ => logger.debug(valueName + " value not found, no global config is loaded")
     }
   }
 

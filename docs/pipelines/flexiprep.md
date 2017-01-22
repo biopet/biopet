@@ -61,8 +61,8 @@ All other values should be provided in the config. Specific config values toward
 
 | Name | Type | Function |
 | ---- | ---- | -------- |
-| skiptrim | Boolean | Default false, if true the trimming step is skipped |
-| skipclip | Boolean | Default false, if true the clipping step is skipped |
+| skip_trim | Boolean | Default false, if true the trimming step is skipped |
+| skip_clip | Boolean | Default false, if true the clipping step is skipped |
 
 ## Result files
 The results from this pipeline will be a fastq file.

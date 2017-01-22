@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{ File, FileOutputStream, PrintWriter }
+import java.io.{ File, FileOutputStream, IOException, PrintWriter }
 
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.{ Genotype, VariantContext }
@@ -557,11 +557,17 @@ object VcfStats extends ToolCommand {
     val command: String = "Rscript " + file + " " + args.mkString(" ")
 
     logger.info("Starting: " + command)
-    val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
-    if (process.exitValue() == 0) logger.info("Done: " + command)
-    else {
-      logger.warn("Failed: " + command)
-      if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
+    try {
+      val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
+      if (process.exitValue() == 0) logger.info("Done: " + command)
+      else {
+        logger.warn("Failed: " + command)
+        if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
+      }
+    } catch {
+      case e: IOException =>
+        logger.warn("Failed: " + command)
+        logger.debug(e)
     }
   }
 }

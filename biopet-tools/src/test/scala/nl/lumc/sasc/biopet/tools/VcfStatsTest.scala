@@ -103,7 +103,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMergeStatsMap = {
+  def testMergeStatsMap() = {
     val m1: mutable.Map[Any, Int] = mutable.Map("a" -> 1)
     val m2: mutable.Map[Any, Int] = mutable.Map("b" -> 2)
 
@@ -124,7 +124,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMergeNestedStatsMap = {
+  def testMergeNestedStatsMap() = {
     val m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
       mutable.Map("nested" -> mutable.Map("a" -> 1)))
     val m2: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
@@ -152,7 +152,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testValueOfTsv = {
+  def testValueOfTsv() = {
     val i = new File(resourcePath("/sample.tsv"))
 
     valueFromTsv(i, "Sample_ID_1", "library") should be(Some("Lib_ID_1"))
@@ -163,7 +163,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMain = {
+  def testMain() = {
     val tmp = Files.createTempDirectory("vcfStats")
     val vcf = resourcePath("/chrQ.vcf.gz")
     val ref = resourcePath("/fake_chrQ.fa")
@@ -229,7 +229,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSortAnyAny = {
+  def testSortAnyAny() = {
     //stub
     val one: Any = 1
     val two: Any = 2
@@ -245,7 +245,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCheckGeneral = {
+  def testCheckGeneral() = {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
     val blah = checkGeneral(record, List())
@@ -253,7 +253,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     blah.get("chrQ") should not be empty
     blah.get("total") should not be empty
 
-    val chrq = blah.get("chrQ").get
+    val chrq = blah("chrQ")
     chrq.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
     chrq.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
     chrq.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
@@ -269,7 +269,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     chrq.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
 
     chrq.get("general") should not be empty
-    val general = chrq.get("general").get
+    val general = chrq("general")
 
     general.get("PolymorphicInSamples") shouldEqual Some(1)
     general.get("ComplexIndel") shouldEqual Some(0)
@@ -291,7 +291,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Symbolic") shouldEqual Some(0)
     general.get("SimpleInsertion") shouldEqual Some(1)
 
-    val total = blah.get("total").get
+    val total = blah("total")
     total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
     total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
     total.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
@@ -307,7 +307,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     total.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
 
     chrq.get("general") should not be empty
-    val totGeneral = total.get("general").get
+    val totGeneral = total("general")
 
     totGeneral.get("PolymorphicInSamples") shouldEqual Some(1)
     totGeneral.get("ComplexIndel") shouldEqual Some(0)
@@ -331,7 +331,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCheckGenotype = {
+  def testCheckGenotype() = {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
     val genotype = record.getGenotype(0)
@@ -341,7 +341,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     blah.get("chrQ") should not be empty
     blah.get("total") should not be empty
 
-    val chrq = blah.get("chrQ").get
+    val chrq = blah("chrQ")
     chrq.get("GQ") shouldEqual Some(Map(99 -> 1))
     chrq.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
     chrq.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
@@ -350,7 +350,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     chrq.get("AD-ref") shouldEqual Some(Map(24 -> 1))
     chrq.get("general") should not be empty
 
-    val general = chrq.get("general").get
+    val general = chrq("general")
     general.get("Hom") shouldEqual Some(0)
     general.get("NoCall") shouldEqual Some(0)
     general.get("Variant") shouldEqual Some(1)
@@ -365,7 +365,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Het") shouldEqual Some(1)
     general.get("HetNonRef") shouldEqual Some(0)
 
-    val total = blah.get("total").get
+    val total = blah("total")
     total.get("GQ") shouldEqual Some(Map(99 -> 1))
     total.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
     total.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
@@ -374,7 +374,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     total.get("AD-ref") shouldEqual Some(Map(24 -> 1))
     total.get("general") should not be empty
 
-    val totGeneral = total.get("general").get
+    val totGeneral = total("general")
     totGeneral.get("Hom") shouldEqual Some(0)
     totGeneral.get("NoCall") shouldEqual Some(0)
     totGeneral.get("Variant") shouldEqual Some(1)
