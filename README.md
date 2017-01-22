@@ -5,6 +5,7 @@
 
 Biopet (Bio Pipeline Execution Toolkit) is the main pipeline development framework of the LUMC Sequencing Analysis Support Core team. It contains our main pipelines and some of the command line tools we develop in-house. It is meant to be used in the main [SHARK](https://humgenprojects.lumc.nl/trac/shark) computing cluster. While usage outside of SHARK is technically possible, some adjustments may need to be made in order to do so.
 
+Full documantation is here: [Biopet documantation](http://biopet-docs.readthedocs.io/en/latest/)
 
 ## Quick Start
 
@@ -59,27 +60,7 @@ Biopet is based on the Queue framework developed by the Broad Institute as part 
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://github.com/biopet/biopet](https://github.com/biopet/biopet/issues), along with our issue tracker.
 
-## Local development setup
-
-To develop Biopet, Java 7, Maven 3.3.3, and GATK Queue 3.5 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
-
-~~~
-$ git clone https://github.com/broadgsa/gatk-protected
-$ cd gatk
-$ git checkout 3.5                              # the current release is based on GATK 3.5
-$ mvn -U clean install
-~~~
-
-This will install all the required dependencies to your local maven repository. After this is done, you can clone our repository and test if everything builds fine:
-
-~~~
-$ git clone https://github.com/biopet/biopet.git
-$ cd biopet
-$ mvn -U clean install
-~~~
-
-If everything builds fine, you're good to go! Otherwise, don't hesitate to contact us or file an issue at our issue tracker.
-
+For more information please go to our [Developer documantation](http://biopet-docs.readthedocs.io/en/develop/developer/getting-started/)
 
 ## About
 

@@ -2,6 +2,7 @@
 
 ### Requirements
 - Maven 3.3
+- Java 8
 - Installed Gatk to maven local repository (see below)
 - Installed Biopet to maven local repository (see below)
 - Some knowledge of the programming language [Scala](http://www.scala-lang.org/) (The pipelines are scripted using Scala)
@@ -16,17 +17,9 @@ Make sure both tools are installed in your local maven repository. To do this on
 
 ```bash
 # Replace 'mvn' with the location of you maven executable or put it in your PATH with the export command.
-git clone https://github.com/broadgsa/gatk
-cd gatk
-git checkout 3.6
-# The GATK version is bound to a version of Biopet. Biopet 0.7.0 uses Gatk 3.6
-mvn clean install
 
-cd ..
-
-git clone https://github.com/biopet/biopet.git
+git clone --recursive https://github.com/biopet/biopet.git
 cd biopet
-git checkout 0.7.0
 mvn -DskipTests=true clean install
 ```
 
