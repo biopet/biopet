@@ -49,9 +49,9 @@ $ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEn
 
 It is usually a good idea to do the real run using `screen` or `nohup` to prevent the job from terminating when you log out of SHARK. In practice, using `biopet` as it is is also fine. What you need to keep in mind, is that each pipeline has their own expected config layout. You can check out more about the general structure of our config files [here](docs/config.md). For the specific structure that each pipeline accepts, please consult the respective pipeline page.
 
-### Running Biopet in your own computer
+## Testing
 
-At the moment, we do not provide links to download the Biopet package. If you are interested in trying out Biopet locally, please contact us as [sasc@lumc.nl](mailto:sasc@lumc.nl).
+Our code is test on each change on out local Jenkins installation. We using a [JenkinsFile]() in out repository to do this.
 
 
 ## Contributing to Biopet
