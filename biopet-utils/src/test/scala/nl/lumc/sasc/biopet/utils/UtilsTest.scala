@@ -6,6 +6,7 @@ import org.testng.annotations.Test
 
 /**
  * Created by Sander Bollen on 12-10-16.
+ * Here we test utils
  */
 class UtilsTest extends TestNGSuite with Matchers {
 
