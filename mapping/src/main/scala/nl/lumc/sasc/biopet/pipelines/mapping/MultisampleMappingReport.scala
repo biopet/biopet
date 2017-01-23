@@ -50,7 +50,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
-    val mappingExecuted = summary.getLibraryValues("mapping").nonEmpty
+    val mappingExecuted = summary.getLibraryValues("mapping").exists(_._2.isDefined)
     val pairedFound = !mappingExecuted || summary.getLibraryValues("mapping", "settings", "paired").exists(_._2 == Some(true))
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => value.isDefined }
