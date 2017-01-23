@@ -47,11 +47,11 @@ class Config(protected var _map: Map[String, Any],
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
           if (file.exists) {
-            logger.info("Loading config file: " + file)
+            logger.debug("Loading config file: " + file)
             loadConfigFile(file, default)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
         }
-      case _ => logger.info(valueName + " value not found, no global config is loaded")
+      case _ => logger.debug(valueName + " value not found, no global config is loaded")
     }
   }
 
@@ -189,7 +189,7 @@ class Config(protected var _map: Map[String, Any],
     } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
-  def writeReport(id: String, directory: File): Unit = {
+  def writeReport(directory: File): Unit = {
     directory.mkdirs()
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
@@ -205,7 +205,7 @@ class Config(protected var _map: Map[String, Any],
     }
 
     def writeMapToJsonFile(map: Map[String, Any], name: String): Unit = {
-      val file = new File(directory, id + "." + name + ".json")
+      val file = new File(directory, name + ".json")
       val writer = new PrintWriter(file)
       writer.write(ConfigUtils.mapToJson(map).spaces2)
       writer.close()

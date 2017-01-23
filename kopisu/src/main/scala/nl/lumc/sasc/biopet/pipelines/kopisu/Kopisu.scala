@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
-import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ ConiferMethod, FreecMethod }
+import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ CnmopsMethod, ConiferMethod, FreecMethod, XhmmMethod }
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -45,9 +45,17 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
     Some(new ConiferMethod(this))
   } else None
 
+  lazy val cnMopsMethod = if (config("use_cnmops_method", default = false)) {
+    Some(new CnmopsMethod(this))
+  } else None
+
+  lazy val xhmmMethod = if (config("use_xhmm_method", default = false)) {
+    Some(new XhmmMethod(this))
+  } else None
+
   // This script is in fact FreeC only.
   def biopetScript() {
-    if (freecMethod.isEmpty && coniferMethod.isEmpty) Logging.addError("No method selected")
+    if (freecMethod.isEmpty && coniferMethod.isEmpty && cnMopsMethod.isEmpty && xhmmMethod.isEmpty) Logging.addError("No CNV method selected")
 
     freecMethod.foreach { method =>
       method.inputBams = inputBams
@@ -61,13 +69,28 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
       add(method)
     }
 
+    cnMopsMethod.foreach { method =>
+      method.inputBams = inputBams
+      method.outputDir = new File(outputDir, "cnmops_method")
+      add(method)
+    }
+
+    xhmmMethod.foreach { method =>
+      method.inputBams = inputBams
+      method.outputDir = new File(outputDir, "xhmm_method")
+      add(method)
+    }
+
     addSummaryJobs()
   }
 
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any] = Map(
     "reference" -> referenceSummary,
-    "freec_method" -> freecMethod.isDefined
+    "freec_method" -> freecMethod.isDefined,
+    "conifer_method" -> coniferMethod.isDefined,
+    "cnmops_method" -> cnMopsMethod.isDefined,
+    "xhmm_method" -> xhmmMethod.isDefined
   )
 
   /** File to put in the summary for thie pipeline */

@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
 import nl.lumc.sasc.biopet.utils.{ LazyCheck, Logging }
 import nl.lumc.sasc.biopet.utils.config._
+import nl.lumc.sasc.biopet.utils.camelize
 import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 import java.io.File
@@ -54,7 +55,7 @@ class Gentrap(val root: Configurable) extends QScript
   // see the enumeration below for valid modes
   lazy val expMeasures = new LazyCheck({
     config("expression_measures", default = List("fragments_per_gene", "bios_base_counts")).asStringList.map(value =>
-      ExpMeasures.values.find(_.toString == Gentrap.camelize(value)) match {
+      ExpMeasures.values.find(_.toString == camelize(value)) match {
         case Some(v) => v
         case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
       }
@@ -64,7 +65,7 @@ class Gentrap(val root: Configurable) extends QScript
   /** Strandedness modes */
   lazy val strandProtocol = new LazyCheck({
     val value: String = config("strand_protocol", default = "non_specific")
-    StrandProtocol.values.find(_.toString == Gentrap.camelize(value)) match {
+    StrandProtocol.values.find(_.toString == camelize(value)) match {
       case Some(v) => v
       case other =>
         Logging.addError(s"'$other' is no strand_protocol or strand_protocol is not given")
@@ -262,7 +263,7 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene, FragmentsPerExon, BaseCounts, BiosBaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
+    val FragmentsPerGene, BiosBaseCounts, BaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
   }
 
   /** Enumeration of available strandedness */
@@ -270,10 +271,4 @@ object Gentrap extends PipelineCommand {
     // for now, only non-strand specific and dUTP stranded protocol is supported
     val NonSpecific, Dutp = Value
   }
-
-  /** Converts string with underscores into camel-case strings */
-  private[gentrap] def camelize(ustring: String): String = ustring
-    .split("_")
-    .map(_.toLowerCase.capitalize)
-    .mkString("")
 }

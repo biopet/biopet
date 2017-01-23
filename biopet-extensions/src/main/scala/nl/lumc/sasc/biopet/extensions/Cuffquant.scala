@@ -35,11 +35,11 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
     means we have 2 samples, each with 2 replicates
     so our input is a list of lists of Files
    */
-  var input: List[List[File]] = List.empty[List[File]]
+  var input: List[List[File]] = Nil
 
   /** input GTF file */
   @Input(doc = "Input GTF file", required = true)
-  var transcriptsGtf: File = null
+  var transcriptsGtf: File = _
 
   /** output file, computed automatically from output directory */
   @Output(doc = "Output CXB file")

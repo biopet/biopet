@@ -24,6 +24,7 @@
     <version>BIOS</version>
     
     <modules>
+        <module>gatk</module>
         <module>biopet-package</module>
         <module>bam2wig</module>
         <module>bammetrics</module>

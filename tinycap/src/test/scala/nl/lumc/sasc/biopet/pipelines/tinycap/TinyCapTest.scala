@@ -119,6 +119,7 @@ object TinyCapTest {
   Files.touch(annotationRefflat)
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "reference_fasta" -> (referenceFasta.getAbsolutePath),
     "bowtie_index" -> (bowtieIndex.getAbsolutePath),
@@ -128,6 +129,7 @@ object TinyCapTest {
     "annotation_refflat" -> annotationRefflat,
 
     "md5sum" -> Map("exe" -> "test"),
+    "rscript" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

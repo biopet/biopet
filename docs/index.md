@@ -35,15 +35,15 @@ The actual path will vary from version to version, which is controlled by which 
 Almost all of the pipelines have a common usage pattern with a similar set of flags, for example:
 
 ~~~
-$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -retry 2
+$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -jobQueue all.q -retry 2
 ~~~
 
-The command above will do a *dry* run of a pipeline using a config file as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
+The command above will do a *dry* run of a pipeline using a config file as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). The `-jobQueue all.q` flag ensures that the proper Queue is used. We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
 
 If the dry run proceeds without problems, you can then do the real run by using the `-run` flag:
 
 ~~~
-$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -retry 2 -run
+$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -jobQueue all.q -retry 2 -run
 ~~~
 
 It is usually a good idea to do the real run using `screen` or `nohup` to prevent the job from terminating when you log out of SHARK. In practice, using `biopet` as it is is also fine. What you need to keep in mind, is that each pipeline has their own expected config layout. You can check out more about the general structure of our config files [here](general/config.md). For the specific structure that each pipeline accepts, please consult the respective pipeline page.

@@ -29,7 +29,6 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 
-  @Argument(doc = "Set flanking amount")
   var flanking: Option[Int] = config("flanking")
 
   var exclusionRegions: List[File] = config("exclusion_regions", default = Nil)

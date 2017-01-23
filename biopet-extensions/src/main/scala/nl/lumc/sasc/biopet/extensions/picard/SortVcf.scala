@@ -33,11 +33,16 @@ class SortVcf(val root: Configurable) extends Picard with Reference {
   @Input(doc = "Sequence dictionary to use", required = true)
   var sequenceDictionary: File = _
 
+  @Output
+  private var outputIndex: File = _
+
   override val dictRequired = true
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (sequenceDictionary == null) sequenceDictionary = referenceDict
+    if (output.getName.endsWith(".vcf.gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
+    if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
+    if (sequenceDictionary == null) sequenceDictionary = referenceDictFile
   }
 
   /** Returns command to execute */

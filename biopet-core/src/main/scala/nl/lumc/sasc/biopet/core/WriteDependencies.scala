@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.broadinstitute.gatk.queue.function.{ CommandLineFunction, QFunction }
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -37,7 +39,7 @@ object WriteDependencies extends Logging with Configurable {
         case f               => f.getClass.getSimpleName
       }
       cache += baseName -> (cache.getOrElse(baseName, 0) + 1)
-      function -> s"$baseName-${cache(baseName)}"
+      function -> s"${baseName.replaceAll("-", "_")}_${cache(baseName)}"
     }).toMap
   }
 
@@ -45,9 +47,10 @@ object WriteDependencies extends Logging with Configurable {
    * This method will generate a json file where information about job and file dependencies are stored
    *
    * @param functions This should be all functions that are given to the graph of Queue
-   * @param outputFile Json file to write dependencies to
+   * @param outputDir
    */
-  def writeDependencies(functions: Seq[QFunction], outputFile: File): Unit = {
+  def writeDependencies(functions: Seq[QFunction], outputDir: File): Unit = {
+    outputDir.mkdirs()
     logger.info("Start calculating dependencies")
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
@@ -87,18 +90,13 @@ object WriteDependencies extends Logging with Configurable {
 
     val files: mutable.Map[File, QueueFile] = mutable.Map()
 
-    def outputFiles(function: QFunction) = {
-      if (function.jobErrorFile == null) function.outputs :+ function.jobOutputFile
-      else function.outputs :+ function.jobOutputFile :+ function.jobErrorFile
-    }
-
     for (function <- functions) {
-      for (input <- function.inputs) {
+      for (input <- BiopetQScript.safeInputs(function).getOrElse(Seq())) {
         val file = files.getOrElse(input, QueueFile(input))
         file.addInputJob(function)
         files += input -> file
       }
-      for (output <- outputFiles(function)) {
+      for (output <- BiopetQScript.safeOutputs(function).getOrElse(Seq())) {
         val file = files.getOrElse(output, QueueFile(output))
         file.addOutputJob(function)
         files += output -> file
@@ -107,27 +105,37 @@ object WriteDependencies extends Logging with Configurable {
 
     val jobs = functionNames.par.map {
       case (f, name) =>
-        name -> Map("command" -> (f match {
+        name.toString -> Map("command" -> (f match {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
+        }), "main_job" -> (f match {
+          case cmd: BiopetCommandLineFunction            => cmd.mainFunction
+          case s: WriteSummary if s.qscript.root == null => true
+          case _                                         => false
         }), "intermediate" -> f.isIntermediate,
-          "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
-          "depends_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
-          "output_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
-          "outputs" -> outputFiles(f).toList,
-          "inputs" -> f.inputs.toList,
-          "done_at_start" -> f.isDone,
-          "fail_at_start" -> f.isFail)
+          "depends_on_intermediate" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
+          "depends_on_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
+          "output_used_by_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).inputJobNames).distinct,
+          "outputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
+          "inputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
+          "done_files" -> BiopetQScript.safeDoneFiles(f).getOrElse(Seq()).toList,
+          "fail_files" -> BiopetQScript.safeFailFiles(f).getOrElse(Seq()).toList,
+          "stdout_file" -> f.jobOutputFile,
+          "done_at_start" -> BiopetQScript.safeIsDone(f),
+          "fail_at_start" -> BiopetQScript.safeIsFail(f))
     }.toIterator.toMap
 
+    val outputFile = new File(outputDir, s"deps.json")
     logger.info(s"Writing dependencies to: $outputFile")
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
-      "jobs" -> jobs.toMap,
+      "jobs" -> jobs,
       "files" -> files.values.par.map(_.getMap).toList
     )).spaces2)
     writer.close()
 
+    PipelineStatus.writePipelineStatus(PipelineStatus.readDepsFile(outputFile), outputDir)
     logger.info("done calculating dependencies")
   }
+
 }

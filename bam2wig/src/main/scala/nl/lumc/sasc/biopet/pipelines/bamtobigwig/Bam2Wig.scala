@@ -68,8 +68,6 @@ object Bam2Wig extends PipelineCommand {
     val bamToBigWig = new Bam2Wig(root)
     bamToBigWig.outputDir = bamFile.getParentFile
     bamToBigWig.bamFile = bamFile
-    bamToBigWig.init()
-    bamToBigWig.biopetScript()
     bamToBigWig
   }
 }

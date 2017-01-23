@@ -16,17 +16,17 @@ Make sure both tools are installed in your local maven repository. To do this on
 
 ```bash
 # Replace 'mvn' with the location of you maven executable or put it in your PATH with the export command.
-git clone https://github.com/broadgsa/gatk-protected
-cd gatk-protected
-git checkout 3.4
-# The GATK version is bound to a version of Biopet. Biopet 0.5.0 uses Gatk 3.4
+git clone https://github.com/broadgsa/gatk
+cd gatk
+git checkout 3.6
+# The GATK version is bound to a version of Biopet. Biopet 0.7.0 uses Gatk 3.6
 mvn clean install
 
 cd ..
 
 git clone https://github.com/biopet/biopet.git
 cd biopet
-git checkout 0.5.0
+git checkout 0.7.0
 mvn -DskipTests=true clean install
 ```
 

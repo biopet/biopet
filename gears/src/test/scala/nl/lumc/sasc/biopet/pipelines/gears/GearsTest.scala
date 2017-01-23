@@ -113,6 +113,7 @@ object GearsTest {
   Files.touch(bam)
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
@@ -130,7 +131,10 @@ object GearsTest {
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
-    "pickopenreferenceotus" -> Map("exe" -> "test")
+    "centrifuge" -> Map("exe" -> "test"),
+    "centrifuge_index" -> "test",
+    "pickopenreferenceotus" -> Map("exe" -> "test"),
+    "centrifugekreport" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

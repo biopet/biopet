@@ -23,8 +23,9 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * Created by pjvan_thof on 3/26/15.
  */
-class Summary(file: File) {
-  val map = ConfigUtils.fileToConfigMap(file)
+class Summary(val map: Map[String, Any]) {
+
+  def this(file: File) = this(ConfigUtils.fileToConfigMap(file))
 
   /** List of all samples in the summary */
   lazy val samples: Set[String] = {
@@ -76,6 +77,11 @@ class Summary(file: File) {
       case (Some(sample), _)         => getSampleValue(sample, path: _*)
       case _                         => getValue(path: _*)
     }
+  }
+
+  /** Get value on nested path with prefix depending is sampleId and/or libId is None or not */
+  def getValueAsArray(sampleId: Option[String], libId: Option[String], path: String*): Option[Array[Any]] = {
+    this.getValue(sampleId, libId, path: _*).map(ConfigUtils.any2list(_).toArray)
   }
 
   /**

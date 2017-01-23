@@ -20,8 +20,8 @@ samples:
   Sample_ID1:
     libraries:
       MySeries_1:
-        R1: R1.fastq.gz
-        R2: R2.fastq.gz
+        R1: /path/to/R1.fastq.gz
+        R2: /path/to/R2.fastq.gz
 ```
 
 ###### JSON:

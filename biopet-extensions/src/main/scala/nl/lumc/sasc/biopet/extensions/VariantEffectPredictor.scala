@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.{ Logging, VcfUtils, tryToParseNumber }
+import nl.lumc.sasc.biopet.utils.{ LazyCheck, Logging, VcfUtils, tryToParseNumber }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -30,6 +30,12 @@ import scala.io.Source
  */
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
 
+  lazy val vepVersion = new LazyCheck({
+    val s: Option[String] = config("vep_version")
+    s
+  })
+  vepVersion()
+
   executable = config("exe", namespace = "perl", default = "perl")
   var vepScript: String = config("vep_script")
 
@@ -38,6 +44,11 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   @Output(doc = "output file", required = true)
   var output: File = null
+
+  override def subPath = {
+    if (vepVersion.isSet) super.subPath ++ List("vep_settings") ++ vepVersion()
+    else super.subPath
+  }
 
   def versionRegex = """version (\d*)""".r
   def versionCommand = executable + " " + vepScript + " --help"
@@ -106,7 +117,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var skibDbCheck: Boolean = config("skip_db_check", default = false)
 
   // Textual args
-  var vepConfig: Option[String] = config("config", freeVar = false)
+  var vepConfigArg: Option[String] = config("config", freeVar = false)
   var species: Option[String] = config("species", freeVar = false)
   var assembly: Option[String] = config("assembly")
   var format: Option[String] = config("format")
@@ -229,7 +240,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
       conditional(lrg, "--lrg") +
       conditional(noWholeGenome, "--no_whole_genome") +
       conditional(skibDbCheck, "--skip_db_check") +
-      optional("--config", vepConfig) +
+      optional("--config", vepConfigArg) +
       optional("--species", species) +
       optional("--assembly", assembly) +
       optional("--format", format) +

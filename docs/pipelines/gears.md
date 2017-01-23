@@ -7,7 +7,8 @@ In case of BAM file as input, it will extract the unaligned read(pair) sequences
 Analysis result is reported in a krona graph, which is visible and navigatable in a webbrowser.
 
 Pipeline analysis components include:
- 
+
+ - [Centrifuge](https://github.com/infphilo/centrifuge)
  - [Kraken, DerrickWood](https://github.com/DerrickWood/kraken)
  - [Qiime closed reference](http://qiime.org)
  - [Qiime open reference](http://qiime.org)
@@ -22,7 +23,8 @@ This pipeline is used to analyse a group of samples. This pipeline only accepts 
 
 | Key | Type | default | Function |
 | --- | ---- | ------- | -------- |
-| gears_use_kraken | Boolean | true | Run fastq file with kraken |
+| gears_use_centrifuge | Boolean | true | Run fastq files with centrifuge |
+| gears_use_kraken | Boolean | false | Run fastq files with kraken |
 | gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
 | gears_use_qiime_open | Boolean | false | Run fastq files with qiime with the open reference module |
 | gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
@@ -65,7 +67,7 @@ Command line flags for Gears are:
 | -sample | --sampleid | String (**required**) | Name of sample |
 | -library | --libid | String (optional) | Name of library |
 
-If `-R2` is given, the pipeline will assume a paired-end setup. `-bam` is mutualy exclusive with the `-R1` and `-R2` flags. Either specify `-bam` or `-R1` and/or `-R2`.
+If `-R2` is given, the pipeline will assume a paired-end setup. `-bam` is mutually exclusive with the `-R1` and `-R2` flags. Either specify `-bam` or `-R1` and/or `-R2`.
 
 ### Sample input extensions
 

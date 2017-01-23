@@ -19,7 +19,7 @@ import java.io.File
 import htsjdk.variant.variantcontext.{ GenotypeType, VariantContext }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ ToolCommand, VcfUtils }
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -315,11 +315,16 @@ object VcfFilter extends ToolCommand {
    * Checks if given samples does have a variant hin this record
    *
    * @param record VCF record
-   * @param mustHaveVariant List of samples that should have this variant
+   * @param samples List of samples that should have this variant
    * @return true if filter passed
    */
-  def mustHaveVariant(record: VariantContext, mustHaveVariant: List[String]): Boolean = {
-    !mustHaveVariant.map(record.getGenotype).exists(a => a.isHomRef || a.isNoCall)
+  def mustHaveVariant(record: VariantContext, samples: List[String]): Boolean = {
+    samples.foreach { s =>
+      if (!record.getSampleNames.toList.contains(s)) {
+        throw new IllegalArgumentException(s"Sample name $s does not exist in VCF file")
+      }
+    }
+    !samples.map(record.getGenotype).exists(a => a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a))
   }
 
   /** Checks if given samples have the same genotype */
