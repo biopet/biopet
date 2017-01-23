@@ -51,7 +51,7 @@ It is usually a good idea to do the real run using `screen` or `nohup` to preven
 
 ## Testing
 
-Our code is test on each change on out local Jenkins installation. We using a [JenkinsFile]() in out repository to do this.
+Our code is tested at our local Jenkins installation for every change. We are using a [JenkinsFile](Jenkinsfile) in our repository to do this.
 
 
 ## Contributing to Biopet
