@@ -40,10 +40,10 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var vepScript: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "output file", required = true)
-  var output: File = null
+  var output: File = _
 
   override def subPath = {
     if (vepVersion.isSet) super.subPath ++ List("vep_settings") ++ vepVersion()
@@ -160,7 +160,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def defaultCoreMemory = 4.0
 
   @Output
-  private var _summary: File = null
+  private var _summary: File = _
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -312,11 +312,11 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
     (for ((header, headerIndex) <- headers) yield {
       val name = header.stripPrefix("[").stripSuffix("]")
-      name.replaceAll(" ", "_") -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).flatMap { line =>
+      name.replaceAll(" ", "_") -> contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).flatMap { line =>
         val values = line.split("\t", 2)
         if (values.last.isEmpty || values.last == "-") None
         else Some(values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(values.last))
-      }.toMap)
+      }.toMap
     }).toMap
   }
 }

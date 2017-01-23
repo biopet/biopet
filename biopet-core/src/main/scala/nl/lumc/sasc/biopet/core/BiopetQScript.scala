@@ -19,7 +19,6 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -118,11 +117,10 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
 
     functions.filter(_.jobOutputFile == null).foreach(f => {
-      try {
-        val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
-        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + className + ".out")
-      } catch {
-        case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
+      val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
+      BiopetQScript.safeOutputs(f) match {
+        case Some(o) => f.jobOutputFile = new File(o.head.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + className + ".out")
+        case _ => f.jobOutputFile = new File("./stdout") // Line is here for test backup
       }
     })
 
@@ -159,7 +157,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       case that: BiopetQScript =>
         that.init()
         that.biopetScript()
-      case _ => subPipeline.script
+      case _ => subPipeline.script()
     }
     addAll(subPipeline.functions)
   }
