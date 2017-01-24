@@ -14,7 +14,7 @@ Full documantation is here: [Biopet documantation](http://biopet-docs.readthedoc
 Biopet is available as a JAR package in SHARK. The easiest way to start using it is to activate the `biopet` environment module, which sets useful aliases and environment variables:
 
 ~~~
-$ module load biopet/v0.6.0
+$ module load biopet/v0.8.0
 ~~~
 
 With each Biopet release, an accompanying environment module is also released. The latest release is version 0.4.0, thus `biopet/v0.4.0` is the module you would want to load.
