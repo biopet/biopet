@@ -65,7 +65,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         )), Map())), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
-          )), Map("summaryModuleTag" -> "gearscentrifuge")))
+          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
         else Nil) ++
         List("Reference" -> ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
@@ -128,7 +128,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
       (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-        Map("summaryStatsTag" -> "centrifuge_report")
+        Map("summaryStatsTag" -> "centrifuge_report", "centrifugeTag" -> Some("centrifuge"))
       )), Map())), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
@@ -162,7 +162,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         )), Map())), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
-          )), Map("summaryModuleTag" -> "gearscentrifuge")))
+          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
         else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map()))

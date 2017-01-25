@@ -50,7 +50,7 @@ object GearsReport extends MultisampleReportBuilder {
       )), Map())), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
-        )), Map("summaryModuleTag" -> "gearscentrifuge")))
+        )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
       else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
@@ -92,7 +92,7 @@ object GearsReport extends MultisampleReportBuilder {
     )), Map())), List(
       "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_unique_report")
-      )), Map("summaryModuleTag" -> "gearscentrifuge")))
+      )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
     else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       )), Map()))
@@ -126,7 +126,7 @@ object GearsReport extends MultisampleReportBuilder {
       )), Map())), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
-        )), Map("summaryModuleTag" -> "gearscentrifuge")))
+        )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
       else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))

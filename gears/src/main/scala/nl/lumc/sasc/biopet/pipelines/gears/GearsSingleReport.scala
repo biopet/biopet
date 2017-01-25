@@ -41,7 +41,7 @@ object GearsSingleReport extends ReportBuilder {
         else Nil) ++
         (if (centrifugeExecuted) List("Centrifuge analysis" ->
           ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-            Map("summaryModuleTag" -> "gearscentrifuge", "summaryStatsTag" -> "centrifuge_unique_report")))
+            Map("summaryModuleTag" -> "gearscentrifuge", "summaryStatsTag" -> "centrifuge_unique_report", "centrifugeTag" -> Some("centrifuge"))))
         else Nil),
       pageArgs
     )
