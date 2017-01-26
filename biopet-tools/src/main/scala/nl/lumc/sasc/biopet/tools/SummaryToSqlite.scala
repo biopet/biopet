@@ -2,14 +2,16 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import ncsa.hdf.`object`.h5.H5File
-import nl.lumc.sasc.biopet.tools.GvcfToBed.Args
+import slick.driver.H2Driver.api._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
 
 /**
   * Created by pjvanthof on 26/01/2017.
   */
-object JsonToHdf5 extends ToolCommand {
+object SummaryToSqlite extends ToolCommand {
 
   case class Args(inputJson: File = null,
                   outputHdf5: File = null) extends AbstractArgs
@@ -29,8 +31,12 @@ object JsonToHdf5 extends ToolCommand {
 
     val jsonMap = ConfigUtils.fileToConfigMap(cmdArgs.inputJson)
 
-    val hdf5 = new H5File(cmdArgs.outputHdf5.getAbsolutePath)
+    val db = Database.forURL(s"jdbc:sqlite:${cmdArgs.outputHdf5.getAbsolutePath}", driver = "org.sqlite.JDBC")
 
+    try {
+
+    } finally db.close
   }
+
 
 }
