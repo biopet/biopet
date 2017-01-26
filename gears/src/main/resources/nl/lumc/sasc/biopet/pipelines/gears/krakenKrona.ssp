@@ -10,17 +10,23 @@
 <%@ var libId: Option[String] = None %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
+<%@ var centrifugeTag: Option[String] = None %>
 <%@ var summaryStatsTag: String = "krakenreport" %>
 <%@ var summaryModuleTag: String = "gearskraken" %>
 
 <%
-    val summaries = if (sampleId.isEmpty && libId.isEmpty) {
+    val summaries = if (sampleId.isEmpty) {
         summary.getSampleValues(summaryModuleTag, "stats", summaryStatsTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
     } else summary.getValue(sampleId, libId, summaryModuleTag, "stats", summaryStatsTag).map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
 
+    val totalReads = if (sampleId.isEmpty) {
+        centrifugeTag.map {tag => summary.getSampleValues(summaryModuleTag, "stats", tag, "metrics", "Read").map(x => x._1 -> x._2.getOrElse(0L).toString.toLong) }
+    } else centrifugeTag.flatMap(tag => summary.getValue(sampleId, libId, summaryModuleTag, "stats", tag, "metrics", "Read"))
+      .map(value => Map(sampleId.get -> value.toString.toLong))
+
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
-    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile)
+    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile, totalReads)
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/krona.ssp",
     args ++ Map("kronaXml" -> tempFile))
