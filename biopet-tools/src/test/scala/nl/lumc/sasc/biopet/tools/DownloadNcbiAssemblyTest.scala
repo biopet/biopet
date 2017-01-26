@@ -23,7 +23,7 @@ class DownloadNcbiAssemblyTest extends TestNGSuite with Matchers {
     val outputReport = File.createTempFile("test.", ".report")
     output.deleteOnExit()
     outputReport.deleteOnExit()
-    DownloadNcbiAssembly.main(Array("-a", "GCF_000844745.1",
+    DownloadNcbiAssembly.main(Array("-a", new File(resourcePath("/GCF_000844745.1.report")).getAbsolutePath,
       "-o", output.getAbsolutePath,
       "--report", outputReport.getAbsolutePath))
 

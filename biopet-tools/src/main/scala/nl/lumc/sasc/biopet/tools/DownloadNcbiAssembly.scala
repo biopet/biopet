@@ -11,7 +11,7 @@ import scala.io.Source
  */
 object DownloadNcbiAssembly extends ToolCommand {
 
-  case class Args(assemblyId: String = null,
+  case class Args(assemblyReport: File = null,
                   outputFile: File = null,
                   reportFile: Option[File] = None,
                   contigNameHeader: Option[String] = None,
@@ -19,8 +19,8 @@ object DownloadNcbiAssembly extends ToolCommand {
                   mustNotHave: List[(String, String)] = List()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[String]('a', "assembly id") required () unbounded () valueName "<file>" action { (x, c) =>
-      c.copy(assemblyId = x)
+    opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action { (x, c) =>
+      c.copy(assemblyReport = x)
     } text "refseq ID from NCBI"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
@@ -52,8 +52,8 @@ object DownloadNcbiAssembly extends ToolCommand {
     val argsParser = new OptParser
     val cmdargs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    logger.info(s"Reading ${cmdargs.assemblyId} from NCBI")
-    val reader = Source.fromURL(s"ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/${cmdargs.assemblyId}.assembly.txt")
+    logger.info(s"Reading ${cmdargs.assemblyReport}")
+    val reader = Source.fromFile(cmdargs.assemblyReport)
     val assamblyReport = reader.getLines().toList
     reader.close()
     cmdargs.reportFile.foreach { file =>
