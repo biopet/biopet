@@ -2,7 +2,6 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.summary.db.{Libraries, Samples}
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,18 +39,20 @@ object SummaryToSqlite extends ToolCommand {
     val jsonMap = ConfigUtils.fileToConfigMap(cmdArgs.inputJson)
 
     if (cmdArgs.outputSqlite.exists()) {
-      if (cmdArgs.force) cmdArgs.outputSqlite.delete()
-      else throw new IllegalArgumentException(s"Db already exist: ${cmdArgs.outputSqlite}")
+      if (cmdArgs.force) {
+        logger.warn("Deleting old database")
+        cmdArgs.outputSqlite.delete()
+      } else throw new IllegalArgumentException(s"Db already exist: ${cmdArgs.outputSqlite}")
     }
 
     val db = Database.forURL(s"jdbc:sqlite:${cmdArgs.outputSqlite.getAbsolutePath}", driver = "org.sqlite.JDBC")
 
     try {
-      val samples = TableQuery[Samples]
-      val libraries = TableQuery[Libraries]
+      import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
       val setup = DBIO.seq(
-        (samples.schema ++ libraries.schema).create
+        (samples.schema ++ libraries.schema)
+          .create
       )
       val setupFuture = db.run(setup)
       Await.result(setupFuture, Duration.Inf)
