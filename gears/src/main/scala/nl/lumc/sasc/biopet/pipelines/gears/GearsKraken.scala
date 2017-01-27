@@ -120,7 +120,7 @@ object GearsKraken {
     convertKrakenSummariesToKronaXml(summaries, outputFile)
   }
 
-  def convertKrakenSummariesToKronaXml(summaries: Map[String, Map[String, Any]], outputFile: File): Unit = {
+  def convertKrakenSummariesToKronaXml(summaries: Map[String, Map[String, Any]], outputFile: File, totalReads: Option[Map[String, Long]] = None): Unit = {
 
     val samples = summaries.keys.toList.sorted
 
@@ -156,7 +156,7 @@ object GearsKraken {
             if (k == "root") {
               val unclassified = summaries(sample)("unclassified").asInstanceOf[Map[String, Any]]("size").asInstanceOf[Long]
               <val>
-                { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified }
+                { totalReads.flatMap(_.get(sample)).getOrElse(getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified) }
               </val>
             } else {
               <val>

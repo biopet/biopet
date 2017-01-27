@@ -52,6 +52,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     val centrifugeCmd = centrifuge | new Gzip(this) > centrifugeOutput
     centrifugeCmd.threadsCorrection = -1
     add(centrifugeCmd)
+    addSummarizable(centrifuge, "centrifuge")
 
     makeKreport("centrifuge", unique = false)
     makeKreport("centrifuge_unique", unique = true)

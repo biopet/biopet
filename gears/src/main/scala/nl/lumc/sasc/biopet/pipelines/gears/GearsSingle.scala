@@ -94,17 +94,20 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       Some(outputFile)
     }
 
-    if (!skipFlexiprep) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.inputR1 = read1
-      flexiprep.inputR2 = read2
-      flexiprep.sampleId = if (sampleId.isEmpty) Some("noSampleName") else sampleId
-      flexiprep.libId = if (libId.isEmpty) Some("noLibName") else libId
-      flexiprep.outputDir = new File(outputDir, "flexiprep")
-      add(flexiprep)
-      (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
-    } else (read1, read2)
+    flexiprep.map { f =>
+      f.inputR1 = read1
+      f.inputR2 = read2
+      f.sampleId = Some(sampleId.getOrElse("noSampleName"))
+      f.libId = Some(libId.getOrElse("noLibName"))
+      f.outputDir = new File(outputDir, "flexiprep")
+      add(f)
+      (f.fastqR1Qc, f.fastqR2Qc)
+    }.getOrElse((read1, read2))
   }
+
+  lazy protected val flexiprep: Option[Flexiprep] = if (!skipFlexiprep) {
+    Some(new Flexiprep(this))
+  } else None
 
   /** Method to add jobs */
   def biopetScript(): Unit = {

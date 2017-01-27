@@ -16,16 +16,19 @@ package nl.lumc.sasc.biopet.extensions.centrifuge
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+import scala.io.Source
 import scala.util.matching.Regex
 
 /**
  * Created by pjvanthof on 19/09/16.
  */
-class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with Version with Summarizable {
   @Input(doc = "Input: FastQ or FastA", required = true)
   var inputR1: File = _
 
@@ -143,4 +146,18 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
     }) +
     (if (outputAsStsout) "" else required("-S", output)) +
     optional("--report-file", report)
+
+  /** Must return files to store into summary */
+  override def summaryFiles: Map[String, File] = metFile.map("metrics" -> _).toMap
+
+  /** Must returns stats to store into summary */
+  override def summaryStats: Any = {
+    metFile.map { file =>
+      val reader = Source.fromFile(file)
+      val header = reader.getLines().next().split("\t")
+      val values = reader.getLines().next().split("\t").map(tryToParseNumber(_, true).get)
+      reader.close()
+      Map("metrics" -> header.zip(values).toMap)
+    }.getOrElse(Map())
+  }
 }
