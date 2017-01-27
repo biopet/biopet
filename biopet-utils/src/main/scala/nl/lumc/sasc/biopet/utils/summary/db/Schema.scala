@@ -11,15 +11,15 @@ object Schema {
 
   class Runs(tag: Tag) extends Table[(Int, String)](tag, "Runs") {
     def runId = column[Int]("runId", O.PrimaryKey)
-    def runName = column[String]("sampleName")
+    def runName = column[String]("runName")
 
     def * = (runId, runName)
   }
   val runs = TableQuery[Runs]
 
   class Samples(tag: Tag) extends Table[(Int, String, Option[Blob])](tag, "Samples") {
-    def sampleId = column[Int]("sampleId", O.PrimaryKey)
-    def sampleName = column[String]("sampleName")
+    def sampleId = column[Int]("id", O.PrimaryKey)
+    def sampleName = column[String]("name")
     def tags = column[Option[Blob]]("tags")
 
     def * = (sampleId, sampleName, tags)
@@ -37,8 +37,8 @@ object Schema {
   val samplesRuns = TableQuery[SamplesRuns]
 
   class Libraries(tag: Tag) extends Table[(Int, String, Int, Option[Blob])](tag, "Libraries") {
-    def libraryId = column[Int]("libraryId", O.PrimaryKey)
-    def libraryName = column[String]("libraryName")
+    def libraryId = column[Int]("id", O.PrimaryKey)
+    def libraryName = column[String]("name")
     def sampleId = column[Int]("sampleId")
     def tags = column[Option[Blob]]("tags")
 
@@ -56,11 +56,60 @@ object Schema {
   }
   val librariesRuns = TableQuery[LibrariesRuns]
 
-  class Pipelines(tag: Tag) extends Table[(Int, String)](tag, "Pipelines") {
-    def pipelineId = column[Int]("runId", O.PrimaryKey)
-    def pipelineName = column[String]("sampleName")
+  class PipelineNames(tag: Tag) extends Table[(Int, String)](tag, "PipelineNames") {
+    def id = column[Int]("id", O.PrimaryKey)
+    def name = column[String]("name")
 
-    def * = (pipelineId, pipelineName)
+    def * = (id, name)
   }
-  val pipelines = TableQuery[Pipelines]
+  val pipelineNames = TableQuery[PipelineNames]
+
+  class ModuleNames(tag: Tag) extends Table[(Int, String)](tag, "ModuleNames") {
+    def id = column[Int]("id", O.PrimaryKey)
+    def name = column[String]("name")
+
+    def * = (id, name)
+  }
+  val moduleNames = TableQuery[ModuleNames]
+
+
+  class Stats(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], Blob, Option[String])](tag, "Stats") {
+    def pipelineId = column[Int]("pipelineId")
+    def runId = column[Int]("runId")
+    def moduleId = column[Option[Int]]("moduleId")
+    def sampleId = column[Option[Int]]("sampleId")
+    def libraryId = column[Option[Int]]("libraryId")
+    def stats = column[Blob]("stats")
+    def schema = column[Option[String]]("schema")
+
+    def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
+
+    def idx = index("idx_stats", (pipelineId, runId, sampleId, libraryId), unique = true)
+  }
+
+  val stats = TableQuery[Stats]
+
+  class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String)](tag, "Files") {
+    def pipelineId = column[Int]("pipelineId")
+    def runId = column[Int]("runId")
+    def moduleId = column[Option[Int]]("moduleId")
+    def sampleId = column[Option[Int]]("sampleId")
+    def libraryId = column[Option[Int]]("libraryId")
+    def path = column[String]("path")
+    def md5 = column[String]("md5")
+
+    def * = (pipelineId, runId, moduleId, sampleId, libraryId, path, md5)
+
+    def idx = index("idx_files", (pipelineId, runId, sampleId, libraryId, path), unique = true)
+  }
+  val files = TableQuery[Files]
+
+  class Executables(tag: Tag) extends Table[(Int, Int)](tag, "Executables") {
+    def runId = column[Int]("runId")
+    def moduleId = column[Int]("moduleId")
+    //TODO: add fields
+
+    def * = (runId, moduleId)
+  }
+  val executables = TableQuery[Executables]
 }

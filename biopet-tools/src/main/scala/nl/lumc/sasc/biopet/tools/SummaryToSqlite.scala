@@ -53,7 +53,9 @@ object SummaryToSqlite extends ToolCommand {
       val setup = DBIO.seq(
         (runs.schema ++ samples.schema ++
           samplesRuns.schema ++ libraries.schema ++
-          librariesRuns.schema ++ pipelines.schema).create
+          librariesRuns.schema ++ pipelineNames.schema ++
+          moduleNames.schema ++ stats.schema ++
+          files.schema ++ executables.schema).create
       )
       val setupFuture = db.run(setup)
       Await.result(setupFuture, Duration.Inf)
