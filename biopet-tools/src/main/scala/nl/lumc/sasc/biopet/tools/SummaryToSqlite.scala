@@ -51,8 +51,9 @@ object SummaryToSqlite extends ToolCommand {
       import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
       val setup = DBIO.seq(
-        (samples.schema ++ libraries.schema)
-          .create
+        (runs.schema ++ samples.schema ++
+          samplesRuns.schema ++ libraries.schema ++
+          librariesRuns.schema ++ pipelines.schema).create
       )
       val setupFuture = db.run(setup)
       Await.result(setupFuture, Duration.Inf)
