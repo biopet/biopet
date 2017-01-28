@@ -54,7 +54,7 @@ object SummaryToSqlite extends ToolCommand {
         (runs.schema ++ samples.schema ++
           samplesRuns.schema ++ libraries.schema ++
           librariesRuns.schema ++ pipelineNames.schema ++
-          moduleNames.schema ++ stats.schema ++
+          moduleNames.schema ++ stats.schema ++ settings.schema ++
           files.schema ++ executables.schema).create
       )
       val setupFuture = db.run(setup)

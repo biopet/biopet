@@ -84,10 +84,24 @@ object Schema {
 
     def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
 
-    def idx = index("idx_stats", (pipelineId, runId, sampleId, libraryId), unique = true)
+    def idx = index("idx_stats", (pipelineId, runId, moduleId, sampleId, libraryId), unique = true)
   }
-
   val stats = TableQuery[Stats]
+
+  class Settings(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], Blob, Option[String])](tag, "Settings") {
+    def pipelineId = column[Int]("pipelineId")
+    def runId = column[Int]("runId")
+    def moduleId = column[Option[Int]]("moduleId")
+    def sampleId = column[Option[Int]]("sampleId")
+    def libraryId = column[Option[Int]]("libraryId")
+    def stats = column[Blob]("stats")
+    def schema = column[Option[String]]("schema")
+
+    def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
+
+    def idx = index("idx_settings", (pipelineId, runId, moduleId, sampleId, libraryId), unique = true)
+  }
+  val settings = TableQuery[Settings]
 
   class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String)](tag, "Files") {
     def pipelineId = column[Int]("pipelineId")
@@ -104,12 +118,17 @@ object Schema {
   }
   val files = TableQuery[Files]
 
-  class Executables(tag: Tag) extends Table[(Int, Int)](tag, "Executables") {
+  class Executables(tag: Tag) extends Table[(Int, String, Option[String], Option[String], Option[String], Option[String])](tag, "Executables") {
     def runId = column[Int]("runId")
-    def moduleId = column[Int]("moduleId")
-    //TODO: add fields
+    def toolName = column[String]("toolName")
+    def version = column[Option[String]]("version")
+    def javaVersion = column[Option[String]]("javaVersion")
+    def exeMd5 = column[Option[String]]("exeMd5")
+    def javaMd5 = column[Option[String]]("javaMd5")
 
-    def * = (runId, moduleId)
+    def * = (runId, toolName, version, javaVersion, exeMd5, javaMd5)
+
+    def idx = index("idx_executables", (runId, toolName), unique = true)
   }
   val executables = TableQuery[Executables]
 }
