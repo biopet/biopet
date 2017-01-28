@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.summary.db.Schema
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,21 +46,8 @@ object SummaryToSqlite extends ToolCommand {
       } else throw new IllegalArgumentException(s"Db already exist: ${cmdArgs.outputSqlite}")
     }
 
-    val db = Database.forURL(s"jdbc:sqlite:${cmdArgs.outputSqlite.getAbsolutePath}", driver = "org.sqlite.JDBC")
+    Schema.createEmptySqlite(cmdArgs.outputSqlite)
 
-    try {
-      import nl.lumc.sasc.biopet.utils.summary.db.Schema._
-
-      val setup = DBIO.seq(
-        (runs.schema ++ samples.schema ++
-          samplesRuns.schema ++ libraries.schema ++
-          librariesRuns.schema ++ pipelineNames.schema ++
-          moduleNames.schema ++ stats.schema ++ settings.schema ++
-          files.schema ++ executables.schema).create
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    } finally db.close
     logger.info("Done")
   }
 

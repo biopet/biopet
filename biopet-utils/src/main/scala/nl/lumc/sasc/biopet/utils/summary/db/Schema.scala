@@ -1,8 +1,13 @@
 package nl.lumc.sasc.biopet.utils.summary.db
 
+import java.io.File
 import java.sql.Blob
 
+import nl.lumc.sasc.biopet.utils.Logging
 import slick.driver.H2Driver.api._
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvan_thof on 27-1-17.
@@ -131,4 +136,21 @@ object Schema {
     def idx = index("idx_executables", (runId, toolName), unique = true)
   }
   val executables = TableQuery[Executables]
+
+  def createEmptySqlite(file: File): Unit = {
+    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
+
+    try {
+      val setup = DBIO.seq(
+        (runs.schema ++ samples.schema ++
+          samplesRuns.schema ++ libraries.schema ++
+          librariesRuns.schema ++ pipelineNames.schema ++
+          moduleNames.schema ++ stats.schema ++ settings.schema ++
+          files.schema ++ executables.schema).create
+      )
+      val setupFuture = db.run(setup)
+      Await.result(setupFuture, Duration.Inf)
+    } finally db.close
+  }
+
 }
