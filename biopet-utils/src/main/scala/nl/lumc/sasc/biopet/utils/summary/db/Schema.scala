@@ -108,7 +108,7 @@ object Schema {
   }
   val settings = TableQuery[Settings]
 
-  class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String)](tag, "Files") {
+  class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String, Boolean, Long)](tag, "Files") {
     def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
     def moduleId = column[Option[Int]]("moduleId")
@@ -116,8 +116,10 @@ object Schema {
     def libraryId = column[Option[Int]]("libraryId")
     def path = column[String]("path")
     def md5 = column[String]("md5")
+    def link = column[Boolean]("link", O.Default(false))
+    def size = column[Long]("size")
 
-    def * = (pipelineId, runId, moduleId, sampleId, libraryId, path, md5)
+    def * = (pipelineId, runId, moduleId, sampleId, libraryId, path, md5, link, size)
 
     def idx = index("idx_files", (pipelineId, runId, sampleId, libraryId, path), unique = true)
   }
