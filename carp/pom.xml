@@ -24,7 +24,7 @@
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>Biopet</artifactId>
-        <version>0.8.0-RC1</version>
+        <version>0.8.0</version>
         <relativePath>../</relativePath>
     </parent>
     
