@@ -3,7 +3,6 @@ package nl.lumc.sasc.biopet.utils.summary.db
 import java.io.File
 import java.sql.Blob
 
-import nl.lumc.sasc.biopet.utils.Logging
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.Await
@@ -62,10 +61,12 @@ object Schema {
   val librariesRuns = TableQuery[LibrariesRuns]
 
   class PipelineNames(tag: Tag) extends Table[(Int, String)](tag, "PipelineNames") {
-    def id = column[Int]("id", O.PrimaryKey)
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
 
     def * = (id, name)
+
+    def idx = index("idx_pipeline_names", (name), unique = true)
   }
   val pipelineNames = TableQuery[PipelineNames]
 
@@ -74,6 +75,8 @@ object Schema {
     def name = column[String]("name")
 
     def * = (id, name)
+
+    def idx = index("idx_module_names", (name), unique = true)
   }
   val moduleNames = TableQuery[ModuleNames]
 
