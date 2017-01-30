@@ -60,7 +60,7 @@ samples:
         bam: MySecond.bam
 ```
 
-Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
+Note that there is a tool called [SamplesTsvToConfig](../tools/SamplesTsvToConfig.md) that enables the user to get the sample config without any chance of creating a wrongly formatted file.
 
 #### Tags
 

@@ -22,7 +22,7 @@ node('local') {
         }
 
         stage('Check Documentation') {
-            sh 'mkdocs build'
+            sh 'mkdocs build --clean --strict'
         }
 
         if(currentBuild.result == null || "SUCCESS".equals(currentBuild.result)) {
