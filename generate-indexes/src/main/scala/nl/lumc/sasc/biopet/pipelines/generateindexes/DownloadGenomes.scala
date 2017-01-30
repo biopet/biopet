@@ -65,9 +65,9 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
         val downloadFastaFile = new File(genomeDir, "download.reference.fa")
 
         genomeConfig.get("ncbi_assembly_report") match {
-          case Some(assemblyID: String) =>
+          case Some(assemblyReport: String) =>
             val downloadAssembly = new DownloadNcbiAssembly(this)
-            downloadAssembly.assemblyId = assemblyID
+            downloadAssembly.assemblyReport = new File(assemblyReport)
             downloadAssembly.output = downloadFastaFile
             downloadAssembly.outputReport = new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
             downloadAssembly.nameHeader = genomeConfig.get("ncbi_assembly_header_name").map(_.toString)
