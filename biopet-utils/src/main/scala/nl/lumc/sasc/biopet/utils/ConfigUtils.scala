@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.File
+import java.io.{ File, PrintWriter }
 import java.util
 
 import argonaut.Argonaut._
@@ -65,22 +65,20 @@ object ConfigUtils extends Logging {
    */
   def mergeMaps(map1: Map[String, Any], map2: Map[String, Any],
                 resolveConflict: (Any, Any, String) => Any = (m1, m2, key) => m1): Map[String, Any] = {
-    var newMap: Map[String, Any] = Map()
-    for (key <- map1.keySet.++(map2.keySet)) {
-      if (!map2.contains(key)) newMap += (key -> map1(key))
-      else if (!map1.contains(key)) newMap += (key -> map2(key))
+    (for (key <- map1.keySet.++(map2.keySet)) yield {
+      if (!map2.contains(key)) (key -> map1(key))
+      else if (!map1.contains(key)) (key -> map2(key))
       else {
         map1(key) match {
           case m1: Map[_, _] =>
             map2(key) match {
-              case m2: Map[_, _] => newMap += (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
-              case _             => newMap += (key -> map1(key))
+              case m2: Map[_, _] => (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
+              case _             => (key -> map1(key))
             }
-          case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
+          case _ => (key -> resolveConflict(map1(key), map2(key), key))
         }
       }
-    }
-    newMap
+    }).toMap
   }
 
   /**
@@ -117,11 +115,21 @@ object ConfigUtils extends Logging {
   def fileToJson(configFile: File): Json = {
     logger.debug("Jsonfile: " + configFile)
     val jsonText = scala.io.Source.fromFile(configFile).mkString
+    try { textToJson(jsonText) }
+    catch {
+      case e: IllegalStateException =>
+        throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile, e)
+    }
+  }
+
+  /** Make json aboject from a file */
+  def textToJson(jsonText: String): Json = {
+    logger.debug("jsonText: " + jsonText)
     val json = Parse.parseOption(jsonText)
     logger.debug(json)
 
     json getOrElse {
-      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
+      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + jsonText)
     }
   }
 
@@ -140,7 +148,18 @@ object ConfigUtils extends Logging {
   def yamlToMap(file: File): Map[String, Any] = {
     val yaml = new Yaml()
     val a = yaml.load(scala.io.Source.fromFile(file).reader())
-    ConfigUtils.any2map(a)
+    if (a == null) throw new IllegalStateException(s"File '$file' is an empty file")
+    else ConfigUtils.any2map(a)
+  }
+
+  lazy val yaml = new Yaml()
+
+  def mapToYaml(map: Map[String, Any]) = yaml.dump(yaml.load(ConfigUtils.mapToJson(map).nospaces))
+
+  def mapToYamlFile(map: Map[String, Any], outputFile: File) = {
+    val writer = new PrintWriter(outputFile)
+    writer.println(mapToYaml(map))
+    writer.close()
   }
 
   /** Convert json to native scala map/values */
@@ -190,6 +209,7 @@ object ConfigUtils extends Logging {
       case Some(x)      => anyToJson(x)
       case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
       case l: List[_]   => Json.array(l.map(anyToJson): _*)
+      case l: Array[_]  => Json.array(l.map(anyToJson): _*)
       case b: Boolean   => Json.jBool(b)
       case n: Int       => Json.jNumberOrString(n)
       case n: Double    => Json.jNumberOrString(n)

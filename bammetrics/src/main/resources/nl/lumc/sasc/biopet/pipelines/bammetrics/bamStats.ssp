@@ -12,9 +12,9 @@
 #for (field <- fields)
     <tr><th>${field}</th><td>
     #if (libId.isDefined)
-        ${summary.getLibraryValue(sampleId.get, libId.get, metricsTag, "stats", "biopet_flagstat", field)}
+        ${summary.getLibraryValue(sampleId.get, libId.get, metricsTag, "stats", "bamstats", "flagstats", field)}
     #else
-        ${summary.getSampleValue(sampleId.get, metricsTag, "stats", "biopet_flagstat", field)}
+        ${summary.getSampleValue(sampleId.get, metricsTag, "stats", "bamstats", "flagstats", field)}
     #end
     </td></tr>
 #end

@@ -22,7 +22,7 @@
 
     <groupId>path.to.your</groupId>
     <artifactId>MyProject</artifactId>
-    <version>YourVersion1.0</version>
+    <version>0.8.0-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

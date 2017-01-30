@@ -130,7 +130,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
-    if (!del && !dup && !inv && !tra) intercept[IllegalArgumentException] {
+    if (!del && !dup && !inv && !tra) intercept[IllegalStateException] {
       pipeline.init()
       pipeline.script()
     }
@@ -198,6 +198,7 @@ object ShivaSvCallingTest {
   copyFile("ref.fa.fai")
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "cache" -> true,

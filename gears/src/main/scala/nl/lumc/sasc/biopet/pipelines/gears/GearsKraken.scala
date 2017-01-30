@@ -41,10 +41,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
   def init(): Unit = {
     require(fastqR1 != null)
-    if (outputName == null) outputName = fastqR1.getName
-      .stripSuffix(".gz")
-      .stripSuffix(".fq")
-      .stripSuffix(".fastq")
+    require(outputName != null)
   }
 
   lazy val krakenConvertToFasta: Boolean = config("kraken_discard_quality", default = false)
@@ -107,7 +104,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
   def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty
+  def summarySettings: Map[String, Any] = Map()
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1) ++ (fastqR2 match {
@@ -123,7 +120,7 @@ object GearsKraken {
     convertKrakenSummariesToKronaXml(summaries, outputFile)
   }
 
-  def convertKrakenSummariesToKronaXml(summaries: Map[String, Map[String, Any]], outputFile: File): Unit = {
+  def convertKrakenSummariesToKronaXml(summaries: Map[String, Map[String, Any]], outputFile: File, totalReads: Option[Map[String, Long]] = None): Unit = {
 
     val samples = summaries.keys.toList.sorted
 
@@ -159,7 +156,7 @@ object GearsKraken {
             if (k == "root") {
               val unclassified = summaries(sample)("unclassified").asInstanceOf[Map[String, Any]]("size").asInstanceOf[Long]
               <val>
-                { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified }
+                { totalReads.flatMap(_.get(sample)).getOrElse(getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified) }
               </val>
             } else {
               <val>

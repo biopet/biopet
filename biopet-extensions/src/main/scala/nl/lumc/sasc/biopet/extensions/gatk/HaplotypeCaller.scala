@@ -42,7 +42,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: Option[File] = config("dbsnp")
+  var dbsnp: Option[File] = dbsnpVcfFile
 
   /** If specified, we will not trim down the active region from the full region (active + extension) to just the active interval for genotyping */
   @Argument(fullName = "dontTrimActiveRegions", shortName = "dontTrimActiveRegions", doc = "If specified, we will not trim down the active region from the full region (active + extension) to just the active interval for genotyping", required = false, exclusiveOf = "", validation = "")

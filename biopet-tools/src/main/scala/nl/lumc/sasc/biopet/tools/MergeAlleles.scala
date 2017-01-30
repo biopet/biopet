@@ -20,7 +20,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ Allele, VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader }
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
@@ -52,13 +52,12 @@ object MergeAlleles extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val readers = commandArgs.inputFiles.map(new VCFFileReader(_, true))
-    val referenceFile = new FastaSequenceFile(commandArgs.reference, true)
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setReferenceDictionary(referenceFile.getSequenceDictionary).
+      setReferenceDictionary(FastaUtils.getCachedDict(commandArgs.reference)).
       setOutputFile(commandArgs.outputFile).
       build)
     val header = new VCFHeader
-    val referenceDict = referenceFile.getSequenceDictionary
+    val referenceDict = FastaUtils.getCachedDict(commandArgs.reference)
     header.setSequenceDictionary(referenceDict)
     writer.writeHeader(header)
 

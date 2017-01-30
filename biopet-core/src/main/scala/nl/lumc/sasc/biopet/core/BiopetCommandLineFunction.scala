@@ -18,7 +18,7 @@ import java.io.{ File, FileInputStream, PrintWriter }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
 
@@ -36,13 +36,22 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   var executable: String = _
 
+  var mainFunction = true
+
   /** This is the default shell for drmaa jobs */
   def defaultRemoteCommand = "bash"
   private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
 
+  val preCommands: List[String] = config("pre_commands", default = Nil, freeVar = false)
+
   private def changeScript(file: File): Unit = {
     val lines = Source.fromFile(file).getLines().toList
     val writer = new PrintWriter(file)
+    remoteCommand match {
+      case "bash" => writer.println("#!/bin/bash")
+      case "sh"   => writer.println("#!/bin/sh")
+      case _      => writer.println(s"#!$remoteCommand")
+    }
     writer.println("set -eubf")
     writer.println("set -o pipefail")
     lines.foreach(writer.println)
@@ -62,8 +71,9 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
       changeScript(new File(jt.getArgs.head.toString))
       jt.setRemoteCommand(remoteCommand)
     case ps: ProcessSettings =>
-      changeScript(new File(ps.getCommand.tail.head))
-      ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
+      changeScript(new File(ps.getCommand.last))
+      if (ps.getCommand.head != "srun")
+        ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
   }
 
   /**
@@ -79,7 +89,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
     this match {
       case r: Reference =>
-        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.dictRequired) deps :+= r.referenceDictFile
         if (r.faiRequired) deps :+= r.referenceFai
         deps = deps.distinct
       case _ =>
@@ -111,7 +121,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
   protected[core] def preProcessExecutable() {
-    val exe = BiopetCommandLineFunction.preProcessExecutable(executable)
+    val exe = BiopetCommandLineFunction.preProcessExecutable(executable, preCommands)
     exe.path.foreach(executable = _)
     addJobReportBinding("md5sum_exe", exe.md5.getOrElse("N/A"))
   }
@@ -219,10 +229,10 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   override final def commandLine: String = {
     preCmdInternal()
-    val cmd = cmdLine +
+    val cmd = preCommands.mkString("\n", "\n", "\n") +
+      cmdLine +
       stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
       stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
-    addJobReportBinding("command", cmd)
     cmd
   }
 
@@ -240,13 +250,19 @@ object BiopetCommandLineFunction extends Logging {
   private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
 
   case class Executable(path: Option[String], md5: Option[String])
-  def preProcessExecutable(executable: String): Executable = {
+  def preProcessExecutable(executable: String, pre_commands: List[String] = Nil): Executable = {
     if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
       if (executable != null) {
         if (!BiopetCommandLineFunction.executableCache.contains(executable)) {
           try {
             val buffer = new StringBuffer()
-            val cmd = Seq("which", executable)
+            val tempFile = File.createTempFile("which.", ".sh")
+            tempFile.deleteOnExit()
+            val writer = new PrintWriter(tempFile)
+            pre_commands.foreach(cmd => writer.println(cmd + " > /dev/null 2> /dev/null"))
+            writer.println(s"which $executable")
+            writer.close()
+            val cmd = Seq("bash", tempFile.getAbsolutePath)
             val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
             if (process.exitValue == 0) {
               val file = new File(buffer.toString)

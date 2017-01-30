@@ -107,6 +107,7 @@ object ToucanTest {
   exacVcfFile.deleteOnExit()
 
   val config = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> resourcePath("/fake_chrQ.fa"),
     "output_dir" -> outputDir,
     "gatk_jar" -> "test",

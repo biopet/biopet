@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.utils._
 import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 
 import scala.collection.JavaConversions._
@@ -49,10 +49,18 @@ trait Reference extends Configurable {
     }
   }
 
+  def referenceDict = FastaUtils.getCachedDict(referenceFasta())
+
   /** All config values will get a prefix */
   override def subPath = {
     referenceConfigPath ::: super.subPath
   }
+
+  lazy val geneAnnotationVersion: Option[String] = config("gene_annotation_name")
+  lazy val geneAnnotationSubPath = geneAnnotationVersion.map(List("gene_annotations", _)).getOrElse(Nil)
+  lazy val dbsnpVersion: Option[String] = config("dbsnp_version")
+  lazy val dbsnpSubPath: List[String] = dbsnpVersion.map(List("dbsnp_annotations", _)).getOrElse(Nil)
+  def dbsnpVcfFile: Option[File] = config("dbsnp_vcf", extraSubPath = dbsnpSubPath)
 
   /** Returns the reference config path */
   def referenceConfigPath = {
@@ -66,7 +74,7 @@ trait Reference extends Configurable {
   def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
 
   /** Returns the dict file belonging to the fasta file */
-  def referenceDict = new File(referenceFasta().getAbsolutePath
+  def referenceDictFile = new File(referenceFasta().getAbsolutePath
     .stripSuffix(".fa")
     .stripSuffix(".fasta")
     .stripSuffix(".fna") + ".dict")
@@ -108,9 +116,8 @@ trait Reference extends Configurable {
   /** Create summary part for reference */
   def referenceSummary: Map[String, Any] = {
     Reference.requireDict(referenceFasta())
-    val file = new IndexedFastaSequenceFile(referenceFasta())
     Map("contigs" ->
-      (for (seq <- file.getSequenceDictionary.getSequences) yield seq.getSequenceName -> {
+      (for (seq <- referenceDict.getSequences) yield seq.getSequenceName -> {
         val md5 = Option(seq.getAttribute("M5"))
         Map("md5" -> md5, "length" -> seq.getSequenceLength)
       }).toMap,
@@ -168,5 +175,34 @@ object Reference {
       checked += dict
       if (!dict.exists()) Logging.addError("Reference is missing a dict file")
     }
+  }
+
+  def askReference: Map[String, Any] = {
+    val warn = "If you use a non-standard reference, please make sure that you have generated all required indexes for this reference"
+    val globalSpecies = Config.global.defaults.getOrElse("references", Map()).asInstanceOf[Map[String, Any]]
+    val species = Question.string("species",
+      description = Some(if (globalSpecies.nonEmpty)
+        s"""Species found in general config:
+           |- ${globalSpecies.keys.toList.sorted.mkString("\n- ")}
+           |$warn
+           |""".stripMargin
+      else s"No references found in global config. $warn"))
+
+    val globalReferences = globalSpecies.getOrElse(species, Map()).asInstanceOf[Map[String, Any]]
+    val referenceName = Question.string("reference_name",
+      description = Some(if (globalReferences.nonEmpty)
+        s"""Reference for $species found in general config:
+            |- ${globalReferences.keys.toList.sorted.mkString("\n- ")}
+            |$warn
+            |""".stripMargin
+      else s"No references found in global config. $warn"))
+
+    val reference = globalReferences.getOrElse(referenceName, Map()).asInstanceOf[Map[String, Any]]
+    val referenceFasta: Option[String] = if (reference.contains("reference_fasta")) None else {
+      Some(Question.string("Reference Fasta", validation = List(TemplateTool.isAbsolutePath, TemplateTool.mustExist),
+        description = Some(s"No fasta file found for $species -> $referenceName")))
+    }
+
+    Map("species" -> species, "reference_name" -> referenceName) ++ referenceFasta.map("reference_fasta" -> _)
   }
 }

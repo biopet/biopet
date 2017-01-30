@@ -54,12 +54,14 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
     swapExt(outputDir, flash.notCombinedR2, ".fastq.gz", ".clip.fastq.gz")
   else flash.notCombinedR2
 
+  val keepFastaqFiles: Boolean = config("keep_fastq_files", default = false)
+
   /** Pipeline itself */
   def biopetScript(): Unit = {
     flash.outputDirectory = new File(outputDir, "flash")
     flash.fastqR1 = fastqR1
     flash.fastqR2 = fastqR2
-    flash.isIntermediate = (forwardPrimers ::: reversePrimers).nonEmpty
+    flash.isIntermediate = !keepFastaqFiles || (forwardPrimers ::: reversePrimers).nonEmpty
     add(flash)
 
     if ((forwardPrimers ::: reversePrimers).nonEmpty) {
@@ -67,6 +69,7 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
       cutadapt.fastqInput = flash.combinedFastq
       cutadapt.fastqOutput = this.combinedFastq
       cutadapt.statsOutput = swapExt(outputDir, cutadapt.fastqOutput, ".fastq.gz", ".stats")
+      cutadapt.isIntermediate = !keepFastaqFiles
       (forwardPrimers ::: reversePrimers).foreach(cutadapt.anywhere += _)
       add(cutadapt)
       addSummarizable(cutadapt, "cutadapt")

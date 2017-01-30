@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, Sa
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.extensions.tools.{ BamStats, BiopetFlagstat }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
@@ -82,9 +82,11 @@ class BamMetrics(val root: Configurable) extends QScript
   def biopetScript() {
     add(SamtoolsFlagstat(this, inputBam, outputDir))
 
-    val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
-    add(biopetFlagstat)
-    addSummarizable(biopetFlagstat, "biopet_flagstat")
+    val bamStats = new BamStats(this)
+    bamStats.bamFile = inputBam
+    bamStats.outputDir = new File(outputDir, "bamstats")
+    add(bamStats)
+    addSummarizable(bamStats, "bamstats")
 
     val multiMetrics = new CollectMultipleMetrics(this)
     multiMetrics.input = inputBam
@@ -134,7 +136,7 @@ class BamMetrics(val root: Configurable) extends QScript
         ampBedToInterval.isIntermediate = true
         add(ampBedToInterval)
 
-        val chsMetrics = CalculateHsMetrics(this, inputBam,
+        val chsMetrics = CollectHsMetrics(this, inputBam,
           List(ampIntervals), ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(chsMetrics)
         addSummarizable(chsMetrics, "hs_metrics")
@@ -148,6 +150,10 @@ class BamMetrics(val root: Configurable) extends QScript
     }
 
     // Create stats and coverage plot for each bed/interval file
+    val allIntervalNames = (roiIntervals ++ ampIntervals).map(_.bed.getName)
+    if (allIntervalNames.size != allIntervalNames.toSet.size) {
+      logger.warn("There are multiple region files with the same name. Metric values might get overwritten")
+    }
     for (intervals <- roiIntervals ++ ampIntervals) {
       val targetName = intervals.bed.getName.stripSuffix(".bed")
       val targetDir = new File(outputDir, targetName)
@@ -156,21 +162,25 @@ class BamMetrics(val root: Configurable) extends QScript
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.sam"),
         minOverlap = config("strict_intersect_overlap", default = 1.0))
       val biopetFlagstatStrict = BiopetFlagstat(this, biStrict.output, targetDir)
-      addSummarizable(biopetFlagstatStrict, targetName + "_biopet_flagstat_strict")
+      addSummarizable(biopetFlagstatStrict, targetName + "_flagstats_strict")
       add(new BiopetFifoPipe(this, List(biStrict, biopetFlagstatStrict)))
 
       val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.sam"),
         minOverlap = config("loose_intersect_overlap", default = 0.01))
       val biopetFlagstatLoose = BiopetFlagstat(this, biLoose.output, targetDir)
-      addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
+      addSummarizable(biopetFlagstatLoose, targetName + "_flagstats_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val sorter = new BedtoolsSort(this)
-      sorter.input = intervals.bed
-      sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
-      add(sorter)
-      val bedCov = BedtoolsCoverage(this, sorter.output, inputBam, depth = true)
+      val sortedBed = BamMetrics.sortedbedCache.getOrElse(intervals.bed, {
+        val sorter = new BedtoolsSort(this)
+        sorter.input = intervals.bed
+        sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
+        add(sorter)
+        BamMetrics.sortedbedCache += intervals.bed -> sorter.output
+        sorter.output
+      })
+      val bedCov = BedtoolsCoverage(this, sortedBed, inputBam, depth = true)
       val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       covStats.title = Some("Coverage Plot")
       covStats.subTitle = Some(s"for file '$targetName.bed'")
@@ -198,4 +208,6 @@ object BamMetrics extends PipelineCommand {
     bamMetrics.biopetScript()
     bamMetrics
   }
+
+  private var sortedbedCache: Map[File, File] = Map()
 }

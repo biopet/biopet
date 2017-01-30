@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -25,8 +26,8 @@ import org.testng.annotations.Test
 /**
  * Created by ahbbollen on 28-8-15.
  */
-class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
-  import SamplesTsvToJson._
+class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers {
+  import SamplesTsvToConfig._
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
   }
@@ -73,7 +74,7 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
     val tsv = new File(resourcePath("/sample.tsv"))
     val json = stringFromInputs(List(tsv), Nil)
 
-    json should equal(
+    ConfigUtils.mapToJson(json).spaces2 should equal(
       """|{
         |  "samples" : {
         |    "Sample_ID_1" : {

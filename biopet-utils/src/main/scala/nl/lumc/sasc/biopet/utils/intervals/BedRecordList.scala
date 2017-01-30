@@ -23,7 +23,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, Logging }
 
 /**
  * Created by pjvan_thof on 8/20/15.
@@ -100,8 +100,7 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val heade
   )
 
   def validateContigs(reference: File) = {
-    val referenceFile = new FastaSequenceFile(reference, true)
-    val dict = referenceFile.getSequenceDictionary
+    val dict = FastaUtils.getCachedDict(reference)
     val notExisting = chrRecords.keys.filter(dict.getSequence(_) == null).toList
     require(notExisting.isEmpty, s"Contigs found in bed records but are not existing in reference: ${notExisting.mkString(",")}")
     this
@@ -152,12 +151,7 @@ object BedRecordList {
     }
   }
 
-  def fromReference(file: File) = {
-    val referenceFile = new FastaSequenceFile(file, true)
-    val dict = referenceFile.getSequenceDictionary
-    referenceFile.close()
-    fromDict(dict)
-  }
+  def fromReference(file: File) = fromDict(FastaUtils.getCachedDict(file))
 
   def fromDict(dict: SAMSequenceDictionary) = {
     fromList(for (contig <- dict.getSequences) yield {

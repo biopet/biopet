@@ -21,7 +21,7 @@ import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFacto
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -82,12 +82,11 @@ object GensToVcf extends ToolCommand {
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
     metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
 
-    val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
-    require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
+    require(FastaUtils.getCachedDict(cmdArgs.referenceFasta).getSequence(cmdArgs.contig) != null,
       s"contig '${cmdArgs.contig}' not found on reference")
 
     val header = new VCFHeader(metaLines, samples.toList)
-    header.setSequenceDictionary(reference.getSequenceDictionary)
+    header.setSequenceDictionary(FastaUtils.getCachedDict(cmdArgs.referenceFasta))
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
       .setOutputFile(cmdArgs.outputVcf)
       .setReferenceDictionary(header.getSequenceDictionary)
@@ -155,7 +154,9 @@ object GensToVcf extends ToolCommand {
             .make()
       }
 
-      val infoMap = infoHeaderKeys.map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x))).toMap).getOrElse(Map())
+      val infoMap = infoHeaderKeys
+        .map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x)).replaceAll(";", ",")).toMap)
+        .getOrElse(Map())
 
       val builder = (new VariantContextBuilder)
         .chr(cmdArgs.contig)

@@ -102,7 +102,7 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: Option[File] = config("dbsnp")
+  var dbsnp: Option[File] = dbsnpVcfFile
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")

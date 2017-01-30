@@ -31,22 +31,28 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
     nl.lumc.sasc.biopet.tools.FastqSync,
+    nl.lumc.sasc.biopet.tools.FastqFilter,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
+    nl.lumc.sasc.biopet.tools.FindOverlapMatch,
     nl.lumc.sasc.biopet.tools.GvcfToBed,
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.MergeTables,
     nl.lumc.sasc.biopet.tools.MpileupToVcf,
     nl.lumc.sasc.biopet.tools.PrefixFastq,
     nl.lumc.sasc.biopet.tools.SageCountFastq,
-    nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
+    nl.lumc.sasc.biopet.tools.SamplesTsvToConfig,
     nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.SquishBed,
     nl.lumc.sasc.biopet.tools.SummaryToTsv,
     nl.lumc.sasc.biopet.tools.ValidateFastq,
+    nl.lumc.sasc.biopet.tools.ValidateVcf,
     nl.lumc.sasc.biopet.tools.VcfFilter,
-    nl.lumc.sasc.biopet.tools.VcfStats,
+    nl.lumc.sasc.biopet.tools.vcfstats.VcfStats,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfWithVcf,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
-    nl.lumc.sasc.biopet.tools.WipeReads)
+    nl.lumc.sasc.biopet.tools.WipeReads,
+    nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly)
+
+  def templates: List[MainCommand] = List()
 }

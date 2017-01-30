@@ -20,8 +20,8 @@ samples:
   Sample_ID1:
     libraries:
       MySeries_1:
-        R1: R1.fastq.gz
-        R2: R2.fastq.gz
+        R1: /path/to/R1.fastq.gz
+        R2: /path/to/R2.fastq.gz
 ```
 
 ###### JSON:
@@ -60,7 +60,7 @@ samples:
         bam: MySecond.bam
 ```
 
-Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
+Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToConfig.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
 
 #### Tags
 

@@ -13,7 +13,7 @@ Biopet (Bio Pipeline Execution Toolkit) is the main pipeline development framewo
 Biopet is available as a JAR package in SHARK. The easiest way to start using it is to activate the `biopet` environment module, which sets useful aliases and environment variables:
 
 ~~~
-$ module load biopet/v0.6.0
+$ module load biopet/v0.8.0
 ~~~
 
 With each Biopet release, an accompanying environment module is also released. The latest release is version 0.6.0, thus `biopet/v0.6.0` is the module you would want to load.
@@ -35,15 +35,15 @@ The actual path will vary from version to version, which is controlled by which 
 Almost all of the pipelines have a common usage pattern with a similar set of flags, for example:
 
 ~~~
-$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -retry 2
+$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -jobQueue all.q -retry 2
 ~~~
 
-The command above will do a *dry* run of a pipeline using a config file as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
+The command above will do a *dry* run of a pipeline using a config file as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). The `-jobQueue all.q` flag ensures that the proper Queue is used. We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
 
 If the dry run proceeds without problems, you can then do the real run by using the `-run` flag:
 
 ~~~
-$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -retry 2 -run
+$ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEnv BWA -jobQueue all.q -retry 2 -run
 ~~~
 
 It is usually a good idea to do the real run using `screen` or `nohup` to prevent the job from terminating when you log out of SHARK. In practice, using `biopet` as it is is also fine. What you need to keep in mind, is that each pipeline has their own expected config layout. You can check out more about the general structure of our config files [here](general/config.md). For the specific structure that each pipeline accepts, please consult the respective pipeline page.
@@ -76,28 +76,6 @@ At the moment, we do not provide links to download the Biopet package. If you ar
 Biopet is based on the Queue framework developed by the Broad Institute as part of their Genome Analysis Toolkit (GATK) framework. The current Biopet release is based on the GATK 3.4 release.
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://github.com/biopet/biopet](https://github.com/biopet/biopet/issues), along with our issue tracker.
-
-## Local development setup
-
-To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.4 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
-
-~~~
-$ git clone https://github.com/broadgsa/gatk-protected
-$ cd gatk-protected
-$ git checkout 3.4                              # the current release is based on GATK 3.4
-$ mvn clean install
-~~~
-
-This will install all the required dependencies to your local maven repository. After this is done, you can clone our repository and test if everything builds fine:
-
-~~~
-$ git clone https://github.com/biopet/biopet.git
-$ cd biopet
-$ mvn clean install
-~~~
-
-If everything builds fine, you're good to go! Otherwise, don't hesitate to contact us or file an issue at our issue tracker.
-
 
 ## About
 

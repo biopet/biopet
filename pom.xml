@@ -21,9 +21,10 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
     
     <modules>
+        <module>gatk</module>
         <module>biopet-package</module>
         <module>bam2wig</module>
         <module>bammetrics</module>

@@ -10,24 +10,32 @@
 <%@ var libId: Option[String] = None %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
+<%@ var centrifugeTag: Option[String] = None %>
+<%@ var summaryStatsTag: String = "krakenreport" %>
+<%@ var summaryModuleTag: String = "gearskraken" %>
 
 <%
-    val summaries = if (sampleId.isEmpty && libId.isEmpty) {
-        summary.getSampleValues("gearskraken", "stats", "krakenreport").map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
-    } else summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
+    val summaries = if (sampleId.isEmpty) {
+        summary.getSampleValues(summaryModuleTag, "stats", summaryStatsTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
+    } else summary.getValue(sampleId, libId, summaryModuleTag, "stats", summaryStatsTag).map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
+
+    val totalReads = if (sampleId.isEmpty) {
+        centrifugeTag.map {tag => summary.getSampleValues(summaryModuleTag, "stats", tag, "metrics", "Read").map(x => x._1 -> x._2.getOrElse(0L).toString.toLong) }
+    } else centrifugeTag.flatMap(tag => summary.getValue(sampleId, libId, summaryModuleTag, "stats", tag, "metrics", "Read"))
+      .map(value => Map(sampleId.get -> value.toString.toLong))
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
-    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile)
+    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile, totalReads)
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/krona.ssp",
     args ++ Map("kronaXml" -> tempFile))
 
 
-    val file = new File(outputDir, "kraken_krona.html")
+    val file = new File(outputDir, s"$summaryModuleTag-$summaryStatsTag.html")
     val writer = new PrintWriter(file)
     writer.println(output)
     writer.close()
 %>
 
-<iframe src="kraken_krona.html" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe src="${summaryModuleTag}-${summaryStatsTag}.html" style="width:100%;height:80vh;border:none;"></iframe>

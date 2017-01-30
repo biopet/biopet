@@ -37,11 +37,11 @@ class HaploTypeCallerGvcfTest extends TestNGSuite with Matchers {
   }
 
   def createInputMap(samples: List[String]): Map[String, File] = {
-    samples map { x =>
+    samples.map({ x =>
       val file = File.createTempFile(x, ".bam")
       file.deleteOnExit()
       x -> file
-    } toMap
+    }).toMap
   }
 
 }

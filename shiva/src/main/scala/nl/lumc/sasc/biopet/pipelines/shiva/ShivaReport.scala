@@ -139,15 +139,15 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     if (libraryLevel) tsvWriter.print("Library") else tsvWriter.print("Sample")
     tsvWriter.println("\tHomVar\tHet\tHomRef\tNoCall")
 
-    def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
+    def getLine(summary: Summary, sample: String, summarySample: Option[String], lib: Option[String] = None): String = {
       val path = target match {
-        case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype")
-        case _       => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "genotype")
+        case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype", sample)
+        case _       => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "total", "genotype", "general", sample)
       }
-      val homVar = new SummaryValue(path :+ "HomVar", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val homRef = new SummaryValue(path :+ "HomRef", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val noCall = new SummaryValue(path :+ "NoCall", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val het = new SummaryValue(path :+ "Het", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val homVar = new SummaryValue(path :+ "HomVar", summary, summarySample, lib).value.getOrElse(0).toString.toLong
+      val homRef = new SummaryValue(path :+ "HomRef", summary, summarySample, lib).value.getOrElse(0).toString.toLong
+      val noCall = new SummaryValue(path :+ "NoCall", summary, summarySample, lib).value.getOrElse(0).toString.toLong
+      val het = new SummaryValue(path :+ "Het", summary, summarySample, lib).value.getOrElse(0).toString.toLong
       val sb = new StringBuffer()
       if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
       sb.append(homVar + "\t")
@@ -162,11 +162,11 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
         sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
         lib <- summary.libraries(sample)
       ) {
-        tsvWriter.println(getLine(summary, sample, Some(lib)))
+        tsvWriter.println(getLine(summary, sample, sampleId, Some(lib)))
       }
     } else {
       for (sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get) {
-        tsvWriter.println(getLine(summary, sample))
+        tsvWriter.println(getLine(summary, sample, sampleId))
       }
     }
 

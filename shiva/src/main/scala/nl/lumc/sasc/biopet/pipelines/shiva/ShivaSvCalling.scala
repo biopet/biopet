@@ -104,14 +104,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = {
-    val callers: Set[String] = configCallers
-    //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
-    Map(
-      "final_mergedvcf" -> outputMergedVCF
-
-    )
-  }
+  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> outputMergedVCF)
 }
 
 object ShivaSvCalling extends PipelineCommand

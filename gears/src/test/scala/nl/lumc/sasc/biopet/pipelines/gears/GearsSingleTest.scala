@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
@@ -49,6 +51,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
   def paired: Boolean = false
   def hasOutputName: Boolean = false
   def kraken: Option[Boolean] = None
+  def centrifuge: Boolean = false
   def qiimeClosed: Boolean = false
   def qiimeOpen: Boolean = false
   def qiimeRtax: Boolean = false
@@ -61,6 +64,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
   def testGears(): Unit = {
     val map = ConfigUtils.mergeMaps(Map(
       "gears_use_qiime_rtax" -> qiimeRtax,
+      "gears_use_centrifuge" -> centrifuge,
       "gears_use_qiime_closed" -> qiimeClosed,
       "gears_use_qiime_open" -> qiimeOpen,
       "gears_use_seq_count" -> seqCount,
@@ -76,8 +80,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
     inputMode match {
       case Some("fastq") =>
-        gears.fastqR1 = Some(TestGearsSingle.r1)
-        gears.fastqR2 = if (paired) Some(TestGearsSingle.r2) else None
+        gears.fastqR1 = List(TestGearsSingle.r1)
+        gears.fastqR2 = if (paired) List(TestGearsSingle.r2) else Nil
       case Some("bam") => gears.bamFile = Some(TestGearsSingle.bam)
       case None        =>
       case _           => new IllegalStateException(s"$inputMode not allowed as inputMode")
@@ -102,12 +106,16 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
       }
 
-      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(true)
+      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+        .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
+
+      gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(false)
       gears.summarySettings("gear_use_qiime_rtax") shouldBe qiimeRtax
       gears.summarySettings("gear_use_qiime_closed") shouldBe qiimeClosed
       gears.summarySettings("gear_use_qiime_open") shouldBe qiimeOpen
 
-      gears.krakenScript.isDefined shouldBe kraken.getOrElse(true)
+      gears.krakenScript.isDefined shouldBe kraken.getOrElse(false)
+      gears.centrifugeScript.isDefined shouldBe centrifuge
       gears.qiimeClosed.isDefined shouldBe qiimeClosed
       gears.qiimeOpen.isDefined shouldBe qiimeOpen
       gears.qiimeRatx.isDefined shouldBe qiimeRtax
@@ -117,9 +125,13 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
       gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
 
-      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
+        ((if (kraken.getOrElse(false)) 1 else 0) + (if (centrifuge) 2 else 0))
+
+      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
   }
 }
@@ -131,6 +143,9 @@ class GearsSingleNoInputTest extends TestGearsSingle {
 class GearsSingleDefaultTest extends TestGearsSingle
 class GearsSingleKrakenTest extends TestGearsSingle {
   override def kraken = Some(true)
+}
+class GearsSingleCentrifugeTest extends TestGearsSingle {
+  override def centrifuge = true
 }
 class GearsSingleQiimeClosedTest extends TestGearsSingle {
   override def qiimeClosed = true
@@ -148,6 +163,10 @@ class GearsSingleseqCountTest extends TestGearsSingle {
 class GearsSingleKrakenPairedTest extends TestGearsSingle {
   override def paired = true
   override def kraken = Some(true)
+}
+class GearsSingleCentrifugePairedTest extends TestGearsSingle {
+  override def paired = true
+  override def centrifuge = true
 }
 class GearsSingleQiimeClosedPairedTest extends TestGearsSingle {
   override def paired = true
@@ -168,6 +187,7 @@ class GearsSingleseqCountPairedTest extends TestGearsSingle {
 
 class GearsSingleAllTest extends TestGearsSingle {
   override def kraken = Some(true)
+  override def centrifuge = true
   override def qiimeClosed = true
   override def qiimeOpen = true
   override def qiimeRtax = true
@@ -175,6 +195,7 @@ class GearsSingleAllTest extends TestGearsSingle {
 }
 class GearsSingleAllPairedTest extends TestGearsSingle {
   override def kraken = Some(true)
+  override def centrifuge = true
   override def qiimeClosed = true
   override def qiimeOpen = true
   override def qiimeRtax = true
@@ -213,7 +234,10 @@ object TestGearsSingle {
   bam.deleteOnExit()
 
   val executables = Map(
+    "skip_write_dependencies" -> true,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
+    "centrifuge" -> Map("exe" -> "test", "centrifuge_index" -> "test"),
+    "centrifugekreport" -> Map("exe" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),

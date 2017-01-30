@@ -83,10 +83,10 @@
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
                     #{
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
-                        val total = summary.getValue((prefixPath ::: List("biopet_flagstat", "All")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val mapped = summary.getValue((prefixPath ::: List("biopet_flagstat", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val duplicates = summary.getValue((prefixPath ::: List("biopet_flagstat", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val secondary = summary.getValue((prefixPath ::: List("biopet_flagstat", "NotPrimaryAlignment")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val total = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "All")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val mapped = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val duplicates = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val secondary = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "NotPrimaryAlignment")):_*).getOrElse(0L).asInstanceOf[Long]
                     }#
                     <td>${total}</td>
                     <td>${mapped}</td>

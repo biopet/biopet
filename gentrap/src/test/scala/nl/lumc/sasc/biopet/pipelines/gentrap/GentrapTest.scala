@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
 import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
+import nl.lumc.sasc.biopet.utils.camelize
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -97,10 +98,10 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
       gentrap.shivaVariantcalling.isDefined shouldBe callVariants.getOrElse(false)
 
       gentrap.summarySettings.getOrElse("expression_measures", List()).asInstanceOf[List[String]].sorted shouldBe
-        expressionMeasures.map(Gentrap.camelize(_)).sorted
+        expressionMeasures.map(camelize(_)).sorted
       gentrap.summarySettings.get("call_variants") shouldBe Some(callVariants.getOrElse(false))
       gentrap.summarySettings.get("remove_ribosomal_reads") shouldBe Some(removeRiboReads.getOrElse(false))
-      gentrap.summarySettings.get("strand_protocol") shouldBe Some(Gentrap.camelize(strandProtocol))
+      gentrap.summarySettings.get("strand_protocol") shouldBe Some(camelize(strandProtocol))
 
       if (expressionMeasures.contains("fragments_per_gene"))
         assert(gentrap.functions.exists(_.isInstanceOf[HtseqCount]))
@@ -186,6 +187,7 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables: Map[String, Any] = Map(
+    "skip_write_dependencies" -> true,
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "refFlat" -> (outputDir + File.separator + "ref.fa"),
     "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),

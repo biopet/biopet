@@ -31,7 +31,7 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
                  _3_ClippingHistogram: Histogram[Int] = new Histogram[Int]()) {
 
   flagstat.loadDefaultFunctions()
-  flagstat.loadQualityFunctions(1, 0)
+  flagstat.loadQualityFunctions()
   flagstat.loadOrientationFunctions
 
   /** This will add an other [[Stats]] inside `this` */
@@ -57,5 +57,18 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
     this.rightClippingHistogram.writeToTsv(new File(outputDir, "right_clipping.tsv"))
     this._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
     this._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
+  }
+
+  def toSummaryMap = {
+    Map(
+      "flagstats" -> flagstat.toSummaryMap,
+      "mapping_quality" -> Map("histogram" -> mappingQualityHistogram.toSummaryMap, "general" -> mappingQualityHistogram.aggregateStats),
+      "insert_size" -> Map("histogram" -> insertSizeHistogram.toSummaryMap, "general" -> insertSizeHistogram.aggregateStats),
+      "clipping" -> Map("histogram" -> clippingHistogram.toSummaryMap, "general" -> clippingHistogram.aggregateStats),
+      "left_clipping" -> Map("histogram" -> leftClippingHistogram.toSummaryMap, "general" -> leftClippingHistogram.aggregateStats),
+      "right_clipping" -> Map("histogram" -> rightClippingHistogram.toSummaryMap, "general" -> rightClippingHistogram.aggregateStats),
+      "5_prime_clipping" -> Map("histogram" -> _5_ClippingHistogram.toSummaryMap, "general" -> _5_ClippingHistogram.aggregateStats),
+      "3_prime_clipping" -> Map("histogram" -> _3_ClippingHistogram.toSummaryMap, "general" -> _3_ClippingHistogram.aggregateStats)
+    )
   }
 }

@@ -31,6 +31,7 @@ class Breakdancer(val root: Configurable) extends SvCaller {
 
       val bdcfg = BreakdancerConfig(this, bamFile, new File(breakdancerSampleDir, sample + ".breakdancer.cfg"))
       val breakdancer = BreakdancerCaller(this, bdcfg.output, new File(breakdancerSampleDir, sample + ".breakdancer.tsv"))
+      breakdancer.deps :+= bamFile
       val bdvcf = BreakdancerVCF(this, breakdancer.output, new File(breakdancerSampleDir, sample + ".breakdancer.vcf"),
         sample = sample + sampleNameSuffix)
 

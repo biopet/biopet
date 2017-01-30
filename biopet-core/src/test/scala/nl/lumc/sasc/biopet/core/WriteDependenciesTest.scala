@@ -15,15 +15,13 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
-import java.nio.file.Files
 
+import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
-
-import scala.io.Source
 
 /**
  * Created by pjvanthof on 09/05/16.
@@ -41,12 +39,14 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDeps: Unit = {
-    val outputFile = File.createTempFile("deps.", ".json")
+  def testDeps(): Unit = {
+    val tempDir = Files.createTempDir()
+    tempDir.deleteOnExit()
+    val outputFile = new File(tempDir, s"deps.json")
     outputFile.deleteOnExit()
     val func1 = Qfunc(file1 :: Nil, file2 :: Nil)
     val func2 = Qfunc(file2 :: Nil, file3 :: Nil)
-    WriteDependencies.writeDependencies(func1 :: func2 :: Nil, outputFile)
+    WriteDependencies.writeDependencies(func1 :: func2 :: Nil, tempDir)
     val deps = ConfigUtils.fileToConfigMap(outputFile)
     deps("jobs") shouldBe a[Map[_, _]]
     val jobs = deps("jobs").asInstanceOf[Map[String, Map[String, Any]]]
@@ -54,7 +54,7 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
 
     deps("files") shouldBe a[List[_]]
     val files = deps("files").asInstanceOf[List[Map[String, Any]]]
-    val paths = files.map(x => x.get("path")).flatten
+    val paths = files.flatMap(x => x.get("path"))
     assert(paths.contains(file1.toString))
     assert(paths.contains(file2.toString))
     assert(paths.contains(file3.toString))
@@ -66,7 +66,7 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
 }
 
 object WriteDependenciesTest {
-  val tempDir = Files.createTempDirectory("test").toFile
+  val tempDir = Files.createTempDir()
   tempDir.deleteOnExit()
   val file1 = new File(tempDir, "file1.txt")
   val file2 = new File(tempDir, "file2.txt")

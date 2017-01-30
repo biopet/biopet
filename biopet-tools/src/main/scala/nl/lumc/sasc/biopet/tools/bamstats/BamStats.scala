@@ -14,19 +14,19 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.File
-import java.util.concurrent.TimeoutException
+import java.io.{ File, PrintWriter }
 
-import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, FastaUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
+import scala.io.Source
 import scala.language.postfixOps
 
 /**
@@ -82,11 +82,8 @@ object BamStats extends ToolCommand {
     val samHeader = samReader.getFileHeader
     samReader.close()
     referenceFasta.map { f =>
-      val referenceReader = new FastaSequenceFile(f, true)
-      val referenceDict = referenceReader.getSequenceDictionary
-      samHeader.getSequenceDictionary.assertSameDictionary(referenceDict, false)
-      referenceReader.close()
-      referenceDict
+      samHeader.getSequenceDictionary.assertSameDictionary(FastaUtils.getCachedDict(f), false)
+      FastaUtils.getCachedDict(f)
     }.getOrElse(samHeader.getSequenceDictionary)
   }
 
@@ -101,12 +98,23 @@ object BamStats extends ToolCommand {
    */
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
-      processContig(contig, bamFile, binSize, threadBinSize, outputDir)
-    }
+      contig.chr -> processContig(contig, bamFile, binSize, threadBinSize, outputDir)
+    }.toList
 
-    val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.toList)
+    val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
-    stats.writeStatsToFiles(outputDir)
+    val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
+    val totalStats = stats.toSummaryMap
+    val statsMap = Map(
+      "total" -> totalStats,
+      "contigs" -> contigsFutures.map(x => x._1 -> Await.result(x._2, Duration.Zero).toSummaryMap).toMap
+    )
+    statsWriter.println(ConfigUtils.mapToJson(statsMap).nospaces)
+    statsWriter.close()
+
+    val summaryWriter = new PrintWriter(new File(outputDir, "bamstats.summary.json"))
+    summaryWriter.println(ConfigUtils.mapToJson(totalStats).nospaces)
+    summaryWriter.close()
   }
 
   /**
@@ -124,11 +132,7 @@ object BamStats extends ToolCommand {
       .grouped((region.length.toDouble / binSize).ceil.toInt / (region.length.toDouble / threadBinSize).ceil.toInt)
       .map(scatters => processThread(scatters, bamFile))
       .toList
-    val stats = waitOnFutures(scattersFutures, Some(region.chr))
-    val contigDir = new File(outputDir, "contigs" + File.separator + region.chr)
-    contigDir.mkdirs()
-    stats.writeStatsToFiles(contigDir)
-    stats
+    waitOnFutures(scattersFutures, Some(region.chr))
   }
 
   /**
@@ -169,7 +173,7 @@ object BamStats extends ToolCommand {
         if (!samRecord.getReadUnmappedFlag) { // Mapped read
           totalStats.mappingQualityHistogram.add(samRecord.getMappingQuality)
         }
-        if (samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
+        if (samRecord.getReadPairedFlag && samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
           totalStats.insertSizeHistogram.add(samRecord.getInferredInsertSize.abs)
 
         val leftClipping = samRecord.getAlignmentStart - samRecord.getUnclippedStart
@@ -212,4 +216,21 @@ object BamStats extends ToolCommand {
     samReader.close()
     stats
   }
+
+  def tsvToMap(tsvFile: File): Map[String, Array[Long]] = {
+    val reader = Source.fromFile(tsvFile)
+    val it = reader.getLines()
+    val header = it.next().split("\t")
+    val arrays = header.zipWithIndex.map(x => x._2 -> (x._1 -> ArrayBuffer[Long]()))
+    for (line <- it) {
+      val values = line.split("\t")
+      require(values.size == header.size, s"Line does not have the number of field as header: $line")
+      for (array <- arrays) {
+        array._2._2.append(values(array._1).toLong)
+      }
+    }
+    reader.close()
+    arrays.map(x => x._2._1 -> x._2._2.toArray).toMap
+  }
+
 }
