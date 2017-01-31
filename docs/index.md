@@ -13,7 +13,7 @@ Biopet (Bio Pipeline Execution Toolkit) is the main pipeline development framewo
 Biopet is available as a JAR package in SHARK. The easiest way to start using it is to activate the `biopet` environment module, which sets useful aliases and environment variables:
 
 ~~~
-$ module load biopet/v0.6.0
+$ module load biopet/v0.8.0
 ~~~
 
 With each Biopet release, an accompanying environment module is also released. The latest release is version 0.6.0, thus `biopet/v0.6.0` is the module you would want to load.
@@ -76,28 +76,6 @@ At the moment, we do not provide links to download the Biopet package. If you ar
 Biopet is based on the Queue framework developed by the Broad Institute as part of their Genome Analysis Toolkit (GATK) framework. The current Biopet release is based on the GATK 3.4 release.
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://github.com/biopet/biopet](https://github.com/biopet/biopet/issues), along with our issue tracker.
-
-## Local development setup
-
-To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.4 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
-
-~~~
-$ git clone https://github.com/broadgsa/gatk-protected
-$ cd gatk-protected
-$ git checkout 3.4                              # the current release is based on GATK 3.4
-$ mvn clean install
-~~~
-
-This will install all the required dependencies to your local maven repository. After this is done, you can clone our repository and test if everything builds fine:
-
-~~~
-$ git clone https://github.com/biopet/biopet.git
-$ cd biopet
-$ mvn clean install
-~~~
-
-If everything builds fine, you're good to go! Otherwise, don't hesitate to contact us or file an issue at our issue tracker.
-
 
 ## About
 
