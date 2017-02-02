@@ -60,7 +60,7 @@ samples:
         bam: MySecond.bam
 ```
 
-Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
+Note that there is a tool called [SamplesTsvToConfig](../tools/SamplesTsvToConfig.md) that enables the user to get the sample config without any chance of creating a wrongly formatted file.
 
 #### Tags
 
@@ -139,3 +139,37 @@ During execution, biopet framework will resolve the value for each ConfigNamespa
 
 To check if the created JSON file is correct their are several possibilities: the simplest way is using [this](http://jsonformatter.curiousconcept.com/)
 website. It is also possible to use Python, Scala or any other programming languages for validating JSON files but this requires some more knowledge.
+
+#Creating config files with Biopet
+
+With the pipelines Gentrap, MultiSampleMapping and Shiva it is possible to use Biopet itself for creating the config files. Biopet should be called with the keyword *template* and the user will be then prompted to enter the values for the parameters needed by the pipelines. Biopet will generate a config file that can be used as input when running the pipelines. The purpose is to ease the step of creating the config files. It is useful especially when Biopet has been pre-configured to use a list of reference genomes. Then the user needs only to specify which refence genome he/she wants to use and the location of the reference genome files can be derived from Biopet's global configuration.
+
+<br/>
+<b> Example </b>
+
+For viewing the pipelines for which this functionality is supported:
+
+``` bash
+biopet template
+```
+
+For getting help about using it for a specific pipeline:
+
+``` bash
+biopet template Gentrap -h
+```
+
+For running the tool:
+
+``` bash
+biopet template Gentrap -o gentrap_config.yml -s gentrap_run.sh
+```
+<br/>
+<b> Description of the parameters </b>
+
+| Flag  (short)| Flag (long) | Type | Function |
+| ------------ | ----------- | ---- | -------- |
+| -o | --outputConfig | Path (**required**) | Name of the config file that gets generated.|
+| -s | --outputScript | Path (optional) | Biopet can also output a script that can be directly used for running the pipeline, the call of the pipeline is generated with the config file as input. This parameter sets the name for the script file.|
+| -t | --template | Path (optional) | A template file with 2 placeholders *%s* is required for generating the script. The first placeholder will be replaced with the name of the pipeline, the second with the paths to the sample and settings config files. When Biopet has been pre-configured to use the default template file, then setting this parameter is optional. |
+|    | --expert |  | This flag enables the user to configure a more extensive list of parameters for the pipeline. |
