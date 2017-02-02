@@ -117,7 +117,7 @@ object WriteDependencies extends Logging with Configurable {
           case _                                         => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
-          "depends_on_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
+          "depends_on_jobs" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
           "output_used_by_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).inputJobNames).distinct,
           "outputs" -> (f.jobOutputFile :: BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList),
           "inputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
