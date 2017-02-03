@@ -105,7 +105,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         case _               =>
       }
       count += 1
-      if (count % 500 == 0) logger.info(s"Preprocessing done for ${count} jobs")
+      if (count % 500 == 0) logger.info(s"Preprocessing done for ${count} jobs out of ${functions.length} total")
     }
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
