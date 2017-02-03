@@ -93,14 +93,19 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
 
     logger.info("Running pre commands")
-    for (function <- functions) function match {
-      case f: BiopetCommandLineFunction =>
-        f.preProcessExecutable()
-        f.beforeGraph()
-        f.internalBeforeGraph()
-        f.commandLine
-      case f: WriteSummary => f.init()
-      case _               =>
+    var count = 0
+    for (function <- functions) {
+      function match {
+        case f: BiopetCommandLineFunction =>
+          f.preProcessExecutable()
+          f.beforeGraph()
+          f.internalBeforeGraph()
+          f.commandLine
+        case f: WriteSummary => f.init()
+        case _               =>
+      }
+      count += 1
+      if (count % 500 == 0) logger.info(s"Preprocessing done for ${count} jobs out of ${functions.length} total")
     }
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
