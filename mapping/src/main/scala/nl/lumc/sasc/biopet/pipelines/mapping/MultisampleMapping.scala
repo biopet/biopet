@@ -35,6 +35,8 @@ import scala.collection.JavaConversions._
 
 /**
  * Created by pjvanthof on 18/12/15.
+ *
+ * This trait is meant to extend pipelines from that require a alignment step
  */
 trait MultisampleMappingTrait extends MultiSampleQScript
   with Reference { qscript: QScript =>
@@ -65,7 +67,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     Some(report)
   }
 
-  override def defaults = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+  override def defaults: Map[String, Any] = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
 
   override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
@@ -101,7 +103,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
-      def keepFinalBamfile = samples(sampleId).libraries.size == 1
+      def keepFinalBamfile: Boolean = samples(sampleId).libraries.size == 1
 
       lazy val mapping: Option[Mapping] = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
         val m: Mapping = new Mapping(qscript) {
@@ -213,13 +215,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     def summaryStats: Map[String, Any] = Map()
 
     /** This is the merged bam file, None if the merged bam file is NA */
-    def bamFile = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
+    def bamFile: Option[File] = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
       mergeStrategy != MultisampleMapping.MergeStrategy.None)
       Some(new File(sampleDir, s"$sampleId.bam"))
     else None
 
     /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
-    def preProcessBam = bamFile
+    def preProcessBam: Option[File] = bamFile
 
     /** Default is set to keep the merged files, user can set this in the config. To change the default this method can be overriden */
     def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
@@ -278,7 +280,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           gears.outputDir = new File(sampleDir, "gears")
           add(gears)
         case "none" =>
-        case x      => Logging.addError(s"${x} is not a valid value for 'mapping_to_gears'")
+        case x      => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
       }
     }
   }
