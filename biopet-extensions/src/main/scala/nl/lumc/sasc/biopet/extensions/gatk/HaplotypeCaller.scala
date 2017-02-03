@@ -514,9 +514,9 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
     (this.getVersion match {
       case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
-       optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
       case _ => ""
-  })
+    })
 }
 
 object HaplotypeCaller {
