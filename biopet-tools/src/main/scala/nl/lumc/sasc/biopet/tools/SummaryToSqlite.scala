@@ -2,8 +2,12 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.summary.db.Schema
+import nl.lumc.sasc.biopet.utils.summary.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
+import slick.driver.H2Driver.api._
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvanthof on 26/01/2017.
@@ -40,7 +44,17 @@ object SummaryToSqlite extends ToolCommand {
       } else throw new IllegalArgumentException(s"Db already exist: ${cmdArgs.outputSqlite}")
     }
 
-    Schema.createEmptySqlite(cmdArgs.outputSqlite)
+    val db = Database.forURL(s"jdbc:sqlite:${cmdArgs.outputSqlite.getAbsolutePath}", driver = "org.sqlite.JDBC")
+
+    val summary = new SummaryDb(db)
+    summary.createTables
+    val runId = Await.result(summary.createRun("runName", "kdfhla"), Duration.Inf)
+
+    List("1", "2", "3", "4").foreach(x => Await.result(summary.createSample(runId, x), Duration.Inf))
+
+    println(Await.result(summary.getSamples(), Duration.Inf))
+
+    db.close()
 
     logger.info("Done")
   }

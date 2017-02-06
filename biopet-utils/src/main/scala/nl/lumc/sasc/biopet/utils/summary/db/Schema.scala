@@ -1,67 +1,44 @@
 package nl.lumc.sasc.biopet.utils.summary.db
 
-import java.io.File
-import java.sql.Blob
-
 import slick.driver.H2Driver.api._
-
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvan_thof on 27-1-17.
   */
 object Schema {
 
-  class Runs(tag: Tag) extends Table[(Int, String)](tag, "Runs") {
-    def runId = column[Int]("runId", O.PrimaryKey)
+  class Runs(tag: Tag) extends Table[(Int, String, String)](tag, "Runs") {
+    def id = column[Int]("id", O.PrimaryKey)
     def runName = column[String]("runName")
+    def outputDir = column[String]("outputDir")
 
-    def * = (runId, runName)
+    def * = (id, runName, outputDir)
   }
   val runs = TableQuery[Runs]
 
-  class Samples(tag: Tag) extends Table[(Int, String, Option[Blob])](tag, "Samples") {
-    def sampleId = column[Int]("id", O.PrimaryKey)
-    def sampleName = column[String]("name")
-    def tags = column[Option[Blob]]("tags")
+  class Samples(tag: Tag) extends Table[(Int, Int, String, Option[String])](tag, "Samples") {
+    def id = column[Int]("id", O.PrimaryKey)
+    def runId = column[Int]("runId")
+    def name = column[String]("name")
+    def tags = column[Option[String]]("tags")
 
-    def * = (sampleId, sampleName, tags)
+    def * = (id, runId, name, tags)
   }
   val samples = TableQuery[Samples]
 
-  class SamplesRuns(tag: Tag) extends Table[(Int, Int)](tag, "SamplesRuns") {
-    def sampleId = column[Int]("sampleId")
+  class Libraries(tag: Tag) extends Table[(Int, Int, String, Int, Option[String])](tag, "Libraries") {
+    def id = column[Int]("id", O.PrimaryKey)
     def runId = column[Int]("runId")
-
-    def * = (sampleId, runId)
-
-    def idx = index("idx_samples_runs", (sampleId, runId), unique = true)
-  }
-  val samplesRuns = TableQuery[SamplesRuns]
-
-  class Libraries(tag: Tag) extends Table[(Int, String, Int, Option[Blob])](tag, "Libraries") {
-    def libraryId = column[Int]("id", O.PrimaryKey)
     def libraryName = column[String]("name")
     def sampleId = column[Int]("sampleId")
-    def tags = column[Option[Blob]]("tags")
+    def tags = column[Option[String]]("tags")
 
-    def * = (libraryId, libraryName, sampleId, tags)
+    def * = (id, runId, libraryName, sampleId, tags)
   }
   val libraries = TableQuery[Libraries]
 
-  class LibrariesRuns(tag: Tag) extends Table[(Int, Int)](tag, "LibrariesRuns") {
-    def libraryId = column[Int]("libraryId")
-    def runId = column[Int]("runId")
-
-    def * = (libraryId, runId)
-
-    def idx = index("idx_libraries_runs", (libraryId, runId), unique = true)
-  }
-  val librariesRuns = TableQuery[LibrariesRuns]
-
   class PipelineNames(tag: Tag) extends Table[(Int, String)](tag, "PipelineNames") {
-    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def id = column[Int]("id", O.PrimaryKey)
     def name = column[String]("name")
 
     def * = (id, name)
@@ -81,13 +58,13 @@ object Schema {
   val moduleNames = TableQuery[ModuleNames]
 
 
-  class Stats(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], Blob, Option[String])](tag, "Stats") {
+  class Stats(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, Option[String])](tag, "Stats") {
     def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
-    def stats = column[Blob]("stats")
+    def stats = column[String]("stats")
     def schema = column[Option[String]]("schema")
 
     def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
@@ -96,13 +73,13 @@ object Schema {
   }
   val stats = TableQuery[Stats]
 
-  class Settings(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], Blob, Option[String])](tag, "Settings") {
+  class Settings(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, Option[String])](tag, "Settings") {
     def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
-    def stats = column[Blob]("stats")
+    def stats = column[String]("stats")
     def schema = column[Option[String]]("schema")
 
     def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
@@ -111,20 +88,21 @@ object Schema {
   }
   val settings = TableQuery[Settings]
 
-  class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String, Boolean, Long)](tag, "Files") {
+  class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String, String, Boolean, Long)](tag, "Files") {
     def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
+    def name = column[String]("name")
     def path = column[String]("path")
     def md5 = column[String]("md5")
     def link = column[Boolean]("link", O.Default(false))
     def size = column[Long]("size")
 
-    def * = (pipelineId, runId, moduleId, sampleId, libraryId, path, md5, link, size)
+    def * = (pipelineId, runId, moduleId, sampleId, libraryId, name, path, md5, link, size)
 
-    def idx = index("idx_files", (pipelineId, runId, sampleId, libraryId, path), unique = true)
+    def idx = index("idx_files", (pipelineId, runId, sampleId, libraryId, name), unique = true)
   }
   val files = TableQuery[Files]
 
@@ -141,21 +119,5 @@ object Schema {
     def idx = index("idx_executables", (runId, toolName), unique = true)
   }
   val executables = TableQuery[Executables]
-
-  def createEmptySqlite(file: File): Unit = {
-    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
-
-    try {
-      val setup = DBIO.seq(
-        (runs.schema ++ samples.schema ++
-          samplesRuns.schema ++ libraries.schema ++
-          librariesRuns.schema ++ pipelineNames.schema ++
-          moduleNames.schema ++ stats.schema ++ settings.schema ++
-          files.schema ++ executables.schema).create
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    } finally db.close
-  }
 
 }
