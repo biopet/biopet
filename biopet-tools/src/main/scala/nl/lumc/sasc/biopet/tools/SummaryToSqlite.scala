@@ -50,6 +50,8 @@ object SummaryToSqlite extends ToolCommand {
     summary.createTables
     val runId = Await.result(summary.createRun("runName", "kdfhla"), Duration.Inf)
 
+    val runs = Await.result(summary.getRuns(), Duration.Inf)
+
     List("1", "2", "3", "4").foreach(x => Await.result(summary.createSample(x, runId, Some("""{"father": "blabla"}""")), Duration.Inf))
 
     println(Await.result(summary.getSamples(), Duration.Inf))
@@ -59,6 +61,10 @@ object SummaryToSqlite extends ToolCommand {
     Await.result(summary.createLibrary("lib1", runId, 1), Duration.Inf)
 
     println(Await.result(summary.getLibraries(), Duration.Inf))
+
+    val pipelineId = Await.result(summary.createPipeline("pipelineName", runId), Duration.Inf)
+
+    println(Await.result(summary.getPipelines(), Duration.Inf))
 
     db.close()
 
