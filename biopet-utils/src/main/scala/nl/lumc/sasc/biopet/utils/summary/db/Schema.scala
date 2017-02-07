@@ -23,6 +23,8 @@ object Schema {
     def tags = column[Option[String]]("tags")
 
     def * = (id, name, runId, tags)
+
+    def idx = index("idx_samples", (runId, name), unique = true)
   }
   val samples = TableQuery[Samples]
 
@@ -34,26 +36,31 @@ object Schema {
     def tags = column[Option[String]]("tags")
 
     def * = (id, name, runId, sampleId, tags)
+
+    def idx = index("idx_libraries", (runId, sampleId, name), unique = true)
   }
   val libraries = TableQuery[Libraries]
 
-  class PipelineNames(tag: Tag) extends Table[(Int, String)](tag, "PipelineNames") {
+  class PipelineNames(tag: Tag) extends Table[(Int, String, Int)](tag, "PipelineNames") {
     def id = column[Int]("id", O.PrimaryKey)
     def name = column[String]("name")
+    def runId = column[Int]("runId")
 
-    def * = (id, name)
+    def * = (id, name, runId)
 
-    def idx = index("idx_pipeline_names", (name), unique = true)
+    def idx = index("idx_pipeline_names", (name, runId), unique = true)
   }
   val pipelineNames = TableQuery[PipelineNames]
 
-  class ModuleNames(tag: Tag) extends Table[(Int, String)](tag, "ModuleNames") {
+  class ModuleNames(tag: Tag) extends Table[(Int, String, Int, Int)](tag, "ModuleNames") {
     def id = column[Int]("id", O.PrimaryKey)
     def name = column[String]("name")
+    def runId = column[Int]("runId")
+    def pipelineId = column[Int]("pipelineId")
 
-    def * = (id, name)
+    def * = (id, name, runId, pipelineId)
 
-    def idx = index("idx_module_names", (name), unique = true)
+    def idx = index("idx_module_names", (name, runId, pipelineId), unique = true)
   }
   val moduleNames = TableQuery[ModuleNames]
 
