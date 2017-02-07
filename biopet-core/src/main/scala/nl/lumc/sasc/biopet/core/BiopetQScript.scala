@@ -122,6 +122,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
     }
 
+    logger.info("Set stdout file when not set")
     functions.filter(_.jobOutputFile == null).foreach(f => {
       val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
       BiopetQScript.safeOutputs(f) match {
@@ -133,6 +134,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     if (!skipWriteDependencies) WriteDependencies.writeDependencies(
       functions,
       new File(logDir, "graph"))
+    else logger.debug("Write dependencies is skipped")
 
     Logging.checkErrors()
     logger.info("Script complete without errors")
