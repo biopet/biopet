@@ -178,6 +178,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         }
       }
       logger.debug("Chunks: " + numberChunks.getOrElse(1))
+      if (numberChunks.getOrElse(1) > 1) chunking = false
     }
   }
 
