@@ -91,7 +91,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     cv.out = finalFile
     cv.setKey = Some("VariantCaller")
     cv.genotypemergeoption = Some("PRIORITIZE")
-    cv.rod_priority_list = Some(callers.map(_.name).mkString(","))
+    cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
       caller.namePrefix = namePrefix
