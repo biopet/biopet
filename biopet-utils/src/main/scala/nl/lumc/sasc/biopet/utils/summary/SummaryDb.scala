@@ -1,7 +1,6 @@
 package nl.lumc.sasc.biopet.utils.summary
 
-import java.sql.Blob
-
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.{Await, Future}
@@ -9,7 +8,6 @@ import scala.concurrent.duration.Duration
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.io.Source
 
 /**
   * Created by pjvanthof on 05/02/2017.
@@ -45,9 +43,9 @@ class SummaryDb(db: Database) {
     db.run(q.result)
   }
 
-  def createSample(runId: Int, name: String, tags: Option[String] = None): Future[Int] = {
+  def createSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
     val id = Await.result(db.run(samples.size.result), Duration.Inf)
-    db.run(samples.forceInsert(id, runId, name, tags)).map(_ => id)
+    db.run(samples.forceInsert(id, name, runId, tags)).map(_ => id)
   }
 
   def getSamples(sampleId: Option[Int] = None, runId: Option[Int] = None, name: Option[String] = None) = {
@@ -61,8 +59,31 @@ class SummaryDb(db: Database) {
     db.run(q.map(x => (x.id, x.runId, x.name)).result)
   }
 
-  def sampleTags(sampleId: Int): Map[String, Any] = {
-    samples.filter(_.id === sampleId).map(_.tags)
+  def getSampleTags(sampleId: Int): Future[Option[Map[String, Any]]] = {
+    db.run(samples.filter(_.id === sampleId).map(_.tags).result)
+      .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
+  }
+
+  def createLibrary(name: String, runId: Int, sampleId: Int, tags: Option[String] = None): Future[Int] = {
+    val id = Await.result(db.run(libraries.size.result), Duration.Inf)
+    db.run(libraries.forceInsert(id, name, runId, sampleId, tags)).map(_ => id)
+  }
+
+  def getLibraries(libId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None, sampleId: Option[Int] = None) = {
+    val q = libraries.filter { lib =>
+      List(
+        libId.map(lib.id === _),
+        sampleId.map(lib.sampleId === _),
+        runId.map(lib.runId === _),
+        name.map(lib.name === _) // not a condition as `criteriaRoast` evaluates to `None`
+      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+    }
+    db.run(q.map(x => (x.id, x.name, x.runId, x.sampleId)).result)
+  }
+
+  def getLibraryTags(libId: Int): Future[Option[Map[String, Any]]] = {
+    db.run(libraries.filter(_.id === libId).map(_.tags).result)
+      .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
   }
 
 }

@@ -16,24 +16,24 @@ object Schema {
   }
   val runs = TableQuery[Runs]
 
-  class Samples(tag: Tag) extends Table[(Int, Int, String, Option[String])](tag, "Samples") {
+  class Samples(tag: Tag) extends Table[(Int, String, Int, Option[String])](tag, "Samples") {
     def id = column[Int]("id", O.PrimaryKey)
-    def runId = column[Int]("runId")
     def name = column[String]("name")
+    def runId = column[Int]("runId")
     def tags = column[Option[String]]("tags")
 
-    def * = (id, runId, name, tags)
+    def * = (id, name, runId, tags)
   }
   val samples = TableQuery[Samples]
 
-  class Libraries(tag: Tag) extends Table[(Int, Int, String, Int, Option[String])](tag, "Libraries") {
+  class Libraries(tag: Tag) extends Table[(Int, String, Int, Int, Option[String])](tag, "Libraries") {
     def id = column[Int]("id", O.PrimaryKey)
+    def name = column[String]("name")
     def runId = column[Int]("runId")
-    def libraryName = column[String]("name")
     def sampleId = column[Int]("sampleId")
     def tags = column[Option[String]]("tags")
 
-    def * = (id, runId, libraryName, sampleId, tags)
+    def * = (id, name, runId, sampleId, tags)
   }
   val libraries = TableQuery[Libraries]
 
@@ -59,38 +59,38 @@ object Schema {
 
 
   class Stats(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, Option[String])](tag, "Stats") {
-    def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
+    def pipelineId = column[Int]("pipelineId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
     def stats = column[String]("stats")
     def schema = column[Option[String]]("schema")
 
-    def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
+    def * = (runId, pipelineId, moduleId, sampleId, libraryId, stats, schema)
 
-    def idx = index("idx_stats", (pipelineId, runId, moduleId, sampleId, libraryId), unique = true)
+    def idx = index("idx_stats", (runId, pipelineId, moduleId, sampleId, libraryId), unique = true)
   }
   val stats = TableQuery[Stats]
 
   class Settings(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, Option[String])](tag, "Settings") {
-    def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
+    def pipelineId = column[Int]("pipelineId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
     def stats = column[String]("stats")
     def schema = column[Option[String]]("schema")
 
-    def * = (pipelineId, runId, moduleId, sampleId, libraryId, stats, schema)
+    def * = (runId, pipelineId, moduleId, sampleId, libraryId, stats, schema)
 
-    def idx = index("idx_settings", (pipelineId, runId, moduleId, sampleId, libraryId), unique = true)
+    def idx = index("idx_settings", (runId, pipelineId, moduleId, sampleId, libraryId), unique = true)
   }
   val settings = TableQuery[Settings]
 
   class Files(tag: Tag) extends Table[(Int, Int, Option[Int], Option[Int], Option[Int], String, String, String, Boolean, Long)](tag, "Files") {
-    def pipelineId = column[Int]("pipelineId")
     def runId = column[Int]("runId")
+    def pipelineId = column[Int]("pipelineId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
@@ -100,9 +100,9 @@ object Schema {
     def link = column[Boolean]("link", O.Default(false))
     def size = column[Long]("size")
 
-    def * = (pipelineId, runId, moduleId, sampleId, libraryId, name, path, md5, link, size)
+    def * = (runId, pipelineId, moduleId, sampleId, libraryId, name, path, md5, link, size)
 
-    def idx = index("idx_files", (pipelineId, runId, sampleId, libraryId, name), unique = true)
+    def idx = index("idx_files", (runId, pipelineId, sampleId, libraryId, name), unique = true)
   }
   val files = TableQuery[Files]
 

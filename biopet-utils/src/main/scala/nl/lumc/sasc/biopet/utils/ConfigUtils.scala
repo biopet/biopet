@@ -122,6 +122,10 @@ object ConfigUtils extends Logging {
     }
   }
 
+  def jsonTextToMap(json: String): Map[String, Any] = {
+    jsonToMap(textToJson(json))
+  }
+
   /** Make json aboject from a file */
   def textToJson(jsonText: String): Json = {
     logger.debug("jsonText: " + jsonText)
