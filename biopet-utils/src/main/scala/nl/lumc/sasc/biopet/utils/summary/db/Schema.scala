@@ -99,22 +99,22 @@ object Schema {
   }
   val settings = TableQuery[Settings]
 
-  case class File(runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], library: Option[Int], name: String, path: String, md5: String, link: Boolean, size: Long)
+  case class File(runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], library: Option[Int], key: String, path: String, md5: String, link: Boolean, size: Long)
   class Files(tag: Tag) extends Table[File](tag, "Files") {
     def runId = column[Int]("runId")
     def pipelineId = column[Int]("pipelineId")
     def moduleId = column[Option[Int]]("moduleId")
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
-    def name = column[String]("name")
+    def key = column[String]("key")
     def path = column[String]("path")
     def md5 = column[String]("md5")
     def link = column[Boolean]("link", O.Default(false))
     def size = column[Long]("size")
 
-    def * = (runId, pipelineId, moduleId, sampleId, libraryId, name, path, md5, link, size) <> (File.tupled, File.unapply)
+    def * = (runId, pipelineId, moduleId, sampleId, libraryId, key, path, md5, link, size) <> (File.tupled, File.unapply)
 
-    def idx = index("idx_files", (runId, pipelineId, sampleId, libraryId, name), unique = true)
+    def idx = index("idx_files", (runId, pipelineId, sampleId, libraryId, key), unique = true)
   }
   val files = TableQuery[Files]
 
