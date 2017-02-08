@@ -126,26 +126,28 @@ class SummaryDb(db: Database) {
 
   def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    val q = List(
-      runId.map(x => (y:Query[Stats, Stats#TableElementType, Seq]) => y.filter(_.runId === x)),
-      pipelineId.map(x => (y:Query[Stats, Stats#TableElementType, Seq]) => y.filter(_.pipelineId === x)),
-      moduleId.map(x => (y:Query[Stats, Stats#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
-      sampleId.map(x => (y:Query[Stats, Stats#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
-      libId.map(x => (y:Query[Stats, Stats#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
-    ).flatten.foldLeft(stats.subquery)((a,b) => b(a))
+    val l: List[Option[Query[Stats, Stats#TableElementType, Seq] => Query[Stats, Stats#TableElementType, Seq]]] = List(
+      runId.map(x => y => y.filter(_.runId === x)),
+      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
+      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
+      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
+      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
+    )
+    val q = l.flatten.foldLeft(stats.subquery)((a,b) => b(a))
 
     db.run(q.result)
   }
 
   def getStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
               sampleId: Option[Int] = None, libId: Option[Int] = None): Future[Option[Map[String, Any]]] = {
-    val q = List(
-      (y:Query[Stats, Stats#TableElementType, Seq]) => y.filter(_.runId === runId),
-      (y:Query[Stats, Stats#TableElementType, Seq]) => y.filter(_.pipelineId === pipelineId),
-      (y:Query[Stats, Stats#TableElementType, Seq]) => (if (moduleId.isDefined) y.filter(_.moduleId === moduleId) else y.filter(_.moduleId.isEmpty)),
-      (y:Query[Stats, Stats#TableElementType, Seq]) => (if (sampleId.isDefined) y.filter(_.sampleId === sampleId) else y.filter(_.sampleId.isEmpty)),
-      (y:Query[Stats, Stats#TableElementType, Seq]) => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
-    ).foldLeft(stats.subquery)((a,b) => b(a))
+    val l: List[Query[Stats, Stats#TableElementType, Seq] => Query[Stats, Stats#TableElementType, Seq]] = List(
+      y => y.filter(_.runId === runId),
+      y => y.filter(_.pipelineId === pipelineId),
+      y => (if (moduleId.isDefined) y.filter(_.moduleId === moduleId) else y.filter(_.moduleId.isEmpty)),
+      y => (if (sampleId.isDefined) y.filter(_.sampleId === sampleId) else y.filter(_.sampleId.isEmpty)),
+      y => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
+    )
+    val q = l.foldLeft(stats.subquery)((a,b) => b(a))
 
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
@@ -157,27 +159,29 @@ class SummaryDb(db: Database) {
 
   def getSettings(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    val q = List(
-      runId.map(x => (y:Query[Settings, Settings#TableElementType, Seq]) => y.filter(_.runId === x)),
-      pipelineId.map(x => (y:Query[Settings, Settings#TableElementType, Seq]) => y.filter(_.pipelineId === x)),
-      moduleId.map(x => (y:Query[Settings, Settings#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
-      sampleId.map(x => (y:Query[Settings, Settings#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
-      libId.map(x => (y:Query[Settings, Settings#TableElementType, Seq]) => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
-    ).flatten.foldLeft(settings.subquery)((a,b) => b(a))
+    val l: List[Option[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]]] = List(
+      runId.map(x => y => y.filter(_.runId === x)),
+      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
+      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
+      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
+      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
+    )
+    val q = l.flatten.foldLeft(settings.subquery)((a,b) => b(a))
 
     db.run(q.result)
   }
 
   def getSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
               sampleId: Option[Int] = None, libId: Option[Int] = None): Future[Option[Map[String, Any]]] = {
-    val q = List(
-      (y:Query[Settings, Settings#TableElementType, Seq]) => y.filter(_.runId === runId),
-      (y:Query[Settings, Settings#TableElementType, Seq]) => y.filter(_.pipelineId === pipelineId),
-      (y:Query[Settings, Settings#TableElementType, Seq]) => (if (moduleId.isDefined) y.filter(_.moduleId === moduleId) else y.filter(_.moduleId.isEmpty)),
-      (y:Query[Settings, Settings#TableElementType, Seq]) => (if (sampleId.isDefined) y.filter(_.sampleId === sampleId) else y.filter(_.sampleId.isEmpty)),
-      (y:Query[Settings, Settings#TableElementType, Seq]) => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
-    ).foldLeft(settings.subquery)((a,b) => b(a))
+    val l: List[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]] = List(
+      _.filter(_.runId === runId),
+      _.filter(_.pipelineId === pipelineId),
+      y => (if (moduleId.isDefined) y.filter(_.moduleId === moduleId) else y.filter(_.moduleId.isEmpty)),
+      y => (if (sampleId.isDefined) y.filter(_.sampleId === sampleId) else y.filter(_.sampleId.isEmpty)),
+      y => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
+    )
 
+    val q = l.foldLeft(settings.subquery)((a,b) => b(a))
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
 
