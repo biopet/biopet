@@ -66,6 +66,12 @@ object SummaryToSqlite extends ToolCommand {
 
     println(Await.result(summary.getPipelines(), Duration.Inf))
 
+    Await.result(summary.createStat(runId, pipelineId, None, None, None, """{"bla": "bla"}"""), Duration.Inf)
+
+    println(Await.result(summary.getStats(runId = Some(runId), pipelineId = Some(pipelineId), sampleId = Option(None)), Duration.Inf))
+
+    println(Await.result(summary.getStat(0,0), Duration.Inf))
+
     db.close()
 
     logger.info("Done")
