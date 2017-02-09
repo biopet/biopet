@@ -84,13 +84,13 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
     val read1: File = if (r1.size == 1) r1.head else {
       val outputFile = new File(outputDir, "merged.R1.fq.gz")
-      Zcat(this, r1) | new Gzip(this) > outputFile
+      add(Zcat(this, r1) | new Gzip(this) > outputFile)
       outputFile
     }
 
     val read2: Option[File] = if (r2.size <= 1) r2.headOption else {
       val outputFile = new File(outputDir, "merged.R2.fq.gz")
-      Zcat(this, r2) | new Gzip(this) > outputFile
+      add(Zcat(this, r2) | new Gzip(this) > outputFile)
       Some(outputFile)
     }
 
