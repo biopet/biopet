@@ -82,8 +82,12 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
-    require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+    if (inputBams.isEmpty) {
+      Logging.addError("No input bams found")
+      inputBams = Map("test", new File("."))
+    }
+    if (callers.isEmpty) Logging.addError("must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+    if (!callers.exists(_.mergeVcfResults)) Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
     addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
 
