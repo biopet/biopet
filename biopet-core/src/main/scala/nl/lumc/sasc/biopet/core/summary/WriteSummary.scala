@@ -28,6 +28,9 @@ import scala.collection.mutable
 import scala.io.Source
 import slick.driver.H2Driver.api._
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 /**
  * This will collect and write the summary
  *
@@ -59,10 +62,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         case s: MultiSampleQScript => s.initSummaryDb
         case _ => qscript.summaryRunId
       }
-      val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
-
-      db.close()
     }
+    val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
+    val pipelineId = Await.result(db.createPipeline(qscript.summaryName, qscript.summaryRunId), Duration.Inf)
+    qscript.summarizables.map(x => Await.result(db.createModule(x._1._1, qscript.summaryRunId, pipelineId), Duration.Inf))
+    db.close()
     for (q <- qscript.summaryQScripts)
       deps :+= q.summaryFile
     for ((_, l) <- qscript.summarizables; s <- l) {

@@ -62,7 +62,7 @@ object SummaryToSqlite extends ToolCommand {
 
     println(Await.result(summary.getLibraries(), Duration.Inf))
 
-    val pipelineId = Await.result(summary.createPipeline("pipelineName", runId), Duration.Inf)
+    val pipelineId = Await.result(summary.forceCreatePipeline("pipelineName", runId), Duration.Inf)
 
     println(Await.result(summary.getPipelines(), Duration.Inf))
 

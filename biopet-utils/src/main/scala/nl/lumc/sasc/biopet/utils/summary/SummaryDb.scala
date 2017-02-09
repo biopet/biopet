@@ -91,9 +91,17 @@ class SummaryDb(db: Database) extends Closeable {
       .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
   }
 
-  def createPipeline(name: String, runId: Int): Future[Int] = {
+  def forceCreatePipeline(name: String, runId: Int): Future[Int] = {
     val id = Await.result(db.run(pipelines.size.result), Duration.Inf)
     db.run(pipelines.forceInsert(Pipeline(id, name, runId))).map(_ => id)
+  }
+
+  def createPipeline(name: String, runId: Int): Future[Int] = {
+    getPipelines(name = Some(name), runId = Some(runId))
+      .flatMap{ case m =>
+        if (m.isEmpty) forceCreatePipeline(name, runId)
+        else Future(m.head.id)
+      }
   }
 
   def getPipelines(pipelineId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None) = {
@@ -104,12 +112,20 @@ class SummaryDb(db: Database) extends Closeable {
         name.map(lib.name === _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
-    db.run(q.map(x => (x.id, x.name, x.runId)).result)
+    db.run(q.result)
+  }
+
+  def forceCreateModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
+    val id = Await.result(db.run(modules.size.result), Duration.Inf)
+    db.run(modules.forceInsert(Module(id, name, runId, pipelineId))).map(_ => id)
   }
 
   def createModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
-    val id = Await.result(db.run(modules.size.result), Duration.Inf)
-    db.run(modules.forceInsert(Module(id, name, runId, pipelineId))).map(_ => id)
+    getModules(name = Some(name), runId = Some(runId), pipelineId = Some(pipelineId))
+      .flatMap{ case m =>
+        if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
+        else Future(m.head.id)
+      }
   }
 
   def getModules(moduleId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None, pipelineId: Option[Int] = None) = {
@@ -121,7 +137,7 @@ class SummaryDb(db: Database) extends Closeable {
         name.map(lib.name === _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
-    db.run(q.map(x => (x.id, x.name, x.runId)).result)
+    db.run(q.result)
   }
 
   def createStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
