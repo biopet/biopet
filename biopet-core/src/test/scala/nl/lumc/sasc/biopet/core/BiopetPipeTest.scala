@@ -23,14 +23,14 @@ import org.testng.annotations.Test
  */
 class BiopetPipeTest extends TestNGSuite with Matchers {
   class Pipe1 extends BiopetCommandLineFunction {
-    val root = null
+    val parent = null
     def cmdLine = "pipe1" +
       (if (!inputAsStdin) " input1 " else "") +
       (if (!outputAsStsout) " output1 " + "")
   }
 
   class Pipe2 extends BiopetCommandLineFunction {
-    val root = null
+    val parent = null
     def cmdLine = "pipe2" +
       (if (!inputAsStdin) " input2 " else "") +
       (if (!outputAsStsout) " output2 " + "")

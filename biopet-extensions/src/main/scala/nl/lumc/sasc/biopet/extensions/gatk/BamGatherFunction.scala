@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
  */
 class BamGatherFunction extends MergeSamFiles(null) with GatherFunction {
 
-  override val root = originalFunction match {
+  override val parent = originalFunction match {
     case b: BiopetCommandLineFunction => b
     case _                            => null
   }

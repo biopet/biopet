@@ -25,7 +25,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvan_thof on 12/10/15.
  */
-class GearsReport(val root: Configurable) extends ReportBuilderExtension {
+class GearsReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = GearsReport
 }
 

@@ -31,7 +31,7 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
  * Design based on work from Henk Buermans (e-Mir)
  * Implementation by wyleung started 19/01/16
  */
-class TinyCap(val root: Configurable) extends QScript
+class TinyCap(val parent: Configurable) extends QScript
   with MultisampleMappingTrait
   with AnnotationRefFlat
   with AnnotationGff

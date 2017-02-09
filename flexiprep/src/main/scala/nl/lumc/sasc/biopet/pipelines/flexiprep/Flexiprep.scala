@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq 
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
-class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", fullName = "inputR1", required = true)
@@ -39,7 +39,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var skipClip: Boolean = config("skip_clip", default = false)
 
   /** Make a final fastq files, by default only when flexiprep is the main pipeline */
-  var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = root == null)
+  var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = parent == null)
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")

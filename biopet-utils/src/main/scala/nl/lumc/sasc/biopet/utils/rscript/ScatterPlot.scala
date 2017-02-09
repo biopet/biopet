@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvan_thof on 4/29/15.
  */
-class ScatterPlot(val root: Configurable) extends Rscript {
+class ScatterPlot(val parent: Configurable) extends Rscript {
   protected var script: File = config("script", default = "plotScatter.R")
 
   var input: File = _

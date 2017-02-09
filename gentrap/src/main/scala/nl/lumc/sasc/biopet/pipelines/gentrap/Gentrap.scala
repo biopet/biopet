@@ -38,7 +38,7 @@ import scala.language.reflectiveCalls
  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-class Gentrap(val root: Configurable) extends QScript
+class Gentrap(val parent: Configurable) extends QScript
   with MultisampleMappingTrait with AnnotationRefFlat with RibosomalRefFlat { qscript =>
 
   // alternative constructor for initialization with empty configuration

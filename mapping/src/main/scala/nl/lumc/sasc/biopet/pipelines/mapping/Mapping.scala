@@ -38,7 +38,7 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.math._
 
 // TODO: documentation
-class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class Mapping(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
 
@@ -135,7 +135,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "aligner" -> aligner,
     "chunking" -> chunking,
     "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
-  ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
+  ) ++ (if (parent == null) Map("reference" -> referenceSummary) else Map())
 
   override def reportClass = {
     val mappingReport = new MappingReport(this)

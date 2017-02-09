@@ -31,7 +31,7 @@ import scala.xml.{ Elem, PrettyPrinter }
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsQiimeClosed(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqInput: File = _
 

@@ -27,7 +27,7 @@ import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
  *
  * Created by pjvan_thof on 3/30/15.
  */
-class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
+class ShivaReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = ShivaReport
 }
 

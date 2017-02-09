@@ -33,7 +33,7 @@ import org.broadinstitute.gatk.queue.QScript
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait with Reference {
+class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrait with Reference {
   qscript =>
   def this() = this(null)
 

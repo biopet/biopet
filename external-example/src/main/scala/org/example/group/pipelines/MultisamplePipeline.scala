@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 30/08/15.
  */
-class MultisamplePipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+class MultisamplePipeline(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 

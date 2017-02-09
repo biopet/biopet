@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.extensions.tools.{ BedtoolsCoverageToCounts, PrefixFa
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
-class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
+class Sage(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 

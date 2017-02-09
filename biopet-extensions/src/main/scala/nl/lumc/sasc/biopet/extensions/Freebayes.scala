@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Created by pjvan_thof on 3/3/15.
  */
-class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Freebayes(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   @Input(required = true)
   var bamfiles: List[File] = Nil

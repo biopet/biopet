@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 /**
  * Created by pjvanthof on 11/01/16.
  */
-class MultisampleMappingReport(val root: Configurable) extends ReportBuilderExtension {
+class MultisampleMappingReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = MultisampleMappingReport
 }
 

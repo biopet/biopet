@@ -31,13 +31,13 @@ import scala.io.Source
  *
  * Created by pjvan_thof on 2/14/15.
  */
-class WriteSummary(val root: Configurable) extends InProcessFunction with Configurable {
+class WriteSummary(val parent: Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
-  require(root.isInstanceOf[SummaryQScript], "root is not a SummaryQScript")
+  require(parent.isInstanceOf[SummaryQScript], "root is not a SummaryQScript")
 
   /** To access qscript for this summary */
-  val qscript = root.asInstanceOf[SummaryQScript]
+  val qscript = parent.asInstanceOf[SummaryQScript]
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil

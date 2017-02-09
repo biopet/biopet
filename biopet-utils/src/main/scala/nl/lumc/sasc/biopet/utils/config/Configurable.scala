@@ -19,14 +19,14 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
-  def root: Configurable
-  def globalConfig: Config = if (root != null) root.globalConfig else Config.global
+  def parent: Configurable
+  def globalConfig: Config = if (parent != null) parent.globalConfig else Config.global
 
   /** suffix to the path */
   def subPath: List[String] = Nil
 
   /** Get default path to search config values for current object */
-  def configPath: List[String] = if (root != null) root.configFullPath else Nil
+  def configPath: List[String] = if (parent != null) parent.configFullPath else Nil
 
   /** Gets name of module for config */
   def configNamespace = getClass.getSimpleName.toLowerCase
@@ -39,9 +39,9 @@ trait Configurable extends ImplicitConversions {
 
   /** This method merge defaults from the root to it's own */
   protected[config] def internalDefaults: Map[String, Any] = {
-    (root != null, defaults.isEmpty) match {
-      case (true, true)   => root.internalDefaults
-      case (true, false)  => ConfigUtils.mergeMaps(defaults, root.internalDefaults)
+    (parent != null, defaults.isEmpty) match {
+      case (true, true)   => parent.internalDefaults
+      case (true, false)  => ConfigUtils.mergeMaps(defaults, parent.internalDefaults)
       case (false, true)  => globalConfig.defaults
       case (false, false) => ConfigUtils.mergeMaps(defaults, globalConfig.defaults)
     }
@@ -52,9 +52,9 @@ trait Configurable extends ImplicitConversions {
 
   /** This method merge fixedValues from the root to it's own */
   protected def internalFixedValues: Map[String, Any] = {
-    (root != null, fixedValues.isEmpty) match {
-      case (true, true)  => root.internalFixedValues
-      case (true, false) => ConfigUtils.mergeMaps(fixedValues, root.internalFixedValues)
+    (parent != null, fixedValues.isEmpty) match {
+      case (true, true)  => parent.internalFixedValues
+      case (true, false) => ConfigUtils.mergeMaps(fixedValues, parent.internalFixedValues)
       case _             => fixedValues
     }
   }

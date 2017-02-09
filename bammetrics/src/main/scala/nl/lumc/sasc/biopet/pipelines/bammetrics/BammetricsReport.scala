@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, 
 import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.utils.rscript.{ StackedBarPlot, LinePlot }
 
-class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
+class BammetricsReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = BammetricsReport
 }
 

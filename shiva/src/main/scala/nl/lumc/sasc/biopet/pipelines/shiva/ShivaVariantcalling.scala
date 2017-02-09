@@ -32,7 +32,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaVariantcalling(val root: Configurable) extends QScript
+class ShivaVariantcalling(val parent: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
   with Reference

@@ -30,7 +30,7 @@ import scala.collection.mutable.ListBuffer
  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  */
 object WriteDependencies extends Logging with Configurable {
-  val root: Configurable = null
+  val parent: Configurable = null
   private def createFunctionNames(functions: Seq[QFunction]): Map[QFunction, String] = {
     val cache: mutable.Map[String, Int] = mutable.Map()
     (for (function <- functions) yield {
@@ -113,7 +113,7 @@ object WriteDependencies extends Logging with Configurable {
           case _                        => None
         }), "main_job" -> (f match {
           case cmd: BiopetCommandLineFunction            => cmd.mainFunction
-          case s: WriteSummary if s.qscript.root == null => true
+          case s: WriteSummary if s.qscript.parent == null => true
           case _                                         => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),

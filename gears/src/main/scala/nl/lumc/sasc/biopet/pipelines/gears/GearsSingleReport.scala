@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
-class GearsSingleReport(val root: Configurable) extends ReportBuilderExtension {
+class GearsSingleReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = GearsSingleReport
 }
 

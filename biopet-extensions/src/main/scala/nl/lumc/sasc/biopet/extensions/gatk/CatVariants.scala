@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
-class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
+class CatVariants(val parent: Configurable) extends BiopetJavaCommandLineFunction with Reference {
   analysisName = "CatVariants"
   javaMainClass = "org.broadinstitute.gatk.tools.CatVariants"
 

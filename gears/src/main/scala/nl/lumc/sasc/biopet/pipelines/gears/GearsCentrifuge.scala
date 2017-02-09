@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 19/09/16.
  */
-class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 

@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Extension for fastqc
  * Based on version 0.10.1 and 0.11.2
  */
-class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Contaminants", required = false)
   var contaminants: Option[File] = None

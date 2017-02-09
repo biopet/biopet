@@ -36,7 +36,7 @@ import scalaz._, Scalaz._
  *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
+class Toucan(val parent: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
@@ -58,7 +58,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   lazy val enableScatter: Boolean = config("enable_scatter", default = referenceDict.getReferenceLength > minScatterGenomeSize)
 
-  def sampleInfo: Map[String, Map[String, Any]] = root match {
+  def sampleInfo: Map[String, Map[String, Any]] = parent match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
     case null                  => VcfUtils.getSampleIds(inputVcf).map(x => x -> Map[String, Any]()).toMap
     case s: SampleLibraryTag   => s.sampleId.map(x => x -> Map[String, Any]()).toMap

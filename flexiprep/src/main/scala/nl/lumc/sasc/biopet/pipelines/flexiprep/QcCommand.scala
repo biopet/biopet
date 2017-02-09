@@ -26,9 +26,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by pjvan_thof on 9/22/15.
  */
-class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) extends BiopetCommandLineFunction with Summarizable {
+class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) extends BiopetCommandLineFunction with Summarizable {
 
-  val flexiprep = root match {
+  val flexiprep = parent match {
     case f: Flexiprep => f
     case _            => throw new IllegalArgumentException("This class may only be used inside Flexiprep")
   }
@@ -44,20 +44,20 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 3
 
-  val seqtk = new SeqtkSeq(root)
-  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(root, fastqc)) else None
+  val seqtk = new SeqtkSeq(parent)
+  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(parent, fastqc)) else None
   var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
-    val sickle = new Sickle(root)
+    val sickle = new Sickle(parent)
     sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
     Some(sickle)
   } else None
 
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
-    val gzip = Gzip(root)
+    val gzip = Gzip(parent)
     gzip.output = output
     gzip
   } else {
-    val cat = Cat(root)
+    val cat = Cat(parent)
     cat.output = output
     cat
   }
@@ -107,7 +107,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
     addPipeJob(seqtk)
 
     clip = if (!flexiprep.skipClip) {
-      val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
+      val cutadapt = clip.getOrElse(new Cutadapt(parent, fastqc))
 
       val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
         fastqc.foundAdapters.map(_.seq)
@@ -159,10 +159,10 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
   def cmdLine = {
 
     val cmd = (clip, trim) match {
-      case (Some(c), Some(t)) => new BiopetFifoPipe(root, seqtk :: c :: t :: outputCommand :: Nil)
-      case (Some(c), _)       => new BiopetFifoPipe(root, seqtk :: c :: outputCommand :: Nil)
-      case (_, Some(t))       => new BiopetFifoPipe(root, seqtk :: t :: outputCommand :: Nil)
-      case _                  => new BiopetFifoPipe(root, seqtk :: outputCommand :: Nil)
+      case (Some(c), Some(t)) => new BiopetFifoPipe(parent, seqtk :: c :: t :: outputCommand :: Nil)
+      case (Some(c), _)       => new BiopetFifoPipe(parent, seqtk :: c :: outputCommand :: Nil)
+      case (_, Some(t))       => new BiopetFifoPipe(parent, seqtk :: t :: outputCommand :: Nil)
+      case _                  => new BiopetFifoPipe(parent, seqtk :: outputCommand :: Nil)
     }
 
     //val cmds = (Some(seqtk) :: clip :: trim :: Some(new Gzip(root)) :: Nil).flatten

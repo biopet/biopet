@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by wyleung
  */
-class GearsSingle(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)

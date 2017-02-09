@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 /**
  * Created by wyleung on 4-2-16.
  */
-class TinyCapReport(val root: Configurable) extends ReportBuilderExtension {
+class TinyCapReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = TinyCapReport
 
 }

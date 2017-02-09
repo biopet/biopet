@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for Kraken */
-class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input: FastQ or FastA")
   var input: List[File] = _

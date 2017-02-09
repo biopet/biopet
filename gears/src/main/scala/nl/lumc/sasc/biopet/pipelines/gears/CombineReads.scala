@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 29/12/15.
  */
-class CombineReads(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class CombineReads(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
   var fastqR1: File = _
 

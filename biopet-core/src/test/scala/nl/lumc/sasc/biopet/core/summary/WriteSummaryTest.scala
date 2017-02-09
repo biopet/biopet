@@ -238,7 +238,7 @@ object WriteSummaryTest {
       def summaryFile: File = tempFile
       def init(): Unit = {}
       def biopetScript(): Unit = {}
-      def root: Configurable = null
+      def parent: Configurable = null
     }
 
   def makeSampleLibraryQscript(name: String,
@@ -260,7 +260,7 @@ object WriteSummaryTest {
       def summaryFile: File = tempFile
       def init(): Unit = {}
       def biopetScript(): Unit = {}
-      def root: Configurable = null
+      def parent: Configurable = null
     }
 
   def makeMultisampleQscript(name: String,
@@ -278,7 +278,7 @@ object WriteSummaryTest {
       def summaryFile: File = tempFile
       def init(): Unit = {}
       def biopetScript(): Unit = {}
-      def root: Configurable = null
+      def parent: Configurable = null
 
       class Sample(id: String) extends AbstractSample(id) {
         class Library(id: String) extends AbstractLibrary(id) {
@@ -310,7 +310,7 @@ object WriteSummaryTest {
                       c: Map[String, Any] = Map()) = new BiopetJavaCommandLineFunction with Summarizable with Version {
     override def globalConfig = new Config(c)
     override def configNamespace = "java_command"
-    def root: Configurable = null
+    def parent: Configurable = null
     def summaryStats: Map[String, Any] = stats
     def summaryFiles: Map[String, File] = files
 
@@ -335,7 +335,7 @@ object WriteSummaryTest {
     new CommandLineFunction with Configurable with Summarizable with Version {
       override def globalConfig = new Config(c)
       override def configNamespace = "version_command"
-      def root: Configurable = null
+      def parent: Configurable = null
 
       def summaryFiles: Map[String, File] = files
       def summaryStats: Any = stats

@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class ConiferRPKM(val root: Configurable) extends Conifer {
+class ConiferRPKM(val parent: Configurable) extends Conifer {
 
   @Input(doc = "Bam file", required = true)
   var bamFile: File = _

@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for samtools mpileup */
-class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
+class SamtoolsMpileup(val parent: Configurable) extends Samtools with Reference {
   @Input(doc = "Bam File")
   var input: List[File] = Nil
 

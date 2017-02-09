@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.extensions.{ PythonCommandLineFunction, RscriptC
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class FreeCCNVPlot(val root: Configurable) extends PythonCommandLineFunction {
+class FreeCCNVPlot(val parent: Configurable) extends PythonCommandLineFunction {
   setPythonScript("freec_CNVPlot.py")
 
   @Input(doc = "Output file from FreeC. *_CNV", required = true)

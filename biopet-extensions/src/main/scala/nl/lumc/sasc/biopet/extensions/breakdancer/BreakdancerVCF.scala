@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
+class BreakdancerVCF(val parent: Configurable) extends PythonCommandLineFunction {
   setPythonScript("breakdancer2vcf.py")
 
   @Input(doc = "Breakdancer TSV")

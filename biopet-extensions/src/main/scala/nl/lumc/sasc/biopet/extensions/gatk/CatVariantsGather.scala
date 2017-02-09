@@ -32,7 +32,7 @@ class CatVariantsGatherer extends CatVariants(null) with GatherFunction {
 
   analysisName = "Gather_CatVariants"
 
-  override val root = originalFunction match {
+  override val parent = originalFunction match {
     case b: BiopetCommandLineFunction => b
     case _                            => null
   }

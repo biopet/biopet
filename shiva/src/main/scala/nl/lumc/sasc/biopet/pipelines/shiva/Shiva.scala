@@ -33,7 +33,7 @@ import org.broadinstitute.gatk.queue.function.QFunction
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait with Reference with TargetRegions { qscript =>
+class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTrait with Reference with TargetRegions { qscript =>
 
   def this() = this(null)
 

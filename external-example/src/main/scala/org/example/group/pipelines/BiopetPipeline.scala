@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.QScript
  * Created by pjvan_thof on 8/28/15.
  */
 //TODO: Replace class Name
-class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript {
+class BiopetPipeline(val parent: Configurable) extends QScript with SummaryQScript {
   def this() = this(null)
 
   /** Only required when using [[SummaryQScript]] */

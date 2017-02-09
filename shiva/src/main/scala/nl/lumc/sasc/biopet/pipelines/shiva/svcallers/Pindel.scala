@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.extensions.pindel._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /// Pindel is actually a mini pipeline executing binaries from the pindel package
-class Pindel(val root: Configurable) extends SvCaller {
+class Pindel(val parent: Configurable) extends SvCaller {
   val name = "pindel"
 
   /** Default pipeline config */

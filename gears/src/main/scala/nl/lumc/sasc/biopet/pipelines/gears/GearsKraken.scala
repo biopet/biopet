@@ -31,7 +31,7 @@ import scala.xml.{ PrettyPrinter, Node }
 /**
  * Created by pjvanthof on 04/12/15.
  */
-class GearsKraken(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsKraken(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 

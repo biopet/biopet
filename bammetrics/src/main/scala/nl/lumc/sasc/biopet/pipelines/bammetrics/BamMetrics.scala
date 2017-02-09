@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
 import org.broadinstitute.gatk.queue.QScript
 
-class BamMetrics(val root: Configurable) extends QScript
+class BamMetrics(val parent: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
   with Reference

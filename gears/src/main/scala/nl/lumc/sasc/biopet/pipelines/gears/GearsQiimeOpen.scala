@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsQiimeOpen(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqInput: File = _
 

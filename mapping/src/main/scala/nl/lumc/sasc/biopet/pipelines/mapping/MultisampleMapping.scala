@@ -287,7 +287,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 }
 
 /** This class is the default implementation that can be used on the command line */
-class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
+class MultisampleMapping(val parent: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
 
   def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")

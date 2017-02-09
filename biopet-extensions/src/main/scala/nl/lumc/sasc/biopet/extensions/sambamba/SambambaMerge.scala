@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba merge  */
-class SambambaMerge(val root: Configurable) extends Sambamba {
+class SambambaMerge(val parent: Configurable) extends Sambamba {
   override def defaultThreads = 4
 
   @Input(doc = "Bam File[s]")

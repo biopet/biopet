@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  *
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
   import CollectMultipleMetrics._
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName

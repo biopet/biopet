@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.queue.QScript
 
 import scala.language.reflectiveCalls
 
-class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Reference {
+class Kopisu(val parent: Configurable) extends QScript with SummaryQScript with Reference {
   qscript =>
   def this() = this(null)
 

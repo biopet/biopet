@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvanthof on 25/06/15.
  */
-class CarpReport(val root: Configurable) extends ReportBuilderExtension {
+class CarpReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = CarpReport
 }
 

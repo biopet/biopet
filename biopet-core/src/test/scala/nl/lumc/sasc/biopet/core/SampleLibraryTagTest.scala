@@ -26,7 +26,7 @@ class SampleLibraryTagTest extends TestNGSuite with Matchers {
   @Test
   def testDefault: Unit = {
     val o = new SampleLibraryTag {
-      override def root: Configurable = null
+      override def parent: Configurable = null
       override def globalConfig = new Config(Map())
     }
     o.sampleId shouldBe None
@@ -36,7 +36,7 @@ class SampleLibraryTagTest extends TestNGSuite with Matchers {
   @Test
   def testInherit: Unit = {
     val o1 = new SampleLibraryTag {
-      override def root: Configurable = null
+      override def parent: Configurable = null
       override def globalConfig = new Config(Map())
     }
     o1.sampleId = Some("sampleName")
@@ -45,7 +45,7 @@ class SampleLibraryTagTest extends TestNGSuite with Matchers {
     o1.libId shouldBe Some("libName")
 
     val o2 = new SampleLibraryTag {
-      override def root: Configurable = o1
+      override def parent: Configurable = o1
       override def globalConfig = new Config(Map())
     }
     o2.sampleId shouldBe o1.sampleId

@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
   qscript =>
 
   def this() = this(null)
