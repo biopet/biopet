@@ -14,30 +14,30 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.LastCommitHash
-import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.utils.summary.SummaryDb
+import org.broadinstitute.gatk.queue.function.{InProcessFunction, QFunction}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.collection.mutable
 import scala.io.Source
+import slick.driver.H2Driver.api._
 
 /**
  * This will collect and write the summary
  *
  * Created by pjvan_thof on 2/14/15.
  */
-class WriteSummary(val parent: Configurable) extends InProcessFunction with Configurable {
+class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
-  require(parent.isInstanceOf[SummaryQScript], "root is not a SummaryQScript")
-
   /** To access qscript for this summary */
-  val qscript = parent.asInstanceOf[SummaryQScript]
+  val qscript = parent
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
@@ -54,6 +54,12 @@ class WriteSummary(val parent: Configurable) extends InProcessFunction with Conf
   }
 
   def init(): Unit = {
+    if (qscript == root) {
+      qscript match {
+        case s: MultiSampleQScript => s.initSummaryDb
+        case _ => qscript.summaryRunId
+      }
+    } // This initialize the database
     for (q <- qscript.summaryQScripts)
       deps :+= q.summaryFile
     for ((_, l) <- qscript.summarizables; s <- l) {
@@ -68,11 +74,13 @@ class WriteSummary(val parent: Configurable) extends InProcessFunction with Conf
       }
     }
 
-    jobOutputFile = new File(out.getParentFile, ".%s.%s.out".format(out.getName, analysisName))
+    jobOutputFile = new File(qscript.summaryDbFile.getParentFile, "." + qscript.summaryDbFile.getName.stripSuffix(".db") + ".out")
   }
 
   /** Function to create summary */
   def run(): Unit = {
+    val summaryDb = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
+
     for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {
       summarizable.addToQscriptSummary(qscript, name)
     }
@@ -161,9 +169,10 @@ class WriteSummary(val parent: Configurable) extends InProcessFunction with Conf
         "summary_creation" -> System.currentTimeMillis()
       ))
 
-    val writer = new PrintWriter(out)
-    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
-    writer.close()
+//    val writer = new PrintWriter(out)
+//    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
+//    writer.close()
+    summaryDb.close()
   }
 
   def prefixSampleLibrary(map: Map[String, Any], sampleId: Option[String], libraryId: Option[String]): Map[String, Any] = {

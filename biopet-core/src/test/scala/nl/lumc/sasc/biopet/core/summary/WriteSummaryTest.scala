@@ -210,7 +210,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 }
 
 object WriteSummaryTest {
-  def makeWriter(root: Configurable, c: Map[String, Any] = Map()) = new WriteSummary(root) {
+  def makeWriter(root: SummaryQScript, c: Map[String, Any] = Map()) = new WriteSummary(root) {
     override def globalConfig = new Config(c + ("exe" -> "test"))
     override def outputs = Seq()
     override def inputs = Seq()

@@ -17,9 +17,14 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.utils.summary.SummaryDb
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import org.broadinstitute.gatk.queue.QScript
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
@@ -251,6 +256,23 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       case _       => Nil
     }
     sample ::: lib ::: super.configFullPath
+  }
+
+  def initSummaryDb: Unit = {
+    val db = SummaryDb.openSqliteSummary(summaryDbFile)
+    val namesOld = Await.result(db.getSamples(runId = Some(summaryRunId)).map(_.map(_.name).toSet), Duration.Inf)
+    for ((sampleName, sample) <- samples) {
+      val sampleId: Int = if (!namesOld.contains(sampleName))
+        Await.result(db.createSample(sampleName, summaryRunId), Duration.Inf)
+      else Await.result(db.getSamples(runId = Some(summaryRunId), name = Some(sampleName)).map(_.head.id), Duration.Inf)
+      // TODO: Add tags
+      val libNamesOld = Await.result(db.getLibraries(runId = summaryRunId, sampleId = sampleId).map(_.map(_.name)), Duration.Inf)
+      for ((libName, lib) <- sample.libraries) {
+        if (!libNamesOld.contains(libName)) db.createLibrary(libName, summaryRunId, sampleId)
+        // TODO: Add tags
+      }
+    }
+    db.close()
   }
 }
 

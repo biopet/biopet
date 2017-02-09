@@ -22,6 +22,8 @@ trait Configurable extends ImplicitConversions {
   def parent: Configurable
   def globalConfig: Config = if (parent != null) parent.globalConfig else Config.global
 
+  final def root: Configurable = if (parent == null) this else parent.root
+
   /** suffix to the path */
   def subPath: List[String] = Nil
 

@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.utils.summary
 
+import java.io.{Closeable, File}
+
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import slick.driver.H2Driver.api._
 
@@ -12,7 +14,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by pjvanthof on 05/02/2017.
   */
-class SummaryDb(db: Database) {
+class SummaryDb(db: Database) extends Closeable {
+
+  def close(): Unit = db.close()
+
   /** This method will create all table */
   def createTables(): Unit = {
     try {
@@ -56,7 +61,7 @@ class SummaryDb(db: Database) {
         name.map(sample.name === _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
-    db.run(q.map(x => (x.id, x.runId, x.name)).result)
+    db.run(q.result)
   }
 
   def getSampleTags(sampleId: Int): Future[Option[Map[String, Any]]] = {
@@ -78,7 +83,7 @@ class SummaryDb(db: Database) {
         name.map(lib.name === _) // not a condition as `criteriaRoast` evaluates to `None`
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
-    db.run(q.map(x => (x.id, x.name, x.runId, x.sampleId)).result)
+    db.run(q.result)
   }
 
   def getLibraryTags(libId: Int): Future[Option[Map[String, Any]]] = {
@@ -184,5 +189,14 @@ class SummaryDb(db: Database) {
     val q = l.foldLeft(settings.subquery)((a,b) => b(a))
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
+}
 
+object SummaryDb {
+  def openSqliteSummary(file: File): SummaryDb = {
+    val exist = file.exists()
+    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
+    val s = new SummaryDb(db)
+    if (!exist) s.createTables()
+    s
+  }
 }
