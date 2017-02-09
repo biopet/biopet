@@ -196,6 +196,8 @@ variantcallers:
     - haplotypecaller
     - unifiedgenotyper
     - haplotypecaller_gvcf
+unifiedgenotyper:
+    merge_vcf_results: false # This will do the variantcalling but will not merged into the final vcf file
 ```
 
 **Additional XHMM CNV calling example**
