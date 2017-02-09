@@ -262,14 +262,14 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
     val namesOld = Await.result(db.getSamples(runId = Some(summaryRunId)).map(_.map(_.name).toSet), Duration.Inf)
     for ((sampleName, sample) <- samples) {
+      val sampleTags = if (sample.sampleTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
       val sampleId: Int = if (!namesOld.contains(sampleName))
-        Await.result(db.createSample(sampleName, summaryRunId), Duration.Inf)
+        Await.result(db.createSample(sampleName, summaryRunId, sampleTags), Duration.Inf)
       else Await.result(db.getSamples(runId = Some(summaryRunId), name = Some(sampleName)).map(_.head.id), Duration.Inf)
-      // TODO: Add tags
       val libNamesOld = Await.result(db.getLibraries(runId = summaryRunId, sampleId = sampleId).map(_.map(_.name)), Duration.Inf)
       for ((libName, lib) <- sample.libraries) {
-        if (!libNamesOld.contains(libName)) db.createLibrary(libName, summaryRunId, sampleId)
-        // TODO: Add tags
+        val libraryTags = if (lib.libTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
+        if (!libNamesOld.contains(libName)) Await.result(db.createLibrary(libName, summaryRunId, sampleId, libraryTags), Duration.Inf)
       }
     }
     db.close()
