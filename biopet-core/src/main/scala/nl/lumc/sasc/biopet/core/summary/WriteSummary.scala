@@ -176,9 +176,9 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         "summary_creation" -> System.currentTimeMillis()
       ))
 
-//    val writer = new PrintWriter(out)
-//    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
-//    writer.close()
+    val writer = new PrintWriter(out)
+    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
+    writer.close()
     summaryDb.close()
   }
 
