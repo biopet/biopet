@@ -145,8 +145,16 @@ class SummaryDb(db: Database) extends Closeable {
     db.run(stats.forceInsert(Stat(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
-  def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+  def createOrUpdateStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
+                         sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
+    val filter = statsFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createStat(runId, pipelineId, moduleId, sampleId, libId, content)
+    else db.run(filter.map(_.content).update(content))
+  }
+
+  private def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     val l: List[Option[Query[Stats, Stats#TableElementType, Seq] => Query[Stats, Stats#TableElementType, Seq]]] = List(
       runId.map(x => y => y.filter(_.runId === x)),
       pipelineId.map(x => y => y.filter(_.pipelineId === x)),
@@ -154,9 +162,12 @@ class SummaryDb(db: Database) extends Closeable {
       sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
       libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
     )
-    val q = l.flatten.foldLeft(stats.subquery)((a,b) => b(a))
+    l.flatten.foldLeft(stats.subquery)((a,b) => b(a))
+  }
 
-    db.run(q.result)
+  def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+    db.run(statsFilter(runId, pipelineId, moduleId, sampleId, libId).result)
   }
 
   def getStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,

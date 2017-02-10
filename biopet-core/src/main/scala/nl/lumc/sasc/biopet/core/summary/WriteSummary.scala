@@ -26,9 +26,9 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.collection.mutable
 import scala.io.Source
-
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * This will collect and write the summary
@@ -87,7 +87,25 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   def run(): Unit = {
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
 
-    //TODO: Add stats
+    val pipelineId = Await.result(db.getPipelines(name = Some(qscript.summaryName), runId = Some(qscript.summaryRunId)).map(_.head.id), Duration.Inf)
+
+    for (((name, sampleName, libName), summarizables) <-qscript.summarizables) {
+      require(summarizables.nonEmpty)
+      val stats = ConfigUtils.anyToJson(if (summarizables.size == 1) summarizables.head.summaryStats
+      else {
+        val s = summarizables.map(_.summaryStats)
+        s.tail.foldLeft(Map("stats" -> s.head))((a,b) =>
+          ConfigUtils.mergeMaps(a, Map("stats" -> b), summarizables.head.resolveSummaryConflict))("stats")
+      })
+      val moduleId = db.getModules(name = Some(name), runId = Some(qscript.summaryRunId), pipelineId = Some(pipelineId))
+        .map(_.head.id)
+      val sampleId = sampleName.map(name => db.getSamples(runId = Some(qscript.summaryRunId), name = Some(name)).map(_.head.id))
+      val libId = libName.map(name => db.getLibraries(runId = Some(qscript.summaryRunId), name = Some(name),
+        sampleId = sampleId.map(Await.result(_, Duration.Inf))).map(_.head.id))
+      db.createOrUpdateStat(qscript.summaryRunId, pipelineId, Some(Await.result(moduleId, Duration.Inf)),
+        sampleId.map(Await.result(_, Duration.Inf)), libId.map(Await.result(_, Duration.Inf)), stats.nospaces)
+
+    }
 
     //TODO: Add Files
 
