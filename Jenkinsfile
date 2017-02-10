@@ -17,8 +17,12 @@ node('local') {
             }
         }
 
-        stage('Report tests') {
+        stage('Report Tests') {
             junit '*/target/surefire-reports/*.xml'
+        }
+
+        stage('Check Documentation') {
+            sh 'mkdocs build --clean --strict'
         }
 
         if(currentBuild.result == null || "SUCCESS".equals(currentBuild.result)) {

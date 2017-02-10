@@ -31,7 +31,7 @@ import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.utils.{ Logging, textToSize }
+import nl.lumc.sasc.biopet.utils.textToSize
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -127,7 +127,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     })
 
   /** Settings to add to summary */
-  def summarySettings = Map(
+  def summarySettings: Map[String, Any] = Map(
     "skip_metrics" -> skipMetrics,
     "skip_flexiprep" -> skipFlexiprep,
     "skip_markduplicates" -> skipMarkduplicates,
@@ -137,7 +137,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
-  override def reportClass = {
+  override def reportClass: Some[MappingReport] = {
     val mappingReport = new MappingReport(this)
     mappingReport.outputDir = new File(outputDir, "report")
     mappingReport.summaryFile = summaryFile
@@ -178,6 +178,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         }
       }
       logger.debug("Chunks: " + numberChunks.getOrElse(1))
+      if (numberChunks.getOrElse(1) <= 1) chunking = false
     }
   }
 
@@ -295,7 +296,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addSummaryJobs()
   }
 
-  protected lazy val bam2wig = if (config("generate_wig", default = false)) {
+  protected lazy val bam2wig: Option[Bam2Wig] = if (config("generate_wig", default = false)) {
     Some(Bam2Wig(this, finalBamFile))
   } else None
 

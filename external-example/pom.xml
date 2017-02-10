@@ -27,7 +27,7 @@
     <artifactId>ExternalExample</artifactId>
 
     <!--TODO: replace version, for a new pipeline it's advised to start with '0.1.0-SNAPSHOT' -->
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

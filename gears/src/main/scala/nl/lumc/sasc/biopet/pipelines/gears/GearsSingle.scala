@@ -84,27 +84,30 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
     val read1: File = if (r1.size == 1) r1.head else {
       val outputFile = new File(outputDir, "merged.R1.fq.gz")
-      Zcat(this, r1) | new Gzip(this) > outputFile
+      add(Zcat(this, r1) | new Gzip(this) > outputFile)
       outputFile
     }
 
     val read2: Option[File] = if (r2.size <= 1) r2.headOption else {
       val outputFile = new File(outputDir, "merged.R2.fq.gz")
-      Zcat(this, r2) | new Gzip(this) > outputFile
+      add(Zcat(this, r2) | new Gzip(this) > outputFile)
       Some(outputFile)
     }
 
-    if (!skipFlexiprep) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.inputR1 = read1
-      flexiprep.inputR2 = read2
-      flexiprep.sampleId = if (sampleId.isEmpty) Some("noSampleName") else sampleId
-      flexiprep.libId = if (libId.isEmpty) Some("noLibName") else libId
-      flexiprep.outputDir = new File(outputDir, "flexiprep")
-      add(flexiprep)
-      (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
-    } else (read1, read2)
+    flexiprep.map { f =>
+      f.inputR1 = read1
+      f.inputR2 = read2
+      f.sampleId = Some(sampleId.getOrElse("noSampleName"))
+      f.libId = Some(libId.getOrElse("noLibName"))
+      f.outputDir = new File(outputDir, "flexiprep")
+      add(f)
+      (f.fastqR1Qc, f.fastqR2Qc)
+    }.getOrElse((read1, read2))
   }
+
+  lazy protected val flexiprep: Option[Flexiprep] = if (!skipFlexiprep) {
+    Some(new Flexiprep(this))
+  } else None
 
   /** Method to add jobs */
   def biopetScript(): Unit = {

@@ -1,3 +1,17 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
@@ -11,7 +25,7 @@ import scala.io.Source
  */
 object DownloadNcbiAssembly extends ToolCommand {
 
-  case class Args(assemblyId: String = null,
+  case class Args(assemblyReport: File = null,
                   outputFile: File = null,
                   reportFile: Option[File] = None,
                   contigNameHeader: Option[String] = None,
@@ -19,8 +33,8 @@ object DownloadNcbiAssembly extends ToolCommand {
                   mustNotHave: List[(String, String)] = List()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[String]('a', "assembly id") required () unbounded () valueName "<file>" action { (x, c) =>
-      c.copy(assemblyId = x)
+    opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action { (x, c) =>
+      c.copy(assemblyReport = x)
     } text "refseq ID from NCBI"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
@@ -52,8 +66,8 @@ object DownloadNcbiAssembly extends ToolCommand {
     val argsParser = new OptParser
     val cmdargs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    logger.info(s"Reading ${cmdargs.assemblyId} from NCBI")
-    val reader = Source.fromURL(s"ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/${cmdargs.assemblyId}.assembly.txt")
+    logger.info(s"Reading ${cmdargs.assemblyReport}")
+    val reader = Source.fromFile(cmdargs.assemblyReport)
     val assamblyReport = reader.getLines().toList
     reader.close()
     cmdargs.reportFile.foreach { file =>
