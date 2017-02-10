@@ -10,8 +10,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /**
-  * Created by pjvanthof on 26/01/2017.
-  */
+ * Created by pjvanthof on 26/01/2017.
+ */
 object SummaryToSqlite extends ToolCommand {
 
   case class Args(inputJson: File = null,
@@ -70,7 +70,7 @@ object SummaryToSqlite extends ToolCommand {
 
     println(Await.result(summary.getStats(runId = Some(runId), pipelineId = Some(pipelineId), sampleId = Option(None)), Duration.Inf))
 
-    println(Await.result(summary.getStat(0,0), Duration.Inf))
+    println(Await.result(summary.getStat(0, 0), Duration.Inf))
 
     db.close()
 

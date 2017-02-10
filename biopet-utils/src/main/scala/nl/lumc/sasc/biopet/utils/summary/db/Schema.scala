@@ -3,8 +3,8 @@ package nl.lumc.sasc.biopet.utils.summary.db
 import slick.driver.H2Driver.api._
 
 /**
-  * Created by pjvan_thof on 27-1-17.
-  */
+ * Created by pjvan_thof on 27-1-17.
+ */
 object Schema {
 
   case class Run(id: Int, name: String, outputDir: String)
@@ -118,7 +118,7 @@ object Schema {
   }
   val files = TableQuery[Files]
 
-  case class Executable(runId: Int, toolName: String, version : Option[String], javaVersion: Option[String], exeMd5: Option[String], javaMd5: Option[String])
+  case class Executable(runId: Int, toolName: String, version: Option[String], javaVersion: Option[String], exeMd5: Option[String], javaMd5: Option[String])
   class Executables(tag: Tag) extends Table[Executable](tag, "Executables") {
     def runId = column[Int]("runId")
     def toolName = column[String]("toolName")

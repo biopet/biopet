@@ -14,15 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.LastCommitHash
 import nl.lumc.sasc.biopet.utils.summary.SummaryDb
-import org.broadinstitute.gatk.queue.function.{InProcessFunction, QFunction}
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
 import scala.io.Source
@@ -59,7 +59,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     if (qscript == root) { // This initialize the database
       qscript match {
         case s: MultiSampleQScript => s.initSummaryDb
-        case _ => qscript.summaryRunId
+        case _                     => qscript.summaryRunId
       }
     }
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
@@ -89,12 +89,12 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
 
     val pipelineId = Await.result(db.getPipelines(name = Some(qscript.summaryName), runId = Some(qscript.summaryRunId)).map(_.head.id), Duration.Inf)
 
-    for (((name, sampleName, libName), summarizables) <-qscript.summarizables) {
+    for (((name, sampleName, libName), summarizables) <- qscript.summarizables) {
       require(summarizables.nonEmpty)
       val stats = ConfigUtils.anyToJson(if (summarizables.size == 1) summarizables.head.summaryStats
       else {
         val s = summarizables.map(_.summaryStats)
-        s.tail.foldLeft(Map("stats" -> s.head))((a,b) =>
+        s.tail.foldLeft(Map("stats" -> s.head))((a, b) =>
           ConfigUtils.mergeMaps(a, Map("stats" -> b), summarizables.head.resolveSummaryConflict))("stats")
       })
       val moduleId = db.getModules(name = Some(name), runId = Some(qscript.summaryRunId), pipelineId = Some(pipelineId))

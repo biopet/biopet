@@ -1,19 +1,19 @@
 package nl.lumc.sasc.biopet.utils.summary
 
-import java.io.{Closeable, File}
+import java.io.{ Closeable, File }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import slick.driver.H2Driver.api._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
-  * Created by pjvanthof on 05/02/2017.
-  */
+ * Created by pjvanthof on 05/02/2017.
+ */
 class SummaryDb(db: Database) extends Closeable {
 
   def close(): Unit = db.close()
@@ -98,9 +98,10 @@ class SummaryDb(db: Database) extends Closeable {
 
   def createPipeline(name: String, runId: Int): Future[Int] = {
     getPipelines(name = Some(name), runId = Some(runId))
-      .flatMap{ case m =>
-        if (m.isEmpty) forceCreatePipeline(name, runId)
-        else Future(m.head.id)
+      .flatMap {
+        case m =>
+          if (m.isEmpty) forceCreatePipeline(name, runId)
+          else Future(m.head.id)
       }
   }
 
@@ -122,9 +123,10 @@ class SummaryDb(db: Database) extends Closeable {
 
   def createModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
     getModules(name = Some(name), runId = Some(runId), pipelineId = Some(pipelineId))
-      .flatMap{ case m =>
-        if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
-        else Future(m.head.id)
+      .flatMap {
+        case m =>
+          if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
+          else Future(m.head.id)
       }
   }
 
@@ -154,7 +156,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   private def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+                          sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     val l: List[Option[Query[Stats, Stats#TableElementType, Seq] => Query[Stats, Stats#TableElementType, Seq]]] = List(
       runId.map(x => y => y.filter(_.runId === x)),
       pipelineId.map(x => y => y.filter(_.pipelineId === x)),
@@ -162,7 +164,7 @@ class SummaryDb(db: Database) extends Closeable {
       sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
       libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
     )
-    l.flatten.foldLeft(stats.subquery)((a,b) => b(a))
+    l.flatten.foldLeft(stats.subquery)((a, b) => b(a))
   }
 
   def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
@@ -179,18 +181,18 @@ class SummaryDb(db: Database) extends Closeable {
       y => (if (sampleId.isDefined) y.filter(_.sampleId === sampleId) else y.filter(_.sampleId.isEmpty)),
       y => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
     )
-    val q = l.foldLeft(stats.subquery)((a,b) => b(a))
+    val q = l.foldLeft(stats.subquery)((a, b) => b(a))
 
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
 
   def createSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                 sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
+                    sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
     db.run(settings.forceInsert(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
   def getSettings(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     val l: List[Option[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]]] = List(
       runId.map(x => y => y.filter(_.runId === x)),
       pipelineId.map(x => y => y.filter(_.pipelineId === x)),
@@ -198,13 +200,13 @@ class SummaryDb(db: Database) extends Closeable {
       sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
       libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
     )
-    val q = l.flatten.foldLeft(settings.subquery)((a,b) => b(a))
+    val q = l.flatten.foldLeft(settings.subquery)((a, b) => b(a))
 
     db.run(q.result)
   }
 
   def getSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-              sampleId: Option[Int] = None, libId: Option[Int] = None): Future[Option[Map[String, Any]]] = {
+                 sampleId: Option[Int] = None, libId: Option[Int] = None): Future[Option[Map[String, Any]]] = {
     val l: List[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]] = List(
       _.filter(_.runId === runId),
       _.filter(_.pipelineId === pipelineId),
@@ -213,7 +215,7 @@ class SummaryDb(db: Database) extends Closeable {
       y => (if (libId.isDefined) y.filter(_.libraryId === libId) else y.filter(_.libraryId.isEmpty))
     )
 
-    val q = l.foldLeft(settings.subquery)((a,b) => b(a))
+    val q = l.foldLeft(settings.subquery)((a, b) => b(a))
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
 }

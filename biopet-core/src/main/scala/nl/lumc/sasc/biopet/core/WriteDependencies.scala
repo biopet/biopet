@@ -112,9 +112,9 @@ object WriteDependencies extends Logging with Configurable {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
         }), "main_job" -> (f match {
-          case cmd: BiopetCommandLineFunction            => cmd.mainFunction
+          case cmd: BiopetCommandLineFunction => cmd.mainFunction
           case s: WriteSummary if s.qscript.parent == null => true
-          case _                                         => false
+          case _ => false
         }), "intermediate" -> f.isIntermediate,
           "depends_on_intermediate" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
           "depends_on_jobs" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,

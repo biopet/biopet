@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 import nl.lumc.sasc.biopet.utils.summary.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 
@@ -52,8 +52,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   def summaryFile: File
 
   def summaryDbFile: File = root match {
-    case s:SummaryQScript => new File(s.outputDir, s"${s.summaryName}.summary.db")
-    case _ => throw new IllegalStateException("Root should be a SummaryQScript")
+    case s: SummaryQScript => new File(s.outputDir, s"${s.summaryName}.summary.db")
+    case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
   }
 
   /**
@@ -113,9 +113,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   private def runIdFile = root match {
     case s: SummaryQScript => new File(s.outputDir, s".log/summary.runid")
-    case _ => throw new IllegalStateException("Root should be a SummaryQscript")
+    case _                 => throw new IllegalStateException("Root should be a SummaryQscript")
   }
-
 
   private def createRun(): Int = {
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
