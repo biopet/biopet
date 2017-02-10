@@ -56,13 +56,23 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   }
 
   def init(): Unit = {
+    val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     if (qscript == root) { // This initialize the database
       qscript match {
         case s: MultiSampleQScript => s.initSummaryDb
+        case t:SampleLibraryTag => t.sampleId.foreach { case sampleName =>
+          val sampleId = Await.result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
+            Await.result(db.createSample(sampleName, qscript.summaryRunId), Duration.Inf)
+          }
+          t.libId.foreach {libName =>
+            val libId = Await.result(db.getSamples(name = Some(libName), runId = Some(qscript.summaryRunId), sampleId = Some(sampleId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
+              Await.result(db.createLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
+            }
+          }
+        }
         case _                     => qscript.summaryRunId
       }
     }
-    val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     val pipelineId = Await.result(db.createPipeline(qscript.summaryName, qscript.summaryRunId), Duration.Inf)
     qscript.summarizables.map(x => Await.result(db.createModule(x._1._1, qscript.summaryRunId, pipelineId), Duration.Inf))
     db.close()
