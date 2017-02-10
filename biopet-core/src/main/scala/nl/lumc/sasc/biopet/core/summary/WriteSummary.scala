@@ -26,7 +26,6 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.collection.mutable
 import scala.io.Source
-import slick.driver.H2Driver.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -86,8 +85,17 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
 
   /** Function to create summary */
   def run(): Unit = {
-    val summaryDb = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
+    val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
 
+    //TODO: Add stats
+
+    //TODO: Add Files
+
+    //TODO: Add executables
+
+    db.close()
+
+    ///////////////// OLD //////////////////
     for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {
       summarizable.addToQscriptSummary(qscript, name)
     }
@@ -127,7 +135,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
       val map = Map(qscript.summaryName -> Map(
         "settings" -> settings,
         "files" -> Map("pipeline" -> files),
-        "executables" -> executables.toMap)
+        "executables" -> executables)
       )
 
       qscript match {
@@ -179,7 +187,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     val writer = new PrintWriter(out)
     writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
     writer.close()
-    summaryDb.close()
+    ///////////////// OLD //////////////////
   }
 
   def prefixSampleLibrary(map: Map[String, Any], sampleId: Option[String], libraryId: Option[String]): Map[String, Any] = {
