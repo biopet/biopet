@@ -114,7 +114,7 @@ object Schema {
 
     def * = (runId, pipelineId, moduleId, sampleId, libraryId, key, path, md5, link, size) <> (File.tupled, File.unapply)
 
-    def idx = index("idx_files", (runId, pipelineId, sampleId, libraryId, key), unique = true)
+    def idx = index("idx_files", (runId, pipelineId, moduleId, sampleId, libraryId, key), unique = true)
   }
   val files = TableQuery[Files]
 
