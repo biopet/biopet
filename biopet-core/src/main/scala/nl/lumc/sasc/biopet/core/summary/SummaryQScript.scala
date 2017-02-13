@@ -119,6 +119,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private def createRun(): Int = {
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
     val id = Await.result(db.createRun(summaryName, outputDir), Duration.Inf)
+    runIdFile.getParentFile.mkdir()
     val writer = new PrintWriter(runIdFile)
     writer.println(id)
     writer.close()
