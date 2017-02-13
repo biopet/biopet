@@ -118,16 +118,18 @@ object Schema {
   }
   val files = TableQuery[Files]
 
-  case class Executable(runId: Int, toolName: String, version: Option[String], javaVersion: Option[String], exeMd5: Option[String], javaMd5: Option[String])
+  case class Executable(runId: Int, toolName: String, version: Option[String], path = Option[String], javaVersion: Option[String], exeMd5: Option[String], javaMd5: Option[String], jarPath: Option[String])
   class Executables(tag: Tag) extends Table[Executable](tag, "Executables") {
     def runId = column[Int]("runId")
     def toolName = column[String]("toolName")
     def version = column[Option[String]]("version")
+    def path = column[Option[String]]("path")
     def javaVersion = column[Option[String]]("javaVersion")
     def exeMd5 = column[Option[String]]("exeMd5")
     def javaMd5 = column[Option[String]]("javaMd5")
+    def jarPath = column[Option[String]]("jarPath")
 
-    def * = (runId, toolName, version, javaVersion, exeMd5, javaMd5) <> (Executable.tupled, Executable.unapply)
+    def * = (runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath) <> (Executable.tupled, Executable.unapply)
 
     def idx = index("idx_executables", (runId, toolName), unique = true)
   }

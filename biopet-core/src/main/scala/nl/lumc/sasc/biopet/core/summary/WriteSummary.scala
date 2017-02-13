@@ -129,8 +129,6 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         Await.result(createFile(db, qscript.summaryRunId, pipelineId, Some(moduleId), sampleId, libId, key, file, outputDir), Duration.Inf)
     }
 
-    //TODO: Add executables
-
     qscript match {
       case tag: SampleLibraryTag =>
         val sampleId = tag.sampleId.flatMap(name => Await.result(db.getSampleId(qscript.summaryRunId, name), Duration.Inf))
@@ -165,6 +163,21 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
+    for ((name, f) <- qscript.functions.flatMap(_ match {
+      case c:Configurable with Version => Some(c)
+      case _ => None
+    }).groupBy(_.configNamespace)) yield {
+      f match {
+        case f: BiopetJavaCommandLineFunction with Version =>
+          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion, f.getJavaVersion, javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Some(f.jarFile.getAbsolutePath))
+        case f: BiopetCommandLineFunction with Version =>
+          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion, Option(f.executable))
+        case f: Configurable with Version =>
+          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion)
+        case _ => None
+      }
+
+    }
 
     db.close()
 

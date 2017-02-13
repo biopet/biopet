@@ -272,6 +272,31 @@ class SummaryDb(db: Database) extends Closeable {
     if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
     else db.run(filter.update(File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
+
+  def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
+    val l: List[Option[Query[Executables, Executables#TableElementType, Seq] => Query[Executables, Executables#TableElementType, Seq]]] = List(
+      runId.map(x => y => y.filter(_.runId === x)),
+      toolName.map(x => y => y.filter(_.toolName === x))
+    )
+    l.flatten.foldLeft(executables.subquery)((a, b) => b(a))
+  }
+
+  def getFiles(runId: Option[Int], toolName: Option[String]) = {
+    db.run(executablesFilter(runId, toolName).result)
+  }
+
+  def createExecutable(runId: Int, toolName: String, version: Option[String] = None, path: Option[String] = None,
+                       javaVersion: Option[String] = None, exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None) = {
+    db.run(executables.forceInsert(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
+  }
+
+  def createOrUpdateExecutable(runId: Int, toolName: String, version: Option[String] = None, path: Option[String] = None,
+                               javaVersion: Option[String] = None, exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None) = {
+    val filter = executablesFilter(Some(runId), Some(toolName))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createExecutable(runId, toolName, version, javaVersion, exeMd5, javaMd5)
+    else db.run(filter.update(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
+  }
 }
 
 object SummaryDb {
