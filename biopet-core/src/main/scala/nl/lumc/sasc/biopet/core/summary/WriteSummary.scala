@@ -114,13 +114,41 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         sampleId = sampleId.map(Await.result(_, Duration.Inf))).map(_.head.id))
       db.createOrUpdateStat(qscript.summaryRunId, pipelineId, Some(Await.result(moduleId, Duration.Inf)),
         sampleId.map(Await.result(_, Duration.Inf)), libId.map(Await.result(_, Duration.Inf)), stats.nospaces)
+
+      //TODO: Add Files
     }
 
-    //TODO: Add Files
-
-    //TODO: Add Settings
-
     //TODO: Add executables
+
+    qscript match {
+      case tag: SampleLibraryTag =>
+        val sampleId = tag.sampleId.flatMap(name => Await.result(db.getSampleId(qscript.summaryRunId, name), Duration.Inf))
+        val libId = tag.libId.flatMap(name => sampleId.flatMap(sampleId => Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
+      //TODO: Add files
+        db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, sampleId, libId, ConfigUtils.mapToJson(tag.summarySettings).nospaces)
+      case q: MultiSampleQScript =>
+        // Global level
+        //TODO: Add files
+        db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
+
+        for ((sampleName, sample) <- q.samples) {
+          // Sample level
+          val sampleId = Await.result(db.getSampleId(qscript.summaryRunId, sampleName), Duration.Inf).getOrElse(throw new IllegalStateException("Sample should already exist in database"))
+          //TODO: Add files
+          db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), None, ConfigUtils.mapToJson(sample.summarySettings).nospaces)
+
+          for ((libName, lib) <- sample.libraries) {
+            // Library level
+            val libId = Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, libName), Duration.Inf).getOrElse(throw new IllegalStateException("Library should already exist in database"))
+            //TODO: Add files
+            db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), ConfigUtils.mapToJson(lib.summarySettings).nospaces)
+          }
+        }
+      case q =>
+        //TODO: Add files
+        db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
+    }
+
 
     db.close()
 

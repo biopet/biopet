@@ -64,6 +64,10 @@ class SummaryDb(db: Database) extends Closeable {
     db.run(q.result)
   }
 
+  def getSampleId(runId: Int, sampleName: String) = {
+    getSamples(runId = Some(runId), name = Some(sampleName)).map(_.headOption.map(_.id))
+  }
+
   def getSampleTags(sampleId: Int): Future[Option[Map[String, Any]]] = {
     db.run(samples.filter(_.id === sampleId).map(_.tags).result)
       .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
@@ -84,6 +88,10 @@ class SummaryDb(db: Database) extends Closeable {
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
+  }
+
+  def getLibraryId(runId: Int, sampleId: Int, name: String) = {
+    getLibraries(runId = Some(runId), sampleId = Some(sampleId), name = Some(name)).map(_.headOption.map(_.id))
   }
 
   def getLibraryTags(libId: Int): Future[Option[Map[String, Any]]] = {
