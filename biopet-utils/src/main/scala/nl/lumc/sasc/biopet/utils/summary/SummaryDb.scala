@@ -191,8 +191,8 @@ class SummaryDb(db: Database) extends Closeable {
     db.run(settings.forceInsert(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
-  def getSettings(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+  def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+                     sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     val l: List[Option[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]]] = List(
       runId.map(x => y => y.filter(_.runId === x)),
       pipelineId.map(x => y => y.filter(_.pipelineId === x)),
@@ -200,9 +200,20 @@ class SummaryDb(db: Database) extends Closeable {
       sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
       libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
     )
-    val q = l.flatten.foldLeft(settings.subquery)((a, b) => b(a))
+    l.flatten.foldLeft(settings.subquery)((a, b) => b(a))
+  }
 
-    db.run(q.result)
+  def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
+                         sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
+    val filter = settingsFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
+    else db.run(filter.map(_.content).update(content))
+  }
+
+  def getSettings(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+    db.run(settingsFilter(runId, pipelineId, moduleId, sampleId, libId).result)
   }
 
   def getSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,

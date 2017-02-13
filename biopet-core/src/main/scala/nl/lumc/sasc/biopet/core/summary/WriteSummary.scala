@@ -114,10 +114,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         sampleId = sampleId.map(Await.result(_, Duration.Inf))).map(_.head.id))
       db.createOrUpdateStat(qscript.summaryRunId, pipelineId, Some(Await.result(moduleId, Duration.Inf)),
         sampleId.map(Await.result(_, Duration.Inf)), libId.map(Await.result(_, Duration.Inf)), stats.nospaces)
-
     }
 
     //TODO: Add Files
+
+    //TODO: Add Settings
 
     //TODO: Add executables
 
