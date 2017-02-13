@@ -107,7 +107,7 @@ object Schema {
     def sampleId = column[Option[Int]]("sampleId")
     def libraryId = column[Option[Int]]("libraryId")
     def key = column[String]("key")
-    def path = column[String]("path")
+    def path = column[String]("path") // This should be relative to the outputDir
     def md5 = column[String]("md5")
     def link = column[Boolean]("link", O.Default(false))
     def size = column[Long]("size")

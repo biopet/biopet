@@ -237,6 +237,41 @@ class SummaryDb(db: Database) extends Closeable {
     val q = l.foldLeft(settings.subquery)((a, b) => b(a))
     db.run(q.map(_.content).result).map(_.headOption.map(ConfigUtils.jsonTextToMap))
   }
+
+  def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
+                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+                  key: Option[String] = None) = {
+    val l: List[Option[Query[Files, Files#TableElementType, Seq] => Query[Files, Files#TableElementType, Seq]]] = List(
+      runId.map(x => y => y.filter(_.runId === x)),
+      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
+      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
+      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
+      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty))),
+      key.map(x => y => y.filter(_.key === x))
+    )
+    l.flatten.foldLeft(files.subquery)((a, b) => b(a))
+  }
+
+  def getFiles(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
+               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+               key: Option[String] = None) = {
+    db.run(filesFilter(runId, pipelineId, moduleId, sampleId, libId, key).result)
+  }
+
+  def createFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
+                 sampleId: Option[Int] = None, libId: Option[Int] = None,
+                 key:String, path: String, md5: String, link: Boolean = false, size: Long) = {
+    db.run(files.forceInsert(File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+  }
+
+  def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
+                         sampleId: Option[Int] = None, libId: Option[Int] = None,
+                         key:String, path: String, md5: String, link: Boolean = false, size: Long) = {
+    val filter = filesFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId), Some(key))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
+    else db.run(filter.update(File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+  }
 }
 
 object SummaryDb {

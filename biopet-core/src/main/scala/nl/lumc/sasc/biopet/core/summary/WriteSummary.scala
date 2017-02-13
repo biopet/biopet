@@ -14,15 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.LastCommitHash
 import nl.lumc.sasc.biopet.utils.summary.SummaryDb
-import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.queue.function.{InProcessFunction, QFunction}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -93,13 +93,23 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     jobOutputFile = new File(qscript.summaryDbFile.getParentFile, "." + qscript.summaryDbFile.getName.stripSuffix(".db") + ".out")
   }
 
+  def createFile(db: SummaryDb, runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libId: Option[Int], key: String, file: File, outputDir: File) = {
+    val path = file.getAbsolutePath.replace(s"^${outputDir.getAbsolutePath}", ".")
+    val md5 = WriteSummary.parseChecksum(SummaryQScript.md5sumCache(file))
+    val size = if (file.exists()) file.length() else 0L
+    val link = if (file.exists()) java.nio.file.Files.isSymbolicLink(file.toPath) else false
+    db.createOrUpdateFile(qscript.summaryRunId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
+  }
+
   /** Function to create summary */
   def run(): Unit = {
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
 
+    val outputDir = new File(Await.result(db.getRuns(runId = Some(qscript.summaryRunId)).map(_.head.outputDir), Duration.Inf))
+
     val pipelineId = Await.result(db.getPipelines(name = Some(qscript.summaryName), runId = Some(qscript.summaryRunId)).map(_.head.id), Duration.Inf)
 
-    for (((name, sampleName, libName), summarizables) <- qscript.summarizables) {
+    for (((name, sampleName, libName), summarizables) <- qscript.summarizables.par) {
       require(summarizables.nonEmpty)
       val stats = ConfigUtils.anyToJson(if (summarizables.size == 1) summarizables.head.summaryStats
       else {
@@ -107,15 +117,16 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         s.tail.foldLeft(Map("stats" -> s.head))((a, b) =>
           ConfigUtils.mergeMaps(a, Map("stats" -> b), summarizables.head.resolveSummaryConflict))("stats")
       })
-      val moduleId = db.getModules(name = Some(name), runId = Some(qscript.summaryRunId), pipelineId = Some(pipelineId))
-        .map(_.head.id)
-      val sampleId = sampleName.map(name => db.getSamples(runId = Some(qscript.summaryRunId), name = Some(name)).map(_.head.id))
-      val libId = libName.map(name => db.getLibraries(runId = Some(qscript.summaryRunId), name = Some(name),
-        sampleId = sampleId.map(Await.result(_, Duration.Inf))).map(_.head.id))
-      db.createOrUpdateStat(qscript.summaryRunId, pipelineId, Some(Await.result(moduleId, Duration.Inf)),
-        sampleId.map(Await.result(_, Duration.Inf)), libId.map(Await.result(_, Duration.Inf)), stats.nospaces)
+      val moduleId = Await.result(db.getModules(name = Some(name), runId = Some(qscript.summaryRunId), pipelineId = Some(pipelineId))
+        .map(_.head.id), Duration.Inf)
+      val sampleId = sampleName.map(name => Await.result(db.getSamples(runId = Some(qscript.summaryRunId), name = Some(name)).map(_.head.id), Duration.Inf))
+      val libId = libName.map(name => Await.result(db.getLibraries(runId = Some(qscript.summaryRunId), name = Some(name),
+        sampleId = sampleId).map(_.head.id), Duration.Inf))
+      db.createOrUpdateStat(qscript.summaryRunId, pipelineId, Some(moduleId),
+        sampleId, libId, stats.nospaces)
 
-      //TODO: Add Files
+      for ((key, file) <- summarizables.head.summaryFiles.par)
+        Await.result(createFile(db, qscript.summaryRunId, pipelineId, Some(moduleId), sampleId, libId, key, file, outputDir), Duration.Inf)
     }
 
     //TODO: Add executables
@@ -124,28 +135,33 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
       case tag: SampleLibraryTag =>
         val sampleId = tag.sampleId.flatMap(name => Await.result(db.getSampleId(qscript.summaryRunId, name), Duration.Inf))
         val libId = tag.libId.flatMap(name => sampleId.flatMap(sampleId => Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
-      //TODO: Add files
+        for ((key, file) <- qscript.summaryFiles.par)
+          Await.result(createFile(db, qscript.summaryRunId, pipelineId, None, sampleId, libId, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, sampleId, libId, ConfigUtils.mapToJson(tag.summarySettings).nospaces)
       case q: MultiSampleQScript =>
         // Global level
-        //TODO: Add files
+        for ((key, file) <- qscript.summaryFiles.par)
+          Await.result(createFile(db, q.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
 
         for ((sampleName, sample) <- q.samples) {
           // Sample level
           val sampleId = Await.result(db.getSampleId(qscript.summaryRunId, sampleName), Duration.Inf).getOrElse(throw new IllegalStateException("Sample should already exist in database"))
-          //TODO: Add files
+          for ((key, file) <- sample.summaryFiles.par)
+            Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), None, None, key, file, outputDir), Duration.Inf)
           db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), None, ConfigUtils.mapToJson(sample.summarySettings).nospaces)
 
           for ((libName, lib) <- sample.libraries) {
             // Library level
             val libId = Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, libName), Duration.Inf).getOrElse(throw new IllegalStateException("Library should already exist in database"))
-            //TODO: Add files
+            for ((key, file) <- lib.summaryFiles.par)
+              Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), Some(libId), None, key, file, outputDir), Duration.Inf)
             db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), ConfigUtils.mapToJson(lib.summarySettings).nospaces)
           }
         }
       case q =>
-        //TODO: Add files
+        for ((key, file) <- q.summaryFiles.par)
+          Await.result(createFile(db, qscript.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
