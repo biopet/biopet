@@ -1,11 +1,12 @@
 package nl.lumc.sasc.biopet.utils.summary
 
-import java.io.{ Closeable, File }
+import java.io.{Closeable, File}
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.summary.db.Schema
 import slick.driver.H2Driver.api._
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
@@ -261,7 +262,7 @@ class SummaryDb(db: Database) extends Closeable {
   def createFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                  sampleId: Option[Int] = None, libId: Option[Int] = None,
                  key:String, path: String, md5: String, link: Boolean = false, size: Long) = {
-    db.run(files.forceInsert(File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+    db.run(files.forceInsert(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
 
   def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
@@ -270,7 +271,7 @@ class SummaryDb(db: Database) extends Closeable {
     val filter = filesFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId), Some(key))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
-    else db.run(filter.update(File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+    else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
 
   def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
