@@ -164,14 +164,12 @@ class SummaryDb(db: Database) extends Closeable {
 
   private def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    val l: List[Option[Query[Stats, Stats#TableElementType, Seq] => Query[Stats, Stats#TableElementType, Seq]]] = List(
-      runId.map(x => y => y.filter(_.runId === x)),
-      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
-      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
-      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
-      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
-    )
-    l.flatten.foldLeft(stats.subquery)((a, b) => b(a))
+    var f = stats.filter(_.runId === runId)
+    pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
+    moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
+    sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
+    libId.foreach(r => f = (if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty)))
+    f
   }
 
   def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
@@ -200,14 +198,11 @@ class SummaryDb(db: Database) extends Closeable {
 
   def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                      sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    val l: List[Option[Query[Settings, Settings#TableElementType, Seq] => Query[Settings, Settings#TableElementType, Seq]]] = List(
-      runId.map(x => y => y.filter(_.runId === x)),
-      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
-      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
-      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
-      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty)))
-    )
-    l.flatten.foldLeft(settings.subquery)((a, b) => b(a))
+    var f = settings.filter(_.runId === runId).filter(_.pipelineId === pipelineId)
+    moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
+    sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
+    libId.foreach(r => f = (if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty)))
+    f
   }
 
   def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
@@ -215,7 +210,7 @@ class SummaryDb(db: Database) extends Closeable {
     val filter = settingsFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
-    else db.run(filter.map(_.content).update(content))
+    else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
   def getSettings(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
@@ -240,15 +235,11 @@ class SummaryDb(db: Database) extends Closeable {
   def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
                   sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
                   key: Option[String] = None) = {
-    val l: List[Option[Query[Files, Files#TableElementType, Seq] => Query[Files, Files#TableElementType, Seq]]] = List(
-      runId.map(x => y => y.filter(_.runId === x)),
-      pipelineId.map(x => y => y.filter(_.pipelineId === x)),
-      moduleId.map(x => y => (if (x.isDefined) y.filter(_.moduleId === x) else y.filter(_.moduleId.isEmpty))),
-      sampleId.map(x => y => (if (x.isDefined) y.filter(_.sampleId === x) else y.filter(_.sampleId.isEmpty))),
-      libId.map(x => y => (if (x.isDefined) y.filter(_.libraryId === x) else y.filter(_.libraryId.isEmpty))),
-      key.map(x => y => y.filter(_.key === x))
-    )
-    l.flatten.foldLeft(files.subquery)((a, b) => b(a))
+    var f = files.filter(_.runId === runId).filter(_.pipelineId === pipelineId).filter(_.key === key)
+    moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
+    sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
+    libId.foreach(r => f = (if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty)))
+    f
   }
 
   def getFiles(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
@@ -273,14 +264,10 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
-    val l: List[Option[Query[Executables, Executables#TableElementType, Seq] => Query[Executables, Executables#TableElementType, Seq]]] = List(
-      runId.map(x => y => y.filter(_.runId === x)),
-      toolName.map(x => y => y.filter(_.toolName === x))
-    )
-    l.flatten.foldLeft(executables.subquery)((a, b) => b(a))
+    executables.filter(_.runId === runId).filter(_.toolName === toolName)
   }
 
-  def getFiles(runId: Option[Int], toolName: Option[String]) = {
+  def getExecutables(runId: Option[Int], toolName: Option[String]) = {
     db.run(executablesFilter(runId, toolName).result)
   }
 
