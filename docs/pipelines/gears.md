@@ -1,10 +1,11 @@
 # Gears
 
 ## Introduction
-Gears is a metagenomics pipeline. (``GE``nome ``A``nnotation of ``R``esidual ``S``equences). One can use this pipeline to identify contamination in sequencing runs on either raw FastQ files or BAM files.
+Gears is a metagenomics pipeline. (``GE``nome ``A``nnotation of ``R``esidual ``S``equences). It can be used to identify contamination in sequencing runs on either raw FastQ files or BAM files.
 In case of BAM file as input, it will extract the unaligned read(pair) sequences for analysis.
+It can also be used to analyse sequencid data obtained from metagenomics samples, containing a mix of different organisms. Taxonomic labels will be assigned to the input reads and these will be reported.
 
-Analysis result is reported in a krona graph, which is visible and navigatable in a webbrowser.
+The result of the analysis is reported in a [Krona graph](https://github.com/marbl/Krona/wiki), which is visible and navigatable in a web browser.
 
 Pipeline analysis components include:
 
@@ -17,7 +18,10 @@ Pipeline analysis components include:
 
 ## Gears
 
-This pipeline is used to analyse a group of samples. This pipeline only accepts fastq files. The fastq files first get trimmed and clipped with [Flexiprep](Flexiprep). This can be disabled with the config flags of [Flexiprep](Flexiprep). The samples can be specified with a sample config file, see [Config](../general/Config)
+This pipeline is used to analyse a group of samples and only accepts fastq files. The fastq files first get trimmed and clipped with [Flexiprep](flexiprep). This can be disabled with the config flags of [Flexiprep](flexiprep). The samples can be specified with a sample config file, see [Config](../general/config).
+Gears uses centrifuge by default as its classification engine and the NCBI non-redundant database (nt) as the default database against which taxonomic assignments for the short input reads are made.
+If you would like to use another classifier you should specify so in the [config](../general/config) file. Multiple classifiers can be used in one run, if you wish to have multiple outputs for comparison.
+Note that the Centrifuge and Kraken systems can be used for any kind of input sequences (e.g. shotgun or WGS), while the QIIME system is optimized for 16S-based analyses.
 
 ### Config
 
@@ -35,22 +39,22 @@ This pipeline is used to analyse a group of samples. This pipeline only accepts 
 To start the pipeline (remove `-run` for a dry run):
 
 ``` bash
-biopet pipeline Gears -run  \
+biopet pipeline Gears -qsub -jobParaEnv BWA -jobQueue all.q -run  \
 -config mySettings.json -config samples.json
 ```
 
 ## GearsSingle
 
-This pipeline can be used to analyse a single sample, this can be fastq files or a bam file. When a bam file is given only the unmapped reads are extracted.
+This pipeline can be used to analyse a single sample, be it fastq files or a bam file. When a bam file is provided as input only the unmapped reads are extracted and further analysed.
 
 ### Example
 
 To start the pipeline (remove `-run` for a dry run):
 
 ``` bash
-biopet pipeline GearsSingle -run  \
--R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
--library myLibname -config mySettings.json
+biopet pipeline GearsSingle -qsub -jobParaEnv BWA -jobQueue all.q -run  \
+-R1 /path/to/myFirstReadPair -R2 /path/to/mySecondReadPair -sample mySampleName \
+-library myLibname -config path/to/mySettings.json
 ```
 
 ### Commandline flags
@@ -77,7 +81,8 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 
 | Key | Type | default | Function |
 | --- | ---- | ------- | -------- |
-| gears_use_kraken | Boolean | true | Run fastq file with kraken |
+| gears_use_centrifuge | Boolean | true | Run fastq file with centrifuge |
+| gears_use_kraken | Boolean | false | Run fastq file with kraken |
 | gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
 | gears_use_qiime_open | Boolean | false | Run fastq files with qiime with the open reference module |
 | gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
@@ -85,15 +90,44 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 
 ### Result files
 
-The results of `GearsSingle` are stored in the following files:
+The results of a `Gears` run are organised in two folders: `report` and `samples`.
+In the `report` folder, one can find the html report (index.html) displaying the summarized results over all samples and providing a navigation view on the taxonomy graph and (its) result, per sample.
+In the `samples` folder, one can find a separate folder for each sample. The individual folders follow the input samples naming and contain the results for each analysis run per sample.
+
+##Example
+
+~~~
+OutDir
++-- report
+|   +-- index.html
++-- samples
+|   +-- <sample_name>
+|       +-- centrifuge
+|           +-- <sample_name>.centrifuge.gz
+|           +-- <sample_name>.centrifuge.kreport
+|           +-- <sample_name>.krkn.json
+|           +-- <sample_name>.centrifuge_unique.greport
+|           +-- <sample_name>.centrifuge_unique.krkn.json
+|       +-- kraken
+|           +-- <sample_name>.krkn.raw
+|           +-- <sample_name>.krkn.full
+|           +-- <sample_name>.krkn.json
+~~~
+
+The `Gears`-specific results are contained in a folder named after each tool that was used (by default `Gears` uses centrifuge). They are stored in the following files:
+
 
 | File suffix | Application | Content | Description |
 | ----------- | ----------- | ------- | ----------- |
+| *.centrifuge.gz | centrifuge | tsv | Annotation per sequence (compressed) |
+| *.centrifuge.kreport | centrifuge-kreport | tsv | Kraken-style report of the centrifuge output including taxonomy information |
+| *.centrifuge.krkn.json | krakenReportToJson | json | JSON representation of the the taxonomy report |
+| *.centrifuge_unique.kreport | centrifuge-kreport | tsv | Kraken-style report of the centrifuge output including taxonomy information for the reads with unique taxonomic assignment |
+| *.centrifuge_unique.krkn.json | krakenReportToJson | json | JSON represeantation of the taxonomy report for the uniquely mapped reads |
 | *.krkn.raw  | kraken      | tsv     | Annotation per sequence |
 | *.krkn.full | kraken-report | tsv | List of all annotation possible with counts filled in for this specific sample|
-| *.krkn.json | krakenreport2json| json | JSON representation of the taxonomy report, for postprocessing |
+| *.krkn.json | krakenReportToJson | json | JSON representation of the taxonomy report, for postprocessing |
 
-In a seperate `report` folder, one can find the html report displaying the summary and providing a navigation view on the taxonomy graph and (its) result.
 
 ## Getting Help
 For questions about this pipeline and suggestions, we have a GitHub page where you can submit your ideas and thoughts .[GitHub](https://github.com/biopet/biopet).
