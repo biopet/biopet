@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.LastCommitHash
-import nl.lumc.sasc.biopet.utils.summary.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.function.{InProcessFunction, QFunction}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 

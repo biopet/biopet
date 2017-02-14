@@ -14,11 +14,11 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
-import nl.lumc.sasc.biopet.utils.summary.SummaryDb
+import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable

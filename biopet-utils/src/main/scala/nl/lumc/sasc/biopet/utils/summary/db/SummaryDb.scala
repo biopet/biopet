@@ -1,16 +1,14 @@
-package nl.lumc.sasc.biopet.utils.summary
+package nl.lumc.sasc.biopet.utils.summary.db
 
-import java.io.{Closeable, File}
+import java.io.{ Closeable, File }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.utils.summary.db.Schema
+import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 import slick.driver.H2Driver.api._
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.Duration
-import nl.lumc.sasc.biopet.utils.summary.db.Schema._
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 /**
  * Created by pjvanthof on 05/02/2017.
