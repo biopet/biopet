@@ -118,7 +118,9 @@ object Schema {
   }
   val files = TableQuery[Files]
 
-  case class Executable(runId: Int, toolName: String, version: Option[String], path: Option[String], javaVersion: Option[String], exeMd5: Option[String], javaMd5: Option[String], jarPath: Option[String])
+  case class Executable(runId: Int, toolName: String, version: Option[String] = None,
+                        path: Option[String] = None, javaVersion: Option[String] = None,
+                        exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None)
   class Executables(tag: Tag) extends Table[Executable](tag, "Executables") {
     def runId = column[Int]("runId")
     def toolName = column[String]("toolName")

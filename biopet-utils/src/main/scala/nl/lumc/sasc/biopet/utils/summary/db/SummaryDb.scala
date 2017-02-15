@@ -164,7 +164,8 @@ class SummaryDb(db: Database) extends Closeable {
 
   private def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    var f = stats.filter(_.runId === runId)
+    var f: Query[Stats, Stats#TableElementType, Seq] = stats
+    runId.foreach(r => f = f.filter(_.runId === r))
     pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
     moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
     sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
@@ -198,7 +199,9 @@ class SummaryDb(db: Database) extends Closeable {
 
   def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                      sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
-    var f = settings.filter(_.runId === runId).filter(_.pipelineId === pipelineId)
+    var f: Query[Settings, Settings#TableElementType, Seq] = settings
+    runId.foreach(r => f = f.filter(_.runId === r))
+    pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
     moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
     sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
     libId.foreach(r => f = (if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty)))
@@ -235,7 +238,10 @@ class SummaryDb(db: Database) extends Closeable {
   def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
                   sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
                   key: Option[String] = None) = {
-    var f = files.filter(_.runId === runId).filter(_.pipelineId === pipelineId).filter(_.key === key)
+    var f: Query[Files, Files#TableElementType, Seq] = files
+    runId.foreach(r => f = f.filter(_.runId === r))
+    pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
+    key.foreach(r => f = f.filter(_.key === r))
     moduleId.foreach(r => f = (if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty)))
     sampleId.foreach(r => f = (if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty)))
     libId.foreach(r => f = (if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty)))
@@ -264,10 +270,13 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
-    executables.filter(_.runId === runId).filter(_.toolName === toolName)
+    var q: Query[Executables, Executables#TableElementType, Seq] = executables
+    runId.foreach(r => q = q.filter(_.runId === r))
+    toolName.foreach(r => q = q.filter(_.toolName === r))
+    q
   }
 
-  def getExecutables(runId: Option[Int], toolName: Option[String]) = {
+  def getExecutables(runId: Option[Int] = None, toolName: Option[String] = None) = {
     db.run(executablesFilter(runId, toolName).result)
   }
 

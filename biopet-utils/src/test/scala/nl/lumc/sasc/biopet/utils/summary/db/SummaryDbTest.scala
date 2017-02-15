@@ -26,7 +26,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     Await.result(db.getSetting(0,0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.createOrUpdateSetting(0, 0, None, None, None, """{"content": "test2" }"""), Duration.Inf)
     Await.result(db.getSetting(0,0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
-
+    db.close()
   }
 
   @Test
@@ -40,6 +40,21 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     Await.result(db.getStat(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.createOrUpdateStat(0, 0, None, None, None, """{"content": "test2" }"""), Duration.Inf)
     Await.result(db.getStat(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
+    db.close()
+  }
+
+  @Test
+  def testExecutable: Unit = {
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    Await.result(db.createOrUpdateExecutable(0, "name"), Duration.Inf)
+    val bla1 = Await.result(db.getExecutables(Some(0)), Duration.Inf)
+    Await.result(db.createOrUpdateExecutable(0, "name", Some("test")), Duration.Inf)
+    Await.result(db.getExecutables(Some(0)), Duration.Inf).head shouldBe Schema.Executable(0, "name", Some("test"))
+    db.close()
   }
 
 }
