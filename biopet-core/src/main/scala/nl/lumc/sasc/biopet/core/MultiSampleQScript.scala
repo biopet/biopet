@@ -272,7 +272,6 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         if (!libNamesOld.contains(libName)) Await.result(db.createLibrary(libName, summaryRunId, sampleId, libraryTags), Duration.Inf)
       }
     }
-    db.close()
   }
 }
 

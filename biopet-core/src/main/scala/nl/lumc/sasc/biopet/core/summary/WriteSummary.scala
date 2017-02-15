@@ -75,7 +75,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     }
     val pipelineId = Await.result(db.createPipeline(qscript.summaryName, qscript.summaryRunId), Duration.Inf)
     qscript.summarizables.map(x => Await.result(db.createModule(x._1._1, qscript.summaryRunId, pipelineId), Duration.Inf))
-    db.close()
+
     for (q <- qscript.summaryQScripts)
       deps :+= q.summaryFile
     for ((_, l) <- qscript.summarizables; s <- l) {
@@ -178,8 +178,6 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
       }
 
     }
-
-    db.close()
 
     ///////////////// OLD //////////////////
     for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {

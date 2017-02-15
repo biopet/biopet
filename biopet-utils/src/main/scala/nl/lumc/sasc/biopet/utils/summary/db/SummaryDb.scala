@@ -286,11 +286,20 @@ class SummaryDb(db: Database) extends Closeable {
 }
 
 object SummaryDb {
+  private var summaryConnections = Map[File, SummaryDb]()
+
+  def closeAll(): Unit = {
+    summaryConnections.foreach(_._2.close())
+  }
+
   def openSqliteSummary(file: File): SummaryDb = {
-    val exist = file.exists()
-    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
-    val s = new SummaryDb(db)
-    if (!exist) s.createTables()
-    s
+    if (!summaryConnections.contains(file)) {
+      val exist = file.exists()
+      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
+      val s = new SummaryDb(db)
+      if (!exist) s.createTables()
+      summaryConnections += file -> s
+    }
+    summaryConnections(file)
   }
 }
