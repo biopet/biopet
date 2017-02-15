@@ -308,7 +308,7 @@ object SummaryDb {
       config.setBusyTimeout("10000")
       config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.OFF)
       val exist = file.exists()
-      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties)
+      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties, executor = AsyncExecutor("single_thread", 1, 1000))
       val s = new SummaryDb(db)
       if (!exist) s.createTables()
       summaryConnections += file -> s
