@@ -101,6 +101,12 @@ While optional settings are:
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
 2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: `macs2_callpeak`
 
+[Gears](gears) is run automatically for the data analysed with `Carp`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
+
+*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
+*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
+*`mapping_to_gears: none` : Disable this functionality.
+
 ## Configuration for detection of broad peaks (ATAC-seq)
 
 Carp can do broad peak-calling by using the following config: 
