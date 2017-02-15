@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.engine.JobRunInfo
@@ -199,10 +199,6 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     }
 
     addedJobs = true
-  }
-
-  override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) = {
-    SummaryDb.closeAll()
   }
 }
 

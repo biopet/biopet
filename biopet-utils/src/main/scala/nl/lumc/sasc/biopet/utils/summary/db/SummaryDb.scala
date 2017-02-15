@@ -8,7 +8,7 @@ import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 /**
  * Created by pjvanthof on 05/02/2017.
@@ -209,7 +209,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                         sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
+                            sampleId: Option[Int] = None, libId: Option[Int] = None, content: String) = {
     val filter = settingsFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
@@ -256,13 +256,13 @@ class SummaryDb(db: Database) extends Closeable {
 
   def createFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                  sampleId: Option[Int] = None, libId: Option[Int] = None,
-                 key:String, path: String, md5: String, link: Boolean = false, size: Long) = {
+                 key: String, path: String, md5: String, link: Boolean = false, size: Long) = {
     db.run(files.forceInsert(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
 
   def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                          sampleId: Option[Int] = None, libId: Option[Int] = None,
-                         key:String, path: String, md5: String, link: Boolean = false, size: Long) = {
+                         key: String, path: String, md5: String, link: Boolean = false, size: Long) = {
     val filter = filesFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId), Some(key))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)

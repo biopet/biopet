@@ -14,15 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.LastCommitHash
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import org.broadinstitute.gatk.queue.function.{InProcessFunction, QFunction}
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
 import scala.io.Source
@@ -60,17 +60,18 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     if (qscript == root) { // This initialize the database
       qscript match {
         case s: MultiSampleQScript => s.initSummaryDb
-        case t:SampleLibraryTag => t.sampleId.foreach { case sampleName =>
-          val sampleId = Await.result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-            Await.result(db.createSample(sampleName, qscript.summaryRunId), Duration.Inf)
-          }
-          t.libId.foreach {libName =>
-            val libId = Await.result(db.getSamples(name = Some(libName), runId = Some(qscript.summaryRunId), sampleId = Some(sampleId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-              Await.result(db.createLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
+        case t: SampleLibraryTag => t.sampleId.foreach {
+          case sampleName =>
+            val sampleId = Await.result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
+              Await.result(db.createSample(sampleName, qscript.summaryRunId), Duration.Inf)
             }
-          }
+            t.libId.foreach { libName =>
+              val libId = Await.result(db.getSamples(name = Some(libName), runId = Some(qscript.summaryRunId), sampleId = Some(sampleId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
+                Await.result(db.createLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
+              }
+            }
         }
-        case _                     => qscript.summaryRunId
+        case _ => qscript.summaryRunId
       }
     }
     val pipelineId = Await.result(db.createPipeline(qscript.summaryName, qscript.summaryRunId), Duration.Inf)
@@ -163,10 +164,12 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
-    for ((name, f) <- qscript.functions.flatMap(_ match {
-      case c:Configurable with Version => Some(c)
-      case _ => None
-    }).groupBy(_.configNamespace)) yield {
+    for (
+      (name, f) <- qscript.functions.flatMap(_ match {
+        case c: Configurable with Version => Some(c)
+        case _                            => None
+      }).groupBy(_.configNamespace)
+    ) yield {
       f match {
         case f: BiopetJavaCommandLineFunction with Version =>
           db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion, f.getJavaVersion, javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Some(f.jarFile.getAbsolutePath))

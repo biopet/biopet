@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.Await
