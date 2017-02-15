@@ -303,8 +303,12 @@ object SummaryDb {
 
   def openSqliteSummary(file: File): SummaryDb = {
     if (!summaryConnections.contains(file)) {
+      val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
+      config.enforceForeignKeys(true)
+      config.setBusyTimeout("10000")
+      config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.OFF)
       val exist = file.exists()
-      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC")
+      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties)
       val s = new SummaryDb(db)
       if (!exist) s.createTables()
       summaryConnections += file -> s
