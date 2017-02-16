@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.utils.summary.db
 
+import java.sql.Date
+
 import slick.driver.H2Driver.api._
 
 /**
@@ -7,13 +9,17 @@ import slick.driver.H2Driver.api._
  */
 object Schema {
 
-  case class Run(id: Int, name: String, outputDir: String)
+  case class Run(id: Int, name: String, outputDir: String, version: String, commitHash: String,
+                 creationDate: Date)
   class Runs(tag: Tag) extends Table[Run](tag, "Runs") {
     def id = column[Int]("id", O.PrimaryKey)
     def runName = column[String]("runName")
     def outputDir = column[String]("outputDir")
+    def version = column[String]("version")
+    def commitHash = column[String]("commitHash")
+    def creationDate = column[Date]("creationDate")
 
-    def * = (id, runName, outputDir) <> (Run.tupled, Run.unapply)
+    def * = (id, runName, outputDir, version, commitHash, creationDate) <> (Run.tupled, Run.unapply)
   }
   val runs = TableQuery[Runs]
 

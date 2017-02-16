@@ -6,9 +6,9 @@ import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
-
-import java.io.{ Closeable, File }
+import scala.concurrent.{Await, Future}
+import java.io.{Closeable, File}
+import java.sql.Date
 
 /**
  * This class interface wityh a summary database
@@ -34,9 +34,10 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   /** This method will create a new run and return the runId */
-  def createRun(runName: String, outputDir: String): Future[Int] = {
+  def createRun(runName: String, outputDir: String, version: String, commitHash: String,
+                creationDate: Date): Future[Int] = {
     val id = Await.result(db.run(runs.size.result), Duration.Inf)
-    db.run(runs.forceInsert(Run(id, runName, outputDir))).map(_ => id)
+    db.run(runs.forceInsert(Run(id, runName, outputDir, version, commitHash, creationDate))).map(_ => id)
   }
 
   /** This will return all runs that match the critiria given */

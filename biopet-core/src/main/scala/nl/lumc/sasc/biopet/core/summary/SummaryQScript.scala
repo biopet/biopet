@@ -14,14 +14,14 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
+import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.engine.JobRunInfo
-import org.broadinstitute.gatk.queue.function.QFunction
+import nl.lumc.sasc.biopet.LastCommitHash
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -124,7 +124,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: BiopetQScript => q.outputDir
       case _                => throw new IllegalStateException("Root should be a BiopetQscript")
     }
-    val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath), Duration.Inf)
+    val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
+      LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
     runIdFile.getParentFile.mkdir()
     val writer = new PrintWriter(runIdFile)
     writer.println(id)

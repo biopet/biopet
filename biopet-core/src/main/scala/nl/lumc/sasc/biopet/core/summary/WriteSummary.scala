@@ -253,8 +253,8 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     }).foldRight(pipelineMap)((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
     val combinedMap = //(for (qscript <- qscript.summaryQScripts) yield {
-    //  ConfigUtils.fileToConfigMap(qscript.summaryFile)
-   // }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
+      //  ConfigUtils.fileToConfigMap(qscript.summaryFile)
+      // }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
       jobsMap ++ Map("meta" -> Map(
         "last_commit_hash" -> LastCommitHash,
         "pipeline_version" -> nl.lumc.sasc.biopet.Version,
