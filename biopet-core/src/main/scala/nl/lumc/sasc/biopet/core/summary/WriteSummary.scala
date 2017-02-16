@@ -167,7 +167,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     (for (f <- qscript.functions.par) yield f match {
       case f: BiopetJavaCommandLineFunction with Version =>
         Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, f.getJavaVersion,
-          javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Some(f.jarFile.getAbsolutePath)))
+          javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Option(f.jarFile).map(_.getAbsolutePath)))
       case f: BiopetCommandLineFunction with Version =>
         Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, Option(f.executable)))
       case f: Configurable with Version =>
@@ -252,10 +252,10 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
     }).foldRight(pipelineMap)((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
-    val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
-      ConfigUtils.fileToConfigMap(qscript.summaryFile)
-    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
-      Map("meta" -> Map(
+    val combinedMap = //(for (qscript <- qscript.summaryQScripts) yield {
+    //  ConfigUtils.fileToConfigMap(qscript.summaryFile)
+   // }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
+      jobsMap ++ Map("meta" -> Map(
         "last_commit_hash" -> LastCommitHash,
         "pipeline_version" -> nl.lumc.sasc.biopet.Version,
         "pipeline_name" -> qscript.summaryName,
