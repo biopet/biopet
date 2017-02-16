@@ -110,8 +110,6 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
     logger.info(s"Preprocessing done for ${functions.length} functions")
 
-    logger.info(s"Preprocessing done for  ${functions.length} jobs")
-
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
