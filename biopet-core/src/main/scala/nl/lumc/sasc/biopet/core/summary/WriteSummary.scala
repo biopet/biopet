@@ -164,23 +164,16 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
-    for (
-      (name, f) <- qscript.functions.flatMap(_ match {
-        case c: Configurable with Version => Some(c)
-        case _                            => None
-      }).groupBy(_.configNamespace)
-    ) yield {
-      f match {
-        case f: BiopetJavaCommandLineFunction with Version =>
-          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion, f.getJavaVersion, javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Some(f.jarFile.getAbsolutePath))
-        case f: BiopetCommandLineFunction with Version =>
-          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion, Option(f.executable))
-        case f: Configurable with Version =>
-          db.createOrUpdateExecutable(qscript.summaryRunId, name, f.getVersion)
-        case _ => None
-      }
-
-    }
+    (for (f <- qscript.functions.par) yield f match {
+      case f: BiopetJavaCommandLineFunction with Version =>
+        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, f.getJavaVersion,
+          javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Some(f.jarFile.getAbsolutePath)))
+      case f: BiopetCommandLineFunction with Version =>
+        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, Option(f.executable)))
+      case f: Configurable with Version =>
+        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion))
+      case _ => None
+    }).flatten.foreach(Await.ready(_, Duration.Inf))
 
     ///////////////// OLD //////////////////
     for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {

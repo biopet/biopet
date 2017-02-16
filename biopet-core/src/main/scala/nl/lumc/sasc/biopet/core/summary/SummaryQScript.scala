@@ -121,8 +121,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private def createRun(): Int = {
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
     val dir = root match {
-      case q:BiopetQScript => q.outputDir
-      case _ => throw new IllegalStateException("Root should be a BiopetQscript")
+      case q: BiopetQScript => q.outputDir
+      case _                => throw new IllegalStateException("Root should be a BiopetQscript")
     }
     val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath), Duration.Inf)
     runIdFile.getParentFile.mkdir()

@@ -215,7 +215,7 @@ class SummaryDb(db: Database) extends Closeable {
 
   /** This return a [[Query]] for [[Settings]] */
   private def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-                     sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+                             sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
     pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
@@ -249,8 +249,8 @@ class SummaryDb(db: Database) extends Closeable {
 
   /** Return a [[Query]] for [[Files]] */
   private def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
-                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
-                  key: Option[String] = None) = {
+                          sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+                          key: Option[String] = None) = {
     var f: Query[Files, Files#TableElementType, Seq] = files
     runId.foreach(r => f = f.filter(_.runId === r))
     pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
