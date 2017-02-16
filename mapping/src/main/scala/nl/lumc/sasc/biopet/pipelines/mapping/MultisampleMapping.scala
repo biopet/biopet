@@ -67,7 +67,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     Some(report)
   }
 
-  override def defaults: Map[String, Any] = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+  override def defaults: Map[String, Any] = super.defaults ++ Map(
+    "reordersam" -> Map("allow_incomplete_dict_concordance" -> true),
+    "gears" -> Map("skip_flexiprep" -> true)
+  )
 
   override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
@@ -99,6 +102,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
       lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
+      lazy val qcFastqR1 = mapping.map(_.flexiprep.fastqR1Qc)
+      lazy val qcFastqR2 = mapping.flatMap(_.flexiprep.fastqR2Qc)
       lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
@@ -274,8 +279,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           add(gears)
         case "all" =>
           val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.inputR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.inputR2).toList
+          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
           gears.sampleId = Some(sampleId)
           gears.outputDir = new File(sampleDir, "gears")
           add(gears)

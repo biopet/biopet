@@ -41,11 +41,6 @@ class DellyCaller(val parent: Configurable) extends BiopetCommandLineFunction wi
   @Argument(doc = "What kind of analysis to run: DEL,DUP,INV,TRA")
   var analysistype: String = _
 
-  override def beforeGraph(): Unit = {
-    super.beforeGraph()
-    deps ::= new File(input.getParentFile, input.getName + ".bai")
-  }
-
   def cmdLine = required(executable) +
     "-t" + required(analysistype) +
     "-o" + required(outputvcf) +

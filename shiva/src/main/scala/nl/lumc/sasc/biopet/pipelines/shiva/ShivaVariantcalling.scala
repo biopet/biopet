@@ -84,6 +84,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
   def biopetScript(): Unit = {
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+    if (!callers.exists(_.mergeVcfResults)) Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
     addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
 
@@ -91,7 +92,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
     cv.out = finalFile
     cv.setKey = Some("VariantCaller")
     cv.genotypemergeoption = Some("PRIORITIZE")
-    cv.rod_priority_list = Some(callers.map(_.name).mkString(","))
+    cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
       caller.namePrefix = namePrefix
@@ -112,21 +113,22 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
-        cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
         vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
-      } else cv.variant :+= TaggedFile(caller.outputFile, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
+      } else if (caller.mergeVcfResults) cv.variant :+= TaggedFile(caller.outputFile, caller.name)
     }
-    add(cv)
-
-    addStats(finalFile, "final")
+    if (cv.variant.nonEmpty) {
+      add(cv)
+      addStats(finalFile, "final")
+    }
 
     addSummaryJobs()
   }

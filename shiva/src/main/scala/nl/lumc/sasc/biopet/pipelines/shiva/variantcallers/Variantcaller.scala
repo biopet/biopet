@@ -27,6 +27,8 @@ trait Variantcaller extends QScript with BiopetQScript with Reference {
 
   var namePrefix: String = _
 
+  val mergeVcfResults: Boolean = config("merge_vcf_results", default = true)
+
   /**
    * Map of samplename -> (preprocessed) bam file
    */
