@@ -6,8 +6,8 @@ import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
-import java.io.{Closeable, File}
+import scala.concurrent.{ Await, Future }
+import java.io.{ Closeable, File }
 import java.sql.Date
 
 /**

@@ -24,6 +24,8 @@ import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
+import scala.collection.mutable.ListBuffer
+
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
@@ -95,6 +97,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
     logger.info("Running pre commands")
     var count = 0
+    val totalCount = functions.size
     for (function <- functions) {
       function match {
         case f: BiopetCommandLineFunction =>
@@ -106,15 +109,15 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         case _               =>
       }
       count += 1
-      if (count % 500 == 0) logger.info(s"Preprocessing done for ${count} jobs out of ${functions.length} total")
+      if (count % 500 == 0) logger.info(s"Preprocessing done for $count jobs out of $totalCount total")
     }
-    logger.info(s"Preprocessing done for ${functions.length} functions")
+    logger.info(s"Preprocessing done for $totalCount functions")
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(new File(logDir, "config"))
-    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, output directory cannot be created")
+    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writable, output directory cannot be created")
 
     logger.info("Checking input files")
     inputFiles.par.foreach { i =>
