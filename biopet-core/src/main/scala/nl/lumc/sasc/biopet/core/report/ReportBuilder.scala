@@ -107,11 +107,25 @@ trait ReportBuilder extends ToolCommand {
   /** Retrival of summary, read only */
   final def summary = setSummary
 
-  /** summary object internaly */
   private var setRunId: Int = 0
 
-  /** Retrival of summary, read only */
   final def runId = setRunId
+
+  private var setSampleCache: Map[String, Int] = _
+
+  final def sampleCache = setSampleCache
+
+  private var setLibraryCache: Map[(String, String), Int] = _
+
+  final def libraryCache = setSampleCache
+
+  private var setPipelineCache: Map[String, Int] = _
+
+  final def pipelineCache = setPipelineCache
+
+  private var setModuleCache: Map[String, Int] = _
+
+  final def moduleCache = setModuleCache
 
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
