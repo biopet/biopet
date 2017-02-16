@@ -61,6 +61,8 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
 
     override def preProcessBam = Some(createFile("filter.bam"))
 
+    override def metricsPreprogressBam = false
+
     val controls: List[String] = config("control", default = Nil)
 
     override def summarySettings = super.summarySettings ++ Map("controls" -> controls)
