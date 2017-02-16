@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
+import org.fusesource.scalate.{TemplateEngine, TemplateSource}
 
 import scala.collection.mutable
 import scala.language.postfixOps
@@ -38,7 +38,9 @@ trait ReportBuilderExtension extends ToolCommandFunction {
   def toolObject = builder
 
   @Input(required = true)
-  var summaryFile: File = _
+  var summaryDbFile: File = _
+
+  var runId: Option[Int] = None
 
   /** OutputDir for the report  */
   var outputDir: File = _
@@ -58,7 +60,8 @@ trait ReportBuilderExtension extends ToolCommandFunction {
   /** Command to generate the report */
   override def cmdLine: String = {
     super.cmdLine +
-      required("--summary", summaryFile) +
+      required("--summaryDb", summaryDbFile) +
+      optional("--runId", runId) +
       required("--outputDir", outputDir) +
       args.map(x => required("-a", x._1 + "=" + x._2)).mkString
   }
@@ -66,8 +69,9 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null,
+  case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
+                  runId: Int = 0,
                   pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -78,8 +82,8 @@ trait ReportBuilder extends ToolCommand {
        """.stripMargin
     )
 
-    opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(summary = x)
+    opt[File]('s', "summaryDb") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(summaryDbFile = x)
     } validate {
       x => if (x.exists) success else failure("Summary JSON file not found!")
     } text "Biopet summary JSON file"
@@ -88,16 +92,26 @@ trait ReportBuilder extends ToolCommand {
       c.copy(outputDir = x)
     } text "Output HTML report files to this directory"
 
+    opt[Int]("runId") unbounded () maxOccurs 1 valueName "<int>" action { (x, c) =>
+      c.copy(runId = x)
+    }
+
     opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
 
   /** summary object internaly */
-  private var setSummary: Summary = _
+  private var setSummary: SummaryDb = _
 
   /** Retrival of summary, read only */
   final def summary = setSummary
+
+  /** summary object internaly */
+  private var setRunId: Int = 0
+
+  /** Retrival of summary, read only */
+  final def runId = setRunId
 
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
@@ -165,7 +179,8 @@ trait ReportBuilder extends ToolCommand {
     )
 
     logger.info("Parsing summary")
-    setSummary = new Summary(cmdArgs.summary)
+    setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
+    setRunId = cmdArgs.runId
 
     total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
@@ -175,7 +190,7 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Generate pages")
     val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
-        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
+        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage, "runId" -> cmdArgs.runId))
 
     logger.info(jobs + " Done")
   }
@@ -196,7 +211,7 @@ trait ReportBuilder extends ToolCommand {
    * @param args Args to add to this sub page, are args from current page are passed automaticly
    * @return Number of pages including all subpages that are rendered
    */
-  def generatePage(summary: Summary,
+  def generatePage(summary: SummaryDb,
                    page: ReportPage,
                    outputDir: File,
                    path: List[String] = Nil,

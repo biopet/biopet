@@ -33,7 +33,7 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
   override def reportClass = {
     val gearsReport = new GearsReport(this)
     gearsReport.outputDir = new File(outputDir, "report")
-    gearsReport.summaryFile = summaryFile
+    gearsReport.summaryDbFile = summaryDbFile
     Some(gearsReport)
   }
 

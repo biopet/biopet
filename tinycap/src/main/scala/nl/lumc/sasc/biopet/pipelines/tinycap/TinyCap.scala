@@ -119,7 +119,7 @@ class TinyCap(val parent: Configurable) extends QScript
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new TinyCapReport(this)
     report.outputDir = new File(outputDir, "report")
-    report.summaryFile = summaryFile
+    report.summaryDbFile = summaryDbFile
     Some(report)
   }
 

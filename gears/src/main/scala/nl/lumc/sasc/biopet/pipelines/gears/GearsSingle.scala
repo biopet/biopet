@@ -73,7 +73,7 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
   override def reportClass = {
     val gears = new GearsSingleReport(this)
     gears.outputDir = new File(outputDir, "report")
-    gears.summaryFile = summaryFile
+    gears.summaryDbFile = summaryDbFile
     sampleId.foreach(gears.args += "sampleId" -> _)
     libId.foreach(gears.args += "libId" -> _)
     Some(gears)

@@ -140,7 +140,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   override def reportClass: Some[MappingReport] = {
     val mappingReport = new MappingReport(this)
     mappingReport.outputDir = new File(outputDir, "report")
-    mappingReport.summaryFile = summaryFile
+    mappingReport.summaryDbFile = summaryDbFile
     mappingReport.args = Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

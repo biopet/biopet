@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.utils.config
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 import scala.concurrent.Future

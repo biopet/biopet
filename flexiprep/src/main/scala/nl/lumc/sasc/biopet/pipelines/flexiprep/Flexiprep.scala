@@ -65,7 +65,7 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
   override def reportClass: Some[FlexiprepReport] = {
     val flexiprepReport = new FlexiprepReport(this)
     flexiprepReport.outputDir = new File(outputDir, "report")
-    flexiprepReport.summaryFile = summaryFile
+    flexiprepReport.summaryDbFile = summaryDbFile
     flexiprepReport.args = Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

@@ -47,7 +47,7 @@ class Gentrap(val parent: Configurable) extends QScript
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new GentrapReport(this)
     report.outputDir = new File(outputDir, "report")
-    report.summaryFile = summaryFile
+    report.summaryDbFile = summaryDbFile
     Some(report)
   }
 

@@ -63,7 +63,7 @@ class BamMetrics(val parent: Configurable) extends QScript
   override def reportClass = {
     val bammetricsReport = new BammetricsReport(this)
     bammetricsReport.outputDir = new File(outputDir, "report")
-    bammetricsReport.summaryFile = summaryFile
+    bammetricsReport.summaryDbFile = summaryDbFile
     bammetricsReport.args = if (libId.isDefined) Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

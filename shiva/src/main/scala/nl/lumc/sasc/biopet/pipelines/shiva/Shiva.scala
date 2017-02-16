@@ -40,7 +40,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
   override def reportClass: Option[ReportBuilderExtension] = {
     val shiva = new ShivaReport(this)
     shiva.outputDir = new File(outputDir, "report")
-    shiva.summaryFile = summaryFile
+    shiva.summaryDbFile = summaryDbFile
     Some(shiva)
   }
 

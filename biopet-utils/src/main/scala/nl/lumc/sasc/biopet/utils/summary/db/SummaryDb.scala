@@ -15,7 +15,7 @@ import java.sql.Date
  *
  * Created by pjvanthof on 05/02/2017.
  */
-class SummaryDb(db: Database) extends Closeable {
+class SummaryDb(val db: Database) extends Closeable {
 
   def close(): Unit = db.close()
 
@@ -73,6 +73,11 @@ class SummaryDb(db: Database) extends Closeable {
   /** Return samplId of a specific runId + sampleName */
   def getSampleId(runId: Int, sampleName: String): Future[Option[Int]] = {
     getSamples(runId = Some(runId), name = Some(sampleName)).map(_.headOption.map(_.id))
+  }
+
+  /** Return samplId of a specific runId + sampleName */
+  def getSampleName(sampleId: Int): Future[Option[Int]] = {
+    getSamples(sampleId = Some(sampleId)).map(_.headOption.map(_.id))
   }
 
   /** Return sample tags of a specific sample as a map */
@@ -184,7 +189,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   /** Return a Query for [[Stats]] */
-  private def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+  def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
@@ -215,7 +220,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   /** This return a [[Query]] for [[Settings]] */
-  private def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
+  def settingsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
                              sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
@@ -249,7 +254,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   /** Return a [[Query]] for [[Files]] */
-  private def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
+  def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
                           sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
                           key: Option[String] = None) = {
     var f: Query[Files, Files#TableElementType, Seq] = files
@@ -287,7 +292,7 @@ class SummaryDb(db: Database) extends Closeable {
   }
 
   /** Returns a [[Query]] for [[Executables]] */
-  private def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
+  def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
     var q: Query[Executables, Executables#TableElementType, Seq] = executables
     runId.foreach(r => q = q.filter(_.runId === r))
     toolName.foreach(r => q = q.filter(_.toolName === r))

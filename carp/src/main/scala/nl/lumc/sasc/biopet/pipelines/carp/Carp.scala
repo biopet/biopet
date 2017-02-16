@@ -103,7 +103,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
   override def reportClass: Option[ReportBuilderExtension] = {
     val carp = new CarpReport(this)
     carp.outputDir = new File(outputDir, "report")
-    carp.summaryFile = summaryFile
+    carp.summaryDbFile = summaryDbFile
     Some(carp)
   }
 
