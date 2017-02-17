@@ -76,8 +76,8 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return samplId of a specific runId + sampleName */
-  def getSampleName(sampleId: Int): Future[Option[Int]] = {
-    getSamples(sampleId = Some(sampleId)).map(_.headOption.map(_.id))
+  def getSampleName(sampleId: Int): Future[Option[String]] = {
+    getSamples(sampleId = Some(sampleId)).map(_.headOption.map(_.name))
   }
 
   /** Return sample tags of a specific sample as a map */
@@ -108,6 +108,11 @@ class SummaryDb(val db: Database) extends Closeable {
   /** Return a libraryId for a specific combination */
   def getLibraryId(runId: Int, sampleId: Int, name: String): Future[Option[Int]] = {
     getLibraries(runId = Some(runId), sampleId = Some(sampleId), name = Some(name)).map(_.headOption.map(_.id))
+  }
+
+  /** Return a libraryId for a specific combination */
+  def getLibraryName(libraryId: Int): Future[Option[String]] = {
+    getLibraries(libId = Some(libraryId)).map(_.headOption.map(_.name))
   }
 
   /** Return library tags as a map */
@@ -190,20 +195,45 @@ class SummaryDb(val db: Database) extends Closeable {
 
   /** Return a Query for [[Stats]] */
   def statsFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-                          sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None) = {
+                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+                  mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false) = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
     pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
     moduleId.foreach(r => f = if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty))
     sampleId.foreach(r => f = if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty))
     libId.foreach(r => f = if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty))
+    if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
+    if (mustHaveLibrary) f = f.filter(_.libraryId.nonEmpty)
+    f
+  }
+
+  def statsJoinFilter(runId: Option[Int] = None, pipelineName: Option[String] = None, moduleName: Option[Option[String]] = None,
+                      sampleName: Option[Option[String]] = None, libraryName: Option[Option[String]] = None,
+                      mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false) = {
+    var f: Query[Stats, Stats#TableElementType, Seq] = stats
+    if (runId.isDefined) f = f.filter(_.runId === runId.get)
+    if (pipelineName.isDefined) f = f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === pipelineName.get).map(_._1)
+    moduleName.foreach(r => if (r.isDefined) f = f.join(modules).on(_.moduleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.moduleId.isEmpty))
+    sampleName.foreach(r => if (r.isDefined) f = f.join(samples).on(_.sampleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.sampleId.isEmpty))
+    libraryName.foreach(r => if (r.isDefined) f = f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.libraryId.isEmpty))
+    if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
+    if (mustHaveLibrary) f = f.filter(_.libraryId.nonEmpty)
     f
   }
 
   /** Return all stats that match given criteria */
   def getStats(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None): Future[Seq[Stat]] = {
-    db.run(statsFilter(runId, pipelineId, moduleId, sampleId, libId).result)
+               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+               mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false): Future[Seq[Stat]] = {
+    db.run(statsFilter(runId, pipelineId, moduleId, sampleId, libId, mustHaveSample, mustHaveLibrary).result)
+  }
+
+  /** Return number of results */
+  def getStatsSize(runId: Option[Int] = None, pipelineName: Option[String] = None, moduleName: Option[Option[String]] = None,
+                   sampleName: Option[Option[String]] = None, libName: Option[Option[String]] = None,
+                   mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false): Future[Int] = {
+    db.run(statsJoinFilter(runId, pipelineName, moduleName, sampleName, libName, mustHaveSample, mustHaveLibrary).size.result)
   }
 
   /** Get a single stat as [[Map[String, Any]] */
@@ -267,11 +297,30 @@ class SummaryDb(val db: Database) extends Closeable {
     f
   }
 
+  def filesJoinFilter(runId: Option[Int] = None, pipelineName: Option[String] = None, moduleName: Option[Option[String]] = None,
+                      sampleName: Option[Option[String]] = None, libraryName: Option[Option[String]] = None,
+                      mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false, key: Option[String] = None) = {
+    var f: Query[Files, Files#TableElementType, Seq] = files
+    if (runId.isDefined) f = f.filter(_.runId === runId.get)
+    if (key.isDefined) f = f.filter(_.key === key.get)
+    if (pipelineName.isDefined) f = f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === pipelineName.get).map(_._1)
+    moduleName.foreach(r => if (r.isDefined) f = f.join(modules).on(_.moduleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.moduleId.isEmpty))
+    sampleName.foreach(r => if (r.isDefined) f = f.join(samples).on(_.sampleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.sampleId.isEmpty))
+    libraryName.foreach(r => if (r.isDefined) f = f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.libraryId.isEmpty))
+    if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
+    if (mustHaveLibrary) f = f.filter(_.libraryId.nonEmpty)
+    f
+  }
+
   /** Returns all [[Files]] with the given criteria */
   def getFiles(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
                sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
                key: Option[String] = None): Future[Seq[Schema.File]] = {
     db.run(filesFilter(runId, pipelineId, moduleId, sampleId, libId, key).result)
+  }
+
+  def getFile(runId: Int, pipelineName: String, moduleName: Option[String], sampleName: Option[String], libraryName: Option[String], key: String): Future[Option[File]] = {
+    db.run(filesJoinFilter(Some(runId), Some(pipelineName), Some(moduleName), Some(sampleName), Some(libraryName), key = Some(key)).map(_.path).result).map(_.headOption.map(new File(_)))
   }
 
   /** Creates a file. This method will raise expection if it already exist */

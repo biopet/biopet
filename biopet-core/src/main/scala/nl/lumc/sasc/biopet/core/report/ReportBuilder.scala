@@ -23,6 +23,8 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{TemplateEngine, TemplateSource}
 
 import scala.collection.mutable
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 
 /**
@@ -68,6 +70,8 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 }
 
 trait ReportBuilder extends ToolCommand {
+
+  implicit def toOption[T](x: T) : Option[T] = Option(x)
 
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
@@ -195,6 +199,10 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Parsing summary")
     setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
     setRunId = cmdArgs.runId
+    setSampleCache = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
+    setLibraryCache = Await.result(summary.getLibraries(runId = Some(runId)), Duration.Inf).map(r => (setSampleCache.find(_._2 == r.sampleId).get._1, r.name) -> r.id).toMap
+    setPipelineCache = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
+    setModuleCache = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
 
     total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
