@@ -206,7 +206,7 @@ class SummaryDb(val db: Database) extends Closeable {
 
   /** Return a Query for [[Stats]] */
   def statsFilter(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
-                  sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
+                  sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
                   mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
@@ -227,7 +227,7 @@ class SummaryDb(val db: Database) extends Closeable {
       case Some(None)              => f.filter(_.sampleId.isEmpty)
       case _                       => f
     }
-    f = module match {
+    f = library match {
       case Some(Some(Left(id)))    => f.filter(_.libraryId === id)
       case Some(Some(Right(name))) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === name).map(_._1)
       case Some(None)              => f.filter(_.libraryId.isEmpty)
@@ -317,7 +317,7 @@ class SummaryDb(val db: Database) extends Closeable {
       case Some(None)              => f.filter(_.sampleId.isEmpty)
       case _                       => f
     }
-    f = module match {
+    f = library match {
       case Some(Some(Left(id)))    => f.filter(_.libraryId === id)
       case Some(Some(Right(name))) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === name).map(_._1)
       case Some(None)              => f.filter(_.libraryId.isEmpty)
