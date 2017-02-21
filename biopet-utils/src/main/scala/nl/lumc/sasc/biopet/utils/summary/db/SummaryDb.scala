@@ -296,7 +296,7 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   def settingsFilter(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
-                     sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
+                     sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
                      mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
@@ -379,37 +379,50 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return a [[Query]] for [[Files]] */
-  def filesFilter(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]] = None,
-                  sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+  def filesFilter(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
+                  sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
                   key: Option[String] = None, pipelineName: Option[String] = None, moduleName: Option[Option[String]] = None,
                   sampleName: Option[Option[String]] = None, libraryName: Option[Option[String]] = None) = {
     var f: Query[Files, Files#TableElementType, Seq] = files
     runId.foreach(r => f = f.filter(_.runId === r))
-    pipelineId.foreach(r => f = f.filter(_.pipelineId === r))
     key.foreach(r => f = f.filter(_.key === r))
-    moduleId.foreach(r => f = if (r.isDefined) f.filter(_.moduleId === r.get) else f.filter(_.moduleId.isEmpty))
-    sampleId.foreach(r => f = if (r.isDefined) f.filter(_.sampleId === r.get) else f.filter(_.sampleId.isEmpty))
-    libId.foreach(r => f = if (r.isDefined) f.filter(_.libraryId === r.get) else f.filter(_.libraryId.isEmpty))
 
-    // Join Query's
-    if (pipelineName.isDefined) f = f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === pipelineName.get).map(_._1)
-    moduleName.foreach(r => if (r.isDefined) f = f.join(modules).on(_.moduleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.moduleId.isEmpty))
-    sampleName.foreach(r => if (r.isDefined) f = f.join(samples).on(_.sampleId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.sampleId.isEmpty))
-    libraryName.foreach(r => if (r.isDefined) f = f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === r.get).map(_._1) else f = f.filter(_.libraryId.isEmpty))
+    f = pipeline match {
+      case Some(Left(id))    => f.filter(_.pipelineId === id)
+      case Some(Right(name)) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === name).map(_._1)
+      case _                 => f
+    }
+    f = module match {
+      case Some(Some(Left(id)))    => f.filter(_.moduleId === id)
+      case Some(Some(Right(name))) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === name).map(_._1)
+      case Some(None)              => f.filter(_.moduleId.isEmpty)
+      case _                       => f
+    }
+    f = sample match {
+      case Some(Some(Left(id)))    => f.filter(_.sampleId === id)
+      case Some(Some(Right(name))) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === name).map(_._1)
+      case Some(None)              => f.filter(_.sampleId.isEmpty)
+      case _                       => f
+    }
+    f = library match {
+      case Some(Some(Left(id)))    => f.filter(_.libraryId === id)
+      case Some(Some(Right(name))) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === name).map(_._1)
+      case Some(None)              => f.filter(_.libraryId.isEmpty)
+      case _                       => f
+    }
     f
   }
 
   /** Returns all [[Files]] with the given criteria */
-  def getFiles(runId: Option[Int] = None, pipelineId: Option[Int] = None, moduleId: Option[Option[Int]],
-               sampleId: Option[Option[Int]] = None, libId: Option[Option[Int]] = None,
+  def getFiles(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]],
+               sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
                key: Option[String] = None): Future[Seq[Schema.File]] = {
-    db.run(filesFilter(runId, pipelineId, moduleId, sampleId, libId, key).result)
+    db.run(filesFilter(runId, pipeline, module, sample, library, key).result)
   }
 
-  def getFile(runId: Int, pipelineName: String, moduleName: Option[String], sampleName: Option[String],
-              libraryName: Option[String], key: String): Future[Option[Schema.File]] = {
-    db.run(filesFilter(runId = Some(runId), pipelineName = Some(pipelineName), moduleName = Some(moduleName),
-      sampleName = Some(sampleName), libraryName = Some(libraryName), key = Some(key)).result).map(_.headOption)
+  def getFile(runId: Int, pipeline: Either[Int, String], module: Option[Either[Int, String]], sample: Option[Either[Int, String]],
+              library: Option[Either[Int, String]], key: String): Future[Option[Schema.File]] = {
+    db.run(filesFilter(Some(runId), Some(pipeline), Some(module), Some(sample), Some(library), Some(key)).result).map(_.headOption)
   }
 
   /** Creates a file. This method will raise expection if it already exist */
@@ -423,7 +436,7 @@ class SummaryDb(val db: Database) extends Closeable {
   def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                          sampleId: Option[Int] = None, libId: Option[Int] = None,
                          key: String, path: String, md5: String, link: Boolean = false, size: Long): Future[Int] = {
-    val filter = filesFilter(Some(runId), Some(pipelineId), Some(moduleId), Some(sampleId), Some(libId), Some(key))
+    val filter = filesFilter(Some(runId), Some(Left(pipelineId)), Some(Left(moduleId)), Some(Left(sampleId)), Some(Left(libId)), Some(key))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
     else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
