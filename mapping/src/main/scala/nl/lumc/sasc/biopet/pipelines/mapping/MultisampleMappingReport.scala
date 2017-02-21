@@ -14,10 +14,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder }
+import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * Created by pjvanthof on 11/01/16.
@@ -45,15 +48,20 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Root page for the carp report */
   def indexPage = {
 
-    val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
-    val centrifugeExecuted = summary.getSampleValues("gearscentrifuge", "stats", "centrifuge_report").values.forall(_.isDefined)
-    val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
-    val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
-    val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
-    val mappingExecuted = summary.getLibraryValues("mapping").exists(_._2.isDefined)
-    val pairedFound = !mappingExecuted || summary.getLibraryValues("mapping", "settings", "paired").exists(_._2 == Some(true))
-    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .exists { case ((sample, lib), value) => value.isDefined }
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")),
+      library = Some(None), mustHaveSample = true), Duration.Inf) >= 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")),
+      library = Some(None), mustHaveSample = true), Duration.Inf) >= 1
+    val wgsExecuted = Await.result(summary.getStatsSize(runId, Right("bammetrics"), Some(Right("wgs")),
+      library = Some(None), mustHaveSample = true), Duration.Inf) >= 1
+    val rnaExecuted = Await.result(summary.getStatsSize(runId, Right("bammetrics"), Some(Right("rna")),
+      library = Some(None), mustHaveSample = true), Duration.Inf) >= 1
+    val insertsizeExecuted = Await.result(summary.getStatsSize(runId, Right("bammetrics"), Some(Right("CollectInsertSizeMetrics")),
+      library = Some(None), mustHaveSample = true), Duration.Inf) >= 1
+    val mappingExecuted = Await.result(summary.getStatsSize(runId, Right("mapping"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
+    val pairedFound = !mappingExecuted || summary.getSettingsForLibraries(runId, Right("mapping"), None, keyValues = Map("paired" -> List("paired")))
+      .exists(_._2.exists(_._2 == Some(true)))
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
@@ -105,8 +113,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Files page, can be used general or at sample level */
   def filesPage: ReportPage = {
-    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .exists { case ((sample, lib), value) => value.isDefined }
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(List(), (if (flexiprepExecuted) List(
       "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
@@ -118,11 +125,13 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   }
 
   /** Single sample page */
-  def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
-    val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
-    val centrifugeExecuted = summary.getValue(Some(sampleId), None, "gearscentrifuge", "stats", "centrifuge_report").isDefined
-    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
+  def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")),
+      library = Some(None), sample = Some(Left(sampleId))), Duration.Inf) >= 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")),
+      library = Some(None), sample = Some(Left(sampleId)), mustHaveSample = true), Duration.Inf) >= 1
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None),
+      sample = Some(Left(sampleId)), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
@@ -149,10 +158,13 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   }
 
   /** Library page */
-  def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
-    val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
-    val centrifugeExecuted = summary.getValue(Some(sampleId), Some(libId), "gearscentrifuge", "stats", "centrifuge_report").isDefined
-    val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
+  def libraryPage(sampleId: Int, libId: Int, args: Map[String, Any]): ReportPage = {
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")),
+      library = Some(Left(libId)), sample = Some(Left(sampleId))), Duration.Inf) >= 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")),
+      library = Some(Left(libId)), sample = Some(Left(sampleId)), mustHaveSample = true), Duration.Inf) >= 1
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), library = Some(Left(libId)),
+      sample = Some(Left(sampleId)), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::

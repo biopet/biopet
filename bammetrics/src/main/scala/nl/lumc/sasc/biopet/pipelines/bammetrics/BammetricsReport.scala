@@ -132,12 +132,11 @@ object BammetricsReport extends ReportBuilder {
       "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
     )
 
-    val pipelineId: Int = summary.getPipelineId(runId, "bammetrics").map(_.get)
-    val moduleId: Option[Int] = summary.getmoduleId(runId, "bamstats", pipelineId)
-
     val results: Map[(Int, Option[Int]), Map[String, Option[Any]]] = if (libraryLevel) {
-      summary.getStatsForLibraries(runId = runId, pipelineName = "bammetrics", moduleName = Some("bamstats"), sampleId = sampleId, keyValues = statsPaths).map(x => (x._1._1, Some(x._1._2)) -> x._2)
-    } else summary.getStatsForSamples(runId, pipelineId, moduleId, sample = sampleId, keyValues = statsPaths).map(x => (x._1, None) -> x._2)
+      summary.getStatsForLibraries(runId, Right("bammetrics"), Some(Right("bamstats")),
+        sampleId = sampleId, keyValues = statsPaths).map(x => (x._1._1, Some(x._1._2)) -> x._2)
+    } else summary.getStatsForSamples(runId, Right("bammetrics"), Some(Right("bamstats")),
+       sample = sampleId.map(Left(_)), keyValues = statsPaths).map(x => (x._1, None) -> x._2)
 
     for (((s,l),result) <- results) {
       val sampleName: String = summary.getSampleName(s).map(_.get)
@@ -168,6 +167,49 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  def writePlotFromSummary(outputDir: File,
+           prefix: String,
+           summary: SummaryDb,
+           libraryLevel: Boolean = false,
+           sampleId: Option[Int] = None,
+           libraryId: Option[Int] = None,
+           statsPaths: Map[String, List[String]],
+           xKey: String,
+           yKey: String,
+           pipeline: Either[Int,String],
+           module: Option[Either[Int,String]],
+           xlabel: Option[String] = None,
+           ylabel: Option[String] = None,
+           title: Option[String] = None,
+           removeZero: Boolean = true): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+
+    val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
+      summary.getStatsForLibraries(runId, pipeline, module, sampleId = sampleId, keyValues = statsPaths)
+        .map(x => (x._1._1, Some(x._1._2)) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
+    } else summary.getStatsForSamples(runId, pipeline, module, sample = sampleId.map(Left(_)), keyValues = statsPaths)
+      .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
+
+    val tables: Array[Map[String, Array[Any]]] = results.map { case ((sample,library), map) =>
+        val sampleName = Await.result(summary.getSampleName(sample), Duration.Inf)
+          .getOrElse(throw new IllegalStateException("Sample must be there"))
+        val libraryName = library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
+      Map(
+        yKey -> map(yKey).getOrElse(Array()),
+        (sampleName + libraryName.map("-" + _)getOrElse("")) -> map(xKey).getOrElse(Array())
+      )
+    }.toArray
+
+    writeTableToTsv(tsvFile, mergeTables(tables, yKey), yKey)
+
+    LinePlot(tsvFile, pngFile,
+      xlabel = xlabel,
+      ylabel = ylabel,
+      title = title,
+      removeZero = removeZero).runLocal()
+  }
+
   /**
    * Generate a line plot for insertsize
    *
@@ -182,36 +224,15 @@ object BammetricsReport extends ReportBuilder {
                      summary: SummaryDb,
                      libraryLevel: Boolean = false,
                      sampleId: Option[Int] = None,
-                     libId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
+                     libraryId: Option[Int] = None): Unit = {
     val statsPaths = Map(
       "insert_size" -> List("histogram", "insert_size"),
-      "All_Reads.fr_count" -> List("histogram", "All_Reads.fr_count")
+      "count" -> List("histogram", "All_Reads.fr_count")
     )
 
-    val pipelineId: Int = summary.getPipelineId(runId, "bammetrics").map(_.get)
-    val moduleId: Option[Int] = summary.getmoduleId(runId, "CollectInsertSizeMetrics", pipelineId)
-
-    val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
-      summary.getStatsForLibraries(runId, pipelineId, moduleId, sampleId = sampleId, keyValues = statsPaths)
-        .map(x => (x._1._1, Some(x._1._2)) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
-    } else summary.getStatsForSamples(runId, pipelineId, moduleId, sample = sampleId, keyValues = statsPaths)
-      .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
-
-    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map {
-        case (sample, lib) =>
-          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
-      }
-    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "insert_size"), "insert_size")
-
-    LinePlot(tsvFile, pngFile,
-      xlabel = Some("Insert size"),
-      ylabel = Some("Reads"),
-      title = Some("Insert size"),
-      removeZero = true).runLocal()
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId,statsPaths,
+      "insert_size", "count", Right("bammetrics"), Some(Right("CollectInsertSizeMetrics")),
+      "Insert size", "Reads", "Insert size")
   }
 
   def mappingQualityPlot(outputDir: File,
@@ -219,27 +240,15 @@ object BammetricsReport extends ReportBuilder {
                          summary: SummaryDb,
                          libraryLevel: Boolean = false,
                          sampleId: Option[Int] = None,
-                         libId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
-    def paths(name: String) = Map(
-      "mapping_quality" -> List("bammetrics", "stats", "bamstats", "mapping_quality", "histogram", "values"),
-      name -> List("bammetrics", "stats", "bamstats", "mapping_quality", "histogram", "counts")
+                         libraryId: Option[Int] = None): Unit = {
+    val statsPaths = Map(
+      "mapping_quality" -> List("mapping_quality", "histogram", "values"),
+      "count" -> List("mapping_quality", "histogram", "counts")
     )
 
-    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map {
-        case (sample, lib) =>
-          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
-      }
-    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "mapping_quality"), "mapping_quality")
-
-    LinePlot(tsvFile, pngFile,
-      xlabel = Some("Mapping Quality"),
-      ylabel = Some("Reads"),
-      title = Some("Mapping Quality"),
-      removeZero = true).runLocal()
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
+      "mapping_quality", "count", Right("bammetrics"), Some(Right("bamstats")),
+      "Mapping quality", "Reads", "Mapping quality")
   }
 
   def clippingPlot(outputDir: File,
@@ -247,27 +256,15 @@ object BammetricsReport extends ReportBuilder {
                    summary: SummaryDb,
                    libraryLevel: Boolean = false,
                    sampleId: Option[Int] = None,
-                   libId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
-    def paths(name: String) = Map(
-      "clipping" -> List("bammetrics", "stats", "bamstats", "clipping", "histogram", "values"),
-      name -> List("bammetrics", "stats", "bamstats", "clipping", "histogram", "counts")
+                   libraryId: Option[Int] = None): Unit = {
+    val statsPaths = Map(
+      "clipping" -> List("clipping", "histogram", "values"),
+      "count" -> List("clipping", "histogram", "counts")
     )
 
-    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map {
-        case (sample, lib) =>
-          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
-      }
-    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "clipping"), "clipping")
-
-    LinePlot(tsvFile, pngFile,
-      xlabel = Some("Clipping"),
-      ylabel = Some("Reads"),
-      title = Some("Clipping"),
-      removeZero = true).runLocal()
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
+      "clipping", "count", Right("bammetrics"), Some(Right("bamstats")),
+      "Clipping", "Reads", "Clipping")
   }
 
   /**
@@ -284,27 +281,15 @@ object BammetricsReport extends ReportBuilder {
                        summary: SummaryDb,
                        libraryLevel: Boolean = false,
                        sampleId: Option[Int] = None,
-                       libId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
-    def paths(name: String) = Map(
-      "coverage" -> List("bammetrics", "stats", "wgs", "histogram", "coverage"),
-      name -> List("bammetrics", "stats", "wgs", "histogram", "count")
+                       libraryId: Option[Int] = None): Unit = {
+    val statsPaths = Map(
+      "coverage" -> List("wgs", "histogram", "coverage"),
+      "count" -> List("wgs", "histogram", "count")
     )
 
-    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map {
-        case (sample, lib) =>
-          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
-      }
-    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "coverage"), "coverage")
-
-    LinePlot(tsvFile, pngFile,
-      xlabel = Some("Coverage"),
-      ylabel = Some("Bases"),
-      title = Some("Whole genome coverage"),
-      removeZero = true).runLocal()
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
+      "coverage", "count", Right("bammetrics"), Some(Right("wgs")),
+      "Coverage", "Bases", "Whole genome coverage")
   }
 
   /**
@@ -320,51 +305,16 @@ object BammetricsReport extends ReportBuilder {
                        prefix: String,
                        summary: SummaryDb,
                        libraryLevel: Boolean = false,
-                       sampleId: Option[String] = None,
-                       libId: Option[String] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
-    def paths(name: String) = Map(
-      "normalized_position" -> List("bammetrics", "stats", "rna", "histogram", "normalized_position"),
-      name -> List("bammetrics", "stats", "rna", "histogram", "All_Reads.normalized_coverage")
+                       sampleId: Option[Int] = None,
+                       libraryId: Option[Int] = None): Unit = {
+    val statsPaths = Map(
+      "position" -> List("rna", "histogram", "normalized_position"),
+      "count" -> List("rna", "histogram", "All_Reads.normalized_coverage")
     )
 
-    val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
-      .map {
-        case (sample, lib) =>
-          getTableFromSummary(summary, paths(lib.map(l => s"$sample-$l").getOrElse(sample)), Some(sample), lib)
-      }
-    writeTableToTsv(tsvFile, mergeTables(tables.toArray, "normalized_position"), "normalized_position")
-
-    LinePlot(tsvFile, pngFile,
-      xlabel = Some("Relative position"),
-      ylabel = Some("Coverage"),
-      title = Some("Rna coverage"),
-      removeZero = true).runLocal()
-  }
-
-  private def getSampleLibraries(summary: SummaryDb,
-                                 sampleId: Option[Int] = None,
-                                 LibId: Option[Int] = None,
-                                 libraryLevel: Boolean = false): List[(Int, Option[Int])] = {
-    if (LibId.isDefined) require(sampleId.isDefined)
-    if (libraryLevel || LibId.isDefined)
-      for ((sample, libs) <- summary.libraries.toList; lib <- libs) yield (sample, Some(lib))
-    else for ((sample, libs) <- summary.libraries.toList) yield (sample, None)
-  }
-
-  def getTableFromSummary(summary: SummaryDb,
-                          paths: Map[String, List[String]],
-                          sampleId: Option[Int] = None,
-                          libId: Option[Int] = None): Map[String, Array[Any]] = {
-    val pathValues: Map[String, Array[Any]] = paths.map {
-      case (key, path) =>
-        val value = summary.getValueAsArray(sampleId, libId, path: _*)
-        key -> value.getOrElse(Array())
-    }
-    require(pathValues.map(_._2.size).toList.distinct.size == 1, s"Arrays in summary does not have the same number of values, $paths")
-    pathValues
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
+      "coverage", "count", Right("bammetrics"), Some(Right("rna")),
+      "Relative position", "Coverage", "Rna coverage")
   }
 
   def mergeTables(tables: Array[Map[String, Array[Any]]],

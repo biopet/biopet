@@ -14,13 +14,17 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
-import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.{Summary, SummaryValue}
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * With this extension the report is executed within a pipeline
@@ -37,7 +41,8 @@ object ShivaReport extends ShivaReportTrait
 /** Trait for report generation for Shiva pipeline, this can be extended */
 trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
-  def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
+  def variantcallingExecuted = summary.getSettingKeys(runId, Right("shiva"), None, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
+    .flatten match {
     case Some(true) => true
     case _          => false
   }
@@ -60,8 +65,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
-    val roi = summary.getValue("shiva", "settings", "regions_of_interest")
-    val amplicon = summary.getValue("shiva", "settings", "amplicon_bed")
+    val roi = summary.getSetting(runId, Right("shiva")).get("regions_of_interest")
+    val amplicon = summary.getSetting(runId, Right("shiva")).get("amplicon_bed")
 
     var regionPages: Map[String, ReportPage] = Map()
 
@@ -108,7 +113,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
   }
 
   /** Single sample page */
-  override def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
+  override def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
     val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
     val oldPage = super.samplePage(sampleId, args)
     oldPage.copy(sections = variantcallingSection ++ oldPage.sections)
@@ -123,51 +128,37 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class
-   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
    * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
    */
   def variantSummaryPlot(outputDir: File,
                          prefix: String,
-                         summary: Summary,
-                         libraryLevel: Boolean = false,
-                         sampleId: Option[String] = None,
+                         summary: SummaryDb,
+                         sampleId: Option[Int] = None,
                          caller: String = "final",
                          target: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
-    if (libraryLevel) tsvWriter.print("Library") else tsvWriter.print("Sample")
-    tsvWriter.println("\tHomVar\tHet\tHomRef\tNoCall")
+    tsvWriter.print("Sample")
+    val field = List("HomVar", "Het", "HomRef", "NoCall")
+    tsvWriter.println(s"\t${field.mkString("\t")}")
 
-    def getLine(summary: Summary, sample: String, summarySample: Option[String], lib: Option[String] = None): String = {
-      val path = target match {
-        case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype", sample)
-        case _       => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "total", "genotype", "general", sample)
-      }
-      val homVar = new SummaryValue(path :+ "HomVar", summary, summarySample, lib).value.getOrElse(0).toString.toLong
-      val homRef = new SummaryValue(path :+ "HomRef", summary, summarySample, lib).value.getOrElse(0).toString.toLong
-      val noCall = new SummaryValue(path :+ "NoCall", summary, summarySample, lib).value.getOrElse(0).toString.toLong
-      val het = new SummaryValue(path :+ "Het", summary, summarySample, lib).value.getOrElse(0).toString.toLong
-      val sb = new StringBuffer()
-      if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
-      sb.append(homVar + "\t")
-      sb.append(het + "\t")
-      sb.append(homRef + "\t")
-      sb.append(noCall)
-      sb.toString
+    val samples = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
+    val statsPaths = {
+      (for (sample <- Await.result(summary.getSamples(runId = runId), Duration.Inf)) yield {
+        field.map(f => s"${sample.name};HomVar" -> List("total", "genotype", "general", sample.name, f)).toMap
+      }).fold(Map())(_ ++ _)
     }
 
-    if (libraryLevel) {
-      for (
-        sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
-        lib <- summary.libraries(sample)
-      ) {
-        tsvWriter.println(getLine(summary, sample, sampleId, Some(lib)))
-      }
-    } else {
-      for (sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get) {
-        tsvWriter.println(getLine(summary, sample, sampleId))
-      }
+    val moduleName = target match {
+      case Some(t) => s"multisample-vcfstats-$caller-$t"
+      case _       => s"multisample-vcfstats-$caller"
+    }
+
+    val results = summary.getStatKeys(runId, Right("shivavariantcalling"), Some(Right(moduleName)), sampleId.map(Left(_)), keyValues = statsPaths)
+
+    for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
+      tsvWriter.println(sample.name + "\t" + field.map(f => results(s"${sample.name};$f").getOrElse("")).mkString("\t"))
     }
 
     tsvWriter.close()
@@ -176,9 +167,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("VCF records")
-    if (libraryLevel) {
-      plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
-    } else plot.width = Some(200 + (summary.samples.count(s => sampleId.getOrElse(s) == s) * 10))
+    plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.runLocal()
   }
 }

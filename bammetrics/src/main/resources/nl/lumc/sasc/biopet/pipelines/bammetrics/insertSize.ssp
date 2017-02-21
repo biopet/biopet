@@ -43,7 +43,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
 
     <div class="panel-body">
     <img src="insertsize.png" class="img-responsive" />
