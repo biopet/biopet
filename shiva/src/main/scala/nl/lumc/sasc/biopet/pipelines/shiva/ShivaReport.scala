@@ -14,14 +14,14 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.{Summary, SummaryValue}
+import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -43,9 +43,9 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   def variantcallingExecuted = summary.getSettingKeys(runId, Right("shiva"), None, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
     .flatten match {
-    case Some(true) => true
-    case _          => false
-  }
+      case Some(true) => true
+      case _          => false
+    }
 
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
 

@@ -207,31 +207,31 @@ class SummaryDb(val db: Database) extends Closeable {
   /** Return a Query for [[Stats]] */
   def statsFilter(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
                   sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
-                  mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false) = {
+                  mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
-      case Some(Left(id)) => f.filter(_.pipelineId === id)
+      case Some(Left(id))    => f.filter(_.pipelineId === id)
       case Some(Right(name)) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === name).map(_._1)
-      case _ => f
+      case _                 => f
     }
     f = module match {
-      case Some(Some(Left(id))) => f.filter(_.moduleId === id)
+      case Some(Some(Left(id)))    => f.filter(_.moduleId === id)
       case Some(Some(Right(name))) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.moduleId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.moduleId.isEmpty)
+      case _                       => f
     }
     f = sample match {
-      case Some(Some(Left(id))) => f.filter(_.sampleId === id)
+      case Some(Some(Left(id)))    => f.filter(_.sampleId === id)
       case Some(Some(Right(name))) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.sampleId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.sampleId.isEmpty)
+      case _                       => f
     }
     f = module match {
-      case Some(Some(Left(id))) => f.filter(_.libraryId === id)
+      case Some(Some(Left(id)))    => f.filter(_.libraryId === id)
       case Some(Some(Right(name))) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.libraryId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.libraryId.isEmpty)
+      case _                       => f
     }
 
     if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
@@ -242,14 +242,14 @@ class SummaryDb(val db: Database) extends Closeable {
   /** Return all stats that match given criteria */
   def getStats(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
                sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
-               mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false): Future[Seq[Stat]] = {
+               mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false): Future[Seq[Stat]] = {
     db.run(statsFilter(runId, pipeline, module, sample, lib, mustHaveSample, mustHaveLibrary).result)
   }
 
   /** Return number of results */
   def getStatsSize(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
                    sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
-                   mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false): Future[Int] = {
+                   mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false): Future[Int] = {
     db.run(statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).size.result)
   }
 
@@ -264,11 +264,12 @@ class SummaryDb(val db: Database) extends Closeable {
                   sample: Option[Either[Int, String]] = None, library: Option[Either[Int, String]] = None,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
-    keyValues.map { case (key, path) =>
-      stats match {
-        case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
-        case None => key -> None
-      }
+    keyValues.map {
+      case (key, path) =>
+        stats match {
+          case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
+          case None      => key -> None
+        }
     }
   }
 
@@ -295,39 +296,38 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   def settingsFilter(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
-                  sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
-                  mustHaveSample: Boolean = false, mustHaveLibrary:Boolean = false) = {
+                     sample: Option[Option[Either[Int, String]]] = None, lib: Option[Option[Either[Int, String]]] = None,
+                     mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
-      case Some(Left(id)) => f.filter(_.pipelineId === id)
+      case Some(Left(id))    => f.filter(_.pipelineId === id)
       case Some(Right(name)) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === name).map(_._1)
-      case _ => f
+      case _                 => f
     }
     f = module match {
-      case Some(Some(Left(id))) => f.filter(_.moduleId === id)
+      case Some(Some(Left(id)))    => f.filter(_.moduleId === id)
       case Some(Some(Right(name))) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.moduleId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.moduleId.isEmpty)
+      case _                       => f
     }
     f = sample match {
-      case Some(Some(Left(id))) => f.filter(_.sampleId === id)
+      case Some(Some(Left(id)))    => f.filter(_.sampleId === id)
       case Some(Some(Right(name))) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.sampleId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.sampleId.isEmpty)
+      case _                       => f
     }
     f = module match {
-      case Some(Some(Left(id))) => f.filter(_.libraryId === id)
+      case Some(Some(Left(id)))    => f.filter(_.libraryId === id)
       case Some(Some(Right(name))) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === name).map(_._1)
-      case Some(None) => f.filter(_.libraryId.isEmpty)
-      case _ => f
+      case Some(None)              => f.filter(_.libraryId.isEmpty)
+      case _                       => f
     }
 
     if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
     if (mustHaveLibrary) f = f.filter(_.libraryId.nonEmpty)
     f
   }
-
 
   /** This method creates or update a setting. */
   def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
@@ -339,38 +339,39 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return all settings that match the given criteria */
-  def getSettings(runId: Option[Int] = None, pipeline: Option[Either[Int,String]] = None, module: Option[Option[Either[Int,String]]] = None,
-                  sample: Option[Option[Either[Int,String]]] = None, library: Option[Option[Either[Int,String]]] = None): Future[Seq[Setting]] = {
+  def getSettings(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
+                  sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None): Future[Seq[Setting]] = {
     db.run(settingsFilter(runId, pipeline, module, sample, library).result)
   }
 
   /** Return a specific setting as [[Map[String, Any]] */
-  def getSetting(runId: Int, pipeline: Either[Int,String], module: Option[Either[Int,String]] = None,
-                 sample: Option[Either[Int,String]] = None, library: Option[Either[Int,String]] = None): Future[Option[Map[String, Any]]] = {
+  def getSetting(runId: Int, pipeline: Either[Int, String], module: Option[Either[Int, String]] = None,
+                 sample: Option[Either[Int, String]] = None, library: Option[Either[Int, String]] = None): Future[Option[Map[String, Any]]] = {
     getSettings(Some(runId), Some(pipeline), Some(module), Some(sample), Some(library))
       .map(_.headOption.map(x => ConfigUtils.jsonTextToMap(x.content)))
   }
 
-  def getSettingKeys(runId: Int, pipeline: Either[Int,String], module: Option[Either[Int,String]] = None,
-                     sample: Option[Either[Int,String]] = None, library: Option[Either[Int,String]] = None,
+  def getSettingKeys(runId: Int, pipeline: Either[Int, String], module: Option[Either[Int, String]] = None,
+                     sample: Option[Either[Int, String]] = None, library: Option[Either[Int, String]] = None,
                      keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getSetting(runId, pipeline, module, sample, library), Duration.Inf)
-    keyValues.map { case (key, path) =>
-      stats match {
-        case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
-        case None => key -> None
-      }
+    keyValues.map {
+      case (key, path) =>
+        stats match {
+          case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
+          case None      => key -> None
+        }
     }
   }
 
-  def getSettingsForSamples(runId: Int, pipeline: Either[Int,String], module: Option[Either[Int,String]] = None, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
+  def getSettingsForSamples(runId: Int, pipeline: Either[Int, String], module: Option[Either[Int, String]] = None, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
     val samples = Await.result(getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (sample <- samples) yield {
       sample.id -> getSettingKeys(runId, pipeline, module, Some(Left(sample.id)), None, keyValues = keyValues)
     }).toMap
   }
 
-  def getSettingsForLibraries(runId: Int, pipeline: Either[Int,String], module: Option[Either[Int,String]] = None, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
+  def getSettingsForLibraries(runId: Int, pipeline: Either[Int, String], module: Option[Either[Int, String]] = None, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
     val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
       (lib.sampleId, lib.id) -> getSettingKeys(runId, pipeline, module, Some(Left(lib.sampleId)), Some(Left(lib.id)), keyValues = keyValues)

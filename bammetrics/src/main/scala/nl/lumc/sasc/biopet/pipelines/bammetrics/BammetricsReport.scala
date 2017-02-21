@@ -14,12 +14,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
+import nl.lumc.sasc.biopet.utils.rscript.{ LinePlot, StackedBarPlot }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -69,10 +69,9 @@ object BammetricsReport extends ReportBuilder {
 
     val insertsizeMetrics = summary.getStatKeys(runId, Right(metricsTag), Some(Right("CollectInsertSizeMetrics")),
       sample = sampleId.map(Left(_)), library = libId.map(Left(_)), Map("metrics" -> List("metrics")))
-        .exists(_._2.isDefined)
+      .exists(_._2.isDefined)
 
-
-    val targetSettings = summary.getSettingKeys(runId, Right(metricsTag),None, sample = sampleId.map(Left(_)), library = libId.map(Left(_)),
+    val targetSettings = summary.getSettingKeys(runId, Right(metricsTag), None, sample = sampleId.map(Left(_)), library = libId.map(Left(_)),
       Map("amplicon_name" -> List("amplicon_name"), "roi_name" -> List("roi_name")))
     val targets = (
       targetSettings("amplicon_name"),
@@ -136,9 +135,9 @@ object BammetricsReport extends ReportBuilder {
       summary.getStatsForLibraries(runId, Right("bammetrics"), Some(Right("bamstats")),
         sampleId = sampleId, keyValues = statsPaths).map(x => (x._1._1, Some(x._1._2)) -> x._2)
     } else summary.getStatsForSamples(runId, Right("bammetrics"), Some(Right("bamstats")),
-       sample = sampleId.map(Left(_)), keyValues = statsPaths).map(x => (x._1, None) -> x._2)
+      sample = sampleId.map(Left(_)), keyValues = statsPaths).map(x => (x._1, None) -> x._2)
 
-    for (((s,l),result) <- results) {
+    for (((s, l), result) <- results) {
       val sampleName: String = summary.getSampleName(s).map(_.get)
       val libName: Option[String] = l.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
       val sb = new StringBuffer()
@@ -168,20 +167,20 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def writePlotFromSummary(outputDir: File,
-           prefix: String,
-           summary: SummaryDb,
-           libraryLevel: Boolean = false,
-           sampleId: Option[Int] = None,
-           libraryId: Option[Int] = None,
-           statsPaths: Map[String, List[String]],
-           xKey: String,
-           yKey: String,
-           pipeline: Either[Int,String],
-           module: Option[Either[Int,String]],
-           xlabel: Option[String] = None,
-           ylabel: Option[String] = None,
-           title: Option[String] = None,
-           removeZero: Boolean = true): Unit = {
+                           prefix: String,
+                           summary: SummaryDb,
+                           libraryLevel: Boolean = false,
+                           sampleId: Option[Int] = None,
+                           libraryId: Option[Int] = None,
+                           statsPaths: Map[String, List[String]],
+                           xKey: String,
+                           yKey: String,
+                           pipeline: Either[Int, String],
+                           module: Option[Either[Int, String]],
+                           xlabel: Option[String] = None,
+                           ylabel: Option[String] = None,
+                           title: Option[String] = None,
+                           removeZero: Boolean = true): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -191,14 +190,15 @@ object BammetricsReport extends ReportBuilder {
     } else summary.getStatsForSamples(runId, pipeline, module, sample = sampleId.map(Left(_)), keyValues = statsPaths)
       .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
 
-    val tables: Array[Map[String, Array[Any]]] = results.map { case ((sample,library), map) =>
+    val tables: Array[Map[String, Array[Any]]] = results.map {
+      case ((sample, library), map) =>
         val sampleName = Await.result(summary.getSampleName(sample), Duration.Inf)
           .getOrElse(throw new IllegalStateException("Sample must be there"))
         val libraryName = library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
-      Map(
-        yKey -> map(yKey).getOrElse(Array()),
-        (sampleName + libraryName.map("-" + _)getOrElse("")) -> map(xKey).getOrElse(Array())
-      )
+        Map(
+          yKey -> map(yKey).getOrElse(Array()),
+          (sampleName + libraryName.map("-" + _) getOrElse ("")) -> map(xKey).getOrElse(Array())
+        )
     }.toArray
 
     writeTableToTsv(tsvFile, mergeTables(tables, yKey), yKey)
@@ -230,7 +230,7 @@ object BammetricsReport extends ReportBuilder {
       "count" -> List("histogram", "All_Reads.fr_count")
     )
 
-    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId,statsPaths,
+    writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
       "insert_size", "count", Right("bammetrics"), Some(Right("CollectInsertSizeMetrics")),
       "Insert size", "Reads", "Insert size")
   }

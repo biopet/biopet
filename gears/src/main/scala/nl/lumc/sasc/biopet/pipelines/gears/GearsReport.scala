@@ -15,7 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.utils.implicits.Either._
-import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{ MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -86,7 +86,6 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", None, sampleName, None, key = "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", None, sampleName, None, key = "qiime_open_otu_table"), Duration.Inf)
 
-
     ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
       Map("summaryStatsTag" -> "centrifuge_report")
     )), Map())), List(
@@ -120,7 +119,6 @@ object GearsReport extends MultisampleReportBuilder {
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) == 1
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", None, sName, lName, key = "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", None, sName, lName, key = "qiime_open_otu_table"), Duration.Inf)
-
 
     ReportPage(
       (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil

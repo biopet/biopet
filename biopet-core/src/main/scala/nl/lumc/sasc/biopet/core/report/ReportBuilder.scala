@@ -17,15 +17,15 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Sample }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
 import nl.lumc.sasc.biopet.utils.tryToParseNumber
-import org.fusesource.scalate.{TemplateEngine, TemplateSource}
+import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 import scala.collection.mutable
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 
@@ -73,8 +73,8 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  implicit def toOption[T](x: T) : Option[T] = Option(x)
-  implicit def autoWait[T](x: Future[T]) : T = Await.result(x, Duration.Inf)
+  implicit def toOption[T](x: T): Option[T] = Option(x)
+  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,

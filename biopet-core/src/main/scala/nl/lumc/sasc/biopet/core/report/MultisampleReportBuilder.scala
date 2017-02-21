@@ -50,14 +50,14 @@ trait MultisampleReportBuilder extends ReportBuilder {
     val samplePages = samples.map(_.id)
       .map(sampleId => sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId))))
       .toList
-    ReportPage(samplePages.map(x => samples.find(_.name == x._1).get.name -> x._2), samplesSections, args)
+    ReportPage(samplePages.map(x => samples.find(_.id == x._1).get.name -> x._2), samplesSections, args)
   }
 
   /** Generate the libraries page for a single sample with a subpage for eacht library */
   def generateLibraryPage(args: Map[String, Any]): ReportPage = {
     val sampleId = args("sampleId") match {
       case Some(x: Int) => x
-      case None    => throw new IllegalStateException("Sample not found")
+      case None         => throw new IllegalStateException("Sample not found")
     }
 
     val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = Some(sampleId)), Duration.Inf)
@@ -65,6 +65,6 @@ trait MultisampleReportBuilder extends ReportBuilder {
     val libPages = libraries.map(_.id)
       .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId))))
       .toList
-    ReportPage(libPages.map(x => libraries.find(_.name == x._1).get.name -> x._2), librariesSections, args)
+    ReportPage(libPages.map(x => libraries.find(_.id == x._1).get.name -> x._2), librariesSections, args)
   }
 }
