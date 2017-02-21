@@ -14,8 +14,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import java.io.File
-
+import nl.lumc.sasc.biopet.utils.implicits.Either._
 import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -40,10 +39,10 @@ object GearsReport extends MultisampleReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", Some("krakenreport"), libName = None, mustHaveSample = true), Duration.Inf) >= sampleCache.size
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", Some("centrifuge_report"), libName = None, mustHaveSample = true), Duration.Inf) >= sampleCache.size
-    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", None, None, None, key = "qiime_closed_otu_table"), Duration.Inf)
-    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", None, None, None, key = "qiime_open_otu_table"), Duration.Inf)
+    val krakenExecuted = summary.getStatsSize(runId = runId, pipeline = Right("gearskraken"), module = Some(Right("krakenreport")), library = Some(None), mustHaveSample = true) >= samples.size
+    val centrifugeExecuted = summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), library = Some(None), mustHaveSample = true) >= samples.size
+    val qiimeClosesOtuTable = summary.getFile(runId, "gears", None, None, None, key = "qiime_closed_otu_table")
+    val qiimeOpenOtuTable = summary.getFile(runId, "gears", None, None, None, key = "qiime_open_otu_table")
 
     ReportPage(
       (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -82,8 +81,8 @@ object GearsReport extends MultisampleReportBuilder {
   /** Single sample page */
   def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
     val sampleName = Await.result(summary.getSampleName(sampleId), Duration.Inf)
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", Some("krakenreport"), sampleName = sampleName, libName = None), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", Some("centrifuge_report"), sampleName = sampleName, libName = None), Duration.Inf) == 1
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = Left(sampleId), library = Some(None)), Duration.Inf) == 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = Left(sampleId), library = None), Duration.Inf) == 1
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", None, sampleName, None, key = "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", None, sampleName, None, key = "qiime_open_otu_table"), Duration.Inf)
 
@@ -115,10 +114,10 @@ object GearsReport extends MultisampleReportBuilder {
     val sName = Await.result(summary.getSampleName(sampleId), Duration.Inf)
     val lName = Await.result(summary.getLibraryName(libId), Duration.Inf)
 
-    val flexiprepExecuted = Await.result(summary.getStatsSize(Some(runId), Some("flexiprep"), None, Some(sName),Some(lName)), Duration.Inf) >= 1
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Some(Right("flexiprep")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) >= 1
 
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", Some("krakenreport"), sampleName = sName, libName = lName), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", Some("centrifuge_report"), sampleName = sName, libName = lName), Duration.Inf) == 1
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) == 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) == 1
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", None, sName, lName, key = "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", None, sName, lName, key = "qiime_open_otu_table"), Duration.Inf)
 

@@ -14,12 +14,17 @@
  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
-import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
-import nl.lumc.sasc.biopet.utils.rscript.{ StackedBarPlot, LinePlot }
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class BammetricsReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = BammetricsReport
@@ -52,23 +57,26 @@ object BammetricsReport extends ReportBuilder {
   }
 
   /** Generates a page with alignment stats */
-  def bamMetricsPage(summary: Summary,
-                     sampleId: Option[String],
-                     libId: Option[String],
+  def bamMetricsPage(summary: SummaryDb,
+                     sampleId: Option[Int],
+                     libId: Option[Int],
                      metricsTag: String = "bammetrics") = {
 
-    val wgsExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "wgs").isDefined
-    val rnaExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "rna").isDefined
+    //val pipelineId: Int = summary.getPipelineId(runId, metricsTag).map(_.get)
 
-    val insertsizeMetrics = summary.getValue(sampleId, libId, metricsTag, "stats", "CollectInsertSizeMetrics", "metrics") match {
-      case Some(None) => false
-      case Some(_)    => true
-      case _          => false
-    }
+    val wgsExecuted = summary.getStatsSize(runId, Right(metricsTag), Some(Right("wgs")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) >= 1
+    val rnaExecuted = summary.getStatsSize(runId, Right(metricsTag), Some(Right("rna")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) >= 1
 
+    val insertsizeMetrics = summary.getStatKeys(runId, Right(metricsTag), Some(Right("CollectInsertSizeMetrics")),
+      sample = sampleId.map(Left(_)), library = libId.map(Left(_)), Map("metrics" -> List("metrics")))
+        .exists(_._2.isDefined)
+
+
+    val targetSettings = summary.getSettingKeys(runId, Right(metricsTag),None, sample = sampleId.map(Left(_)), library = libId.map(Left(_)),
+      Map("amplicon_name" -> List("amplicon_name"), "roi_name" -> List("roi_name")))
     val targets = (
-      summary.getValue(sampleId, libId, metricsTag, "settings", "amplicon_name"),
-      summary.getValue(sampleId, libId, metricsTag, "settings", "roi_name")
+      targetSettings("amplicon_name"),
+      targetSettings("roi_name")
     ) match {
         case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
         case (_, Some(roi: List[_])) => roi.map(_.toString)
@@ -108,44 +116,43 @@ object BammetricsReport extends ReportBuilder {
    */
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,
-                           summary: Summary,
+                           summary: SummaryDb,
                            libraryLevel: Boolean = false,
-                           sampleId: Option[String] = None): Unit = {
+                           sampleId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) tsvWriter.print("Library") else tsvWriter.print("Sample")
     tsvWriter.println("\tMapped\tDuplicates\tUnmapped\tSecondary")
 
-    def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
-      val mapped = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "Mapped"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val duplicates = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "Duplicates"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val total = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "All"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val secondary = new SummaryValue(List("bammetrics", "stats", "bamstats", "flagstats", "NotPrimaryAlignment"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+    val statsPaths = Map(
+      "Mapped" -> List("flagstats", "Mapped"),
+      "Duplicates" -> List("flagstats", "Duplicates"),
+      "All" -> List("flagstats", "All"),
+      "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
+    )
+
+    val pipelineId: Int = summary.getPipelineId(runId, "bammetrics").map(_.get)
+    val moduleId: Option[Int] = summary.getmoduleId(runId, "bamstats", pipelineId)
+
+    val results: Map[(Int, Option[Int]), Map[String, Option[Any]]] = if (libraryLevel) {
+      summary.getStatsForLibraries(runId = runId, pipelineName = "bammetrics", moduleName = Some("bamstats"), sampleId = sampleId, keyValues = statsPaths).map(x => (x._1._1, Some(x._1._2)) -> x._2)
+    } else summary.getStatsForSamples(runId, pipelineId, moduleId, sample = sampleId, keyValues = statsPaths).map(x => (x._1, None) -> x._2)
+
+    for (((s,l),result) <- results) {
+      val sampleName: String = summary.getSampleName(s).map(_.get)
+      val libName: Option[String] = l.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
       val sb = new StringBuffer()
-      if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
+      if (libName.isDefined) sb.append(sampleName + "-" + libName.get + "\t") else sb.append(sampleName + "\t")
+      val mapped = ConfigUtils.any2long(result("Mapped"))
+      val duplicates = ConfigUtils.any2long(result("Duplicates"))
+      val total = ConfigUtils.any2long(result("All"))
+      val secondary = ConfigUtils.any2long(result("NotPrimaryAlignment"))
       sb.append((mapped - duplicates - secondary) + "\t")
       sb.append(duplicates + "\t")
       sb.append((total - mapped) + "\t")
       sb.append(secondary)
-      sb.toString
-    }
-
-    if (libraryLevel) {
-      for (
-        sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
-        lib <- summary.libraries(sample)
-      ) {
-        tsvWriter.println(getLine(summary, sample, Some(lib)))
-      }
-    } else {
-      for (sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get) {
-        tsvWriter.println(getLine(summary, sample))
-      }
+      tsvWriter.println(sb.toString)
     }
 
     tsvWriter.close()
@@ -155,8 +162,8 @@ object BammetricsReport extends ReportBuilder {
     plot.output = pngFile
     plot.ylabel = Some("Reads")
     if (libraryLevel) {
-      plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
-    } else plot.width = Some(200 + (summary.samples.count(s => sampleId.getOrElse(s) == s) * 10))
+      plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size) * 10)
+    } else plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.title = Some("Aligned reads")
     plot.runLocal()
   }
@@ -172,17 +179,26 @@ object BammetricsReport extends ReportBuilder {
    */
   def insertSizePlot(outputDir: File,
                      prefix: String,
-                     summary: Summary,
+                     summary: SummaryDb,
                      libraryLevel: Boolean = false,
-                     sampleId: Option[String] = None,
-                     libId: Option[String] = None): Unit = {
+                     sampleId: Option[Int] = None,
+                     libId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
-    def paths(name: String) = Map(
-      "insert_size" -> List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "insert_size"),
-      name -> List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "All_Reads.fr_count")
+    val statsPaths = Map(
+      "insert_size" -> List("histogram", "insert_size"),
+      "All_Reads.fr_count" -> List("histogram", "All_Reads.fr_count")
     )
+
+    val pipelineId: Int = summary.getPipelineId(runId, "bammetrics").map(_.get)
+    val moduleId: Option[Int] = summary.getmoduleId(runId, "CollectInsertSizeMetrics", pipelineId)
+
+    val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
+      summary.getStatsForLibraries(runId, pipelineId, moduleId, sampleId = sampleId, keyValues = statsPaths)
+        .map(x => (x._1._1, Some(x._1._2)) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
+    } else summary.getStatsForSamples(runId, pipelineId, moduleId, sample = sampleId, keyValues = statsPaths)
+      .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
 
     val tables = getSampleLibraries(summary, sampleId, libId, libraryLevel)
       .map {
@@ -200,10 +216,10 @@ object BammetricsReport extends ReportBuilder {
 
   def mappingQualityPlot(outputDir: File,
                          prefix: String,
-                         summary: Summary,
+                         summary: SummaryDb,
                          libraryLevel: Boolean = false,
-                         sampleId: Option[String] = None,
-                         libId: Option[String] = None): Unit = {
+                         sampleId: Option[Int] = None,
+                         libId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -228,10 +244,10 @@ object BammetricsReport extends ReportBuilder {
 
   def clippingPlot(outputDir: File,
                    prefix: String,
-                   summary: Summary,
+                   summary: SummaryDb,
                    libraryLevel: Boolean = false,
-                   sampleId: Option[String] = None,
-                   libId: Option[String] = None): Unit = {
+                   sampleId: Option[Int] = None,
+                   libId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -265,10 +281,10 @@ object BammetricsReport extends ReportBuilder {
    */
   def wgsHistogramPlot(outputDir: File,
                        prefix: String,
-                       summary: Summary,
+                       summary: SummaryDb,
                        libraryLevel: Boolean = false,
-                       sampleId: Option[String] = None,
-                       libId: Option[String] = None): Unit = {
+                       sampleId: Option[Int] = None,
+                       libId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
@@ -302,7 +318,7 @@ object BammetricsReport extends ReportBuilder {
    */
   def rnaHistogramPlot(outputDir: File,
                        prefix: String,
-                       summary: Summary,
+                       summary: SummaryDb,
                        libraryLevel: Boolean = false,
                        sampleId: Option[String] = None,
                        libId: Option[String] = None): Unit = {
@@ -328,20 +344,20 @@ object BammetricsReport extends ReportBuilder {
       removeZero = true).runLocal()
   }
 
-  private def getSampleLibraries(summary: Summary,
-                                 sampleId: Option[String] = None,
-                                 LibId: Option[String] = None,
-                                 libraryLevel: Boolean = false): List[(String, Option[String])] = {
+  private def getSampleLibraries(summary: SummaryDb,
+                                 sampleId: Option[Int] = None,
+                                 LibId: Option[Int] = None,
+                                 libraryLevel: Boolean = false): List[(Int, Option[Int])] = {
     if (LibId.isDefined) require(sampleId.isDefined)
     if (libraryLevel || LibId.isDefined)
       for ((sample, libs) <- summary.libraries.toList; lib <- libs) yield (sample, Some(lib))
     else for ((sample, libs) <- summary.libraries.toList) yield (sample, None)
   }
 
-  def getTableFromSummary(summary: Summary,
+  def getTableFromSummary(summary: SummaryDb,
                           paths: Map[String, List[String]],
-                          sampleId: Option[String] = None,
-                          libId: Option[String] = None): Map[String, Array[Any]] = {
+                          sampleId: Option[Int] = None,
+                          libId: Option[Int] = None): Map[String, Array[Any]] = {
     val pathValues: Map[String, Array[Any]] = paths.map {
       case (key, path) =>
         val value = summary.getValueAsArray(sampleId, libId, path: _*)

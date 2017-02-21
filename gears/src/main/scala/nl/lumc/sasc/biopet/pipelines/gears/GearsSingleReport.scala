@@ -30,9 +30,11 @@ object GearsSingleReport extends ReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
-    Await.result(summary.getStatsSize(runId, "gearscentrifuge", Some("centrifuge_report"), sampleId, libId), Duration.Inf) == 1
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", Some("krakenreport"), sampleId, libId), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", Some("centrifuge_report"), sampleId, libId), Duration.Inf) == 1
+    val sampleName = sampleId.flatMap(x => Await.result(summary.getSampleName(x), Duration.Inf))
+    val libraryName = libId.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
+
+    val krakenExecuted = summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) == 1
+    val centrifugeExecuted = summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) == 1
 
     ReportPage(
       List(

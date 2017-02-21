@@ -17,13 +17,15 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.fusesource.scalate.{TemplateEngine, TemplateSource}
 
 import scala.collection.mutable
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 
@@ -72,6 +74,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 trait ReportBuilder extends ToolCommand {
 
   implicit def toOption[T](x: T) : Option[T] = Option(x)
+  implicit def autoWait[T](x: Future[T]) : T = Await.result(x, Duration.Inf)
 
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
@@ -115,21 +118,10 @@ trait ReportBuilder extends ToolCommand {
 
   final def runId = setRunId
 
-  private var setSampleCache: Map[String, Int] = _
-
-  final def sampleCache = setSampleCache
-
-  private var setLibraryCache: Map[(String, String), Int] = _
-
-  final def libraryCache = setSampleCache
-
-  private var setPipelineCache: Map[String, Int] = _
-
-  final def pipelineCache = setPipelineCache
-
-  private var setModuleCache: Map[String, Int] = _
-
-  final def moduleCache = setModuleCache
+  private var _setSamples = Seq[Sample]()
+  final def samples = _setSamples
+  private var _setLibraries = Seq[Library]()
+  final def libraries = _setLibraries
 
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
@@ -137,9 +129,9 @@ trait ReportBuilder extends ToolCommand {
   private var done = 0
   private var total = 0
 
-  private var _sampleId: Option[String] = None
+  private var _sampleId: Option[Int] = None
   protected[report] def sampleId = _sampleId
-  private var _libId: Option[String] = None
+  private var _libId: Option[Int] = None
   protected[report] def libId = _libId
 
   case class ExtFile(resourcePath: String, targetPath: String)
@@ -168,19 +160,25 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
+    setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
+    setRunId = cmdArgs.runId
+
     cmdArgs.pageArgs.get("sampleId") match {
       case Some(s: String) =>
-        cmdArgs.pageArgs += "sampleId" -> Some(s)
-        _sampleId = Some(s)
+        _sampleId = Await.result(summary.getSampleId(runId, s), Duration.Inf)
+        cmdArgs.pageArgs += "sampleId" -> sampleId
       case _ =>
     }
 
     cmdArgs.pageArgs.get("libId") match {
       case Some(l: String) =>
-        cmdArgs.pageArgs += "libId" -> Some(l)
-        _libId = Some(l)
+        _libId = Await.result(summary.getLibraryId(runId, sampleId.get, l), Duration.Inf)
+        cmdArgs.pageArgs += "libId" -> libId
       case _ =>
     }
+
+    _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
     logger.info("Copy Base files")
 
@@ -195,14 +193,6 @@ trait ReportBuilder extends ToolCommand {
           new File(extOutputDir, resource.targetPath),
           createDirs = true)
     )
-
-    logger.info("Parsing summary")
-    setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
-    setRunId = cmdArgs.runId
-    setSampleCache = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
-    setLibraryCache = Await.result(summary.getLibraries(runId = Some(runId)), Duration.Inf).map(r => (setSampleCache.find(_._2 == r.sampleId).get._1, r.name) -> r.id).toMap
-    setPipelineCache = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
-    setModuleCache = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf).map(r => r.name -> r.id).toMap
 
     total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")

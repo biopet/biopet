@@ -23,9 +23,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
 
     Await.result(db.createOrUpdateSetting(0, 0, None, None, None, """{"content": "test" }"""), Duration.Inf)
     val bla = Await.result(db.getSettings(Some(0)), Duration.Inf)
-    Await.result(db.getSetting(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
+    Await.result(db.getSetting(0, Left(0), None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.createOrUpdateSetting(0, 0, None, None, None, """{"content": "test2" }"""), Duration.Inf)
-    Await.result(db.getSetting(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
+    Await.result(db.getSetting(0, Left(0), None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
     db.close()
   }
 
@@ -37,9 +37,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     db.createTables()
 
     Await.result(db.createOrUpdateStat(0, 0, None, None, None, """{"content": "test" }"""), Duration.Inf)
-    Await.result(db.getStat(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
+    Await.result(db.getStat(0, Left(0), None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.createOrUpdateStat(0, 0, None, None, None, """{"content": "test2" }"""), Duration.Inf)
-    Await.result(db.getStat(0, 0, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
+    Await.result(db.getStat(0, Left(0), None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
     db.close()
   }
 
