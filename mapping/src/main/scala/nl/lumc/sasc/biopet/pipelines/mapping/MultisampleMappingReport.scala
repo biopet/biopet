@@ -115,13 +115,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   def filesPage: ReportPage = {
     val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
 
-    ReportPage(List(), (if (flexiprepExecuted) List(
-      "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-      "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"))
-    else Nil) :::
-      List("Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
-        "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-          Map("pipelineName" -> pipelineName, "fileTag" -> "output_bam_preprocess"))), Map())
+    ReportPage(List(), Nil, Map())
   }
 
   /** Single sample page */

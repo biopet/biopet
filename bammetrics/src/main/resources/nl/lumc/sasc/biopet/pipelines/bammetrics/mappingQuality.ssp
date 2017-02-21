@@ -1,26 +1,23 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-#import(org.apache.commons.io.FileUtils)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
-<%@ var rootPath: String %>
-<%@ var metricsTag: String = "bammetrics" %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var sampleLevel: Boolean = false %>
+<%@ var rootPath: String %>
 <%@ var outputDir: File %>
-<%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
+<%@ var runId: Int %>
+<%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
+
 #{
-    val samples = sampleId match {
-    case Some(sample) => {
-    List(sample.toString)
-    }
-    case _ => summary.samples.toList
-    }
+    val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
 }#
 
 #if (showIntro)
@@ -42,7 +39,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
 
     <div class="panel-body">
     <img src="mapping_quality.png" class="img-responsive" />
@@ -71,12 +68,12 @@
         #end
     </tr></thead>
     <tbody>
-        #for (sample <- samples.toList.sorted)
+        #for (sample <- samples.sortBy(_.name))
             #{
-                val libs = (libId, sampleLevel) match {
-                case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                val libs: List[Option[Int]] = (libId, sampleLevel) match {
+                case (_, true) => List(None)
+                case (Some(_), _) => List(libId)
+                case _ => Await.result(summary.getLibraries(sampleId = Some(sample.id), runId = Some(runId)), Duration.Inf).map(x => Some(x.id)).toList
                 }
             }#
             <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
@@ -84,14 +81,11 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
                     #{
-                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
-
-                        val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("bamstats", "mapping_quality", "general", field)):_*).getOrElse("N/A")
-                        }
+                        val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
+                        val results = summary.getStatKeys(runId, Right("bammetrics"), Some(Right("bamstats")), sample = Some(Left(sample.id)), library = libId.map(Left(_)), keyValues = statsPaths)
                     }#
-                    #for (value <- fieldValues)
-                        <td>${value}</td>
+                    #for (field <- fields)
+                        <td>${results(field)}</td>
                     #end
                 </tr>
             #end

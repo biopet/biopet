@@ -407,9 +407,9 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   def getFile(runId: Int, pipelineName: String, moduleName: Option[String], sampleName: Option[String],
-              libraryName: Option[String], key: String): Future[Option[File]] = {
+              libraryName: Option[String], key: String): Future[Option[Schema.File]] = {
     db.run(filesFilter(runId = Some(runId), pipelineName = Some(pipelineName), moduleName = Some(moduleName),
-      sampleName = Some(sampleName), libraryName = Some(libraryName), key = Some(key)).map(_.path).result).map(_.headOption.map(new File(_)))
+      sampleName = Some(sampleName), libraryName = Some(libraryName), key = Some(key)).result).map(_.headOption)
   }
 
   /** Creates a file. This method will raise expection if it already exist */

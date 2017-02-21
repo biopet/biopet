@@ -55,11 +55,7 @@ object MappingReport extends ReportBuilder {
       bamMetricsPage.map(_.subPages).getOrElse(Nil) ::: List(
         "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
         )), Map()),
-        "Files" -> ReportPage(List(), (if (skipFlexiprep) Nil else List(
-          "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-          "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"))) :::
-          List("Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false))
-          ), Map())
+        "Files" -> ReportPage(List(), Nil, Map())
       ) :::
         (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
           "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
