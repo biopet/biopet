@@ -198,7 +198,7 @@ class SummaryDb(val db: Database) extends Closeable {
   /** This create or update a stat */
   def createOrUpdateStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                          sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    val filter = statsFilter(Some(runId), Some(Left(pipelineId)), Some(Left(moduleId)), Some(Left(sampleId)), Some(Left(libId)))
+    val filter = statsFilter(Some(runId), Some(Left(pipelineId)), Some(moduleId.map(Left(_))), Some(sampleId.map(Left(_))), Some(libId.map(Left(_))))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createStat(runId, pipelineId, moduleId, sampleId, libId, content)
     else db.run(filter.map(_.content).update(content))
