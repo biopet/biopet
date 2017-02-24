@@ -16,7 +16,7 @@
         "species" -> List("reference", "species"),
         "name" -> List("reference", "name")
     ))
-    val contigs = settings.getOrElse("contigs", Some(Map.empty)).get.asInstanceOf[Map[String, Map[String, Any]]]
+    val contigs = settings.getOrElse("contigs", Some(Map())).getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
 
     val referenceFile = Await.result(summary.getFile(runId, Right(pipeline), None, None, None, key = "referenceFasta"), Duration.Inf)
 }#
