@@ -104,19 +104,6 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
     logger.info(s"Preprocessing done for $totalCount functions")
 
-    logger.info("Adding report")
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach { report =>
-        for (f <- functions) f match {
-          case w: WriteSummary => report.deps :+= w.jobOutputFile
-          case _               =>
-        }
-        add(report)
-      }
-    }
-
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
@@ -138,6 +125,20 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         case _       => f.jobOutputFile = new File("./stdout") // Line is here for test backup
       }
     })
+
+    logger.info("Adding report")
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write report is skipped because sample flag is used")
+      case _ => reportClass.foreach { report =>
+        for (f <- functions) f match {
+          case w: WriteSummary => report.deps :+= w.jobOutputFile
+          case _               =>
+        }
+        report.jobOutputFile = new File(report.outputDir, ".report.out")
+        add(report)
+      }
+    }
 
     if (!skipWriteDependencies) WriteDependencies.writeDependencies(
       functions,

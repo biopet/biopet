@@ -38,8 +38,6 @@ object MappingReport extends ReportBuilder {
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
-  summary.getStatsSize(runId, Right("gears"), Some(Right("krakenreport")),
-    sample = sampleId.map(Left(_)), library = libId.map(Left(_)))
   def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, Right("gears"), Some(Right("krakenreport")),
     sample = sampleId.map(Left(_)), library = libId.map(Left(_))), Duration.Inf) >= 1
 
