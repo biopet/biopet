@@ -332,7 +332,7 @@ class SummaryDb(val db: Database) extends Closeable {
   /** This method creates or update a setting. */
   def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                             sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    val filter = settingsFilter(Some(runId), Some(Left(pipelineId)), Some(Left(moduleId)), Some(Left(sampleId)), Some(Left(libId)))
+    val filter = settingsFilter(Some(runId), Some(Left(pipelineId)), Some(moduleId.map(Left(_))), Some(sampleId.map(Left(_))), Some(libId.map(Left(_))))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
     else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
@@ -436,7 +436,7 @@ class SummaryDb(val db: Database) extends Closeable {
   def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
                          sampleId: Option[Int] = None, libId: Option[Int] = None,
                          key: String, path: String, md5: String, link: Boolean = false, size: Long): Future[Int] = {
-    val filter = filesFilter(Some(runId), Some(Left(pipelineId)), Some(Left(moduleId)), Some(Left(sampleId)), Some(Left(libId)), Some(key))
+    val filter = filesFilter(Some(runId), Some(Left(pipelineId)), Some(moduleId.map(Left(_))), Some(sampleId.map(Left(_))), Some(libId.map(Left(_))), Some(key))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
     else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
