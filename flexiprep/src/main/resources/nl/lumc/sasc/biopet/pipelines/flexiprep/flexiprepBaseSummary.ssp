@@ -112,8 +112,8 @@
         #for (sample <- samples.sortBy(_.name))
             #{
                 val sampleRowspan = {
-                libraries.size +
-                settings.count(_._2("paired").getOrElse(false) == true)
+                libraries.filter(_.sampleId == sample.id).size +
+                settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
                 }
             }#
             <tr><td rowspan="${sampleRowspan}">
@@ -124,7 +124,6 @@
             #end
             </td>
             #for (lib <- libraries.filter(_.sampleId == sample.id))
-                #if (Some(lib.id) != libId) <tr> #end
                     #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
                     <td #if (paired == true) rowspan="2" #end>
                     #if (multisample)
