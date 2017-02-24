@@ -12,7 +12,7 @@
 <%@ var plot: String %>
 <%@ var outputDir: File %>
 #{
-    val settings = summary.getSettingKeys(runId, Right("flexiprep"), keyValues = Map(
+    val settings = summary.getSettingKeys(runId, Right("flexiprep"), None, sampleId.map(Left(_)), libId.map(Left(_)), keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
 
     val paired: Boolean = settings("paired") == Some(true)

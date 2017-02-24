@@ -26,7 +26,7 @@
 
     val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
         summary.getSettingKeys(runId, Right("flexiprep"), None, sampleId.map(Left(_)), libId.map(Left(_)), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
-    else settings.count(_._2.getOrElse("skip_clip", None) == Some(true)) >= 1
+    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 }#
 
 #if (showIntro)
