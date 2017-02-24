@@ -18,7 +18,7 @@
     ))
     val contigs = settings.getOrElse("contigs", Some(Map.empty)).get.asInstanceOf[Map[String, Map[String, Any]]]
 
-    val referenceFile = Await.result(summary.getFile(runId, pipeline, None, None, None, key = "referenceFasta"), Duration.Inf)
+    val referenceFile = Await.result(summary.getFile(runId, Right(pipeline), None, None, None, key = "referenceFasta"), Duration.Inf)
 }#
 
 <table class="table">
