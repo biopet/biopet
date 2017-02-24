@@ -124,31 +124,31 @@
             #end
             </td>
             #for (lib <- libraries.filter(_.sampleId == sample.id))
-                    #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
-                    <td #if (paired == true) rowspan="2" #end>
-                    #if (multisample)
-                        <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>
-                    #else
-                        ${lib.name}
-                    #end
-                    </td>
-                    #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
-                    #for (read <- reads)
-                        #if (read == "R2") </tr><tr> #end
-                        #{
-                            val statsPaths = Map("num_total" -> List("bases", "num_total"))
-                            val seqstatStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read)), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
-                            val seqstatQcStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read + "_qc")), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
+                #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
+                <td #if (paired == true) rowspan="2" #end>
+                #if (multisample)
+                    <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>
+                #else
+                    ${lib.name}
+                #end
+                </td>
+                #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
+                #for (read <- reads)
+                    #if (read == "R2") </tr><tr> #end
+                    #{
+                        val statsPaths = Map("num_total" -> List("bases", "num_total"))
+                        val seqstatStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read)), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
+                        val seqstatQcStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read + "_qc")), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
 
-                            val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
-                            val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
-                        }#
-                        <td>${read}</td>
-                        <td>${beforeTotal}</td>
-                        <td>${beforeTotal - afterTotal}</td>
-                        <td>${(beforeTotal - afterTotal).toDouble / beforeTotal * 100}%</td>
-                        <td>${afterTotal}</td>
-                    #end
+                        val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
+                        val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
+                    }#
+                    <td>${read}</td>
+                    <td>${beforeTotal}</td>
+                    <td>${beforeTotal - afterTotal}</td>
+                    <td>${(beforeTotal - afterTotal).toDouble / beforeTotal * 100}%</td>
+                    <td>${afterTotal}</td>
+                #end
                 </tr>
             #end
         #end

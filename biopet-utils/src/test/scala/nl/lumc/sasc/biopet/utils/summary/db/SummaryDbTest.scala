@@ -63,7 +63,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     db.createTables()
 
     Await.result(db.createOrUpdateStat(0, 0, Some(0), Some(0), Some(0),
-          """
+      """
         |{
         |"content": "test",
         |"content2": {
@@ -71,9 +71,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map()) shouldBe Map()
-    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
-    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
+    db.getStatKeys(0, Left(0), Some(Left(0)), Some(Left(0)), Some(Left(0)), keyValues = Map()) shouldBe Map()
+    db.getStatKeys(0, Left(0), Some(Left(0)), Some(Left(0)), Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
+    db.getStatKeys(0, Left(0), Some(Left(0)), Some(Left(0)), Some(Left(0)), keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
 
     db.close()
   }
@@ -97,8 +97,8 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatsForSamples(0, Left(0),Some(Left(0)), keyValues = Map()) shouldBe Map(0 -> Map())
-    db.getStatsForSamples(0, Left(0),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
+    db.getStatsForSamples(0, Left(0), Some(Left(0)), keyValues = Map()) shouldBe Map(0 -> Map())
+    db.getStatsForSamples(0, Left(0), Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
 
     db.close()
   }
@@ -122,12 +122,11 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatsForLibraries(0, Left(0),Some(Left(0)), keyValues = Map()) shouldBe Map((0,0) -> Map())
-    db.getStatsForLibraries(0, Left(0),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map((0,0) -> Map("content" -> Some("test")))
+    db.getStatsForLibraries(0, Left(0), Some(Left(0)), keyValues = Map()) shouldBe Map((0, 0) -> Map())
+    db.getStatsForLibraries(0, Left(0), Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map((0, 0) -> Map("content" -> Some("test")))
 
     db.close()
   }
-
 
   @Test
   def testExecutable: Unit = {
