@@ -86,18 +86,6 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     }
 
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach { report =>
-        for (f <- functions) f match {
-          case w: WriteSummary => report.deps :+= w.jobOutputFile
-          case _               =>
-        }
-        add(report)
-      }
-    }
-
     logger.info("Running pre commands")
     var count = 0
     val totalCount = functions.size
@@ -115,6 +103,19 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       if (count % 500 == 0) logger.info(s"Preprocessing done for $count jobs out of $totalCount total")
     }
     logger.info(s"Preprocessing done for $totalCount functions")
+
+    logger.info("Adding report")
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write report is skipped because sample flag is used")
+      case _ => reportClass.foreach { report =>
+        for (f <- functions) f match {
+          case w: WriteSummary => report.deps :+= w.jobOutputFile
+          case _               =>
+        }
+        add(report)
+      }
+    }
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
