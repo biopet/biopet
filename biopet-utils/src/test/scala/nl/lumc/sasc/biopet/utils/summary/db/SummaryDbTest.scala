@@ -56,6 +56,80 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testStatKeys: Unit = {
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    Await.result(db.createOrUpdateStat(0, 0, Some(0), Some(0), Some(0),
+          """
+        |{
+        |"content": "test",
+        |"content2": {
+        |  "key": "value"
+        |}
+        | }""".stripMargin), Duration.Inf)
+
+    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map()) shouldBe Map()
+    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
+    db.getStatKeys(0,Left(0),Some(Left(0)),Some(Left(0)),Some(Left(0)), keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
+
+    db.close()
+  }
+
+  @Test
+  def testStatsForSamples: Unit = {
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    val sampleId = Await.result(db.createSample("test_sample", 0), Duration.Inf)
+    val libraryId = Await.result(db.createLibrary("test_library", 0, sampleId), Duration.Inf)
+
+    Await.result(db.createOrUpdateStat(0, 0, Some(0), Some(sampleId), None,
+      """
+        |{
+        |"content": "test",
+        |"content2": {
+        |  "key": "value"
+        |}
+        | }""".stripMargin), Duration.Inf)
+
+    db.getStatsForSamples(0, Left(0),Some(Left(0)), keyValues = Map()) shouldBe Map(0 -> Map())
+    db.getStatsForSamples(0, Left(0),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
+
+    db.close()
+  }
+
+  @Test
+  def testStatsForLibraries: Unit = {
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    val sampleId = Await.result(db.createSample("test_sample", 0), Duration.Inf)
+    val libraryId = Await.result(db.createLibrary("test_library", 0, sampleId), Duration.Inf)
+
+    Await.result(db.createOrUpdateStat(0, 0, Some(0), Some(sampleId), Some(libraryId),
+      """
+        |{
+        |"content": "test",
+        |"content2": {
+        |  "key": "value"
+        |}
+        | }""".stripMargin), Duration.Inf)
+
+    db.getStatsForLibraries(0, Left(0),Some(Left(0)), keyValues = Map()) shouldBe Map((0,0) -> Map())
+    db.getStatsForLibraries(0, Left(0),Some(Left(0)), keyValues = Map("content" -> List("content"))) shouldBe Map((0,0) -> Map("content" -> Some("test")))
+
+    db.close()
+  }
+
+
+  @Test
   def testExecutable: Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()

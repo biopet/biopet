@@ -285,7 +285,7 @@ class SummaryDb(val db: Database) extends Closeable {
                            sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
     val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
-      (lib.sampleId, lib.id) -> getStatKeys(runId, pipeline, module, Left(lib.sampleId), Left(lib.id), keyValues = keyValues)
+      (lib.sampleId, lib.id) -> getStatKeys(runId, pipeline, module, Some(Left(lib.sampleId)), Some(Left(lib.id)), keyValues = keyValues)
     }).toMap
   }
 

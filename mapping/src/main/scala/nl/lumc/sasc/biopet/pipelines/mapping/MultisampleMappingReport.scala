@@ -61,7 +61,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     val mappingExecuted = Await.result(summary.getStatsSize(runId, Right("mapping"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
     val pairedFound = !mappingExecuted || summary.getSettingsForLibraries(runId, Right("mapping"), None, keyValues = Map("paired" -> List("paired")))
       .exists(_._2.exists(_._2 == Some(true)))
-    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
@@ -124,7 +124,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       library = Some(None), sample = Some(Left(sampleId))), Duration.Inf) >= 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")),
       library = Some(None), sample = Some(Left(sampleId)), mustHaveSample = true), Duration.Inf) >= 1
-    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None),
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"),
       sample = Some(Left(sampleId)), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(List(
@@ -157,7 +157,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       library = Some(Left(libId)), sample = Some(Left(sampleId))), Duration.Inf) >= 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")),
       library = Some(Left(libId)), sample = Some(Left(sampleId)), mustHaveSample = true), Duration.Inf) >= 1
-    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), library = Some(Left(libId)),
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), library = Some(Left(libId)),
       sample = Some(Left(sampleId)), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(

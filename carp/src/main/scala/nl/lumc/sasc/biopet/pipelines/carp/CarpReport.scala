@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
- * Class for report for CArp
+ * Class for report for Carp
  *
  * Created by pjvanthof on 25/06/15.
  */

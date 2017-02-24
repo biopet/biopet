@@ -14,12 +14,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
-import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class FlexiprepReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = FlexiprepReport
@@ -84,39 +87,41 @@ object FlexiprepReport extends ReportBuilder {
   def readSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,
-                      summary: Summary,
-                      sampleId: Option[String] = None): Unit = {
+                      summary: SummaryDb,
+                      sampleId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
 
-    def getLine(summary: Summary, sample: String, lib: String): String = {
-      val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "reads", "num_total"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val clippingDiscardedToShort = new SummaryValue(List("flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val clippingDiscardedToLong = new SummaryValue(List("flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val trimmingDiscarded = new SummaryValue(List("flexiprep", "stats", "trimming", "num_reads_discarded_" + read),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+    val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
+    val seqstatStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read), keyValues = seqstatPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read + "_qc"), keyValues = seqstatPaths)
+
+    val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
+      "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
+    val clippingStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("clipping_" + read), keyValues = clippingPaths)
+
+    val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
+    val trimmingStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("trimming"), keyValues = trimmingPaths)
+
+    val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
+
+    for (lib <- libraries) {
+      val beforeTotal = seqstatStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
+      val afterTotal = seqstatQcStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
+      val clippingDiscardedToShort = clippingStats((lib.sampleId, lib.id))("num_reads_discarded_too_short").getOrElse(0).toString.toLong
+      val clippingDiscardedToLong = clippingStats((lib.sampleId, lib.id))("num_reads_discarded_too_long").getOrElse(0).toString.toLong
+      val trimmingDiscarded = trimmingStats((lib.sampleId, lib.id))("num_reads_discarded").getOrElse(0).toString.toLong
 
       val sb = new StringBuffer()
-      sb.append(sample + "-" + lib + "\t")
+      sb.append(Await.result(summary.getSampleName(lib.sampleId), Duration.Inf) + "-" + lib.name + "\t")
       sb.append(afterTotal + "\t")
       sb.append((clippingDiscardedToShort + clippingDiscardedToLong) + "\t")
       sb.append(trimmingDiscarded + "\t")
       sb.append(beforeTotal - afterTotal - trimmingDiscarded - clippingDiscardedToShort - clippingDiscardedToLong)
-      sb.toString
-    }
 
-    for (
-      sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
-      lib <- summary.libraries(sample)
-    ) {
-      tsvWriter.println(getLine(summary, sample, lib))
+      tsvWriter.println(sb.toString)
     }
 
     tsvWriter.close()
@@ -125,7 +130,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
+    plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size * 10))
     plot.title = Some("QC summary on " + read + " reads")
     plot.runLocal()
   }
@@ -141,31 +146,29 @@ object FlexiprepReport extends ReportBuilder {
   def baseSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,
-                      summary: Summary,
-                      sampleId: Option[String] = None): Unit = {
+                      summary: SummaryDb,
+                      sampleId: Option[Int] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     tsvWriter.println("Library\tAfter_QC\tDiscarded")
 
-    def getLine(summary: Summary, sample: String, lib: String): String = {
-      val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "bases", "num_total"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_qc", "bases", "num_total"),
-        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+    val statsPaths = Map("num_total" -> List("bases", "num_total"))
+    val seqstatStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read), keyValues = statsPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read + "_qc"), keyValues = statsPaths)
+
+    val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
+
+    for (lib <- libraries) {
+      val beforeTotal = seqstatStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
+      val afterTotal = seqstatQcStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
 
       val sb = new StringBuffer()
-      sb.append(sample + "-" + lib + "\t")
+      sb.append(Await.result(summary.getSampleName(lib.sampleId), Duration.Inf) + "-" + lib + "\t")
       sb.append(afterTotal + "\t")
       sb.append(beforeTotal - afterTotal)
-      sb.toString
-    }
 
-    for (
-      sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
-      lib <- summary.libraries(sample)
-    ) {
-      tsvWriter.println(getLine(summary, sample, lib))
+      tsvWriter.println(sb.toString)
     }
 
     tsvWriter.close()
@@ -174,7 +177,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Bases")
-    plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
+    plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size * 10))
     plot.title = Some("QC summary on " + read + " bases")
     plot.runLocal()
   }
