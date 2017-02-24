@@ -81,7 +81,6 @@ class SageTest extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
-      pipeline.summaryFile shouldBe new File(SageTest.outputDir, "Sage.summary.json")
       pipeline.summaryFiles shouldBe Map()
       pipeline.summarySettings shouldBe Map()
 

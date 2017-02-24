@@ -95,9 +95,6 @@ class Kopisu(val parent: Configurable) extends QScript with SummaryQScript with 
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = inputBams.map(x => s"inputbam_${x._1}" -> x._2)
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "kopisu.summary.json")
 }
 
 object Kopisu extends PipelineCommand

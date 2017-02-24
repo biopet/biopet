@@ -52,8 +52,6 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript {
     ), "strandSensitive" -> true
   )
 
-  def summaryFile: File = new File(outputDir, "Sage.summary.json")
-
   def summaryFiles: Map[String, File] = Map()
 
   def summarySettings: Map[String, Any] = Map()

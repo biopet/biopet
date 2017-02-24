@@ -37,8 +37,6 @@ class MultisamplePipeline(val parent: Configurable) extends QScript with MultiSa
     // this code will be executed after all code of all samples is executed
   }
 
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
-
   //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()
 

@@ -100,9 +100,6 @@ class GearsKraken(val parent: Configurable) extends QScript with SummaryQScript 
     addSummaryJobs()
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
-
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()
 

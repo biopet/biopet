@@ -45,9 +45,6 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
   def init(): Unit = {
   }
 
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "gears.summary.json")
-
   /** Pipeline itself */
   def biopetScript(): Unit = {
     addSamplesJobs()

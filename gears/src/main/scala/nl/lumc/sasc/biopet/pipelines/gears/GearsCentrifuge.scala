@@ -77,9 +77,6 @@ class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScr
     addSummarizable(krakenReportJSON, s"${name}_report")
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".centrifuge.summary.json")
-
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()
 

@@ -24,9 +24,6 @@ class HelloPipeline(val parent: Configurable) extends QScript with SummaryQScrip
   def this() = this(null)
 
   /** Only required when using [[SummaryQScript]] */
-  def summaryFile = new File(outputDir, "hello.summary.json")
-
-  /** Only required when using [[SummaryQScript]] */
   def summaryFiles: Map[String, File] = Map()
 
   /** Only required when using [[SummaryQScript]] */

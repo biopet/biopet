@@ -28,9 +28,6 @@ class BiopetPipeline(val parent: Configurable) extends QScript with SummaryQScri
   def this() = this(null)
 
   /** Only required when using [[SummaryQScript]] */
-  def summaryFile = new File(outputDir, "magpie.summary.json")
-
-  /** Only required when using [[SummaryQScript]] */
   def summaryFiles: Map[String, File] = Map()
 
   /** Only required when using [[SummaryQScript]] */

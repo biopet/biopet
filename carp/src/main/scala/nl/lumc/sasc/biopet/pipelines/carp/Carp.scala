@@ -54,8 +54,6 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     "macs2callpeak" -> Map("fileformat" -> "")
   )
 
-  def summaryFile = new File(outputDir, "Carp.summary.json")
-
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
 

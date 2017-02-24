@@ -208,9 +208,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     }
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "Shiva.summary.json")
-
   /** Settings of pipeline for summary */
   override def summarySettings = super.summarySettings ++ Map(
     "annotation" -> annotation.isDefined,

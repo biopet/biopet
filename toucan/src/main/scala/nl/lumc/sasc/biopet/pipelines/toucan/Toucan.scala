@@ -284,8 +284,6 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
     finalLn.output
   }
 
-  def summaryFile = new File(outputDir, "Toucan.summary.json")
-
   def summaryFiles = Map("input_vcf" -> inputVcf, "outputVcf" -> outputVcf)
 
   def summarySettings = Map()

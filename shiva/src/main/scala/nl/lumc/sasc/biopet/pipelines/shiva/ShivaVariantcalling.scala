@@ -163,9 +163,6 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
     }
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
-
   /** Settings for the summary */
   def summarySettings = Map(
     "variantcallers" -> configCallers.toList,

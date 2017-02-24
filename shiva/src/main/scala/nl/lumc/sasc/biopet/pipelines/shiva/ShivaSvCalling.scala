@@ -97,9 +97,6 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
   /** Will generate all available variantcallers */
   protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")
-
   /** Settings for the summary */
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 

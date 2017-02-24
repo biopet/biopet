@@ -52,8 +52,6 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript {
 
   lazy val shiva = new Shiva(qscript)
 
-  def summaryFile: File = new File(outputDir, "Basty.summary.json")
-
   def summaryFiles: Map[String, File] = Map()
 
   def summarySettings: Map[String, Any] = Map("boot_runs" -> numBoot)

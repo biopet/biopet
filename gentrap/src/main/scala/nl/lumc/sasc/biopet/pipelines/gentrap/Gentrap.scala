@@ -152,9 +152,6 @@ class Gentrap(val parent: Configurable) extends QScript
     Some(pipeline)
   } else None
 
-  /** Output summary file */
-  def summaryFile: File = new File(outputDir, "gentrap.summary.json")
-
   /** Files that will be listed in the summary file */
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
     "annotation_refflat" -> annotationRefFlat()

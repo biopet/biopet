@@ -43,13 +43,6 @@ class BamMetrics(val parent: Configurable) extends QScript
 
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
-  /** return location of summary file */
-  def summaryFile = (sampleId, libId) match {
-    case (Some(s), Some(l)) => new File(outputDir, s + "-" + l + ".BamMetrics.summary.json")
-    case (Some(s), _)       => new File(outputDir, s + ".BamMetrics.summary.json")
-    case _                  => new File(outputDir, "BamMetrics.summary.json")
-  }
-
   /** returns files to store in summary */
   def summaryFiles = Map("reference" -> referenceFasta(),
     "input_bam" -> inputBam) ++

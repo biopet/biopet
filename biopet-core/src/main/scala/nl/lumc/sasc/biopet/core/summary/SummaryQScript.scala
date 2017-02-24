@@ -50,9 +50,6 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File]
 
-  /** Name of summary output file */
-  def summaryFile: File
-
   def summaryDbFile: File = root match {
     case s: SummaryQScript => new File(s.outputDir, s"${s.summaryName}.summary.db")
     case _                 => throw new IllegalStateException("Root should be a SummaryQScript")

@@ -77,9 +77,6 @@ class GearsQiimeClosed(val parent: Configurable) extends QScript with SummaryQSc
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
 
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
-
   val downSample: Option[Double] = config("downsample")
 
   def addDownsample(input: File, output: File): File = {

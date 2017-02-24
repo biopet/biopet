@@ -108,8 +108,6 @@ class TinyCap(val parent: Configurable) extends QScript
     }
   }
 
-  override def summaryFile = new File(outputDir, "tinycap.summary.json")
-
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
     "annotation_refflat" -> annotationRefFlat(),
     "annotationGtf" -> annotationGtf,

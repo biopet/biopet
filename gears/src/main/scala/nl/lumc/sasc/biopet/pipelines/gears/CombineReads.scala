@@ -95,7 +95,4 @@ class CombineReads(val parent: Configurable) extends QScript with SummaryQScript
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map()
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "combine_reads.summary.json")
 }

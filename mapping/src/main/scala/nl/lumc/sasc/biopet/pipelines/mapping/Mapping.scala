@@ -101,9 +101,6 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     new File(outputDir, outputName + ".bam")
   } else new File(outputDir, outputName + ".dedup.bam")
 
-  /** location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
-
   override def defaults: Map[String, Any] = Map(
     "gsnap" -> Map("batch" -> 4),
     "star" -> Map("outsamunmapped" -> "Within")
