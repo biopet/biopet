@@ -70,7 +70,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
 
   override def summaryDeps = trim.map(_.summaryDeps).toList.flatten ::: super.summaryDeps
 
-  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+  override def addToQscriptSummary(qscript: SummaryQScript): Unit = {
     clip match {
       case Some(job) => qscript.addSummarizable(job, s"clipping_$read")
       case _         =>
