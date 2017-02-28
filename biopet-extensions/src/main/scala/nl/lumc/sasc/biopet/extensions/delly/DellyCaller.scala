@@ -49,6 +49,14 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with
   def cmdLine = required(executable) +
     "-t" + required(analysistype) +
     "-o" + required(outputvcf) +
-    required(input)
+    required(input) +
+    createEmptyOutputIfNeeded
+
+  def createEmptyOutputIfNeeded = Array("c=$?",
+    "if [ $c -eq 0 ] && [ ! -f " + outputvcf + " ]; then",
+    "echo '##fileformat=VCFv4.2' > " + outputvcf,
+    "echo '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO' >> " + outputvcf,
+    "fi",
+    "exit $c").mkString("\n", "\n", "\n")
 
 }
