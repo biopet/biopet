@@ -52,6 +52,7 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with
     required(input) +
     createEmptyOutputIfNeeded
 
+  // when no variants are found then the tool doesn't generate the output file either, in Biopet it's needed that the empty file would be there
   def createEmptyOutputIfNeeded = Array("c=$?",
     "if [ $c -eq 0 ] && [ ! -f " + outputvcf + " ]; then",
     "echo '##fileformat=VCFv4.2' > " + outputvcf,
