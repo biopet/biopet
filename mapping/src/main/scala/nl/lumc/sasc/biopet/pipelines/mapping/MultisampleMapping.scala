@@ -35,6 +35,8 @@ import scala.collection.JavaConversions._
 
 /**
  * Created by pjvanthof on 18/12/15.
+ *
+ * This trait is meant to extend pipelines from that require a alignment step
  */
 trait MultisampleMappingTrait extends MultiSampleQScript
   with Reference { qscript: QScript =>
@@ -65,7 +67,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     Some(report)
   }
 
-  override def defaults = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+  override def defaults: Map[String, Any] = super.defaults ++ Map(
+    "reordersam" -> Map("allow_incomplete_dict_concordance" -> true),
+    "gears" -> Map("skip_flexiprep" -> true)
+  )
 
   override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
@@ -85,6 +90,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
+    def metricsPreprogressBam = true
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) { lib =>
 
@@ -97,11 +104,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
       lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
+      lazy val qcFastqR1 = mapping.map(_.flexiprep.fastqR1Qc)
+      lazy val qcFastqR2 = mapping.flatMap(_.flexiprep.fastqR2Qc)
       lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
-      def keepFinalBamfile = samples(sampleId).libraries.size == 1
+      def keepFinalBamfile: Boolean = samples(sampleId).libraries.size == 1
 
       lazy val mapping: Option[Mapping] = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
         val m: Mapping = new Mapping(qscript) {
@@ -213,13 +222,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     def summaryStats: Map[String, Any] = Map()
 
     /** This is the merged bam file, None if the merged bam file is NA */
-    def bamFile = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
+    def bamFile: Option[File] = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
       mergeStrategy != MultisampleMapping.MergeStrategy.None)
       Some(new File(sampleDir, s"$sampleId.bam"))
     else None
 
     /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
-    def preProcessBam = bamFile
+    def preProcessBam: Option[File] = bamFile
 
     /** Default is set to keep the merged files, user can set this in the config. To change the default this method can be overriden */
     def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
@@ -256,7 +265,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       if (mergeStrategy != MergeStrategy.None && libraries.flatMap(_._2.bamFile).nonEmpty) {
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
-        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.inputBam = if (metricsPreprogressBam) preProcessBam.get else bamFile.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         add(bamMetrics)
 
@@ -272,13 +281,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           add(gears)
         case "all" =>
           val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.inputR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.inputR2).toList
+          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
           gears.sampleId = Some(sampleId)
           gears.outputDir = new File(sampleDir, "gears")
           add(gears)
         case "none" =>
-        case x      => Logging.addError(s"${x} is not a valid value for 'mapping_to_gears'")
+        case x      => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
       }
     }
   }

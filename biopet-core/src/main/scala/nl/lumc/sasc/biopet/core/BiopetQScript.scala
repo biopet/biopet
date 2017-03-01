@@ -93,15 +93,21 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
 
     logger.info("Running pre commands")
-    for (function <- functions) function match {
-      case f: BiopetCommandLineFunction =>
-        f.preProcessExecutable()
-        f.beforeGraph()
-        f.internalBeforeGraph()
-        f.commandLine
-      case f: WriteSummary => f.init()
-      case _               =>
+    var count = 0
+    for (function <- functions) {
+      function match {
+        case f: BiopetCommandLineFunction =>
+          f.preProcessExecutable()
+          f.beforeGraph()
+          f.internalBeforeGraph()
+          f.commandLine
+        case f: WriteSummary => f.init()
+        case _               =>
+      }
+      count += 1
+      if (count % 500 == 0) logger.info(s"Preprocessing done for ${count} jobs out of ${functions.length} total")
     }
+    logger.info(s"Preprocessing done for ${functions.length} functions")
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
@@ -116,6 +122,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
     }
 
+    logger.info("Set stdout file when not set")
     functions.filter(_.jobOutputFile == null).foreach(f => {
       val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
       BiopetQScript.safeOutputs(f) match {
@@ -127,6 +134,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     if (!skipWriteDependencies) WriteDependencies.writeDependencies(
       functions,
       new File(logDir, "graph"))
+    else logger.debug("Write dependencies is skipped")
 
     Logging.checkErrors()
     logger.info("Script complete without errors")

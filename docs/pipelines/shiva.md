@@ -52,6 +52,12 @@ biopet pipeline shiva -config MySamples.json -config MySettings.json -run
 
 A dry run can be performed by simply removing the `-run` flag from the command line call.
 
+[Gears](gears) is run automatically for the data analysed with `Shiva`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
+
+*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
+*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
+*`mapping_to_gears: none` : Disable this functionality.
+
 ### Only variant calling
 
 It is possible to run Shiva while only performing its variant calling steps.
@@ -196,6 +202,8 @@ variantcallers:
     - haplotypecaller
     - unifiedgenotyper
     - haplotypecaller_gvcf
+unifiedgenotyper:
+    merge_vcf_results: false # This will do the variantcalling but will not merged into the final vcf file
 ```
 
 **Additional XHMM CNV calling example**

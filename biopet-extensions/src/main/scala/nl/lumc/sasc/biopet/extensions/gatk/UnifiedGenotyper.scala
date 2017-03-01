@@ -300,7 +300,6 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
     optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
     optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
     optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
-    optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat) +
     optional("-maxAltAlleles", max_alternate_alleles, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
@@ -323,7 +322,12 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
+    (this.getVersion match {
+      case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+      case _ => ""
+    })
 }
 
 object UnifiedGenotyper {

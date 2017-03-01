@@ -62,7 +62,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqcR1After: Fastqc = _
   var fastqcR2After: Fastqc = _
 
-  override def reportClass = {
+  override def reportClass: Some[FlexiprepReport] = {
     val flexiprepReport = new FlexiprepReport(this)
     flexiprepReport.outputDir = new File(outputDir, "report")
     flexiprepReport.summaryFile = summaryFile
@@ -74,6 +74,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Function that's need to be executed before the script is accessed */
   def init() {
+    paired = inputR2.isDefined
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
     if (sampleId == null || sampleId.isEmpty) Logging.addError("Missing sample ID on flexiprep module")
     if (libId == null || libId.isEmpty) Logging.addError("Missing library ID on flexiprep module")
@@ -147,10 +148,10 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
   }
 
-  def fastqR1Qc = if (paired)
+  def fastqR1Qc: File = if (paired)
     new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.sync.fq.gz")
   else new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
-  def fastqR2Qc = if (paired)
+  def fastqR2Qc: Option[File] = if (paired)
     Some(new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R2.qc.sync.fq.gz"))
   else None
 
@@ -225,7 +226,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         /** Must returns stats to store into summary */
         def summaryStats: Any = Map()
 
-        override def summaryDeps = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
+        override def summaryDeps: List[File] = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
       }
 
       pipe.deps ::= fastqcR1.output
