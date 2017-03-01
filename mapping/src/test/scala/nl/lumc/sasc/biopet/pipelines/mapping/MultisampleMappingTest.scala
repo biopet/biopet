@@ -14,27 +14,32 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Created by pjvanthof on 15/05/16.
  */
 trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
+
+  val outputDir = MultisampleMappingTestTrait.outputDir
+  val configMap = MultisampleMappingTestTrait.config(outputDir)
+
   def initPipeline(map: Map[String, Any]): MultisampleMapping = {
     new MultisampleMapping() {
       override def configNamespace = "multisamplemapping"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, MultisampleMappingTestTrait.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, configMap))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -59,7 +64,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   @Test(dataProvider = "mappingOptions")
   def testMultisampleMapping(merge: MultisampleMapping.MergeStrategy.Value, sample1: Boolean, sample2: Boolean): Unit = {
     val map: Map[String, Any] = {
-      var m: Map[String, Any] = MultisampleMappingTestTrait.config
+      var m: Map[String, Any] = configMap
       if (sample1) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample2, m)
       if (sample3) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample3, m)
@@ -110,6 +115,11 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
+  }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(outputDir)
   }
 }
 
@@ -162,12 +172,7 @@ class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
 }
 
 object MultisampleMappingTestTrait {
-  private var dirs: List[File] = Nil
-  def outputDir = {
-    val dir = Files.createTempDir()
-    dirs :+= dir
-    dir
-  }
+  def outputDir = Files.createTempDir()
 
   val inputDir = Files.createTempDir()
 
@@ -179,7 +184,9 @@ object MultisampleMappingTestTrait {
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(inputDir, name))
+    val out = new File(inputDir, name)
+    out.deleteOnExit()
+    val os = new FileOutputStream(out)
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -189,7 +196,7 @@ object MultisampleMappingTestTrait {
   copyFile("ref.fa.fai")
   copyFile("empty.sam")
 
-  def config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
