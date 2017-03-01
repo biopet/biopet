@@ -53,7 +53,10 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   }
 
   def init(): Unit = {
-    qscript.summarizables.foreach(_._2.foreach(_.addToQscriptSummary(qscript)))
+    qscript.summarizables.foreach(_._2.foreach { s =>
+      if (!s.addToQscriptSummaryDone) s.addToQscriptSummary(qscript)
+      s.addToQscriptSummaryDone = true
+    })
 
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     if (qscript == root) { // This initialize the database

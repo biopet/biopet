@@ -78,7 +78,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         List("Reference" -> ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
         ), Map()),
-          "Files" -> filesPage,
+          "Files" -> filesPage(),
           "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
           )), Map())
         ),
@@ -112,7 +112,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   }
 
   /** Files page, can be used general or at sample level */
-  def filesPage: ReportPage = {
+  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
     val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Right("flexiprep"), Some(None), mustHaveLibrary = true), Duration.Inf) >= 1
 
     ReportPage(List(), Nil, Map())
@@ -140,7 +140,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ++
-      List("Files" -> filesPage
+      List("Files" -> filesPage()
       ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),

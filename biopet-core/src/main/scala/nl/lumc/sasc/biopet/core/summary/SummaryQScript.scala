@@ -58,40 +58,23 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   /**
    * Add a module to summary for this pipeline
    *
-   * Auto detect sample and library from pipeline
-   *
-   * @param summarizable summarizable to add to summary for this pipeline
-   * @param name Name of module
-   */
-  def addSummarizable(summarizable: Summarizable, name: String): Unit = {
-    this match {
-      case tag: SampleLibraryTag => addSummarizable(summarizable, name, tag.sampleId, tag.libId)
-      case _                     => addSummarizable(summarizable, name, None, None)
-    }
-  }
-
-  /**
-   * Add a module to summary for this pipeline
-   *
-   * @param summarizable summarizable to add to summary for this pipeline
-   * @param name Name of module
-   * @param sampleId Id of sample
-   */
-  def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String]): Unit = {
-    addSummarizable(summarizable, name, sampleId, None)
-  }
-
-  /**
-   * Add a module to summary for this pipeline
-   *
    * @param summarizable summarizable to add to summary for this pipeline
    * @param name Name of module
    * @param sampleId Id of sample
    * @param libraryId Id of libary
+   * @param forceSingle If true it replaces summarizable instead of adding to it
    */
-  def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String], libraryId: Option[String]): Unit = {
-    if (libraryId.isDefined) require(sampleId.isDefined) // Library always require a sample
-    summarizables += (name, sampleId, libraryId) -> (summarizable :: summarizables.getOrElse((name, sampleId, libraryId), Nil))
+  def addSummarizable(summarizable: Summarizable, name: String,
+                      sampleId: Option[String] = None,
+                      libraryId: Option[String] = None,
+                      forceSingle: Boolean = false): Unit = {
+    val (sId, lId) = this match {
+      case tag: SampleLibraryTag => (tag.sampleId, tag.libId)
+      case _                     => (sampleId, libraryId)
+    }
+    if (lId.isDefined) require(sId.isDefined) // Library always require a sample
+    if (forceSingle) summarizables = summarizables.filterNot(_._1 == (name, sId, lId))
+    summarizables += (name, sId, lId) -> (summarizable :: summarizables.getOrElse((name, sId, lId), Nil))
   }
 
   /** Add an other qscript to merge in output summary */
