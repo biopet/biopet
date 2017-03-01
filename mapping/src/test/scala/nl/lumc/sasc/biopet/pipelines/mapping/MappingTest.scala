@@ -104,10 +104,10 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
   val inputDir = Files.createTempDir()
 
-  val r1 = new File(inputDir, "input" + File.separator + "R1.fq")
-  val r2 = new File(inputDir, "input" + File.separator + "R2.fq")
-  val r1Zipped = new File(inputDir, "input" + File.separator + "R1.fq.gz")
-  val r2Zipped = new File(inputDir, "input" + File.separator + "R2.fq.gz")
+  val r1 = new File(inputDir, "R1.fq")
+  val r2 = new File(inputDir, "R2.fq")
+  val r1Zipped = new File(inputDir, "R1.fq.gz")
+  val r2Zipped = new File(inputDir, "R2.fq.gz")
   val hisat2Index = new File(inputDir, "ref.1.ht2")
 
   @BeforeClass
@@ -128,7 +128,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }

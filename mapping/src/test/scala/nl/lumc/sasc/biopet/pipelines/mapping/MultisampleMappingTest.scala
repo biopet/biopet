@@ -162,18 +162,24 @@ class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
 }
 
 object MultisampleMappingTestTrait {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  private var dirs: List[File] = Nil
+  def outputDir = {
+    val dir = Files.createTempDir()
+    dirs :+= dir
+    dir
+  }
+
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): File = {
-    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    val file = new File(inputDir, name).getAbsoluteFile
     Files.touch(file)
     file
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -183,14 +189,14 @@ object MultisampleMappingTestTrait {
   copyFile("ref.fa.fai")
   copyFile("empty.sam")
 
-  val config = Map(
+  def config = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
     "output_dir" -> outputDir,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "input_alleles" -> "test",
     "fastqc" -> Map("exe" -> "test"),
@@ -234,7 +240,7 @@ object MultisampleMappingTestTrait {
   val sample3 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "bam" -> (outputDir + File.separator + "empty.sam")
+        "bam" -> (inputDir + File.separator + "empty.sam")
       )
     )
     )))
@@ -242,7 +248,7 @@ object MultisampleMappingTestTrait {
   val sample4 = Map(
     "samples" -> Map("sample4" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "bam" -> (outputDir + File.separator + "empty.sam")
+        "bam" -> (inputDir + File.separator + "empty.sam")
       )
     )
     )))
