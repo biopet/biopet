@@ -94,16 +94,15 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
     }
 
     program
-      .filterNot(_ == Programs.CollectInsertSizeMetrics.toString && !new File(outputName + ".insert_size_metrics").exists())
       .foreach { p =>
         p match {
           case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
             qscript.addSummarizable(summarizable(() => Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))), p, forceSingle = true)
           case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-            qscript.addSummarizable(summarizable(() => Map(
+            qscript.addSummarizable(summarizable(() => if (!new File(outputName + ".insert_size_metrics").exists()) Map(
               "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
               "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
-            )), p, forceSingle = true)
+            ) else Map()), p, forceSingle = true)
           case _ if p == Programs.QualityScoreDistribution.toString =>
             qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))), p, forceSingle = true)
           case _ if p == Programs.MeanQualityByCycle.toString =>
@@ -117,7 +116,7 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
 
   def summaryStats = Map()
 
-  def summaryFiles = {
+  def summaryFiles: Map[String, File] = {
     program.map {
       case p if p == Programs.CollectInsertSizeMetrics.toString =>
         Map(
