@@ -95,14 +95,20 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
   }
 
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  private var dirs: List[File] = Nil
+  def outputDir: File = {
+    val dir = Files.createTempDir()
+    dirs :+= dir
+    dir
+  }
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
-  val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
-  val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
-  val hisat2Index = new File(outputDir, "ref.1.ht2")
+  val inputDir = Files.createTempDir()
+
+  val r1 = new File(inputDir, "input" + File.separator + "R1.fq")
+  val r2 = new File(inputDir, "input" + File.separator + "R2.fq")
+  val r1Zipped = new File(inputDir, "input" + File.separator + "R1.fq.gz")
+  val r2Zipped = new File(inputDir, "input" + File.separator + "R2.fq.gz")
+  val hisat2Index = new File(inputDir, "ref.1.ht2")
 
   @BeforeClass
   def createTempFiles: Unit = {
@@ -129,10 +135,10 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
   val executables = Map(
     "skip_write_dependencies" -> true,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "db" -> "test",
-    "bowtie_index" -> (outputDir + File.separator + "ref"),
-    "hisat2_index" -> (outputDir + File.separator + "ref"),
+    "bowtie_index" -> (inputDir + File.separator + "ref"),
+    "hisat2_index" -> (inputDir + File.separator + "ref"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "gsnap" -> Map("exe" -> "test"),
@@ -156,7 +162,8 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(outputDir)
+    FileUtils.deleteDirectory(inputDir)
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 

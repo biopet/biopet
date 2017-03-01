@@ -106,7 +106,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
   /** Files page, can be used general or at sample level */
   override def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
     val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-      Map("sampleId" -> None)))
+      Map("sampleId" -> sampleId)))
     else Nil
     val oldPage = super.filesPage(sampleId, libraryId)
     oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
