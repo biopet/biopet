@@ -203,14 +203,14 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         }
       } else Seq()
 
-      val founndAdapters = modules.get("Adapter Content").map { x =>
+      val foundAdapters = modules.get("Adapter Content").map { x =>
         val header = x.lines.head.split("\t").tail.zipWithIndex
         val lines = x.lines.tail.map(_.split("\t").tail)
         val found = header.filter(h => lines.exists(x => x(h._2).toFloat > 0)).map(_._1)
         adapterSet.filter(x => found.contains(x.name))
       }
 
-      fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC ++ founndAdapters.getOrElse(Seq())
+      fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC ++ foundAdapters.getOrElse(Seq())
     } else Set()
   }
 
