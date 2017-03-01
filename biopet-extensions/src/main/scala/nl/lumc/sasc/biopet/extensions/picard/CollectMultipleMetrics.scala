@@ -99,7 +99,7 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
           case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
             qscript.addSummarizable(summarizable(() => Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))), p, forceSingle = true)
           case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-            qscript.addSummarizable(summarizable(() => if (!new File(outputName + ".insert_size_metrics").exists()) Map(
+            qscript.addSummarizable(summarizable(() => if (new File(outputName + ".insert_size_metrics").exists()) Map(
               "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
               "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
             )
