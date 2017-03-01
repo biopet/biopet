@@ -77,14 +77,14 @@
                 case _ => Await.result(summary.getLibraries(sampleId = Some(sample.id), runId = Some(runId)), Duration.Inf).map(x => Some(x.id)).toList
                 }
             }#
-            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
             #for (libId <- libs)
                 #{ val libName = libId.map(l => Await.result(summary.getLibraryName(l), Duration.Inf)) }#
                 #if (libs.head != libId) <tr> #end
                         #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                         #{
-                            val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
-                            val results = summary.getStatKeys(runId, Right("bammetrics"), Some(Right("bamstats")), sample = Some(Left(sample.id)), library = libId.map(Left(_)), keyValues = statsPaths)
+                            val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+                            val results = summary.getStatKeys(runId, Right("bammetrics"), Some(Right("CollectInsertSizeMetrics")), sample = Some(Left(sample.id)), library = libId.map(Left(_)), keyValues = statsPaths)
                         }#
                         #for (field <- fields)
                             <td>${results(field)}</td>
