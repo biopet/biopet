@@ -11,12 +11,13 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /**
+ * Testing voor [[SummaryDb]]
  * Created by pjvanthof on 14/02/2017.
  */
 class SummaryDbTest extends TestNGSuite with Matchers {
 
   @Test
-  def testRuns: Unit = {
+  def testRuns(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -34,7 +35,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSamples: Unit = {
+  def testSamples(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -58,7 +59,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testLibraries: Unit = {
+  def testLibraries(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -85,7 +86,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testPipelines: Unit = {
+  def testPipelines(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -105,7 +106,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testModules: Unit = {
+  def testModules(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -126,7 +127,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSettings: Unit = {
+  def testSettings(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -140,7 +141,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSettingKeys: Unit = {
+  def testSettingKeys(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -163,14 +164,13 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSettingsForSamples: Unit = {
+  def testSettingsForSamples(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
     db.createTables()
 
     val sampleId = Await.result(db.createSample("test_sample", 0), Duration.Inf)
-    val libraryId = Await.result(db.createLibrary("test_library", 0, sampleId), Duration.Inf)
 
     Await.result(db.createOrUpdateSetting(0, 0, Some(0), Some(sampleId), None,
       """
@@ -188,7 +188,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSettingsForLibraries: Unit = {
+  def testSettingsForLibraries(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -213,7 +213,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testStats: Unit = {
+  def testStats(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -243,7 +243,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testStatKeys: Unit = {
+  def testStatKeys(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -266,14 +266,13 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testStatsForSamples: Unit = {
+  def testStatsForSamples(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
     db.createTables()
 
     val sampleId = Await.result(db.createSample("test_sample", 0), Duration.Inf)
-    val libraryId = Await.result(db.createLibrary("test_library", 0, sampleId), Duration.Inf)
 
     Await.result(db.createOrUpdateStat(0, 0, Some(0), Some(sampleId), None,
       """
@@ -291,7 +290,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testStatsForLibraries: Unit = {
+  def testStatsForLibraries(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -316,7 +315,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testFiles: Unit = {
+  def testFiles(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -328,31 +327,30 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val sampleId = Await.result(db.createSample("test_sample", runId), Duration.Inf)
     val libraryId = Await.result(db.createLibrary("test_library", runId, sampleId), Duration.Inf)
 
-    Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path", "md5", false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path","md5",false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path","md5",false,1))
-    Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path2", "md5", false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path2","md5",false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",false,1))
+    Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path", "md5", link = false, 1), Duration.Inf)
+    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path","md5",link = false,1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path","md5",link = false,1))
+    Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path2", "md5", link = false, 1), Duration.Inf)
+    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1))
 
     // Test join queries
-    Await.result(db.createOrUpdateFile(runId, pipelineId, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Right("test_pipeline"), Some(Right("test_module")), Some(Right("test_sample")), Some(Right("test_library")), "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",false,1), Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",false,1))
+    Await.result(db.createOrUpdateFile(runId, pipelineId, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1), Duration.Inf)
+    Await.result(db.getFile(runId, Right("test_pipeline"), Some(Right("test_module")), Some(Right("test_sample")), Some(Right("test_library")), "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",link = false,1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1), Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",link = false,1))
 
     db.close()
   }
 
 
   @Test
-  def testExecutable: Unit = {
+  def testExecutable(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
     db.createTables()
 
     Await.result(db.createOrUpdateExecutable(0, "name"), Duration.Inf)
-    val bla1 = Await.result(db.getExecutables(Some(0)), Duration.Inf)
     Await.result(db.createOrUpdateExecutable(0, "name", Some("test")), Duration.Inf)
     Await.result(db.getExecutables(Some(0)), Duration.Inf).head shouldBe Schema.Executable(0, "name", Some("test"))
     db.close()
