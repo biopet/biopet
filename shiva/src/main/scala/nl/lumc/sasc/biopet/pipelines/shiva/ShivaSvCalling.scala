@@ -69,23 +69,28 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
     // merge VCF by sample
     for ((sample, bamFile) <- inputBams) {
-      var sampleVCFS: List[Option[File]] = List.empty
-      callers.foreach { caller =>
-        sampleVCFS ::= caller.outputVCF(sample)
+      if (callers.size > 1) {
+        var sampleVCFS: List[Option[File]] = List.empty
+        callers.foreach { caller =>
+          sampleVCFS ::= caller.outputVCF(sample)
+        }
+        val mergeSVcalls = new Pysvtools(this)
+        mergeSVcalls.input = sampleVCFS.flatten
+        mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
+        add(mergeSVcalls)
+        outputMergedVCFbySample += (sample -> mergeSVcalls.output)
+      } else {
+        outputMergedVCFbySample += (sample -> callers.head.outputVCF(sample))
       }
-      val mergeSVcalls = new Pysvtools(this)
-      mergeSVcalls.input = sampleVCFS.flatten
-      mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
-      add(mergeSVcalls)
-      outputMergedVCFbySample += (sample -> mergeSVcalls.output)
     }
 
-    // merge all files from all samples in project
-    val mergeSVcallsProject = new Pysvtools(this)
-    mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
-    mergeSVcallsProject.output = outputMergedVCF
-    add(mergeSVcallsProject)
-
+    if (inputBams.size > 1) {
+      // merge all files from all samples in project
+      val mergeSVcallsProject = new Pysvtools(this)
+      mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
+      mergeSVcallsProject.output = outputMergedVCF
+      add(mergeSVcallsProject)
+    }
     // merging the VCF calls by project
     // basicly this will do all samples from this pipeline run
     // group by "tags"
@@ -104,7 +109,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> outputMergedVCF)
+  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> (if (inputBams.size > 1) outputMergedVCF else outputMergedVCFbySample.values.head))
 }
 
 object ShivaSvCalling extends PipelineCommand
