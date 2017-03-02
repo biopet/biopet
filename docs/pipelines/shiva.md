@@ -103,7 +103,9 @@ At this moment the following variant callers can be used
 * <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a>
 * <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools_singlesample</a>
 * <a href="https://github.com/ekg/freebayes">freebayes</a>
+* <a href="http://varscan.sourceforge.net/">varscan</a>
 * [raw](../tools/MpileupToVcf)
+
 
 ## Config options
 
