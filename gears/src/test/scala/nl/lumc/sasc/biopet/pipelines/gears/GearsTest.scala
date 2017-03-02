@@ -17,12 +17,13 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Created by pjvanthof on 04/02/16.
@@ -55,10 +56,14 @@ abstract class GearsTest extends TestNGSuite with Matchers {
     ) yield Array("", s1, s2)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "gearsOptions")
   def testGears(dummy: String, sample1: Boolean, sample2: Boolean): Unit = {
+    val outputDir = GearsTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = GearsTest.config
+      var m: Map[String, Any] = GearsTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(GearsTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(GearsTest.sample2, m)
       ConfigUtils.mergeMaps(Map(
@@ -82,6 +87,11 @@ abstract class GearsTest extends TestNGSuite with Matchers {
 
     }
   }
+
+  @AfterClass
+  def removeDirs: Unit = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 class GearsDefaultTest extends GearsTest
@@ -101,18 +111,21 @@ class GearsLibraryTest extends GearsTest {
 }
 
 object GearsTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
-  outputDir.deleteOnExit()
+  def outputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  val inputDir = Files.createTempDir()
+
+  val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  r1.deleteOnExit()
+  val r2 = new File(inputDir, "R2.fq")
   Files.touch(r2)
-  val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
+  r2.deleteOnExit()
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
+  bam.deleteOnExit()
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),

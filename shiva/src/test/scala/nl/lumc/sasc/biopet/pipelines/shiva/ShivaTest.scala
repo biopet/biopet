@@ -14,18 +14,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
+import nl.lumc.sasc.biopet.extensions.gatk.{BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Class for testing shiva
@@ -36,7 +37,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Shiva = {
     new Shiva() {
       override def configNamespace = "shiva"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaTest.config))
+      override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -62,11 +63,15 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def cnvCalling = false
   def annotation = false
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "shivaOptions")
   def testShiva(f: String, sample1: Boolean, sample2: Boolean,
                 realign: Boolean, baseRecalibration: Boolean): Unit = {
+    val outputDir = ShivaTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = ShivaTest.config
+      var m: Map[String, Any] = ShivaTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp_vcf" -> "test.vcf.gz"), m)
@@ -124,6 +129,11 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
         (if (libraryCalling) numberLibs * 2 else 0))
     }
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 class ShivaDefaultTest extends ShivaTestTrait
@@ -170,12 +180,14 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 }
 
 object ShivaTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): String = {
-    val file = new File(outputDir, "input" + File.separator + name)
+    val file = new File(inputDir, name)
     Files.touch(file)
+    file.deleteOnExit()
     file.getAbsolutePath
   }
 
@@ -190,14 +202,14 @@ object ShivaTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
     "output_dir" -> outputDir,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),

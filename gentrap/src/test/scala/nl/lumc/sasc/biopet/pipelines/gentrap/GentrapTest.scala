@@ -14,21 +14,22 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, BiopetPipe}
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.tools.{BaseCounter, WipeReads}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.utils.camelize
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends TestNGSuite with Matchers {
 
@@ -58,11 +59,14 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
     } yield Array(strandProtocol)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "expMeasuresstrandProtocol")
   def testGentrap(strandProtocol: String) = {
-
+    val outputDir = GentrapTest.outputDir
+    dirs :+= outputDir
     val settings = Map(
-      "output_dir" -> GentrapTest.outputDir,
+      "output_dir" -> outputDir,
       "gsnap" -> Map("db" -> "test", "dir" -> "test"),
       "expression_measures" -> expressionMeasures,
       "strand_protocol" -> strandProtocol
@@ -145,6 +149,10 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
     }
   }
 
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 class GentrapFragmentsPerGeneTest extends GentrapTestAbstract(List("fragments_per_gene"))
@@ -166,18 +174,18 @@ class GentrapCallVariantsTest extends GentrapTestAbstract(List("fragments_per_ge
 }
 
 object GentrapTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): String = {
-    val file = new File(outputDir, "input" + File.separator + name)
+    val file = new File(inputDir, name)
     Files.touch(file)
     file.getAbsolutePath
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -188,12 +196,12 @@ object GentrapTest {
 
   val executables: Map[String, Any] = Map(
     "skip_write_dependencies" -> true,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
-    "refFlat" -> (outputDir + File.separator + "ref.fa"),
-    "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
-    "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
-    "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
-    "ribosome_refflat" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
+    "refFlat" -> (inputDir + File.separator + "ref.fa"),
+    "annotation_gtf" -> (inputDir + File.separator + "ref.fa"),
+    "annotation_bed" -> (inputDir + File.separator + "ref.fa"),
+    "annotation_refflat" -> (inputDir + File.separator + "ref.fa"),
+    "ribosome_refflat" -> (inputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test",
     "rscript" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),

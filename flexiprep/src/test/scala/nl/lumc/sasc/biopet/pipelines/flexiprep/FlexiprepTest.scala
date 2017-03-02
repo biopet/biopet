@@ -59,10 +59,14 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     ) yield Array("", pair, skipTrim, skipClip, zip, abortOnCorruptFastq)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "flexiprepOptions")
   def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean,
                     zipped: Boolean, abortOnCorruptFastq: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir,
+    val outputDir = FlexiprepTest.outputDir
+    dirs :+= outputDir
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
       "skip_trim" -> skipTrim,
       "skip_clip" -> skipClip,
       "abort_on_corrupt_fastq" -> abortOnCorruptFastq
@@ -85,8 +89,10 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
   @Test
   def testNoSample: Unit = {
+    val outputDir = FlexiprepTest.outputDir
+    dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map(
-      "output_dir" -> FlexiprepTest.outputDir
+      "output_dir" -> outputDir
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
@@ -97,22 +103,27 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(FlexiprepTest.outputDir)
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object FlexiprepTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  val inputDir = Files.createTempDir()
+
+  val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  r1.deleteOnExit()
+  val r2 = new File(inputDir, "R2.fq")
   Files.touch(r2)
-  val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  r2.deleteOnExit()
+  val r1Zipped = new File(inputDir, "R1.fq.gz")
   Files.touch(r1Zipped)
-  val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
+  r1Zipped.deleteOnExit()
+  val r2Zipped = new File(inputDir, "R2.fq.gz")
   Files.touch(r2Zipped)
+  r2Zipped.deleteOnExit()
 
   val executables = Map(
     "skip_write_dependencies" -> true,

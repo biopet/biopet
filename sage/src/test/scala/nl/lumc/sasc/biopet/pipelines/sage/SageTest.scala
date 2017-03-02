@@ -14,15 +14,16 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Created by pjvanthof on 28/09/16.
@@ -53,10 +54,14 @@ class SageTest extends TestNGSuite with Matchers {
   def tagsLibrary = false
   def libraryCounts: Option[Boolean] = None
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "sageOptions")
   def testSage(f: String, sample1: Boolean, sample2: Boolean): Unit = {
+    val outputDir = SageTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = SageTest.config
+      var m: Map[String, Any] = SageTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(SageTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(SageTest.sample2, m)
       ConfigUtils.mergeMaps(
@@ -99,6 +104,11 @@ class SageTest extends TestNGSuite with Matchers {
 
     }
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 class SageNoBedTest extends SageTest {
@@ -121,11 +131,11 @@ class SageLibraryCountsTest extends SageTest {
 }
 
 object SageTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val intputDir = Files.createTempDir()
+
   def inputTouch(name: String): String = {
-    val file = new File(outputDir, "input" + File.separator + name)
+    val file = new File(intputDir, name)
     Files.touch(file)
     file.getAbsolutePath
   }
@@ -134,7 +144,7 @@ object SageTest {
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(intputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -143,9 +153,9 @@ object SageTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val config: Map[String, Any] = Map(
+  def config(outputDir: File): Map[String, Any] = Map(
     "skip_write_dependencies" -> true,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (intputDir + File.separator + "ref.fa"),
     "output_dir" -> outputDir.getAbsolutePath,
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),

@@ -14,19 +14,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.basty
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.{ Raxml, RunGubbins }
-import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
+import nl.lumc.sasc.biopet.extensions.{Raxml, RunGubbins}
+import nl.lumc.sasc.biopet.extensions.gatk.{BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
-import nl.lumc.sasc.biopet.extensions.tools.{ BastyGenerateFasta, VcfStats }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.tools.{BastyGenerateFasta, VcfStats}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Created by pjvanthof on 27/09/16.
@@ -61,10 +62,14 @@ class BastyTest extends TestNGSuite with Matchers {
   def annotation = false
   def bootRuns: Option[Int] = None
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "bastyOptions")
   def testBasty(f: String, sample1: Boolean, sample2: Boolean): Unit = {
+    val outputDir = BastyTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = BastyTest.config
+      var m: Map[String, Any] = BastyTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(BastyTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(BastyTest.sample2, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp_vcf" -> "test.vcf.gz"), m)
@@ -133,21 +138,26 @@ class BastyTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[RunGubbins]) shouldBe 2
     }
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object BastyTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): String = {
-    val file = new File(outputDir, "input" + File.separator + name)
+    val file = new File(inputDir, name)
     Files.touch(file)
     file.getAbsolutePath
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -156,14 +166,14 @@ object BastyTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
     "output_dir" -> outputDir,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
