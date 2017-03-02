@@ -56,9 +56,13 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     ) yield Array(rois, amplicon, rna, wgs)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "bammetricsOptions")
   def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean, wgs: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir, "rna_metrics" -> rna, "wgs_metrics" -> wgs),
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir, "rna_metrics" -> rna, "wgs_metrics" -> wgs),
       Map(BamMetricsTest.executables.toSeq: _*)) ++
       (if (amplicon) Map("amplicon_bed" -> BamMetricsTest.ampliconBed.getAbsolutePath) else Map()) ++
       (if (rna) Map("annotation_refflat" -> "transcripts.refFlat") else Map()) ++
@@ -81,30 +85,28 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass
-  def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(BamMetricsTest.outputDir)
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object BamMetricsTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  val inputDir = Files.createTempDir()
 
-  val bam = new File(outputDir, "input" + File.separator + "bla.bam")
+  val bam = new File(inputDir, "input" + File.separator + "bla.bam")
   Files.touch(bam)
-  val ampliconBed = new File(outputDir, "input" + File.separator + "amplicon_bed.bed")
+  val ampliconBed = new File(inputDir, "input" + File.separator + "amplicon_bed.bed")
   Files.touch(ampliconBed)
 
   def roi(i: Int): File = {
-    val roi = new File(outputDir, "input" + File.separator + s"roi${i}.bed")
+    val roi = new File(inputDir, "input" + File.separator + s"roi${i}.bed")
     Files.touch(roi)
     roi
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -116,7 +118,7 @@ object BamMetricsTest {
   val executables = Map(
     "skip_write_dependencies" -> true,
     "refFlat" -> "bla.refFlat",
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "samtools" -> Map("exe" -> "test"),
     "bedtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")

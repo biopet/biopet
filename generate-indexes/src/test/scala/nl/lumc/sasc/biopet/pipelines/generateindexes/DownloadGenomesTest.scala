@@ -14,58 +14,73 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
+import java.io.File
+
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{AfterClass, Test}
 
 /**
  * Created by pjvan_thof on 13-5-16.
  */
 class DownloadGenomesTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): DownloadGenomes = {
+  def initPipeline(map: Map[String, Any], outputDir: File): DownloadGenomes = {
     new DownloadGenomes() {
       override def configNamespace = "generateindexes"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, DownloadGenomesTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, DownloadGenomesTest.config(outputDir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
   }
 
+  private var dirs: List[File] = Nil
+
   @Test
   def testNoFastaUri(): Unit = {
-    val pipeline = initPipeline(Map())
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map(), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("" -> "")))
     an[IllegalArgumentException] should be thrownBy pipeline.script()
   }
 
   @Test
   def testNcbiAssembly(): Unit = {
-    val pipeline = initPipeline(Map())
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map(), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_report" -> "id")))
     noException should be thrownBy pipeline.script()
   }
 
   @Test
   def testSingleFasta(): Unit = {
-    val pipeline = initPipeline(Map())
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map(), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri")))
     noException should be thrownBy pipeline.script()
   }
 
   @Test
   def testMultiFasta(): Unit = {
-    val pipeline = initPipeline(Map())
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map(), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> List("uri", "uri2", "uri3.gz"))))
     noException should be thrownBy pipeline.script()
   }
 
   @Test
   def testSingleDbsnp(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz")))))
     noException should be thrownBy pipeline.script()
@@ -73,7 +88,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testContigMapDbsnp(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf.gz", "contig_map" -> Map("1" -> "chr1"))))))
     noException should be thrownBy pipeline.script()
@@ -81,7 +98,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testUnzippedContigMapDbsnp(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf", "contig_map" -> Map("1" -> "chr1"))))))
     noException should be thrownBy pipeline.script()
@@ -89,7 +108,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testSingleUnzippedDbsnp(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map(("vcf_uri" -> "uri.vcf"))))))
     noException should be thrownBy pipeline.script()
@@ -97,7 +118,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testMultiDbsnp(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "dbsnp" -> Map("version" -> Map("vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))))
     noException should be thrownBy pipeline.script()
@@ -105,7 +128,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testVep(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "vep" -> Map("version" -> Map("cache_uri" -> "something/human_vep_80_hg19.tar.gz")))))
     noException should be thrownBy pipeline.script()
@@ -113,7 +138,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testGtfZipped(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf.gz")))))
     noException should be thrownBy pipeline.script()
@@ -121,7 +148,9 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testGtf(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gtf_uri" -> "bla.gf")))))
     noException should be thrownBy pipeline.script()
@@ -129,19 +158,22 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
 
   @Test
   def testGff(): Unit = {
-    val pipeline = initPipeline(Map("download_annotations" -> true))
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
       "gene_annotation" -> Map("version" -> Map("gff_uri" -> "bla.gf")))))
     noException should be thrownBy pipeline.script()
   }
 
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object DownloadGenomesTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "bwa" -> Map("exe" -> "test"),
