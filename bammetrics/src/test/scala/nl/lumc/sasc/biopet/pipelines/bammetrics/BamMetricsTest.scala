@@ -93,13 +93,13 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 object BamMetricsTest {
   val inputDir = Files.createTempDir()
 
-  val bam = new File(inputDir, "input" + File.separator + "bla.bam")
+  val bam = new File(inputDir, "bla.bam")
   Files.touch(bam)
-  val ampliconBed = new File(inputDir, "input" + File.separator + "amplicon_bed.bed")
+  val ampliconBed = new File(inputDir, "amplicon_bed.bed")
   Files.touch(ampliconBed)
 
   def roi(i: Int): File = {
-    val roi = new File(inputDir, "input" + File.separator + s"roi${i}.bed")
+    val roi = new File(inputDir, s"roi${i}.bed")
     Files.touch(roi)
     roi
   }
