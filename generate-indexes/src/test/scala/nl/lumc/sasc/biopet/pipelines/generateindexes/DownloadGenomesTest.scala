@@ -45,7 +45,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   @Test
   def testNcbiAssembly(): Unit = {
     val pipeline = initPipeline(Map())
-    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_id" -> "id")))
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("ncbi_assembly_report" -> "id")))
     noException should be thrownBy pipeline.script()
   }
 
