@@ -193,7 +193,7 @@ object ShivaTest {
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }

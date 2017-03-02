@@ -44,10 +44,10 @@ import scala.collection.mutable.ListBuffer
  * Created by pjvan_thof on 3/2/15.
  */
 trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any], outputDir: File): ShivaVariantcalling = {
+  def initPipeline(map: Map[String, Any], dir: File): ShivaVariantcalling = {
     new ShivaVariantcalling() {
       override def configNamespace = "shivavariantcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config(outputDir)))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }

@@ -38,7 +38,6 @@ class KopisuTest extends TestNGSuite with Matchers {
     new Kopisu() {
       override def configNamespace = "kopisu"
       override def globalConfig = new Config(ConfigUtils.mergeMaps(map, KopisuTest.config(dir)))
-      outputDir = dir
       qSettings = new QSettings
       qSettings.runName = "test"
     }
