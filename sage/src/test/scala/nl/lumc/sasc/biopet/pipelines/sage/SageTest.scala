@@ -33,7 +33,7 @@ class SageTest extends TestNGSuite with Matchers {
     new Sage() {
       override def configNamespace = "sage"
 
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, SageTest.config))
+      override def globalConfig = new Config(map)
 
       qSettings = new QSettings
       qSettings.runName = "test"
