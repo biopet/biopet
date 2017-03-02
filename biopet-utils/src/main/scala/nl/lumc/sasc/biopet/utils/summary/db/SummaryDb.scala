@@ -414,7 +414,7 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Returns all [[Files]] with the given criteria */
-  def getFiles(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]],
+  def getFiles(runId: Option[Int] = None, pipeline: Option[Either[Int, String]] = None, module: Option[Option[Either[Int, String]]] = None,
                sample: Option[Option[Either[Int, String]]] = None, library: Option[Option[Either[Int, String]]] = None,
                key: Option[String] = None): Future[Seq[Schema.File]] = {
     db.run(filesFilter(runId, pipeline, module, sample, library, key).result)
