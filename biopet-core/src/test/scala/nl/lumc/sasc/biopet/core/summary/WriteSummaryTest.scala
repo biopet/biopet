@@ -14,20 +14,20 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import nl.lumc.sasc.biopet.utils.summary.Summary
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.queue.{QScript, QSettings}
+import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import WriteSummaryTest._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.apache.commons.io.FileUtils
-import org.testng.annotations.{AfterClass, Test}
+import org.testng.annotations.{ AfterClass, Test }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -98,7 +98,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" ->  List("key"))) shouldBe Map("key" -> Some("value"))
+    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
     Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
@@ -119,7 +119,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" ->  List("key"))) shouldBe Map("key" -> Some("value"))
+    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
     Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
@@ -140,7 +140,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" ->  List("key"))) shouldBe Map("key" -> Some("value"))
+    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
     Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
@@ -161,7 +161,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), Some(Right("sampleName")), Some(Right("libName")), keyValues = Map("key" ->  List("key"))) shouldBe Map("key" -> Some("value"))
+    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), Some(Right("sampleName")), Some(Right("libName")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
     Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), Some(Right("sampleName")), Some(Right("libName")), key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
@@ -202,7 +202,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" ->  List("key"))) shouldBe Map("key" -> Some("value"))
+    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
     Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 

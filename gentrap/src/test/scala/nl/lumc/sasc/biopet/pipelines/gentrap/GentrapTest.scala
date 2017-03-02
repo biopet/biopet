@@ -14,22 +14,22 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, BiopetPipe}
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.tools.{BaseCounter, WipeReads}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.utils.camelize
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, DataProvider, Test}
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends TestNGSuite with Matchers {
 

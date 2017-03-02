@@ -23,7 +23,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, Test}
+import org.testng.annotations.{ AfterClass, Test }
 
 /**
  * Created by pjvan_thof on 31-5-16.

@@ -21,7 +21,7 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

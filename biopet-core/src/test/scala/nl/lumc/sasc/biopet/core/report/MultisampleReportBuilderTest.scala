@@ -61,7 +61,6 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
 
     }
 
-
     val tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
     val args = Array("-s", dbFile.getAbsolutePath, "-o", tempDir.getAbsolutePath)

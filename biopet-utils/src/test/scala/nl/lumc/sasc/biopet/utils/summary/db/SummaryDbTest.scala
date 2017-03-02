@@ -72,7 +72,6 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     Await.result(db.getLibraries(), Duration.Inf) shouldBe empty
     val libraryId = Await.result(db.createLibrary("test_lib", runId, sampleId), Duration.Inf)
 
-
     Await.result(db.getLibraries(), Duration.Inf) shouldBe Seq(Schema.Library(libraryId, "test_lib", runId, sampleId, None))
     Await.result(db.getLibraryName(libraryId), Duration.Inf) shouldBe Some("test_lib")
     Await.result(db.getLibraryId(runId, sampleId, "test_lib"), Duration.Inf) shouldBe Some(libraryId)
@@ -328,20 +327,19 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val libraryId = Await.result(db.createLibrary("test_library", runId, sampleId), Duration.Inf)
 
     Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path","md5",link = false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path","md5",link = false,1))
+    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path", "md5", link = false, 1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path", "md5", link = false, 1))
     Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path2", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1))
+    Await.result(db.getFile(runId, Left(pipelineId), None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1))
 
     // Test join queries
     Await.result(db.createOrUpdateFile(runId, pipelineId, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, Right("test_pipeline"), Some(Right("test_module")), Some(Right("test_sample")), Some(Right("test_library")), "key"), Duration.Inf) shouldBe Some(Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",link = false,1))
-    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0,0,None,None,None,"key","path2","md5",link = false,1), Schema.File(0,0,Some(moduleId), Some(sampleId), Some(libraryId),"key","path3","md5",link = false,1))
+    Await.result(db.getFile(runId, Right("test_pipeline"), Some(Right("test_module")), Some(Right("test_sample")), Some(Right("test_library")), "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1))
+    Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1), Schema.File(0, 0, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1))
 
     db.close()
   }
-
 
   @Test
   def testExecutable(): Unit = {

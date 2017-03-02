@@ -14,21 +14,21 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.breakdancer.{BreakdancerCaller, BreakdancerConfig, BreakdancerVCF}
+import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerCaller, BreakdancerConfig, BreakdancerVCF }
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.pindel.{PindelCaller, PindelConfig, PindelVCF}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelConfig, PindelVCF }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, DataProvider, Test}
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
