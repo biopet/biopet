@@ -1,5 +1,5 @@
-timeout(45) {
-    node('local') {
+node('local') {
+    timeout(45) {
         try {
 
             stage('Init') {
