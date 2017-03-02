@@ -29,10 +29,10 @@ import org.testng.annotations.{ AfterClass, Test }
  * Created by pjvan_thof on 13-5-16.
  */
 class DownloadGenomesTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any], outputDir: File): DownloadGenomes = {
+  def initPipeline(map: Map[String, Any], dir: File): DownloadGenomes = {
     new DownloadGenomes() {
       override def configNamespace = "generateindexes"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, DownloadGenomesTest.config(outputDir)))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, DownloadGenomesTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }

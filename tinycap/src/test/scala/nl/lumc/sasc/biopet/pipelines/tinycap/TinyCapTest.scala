@@ -102,9 +102,9 @@ object TinyCapTest {
   def outputDir = Files.createTempDir()
   val inputDir = Files.createTempDir()
 
-  val r1 = new File(inputDir, "input" + File.separator + "R1.fq.gz")
+  val r1 = new File(inputDir, "R1.fq.gz")
   Files.touch(r1)
-  val bam = new File(inputDir, "input" + File.separator + "bamfile.bam")
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
 
   val referenceFasta = new File(inputDir, "ref.fa")
