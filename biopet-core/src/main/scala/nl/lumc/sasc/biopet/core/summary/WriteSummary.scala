@@ -38,6 +38,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
+  require(parent != null)
+
   /** To access qscript for this summary */
   val qscript = parent
 

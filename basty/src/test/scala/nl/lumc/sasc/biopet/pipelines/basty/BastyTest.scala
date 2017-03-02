@@ -36,7 +36,7 @@ class BastyTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Basty = {
     new Basty() {
       override def configNamespace = "shiva"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, BastyTest.config))
+      override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"
     }
