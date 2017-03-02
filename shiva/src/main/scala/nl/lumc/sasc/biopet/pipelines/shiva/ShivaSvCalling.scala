@@ -80,7 +80,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
         add(mergeSVcalls)
         outputMergedVCFbySample += (sample -> mergeSVcalls.output)
       } else {
-        outputMergedVCFbySample += (sample -> callers.head.outputVCF(sample))
+        outputMergedVCFbySample += (sample -> callers.head.outputVCF(sample).get)
       }
     }
 
