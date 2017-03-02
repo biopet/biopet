@@ -34,10 +34,11 @@ import scala.collection.mutable.ListBuffer
  * Created by pjvan_thof on 3/2/15.
  */
 class KopisuTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any], outputDir: File): Kopisu = {
+  def initPipeline(map: Map[String, Any], dir: File): Kopisu = {
     new Kopisu() {
       override def configNamespace = "kopisu"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, KopisuTest.config(outputDir)))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, KopisuTest.config(dir)))
+      outputDir = dir
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -121,6 +122,9 @@ object KopisuTest {
   val controlDir = Files.createTempDir()
   Files.touch(new File(controlDir, "test.txt"))
 
+  val coniferScript = File.createTempFile("conifer.", ".py")
+  coniferScript.deleteOnExit()
+
   def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
@@ -133,7 +137,7 @@ object KopisuTest {
     "tabix" -> Map("exe" -> "test"),
     "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" -> "test"),
     "controls_dir" -> controlDir.getAbsolutePath,
-    "conifer" -> Map("script" -> "/usr/bin/test"),
+    "conifer" -> Map("script" -> coniferScript.getAbsolutePath),
     "probe_file" -> "test",
     "rscript" -> Map("exe" -> "test")
   )
