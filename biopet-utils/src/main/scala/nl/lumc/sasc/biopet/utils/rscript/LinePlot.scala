@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvan_thof on 4/29/15.
  */
-class LinePlot(val root: Configurable) extends Rscript {
+class LinePlot(val parent: Configurable) extends Rscript {
   protected var script: File = config("script", default = "plotXY.R")
 
   var input: File = _

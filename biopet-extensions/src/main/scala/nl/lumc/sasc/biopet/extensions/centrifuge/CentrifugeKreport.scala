@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 19/09/16.
  */
-class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunction {
+class CentrifugeKreport(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Output files centrifuge", required = true)
   var centrifugeOutputFiles: List[File] = Nil
 

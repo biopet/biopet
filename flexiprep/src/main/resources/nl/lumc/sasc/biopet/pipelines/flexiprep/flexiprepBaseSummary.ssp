@@ -1,10 +1,14 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
 #import(java.io.File)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
+<%@ var summary: SummaryDb %>
+<%@ var runId: Int %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
 <%@ var showPlot: Boolean = false %>
@@ -12,13 +16,18 @@
 <%@ var showIntro: Boolean = true %>
 <%@ var multisample: Boolean = true %>
 #{
-    val samples = sampleId match {
-        case Some(sample) => List(sample.toString)
-        case _ => summary.samples.toList
-    }
-    val trimCount = summary.getLibraryValues("flexiprep", "settings", "skip_trim").count(_._2 == Some(false))
-    val clipCount = summary.getLibraryValues("flexiprep", "settings", "skip_clip").count(_._2 == Some(false))
-    val librariesCount = summary.samples.foldLeft(0)(_ + summary.libraries(_).size)
+    val samples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    val settings = summary.getSettingsForLibraries(runId, Right("flexiprep"), keyValues = Map(
+    "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
+    settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
+    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
+    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(true))
+    val librariesCount = libraries.size
+
+    val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
+    summary.getSettingKeys(runId, Right("flexiprep"), None, sampleId.map(Left(_)), libId.map(Left(_)), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
+    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 }#
 #if (showIntro)
     <br/>
@@ -56,9 +65,6 @@
 #end
 #if (showPlot)
     #{
-        val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-            summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
-        else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
         FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summary, sampleId = sampleId)
         if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
     }#
@@ -103,48 +109,46 @@
         <th>After QC</th>
     </tr></thead>
     <tbody>
-        #for (sample <- samples.toList.sorted)
+        #for (sample <- samples.sortBy(_.name))
             #{
-                val libs = libId match {
-                case Some(libId) => List(libId.toString).sorted
-                case _ => summary.libraries(sample).toList.sorted
-                }
-
                 val sampleRowspan = {
-                libs.size +
-                libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
+                libraries.filter(_.sampleId == sample.id).size +
+                settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
                 }
             }#
             <tr><td rowspan="${sampleRowspan}">
             #if (multisample)
-                <a href="${rootPath}Samples/${sample}/index.html">${sample}</a>
+                <a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a>
             #else
                 ${sample}
             #end
             </td>
-            #for (libId <- libs)
-                #if (libs.head != libId) <tr> #end
-                    #{ val paired = summary.getLibraryValue(sample, libId, "flexiprep", "settings", "paired").getOrElse(false) }#
-                    <td #if (paired == true) rowspan="2" #end>
-                    #if (multisample)
-                        <a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a>
-                    #else
-                        ${libId}
-                    #end
-                    </td>
-                    #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
-                    #for (read <- reads)
-                        #if (read == "R2") </tr><tr> #end
-                        #{
-                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "bases", "num_total").getOrElse(0).toString.toLong
-                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_qc", "bases", "num_total").getOrElse(0).toString.toLong
-                        }#
-                        <td>${read}</td>
-                        <td>${beforeTotal}</td>
-                        <td>${beforeTotal - afterTotal}</td>
-                        <td>${(beforeTotal - afterTotal).toDouble / beforeTotal * 100}%</td>
-                        <td>${afterTotal}</td>
-                    #end
+            #for (lib <- libraries.filter(_.sampleId == sample.id))
+                #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
+                <td #if (paired == true) rowspan="2" #end>
+                #if (multisample)
+                    <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>
+                #else
+                    ${lib.name}
+                #end
+                </td>
+                #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
+                #for (read <- reads)
+                    #if (read == "R2") </tr><tr> #end
+                    #{
+                        val statsPaths = Map("num_total" -> List("bases", "num_total"))
+                        val seqstatStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read)), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
+                        val seqstatQcStats = summary.getStatKeys(runId, Right("flexiprep"), Some(Right("seqstat_" + read + "_qc")), sample = Some(Left(sample.id)), library = Some(Left(lib.id)), keyValues = statsPaths)
+
+                        val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
+                        val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
+                    }#
+                    <td>${read}</td>
+                    <td>${beforeTotal}</td>
+                    <td>${beforeTotal - afterTotal}</td>
+                    <td>${(beforeTotal - afterTotal).toDouble / beforeTotal * 100}%</td>
+                    <td>${afterTotal}</td>
+                #end
                 </tr>
             #end
         #end

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by ahbbollen on 12-10-15.
  */
-class BcftoolsView(val root: Configurable) extends Bcftools {
+class BcftoolsView(val parent: Configurable) extends Bcftools {
 
   @Input(doc = "Input VCF file")
   var input: File = _

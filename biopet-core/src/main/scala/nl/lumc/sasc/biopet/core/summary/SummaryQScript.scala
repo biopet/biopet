@@ -14,13 +14,19 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.File
+import java.io.{ File, PrintWriter }
+import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
+import nl.lumc.sasc.biopet.LastCommitHash
 
 import scala.collection.mutable
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.io.Source
 
 /**
  * This trait is used for qscript / pipelines that will produce a summary
@@ -44,8 +50,10 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File]
 
-  /** Name of summary output file */
-  def summaryFile: File
+  def summaryDbFile: File = root match {
+    case s: SummaryQScript => new File(s.outputDir, s"${s.summaryName}.summary.db")
+    case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
+  }
 
   /**
    * Add a module to summary for this pipeline
@@ -92,6 +100,35 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   }
 
   private var addedJobs = false
+
+  final lazy val summaryRunId: Int = {
+    if (runIdFile.exists()) {
+      val reader = Source.fromFile(runIdFile)
+      val id = reader.getLines().next().toInt
+      reader.close()
+      id
+    } else createRun
+  }
+
+  private def runIdFile = root match {
+    case s: SummaryQScript => new File(s.outputDir, s".log/summary.runid")
+    case _                 => throw new IllegalStateException("Root should be a SummaryQscript")
+  }
+
+  private def createRun(): Int = {
+    val db = SummaryDb.openSqliteSummary(summaryDbFile)
+    val dir = root match {
+      case q: BiopetQScript => q.outputDir
+      case _                => throw new IllegalStateException("Root should be a BiopetQscript")
+    }
+    val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
+      LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
+    runIdFile.getParentFile.mkdir()
+    val writer = new PrintWriter(runIdFile)
+    writer.println(id)
+    writer.close()
+    id
+  }
 
   /** Add jobs to qscript to execute summary, also add checksum jobs */
   def addSummaryJobs(): Unit = {

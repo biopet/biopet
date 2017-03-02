@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba markdup  */
-class SambambaMarkdup(val root: Configurable) extends Sambamba {
+class SambambaMarkdup(val parent: Configurable) extends Sambamba {
   override def defaultThreads = 4
 
   @Input(doc = "Bam File")

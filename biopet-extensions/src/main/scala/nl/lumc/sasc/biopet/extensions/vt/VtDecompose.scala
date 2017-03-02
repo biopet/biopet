@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 20/11/15.
  */
-class VtDecompose(val root: Configurable) extends Vt with Version with Reference {
+class VtDecompose(val parent: Configurable) extends Vt with Version with Reference {
   def versionRegex = """decompose (.*)""".r
   override def versionExitcode = List(0, 1)
   def versionCommand = executable + " decompose"

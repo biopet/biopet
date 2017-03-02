@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweSamplesAdd(val root: Configurable) extends Manwe {
+class ManweSamplesAdd(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "the sample name")
   var name: Option[String] = _

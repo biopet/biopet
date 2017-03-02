@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the htseq-count command line tool
  * Written based on htseq-count version 0.6.1p1
  */
-class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class HtseqCount(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "htseq-count")

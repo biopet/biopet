@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  *
  * Created by pjvan_thof on 1/13/15.
  */
-class PrefixFastq(val root: Configurable) extends ToolCommandFunction {
+class PrefixFastq(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.PrefixFastq
 
   override def defaultCoreMemory = 1.0

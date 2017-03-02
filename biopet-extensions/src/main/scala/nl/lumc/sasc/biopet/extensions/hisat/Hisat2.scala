@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 2.0.4
  */
-class Hisat2(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Hisat2(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   // TODO: handle --sra-acc flag. This is currently unsupported by the wrapper.
 

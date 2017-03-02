@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for zcat */
-class Zcat(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Zcat(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Zipped file", required = true)
   var input: List[File] = Nil
 

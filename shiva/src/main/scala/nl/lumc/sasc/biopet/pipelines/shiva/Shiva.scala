@@ -33,14 +33,14 @@ import org.broadinstitute.gatk.queue.function.QFunction
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait with Reference with TargetRegions { qscript =>
+class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTrait with Reference with TargetRegions { qscript =>
 
   def this() = this(null)
 
   override def reportClass: Option[ReportBuilderExtension] = {
     val shiva = new ShivaReport(this)
     shiva.outputDir = new File(outputDir, "report")
-    shiva.summaryFile = summaryFile
+    shiva.summaryDbFile = summaryDbFile
     Some(shiva)
   }
 
@@ -207,9 +207,6 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
       add(cnv)
     }
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "Shiva.summary.json")
 
   /** Settings of pipeline for summary */
   override def summarySettings = super.summarySettings ++ Map(

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * @deprecated Use picard.util.BedToIntervalList instead
  */
-class DownloadNcbiAssembly(val root: Configurable) extends ToolCommandFunction {
+class DownloadNcbiAssembly(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly
 
   @Output(doc = "Output fasta file", required = true)

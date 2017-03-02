@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by Sander Bollen on 23-11-16.
  */
-class XhmmPca(val root: Configurable) extends Xhmm {
+class XhmmPca(val parent: Configurable) extends Xhmm {
 
   @Input
   var inputMatrix: File = _

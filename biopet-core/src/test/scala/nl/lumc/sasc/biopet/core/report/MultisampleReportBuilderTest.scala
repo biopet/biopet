@@ -36,10 +36,10 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
       def reportName: String = "test"
       def indexPage: ReportPage = ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map())
 
-      def samplePage(sampleId: String, args: Map[String, Any]): ReportPage =
+      def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage =
         ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map())
 
-      def libraryPage(sampleId: String, libraryId: String, args: Map[String, Any]) = ReportPage(Nil, Nil, Map())
+      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = ReportPage(Nil, Nil, Map())
     }
 
     val tempDir = Files.createTempDir()

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Extension for Tophat
  */
-class Tophat(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Tophat(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   executable = config("exe", default = "tophat", freeVar = false)
 

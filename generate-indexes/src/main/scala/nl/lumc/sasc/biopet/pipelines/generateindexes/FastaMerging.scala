@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvan_thof on 13-5-16.
  */
-class FastaMerging(val root: Configurable) extends BiopetCommandLineFunction {
+class FastaMerging(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input
   var input: List[File] = Nil
 

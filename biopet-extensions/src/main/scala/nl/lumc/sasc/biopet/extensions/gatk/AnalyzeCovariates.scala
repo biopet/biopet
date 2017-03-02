@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
-class AnalyzeCovariates(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class AnalyzeCovariates(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "AnalyzeCovariates"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }

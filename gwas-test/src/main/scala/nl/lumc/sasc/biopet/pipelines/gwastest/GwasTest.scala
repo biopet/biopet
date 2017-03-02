@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 16/03/16.
  */
-class GwasTest(val root: Configurable) extends QScript with BiopetQScript with Reference {
+class GwasTest(val parent: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
   val inputVcf: File = config("input_vcf")

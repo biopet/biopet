@@ -1,21 +1,29 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(org.apache.commons.io.FileUtils)
 #import(java.io.File)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] %>
+<%@ var summary: SummaryDb %>
+<%@ var runId: Int %>
+<%@ var sampleId: Option[Int] %>
+<%@ var libId: Option[Int] %>
 <%@ var plot: String %>
 <%@ var outputDir: File %>
 #{
-    val paired: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
-    val skipClip: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "skip_clip").get.asInstanceOf[Boolean]
-    val skipTrim: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "skip_trim").get.asInstanceOf[Boolean]
+    val settings = summary.getSettingKeys(runId, Right("flexiprep"), None, sampleId.map(Left(_)), libId.map(Left(_)), keyValues = Map(
+    "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
+
+    val paired: Boolean = settings("paired") == Some(true)
+    val skipClip: Boolean = settings("skip_clip") == Some(true)
+    val skipTrim: Boolean = settings("skip_trim") == Some(true)
 
     def getPlot(read:String) = {
-        summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "files", read, plot, "path").collect {
+        val file = Await.result(summary.getFile(runId, Right("flexiprep"), Some(Right(read)), sampleId.map(Left(_)), libId.map(Left(_)), plot), Duration.Inf)
+        file.collect {
             case path => {
-                val file = new File(path.toString)
+                val file = new File(path.path.toString)
                 val newFile = new File(outputDir, read + "_" + file.getName)
                 if (file.exists()) FileUtils.copyFile(file, newFile)
                 newFile.getName
@@ -24,7 +32,8 @@
     }
 
     def plotAvailable(read:String) = {
-        new File(summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "files", read, plot, "path").get.toString).exists()
+        val file = Await.result(summary.getFile(runId, Right("flexiprep"), Some(Right(read)), sampleId.map(Left(_)), libId.map(Left(_)), plot), Duration.Inf)
+        file.map(x => new File(x.path).exists()).getOrElse(false)
     }
 
 }#

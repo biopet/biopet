@@ -17,7 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
-class GearsSingleReport(val root: Configurable) extends ReportBuilderExtension {
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+class GearsSingleReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = GearsSingleReport
 }
 
@@ -27,8 +30,11 @@ object GearsSingleReport extends ReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
-    val krakenExecuted = summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").isDefined
-    val centrifugeExecuted = summary.getValue(sampleId, libId, "gearscentrifuge", "stats", "centrifuge_report").isDefined
+    val sampleName = sampleId.flatMap(x => Await.result(summary.getSampleName(x), Duration.Inf))
+    val libraryName = libId.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
+
+    val krakenExecuted = summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) == 1
+    val centrifugeExecuted = summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = sampleId.map(Left(_)), library = libId.map(Left(_))) == 1
 
     ReportPage(
       List(

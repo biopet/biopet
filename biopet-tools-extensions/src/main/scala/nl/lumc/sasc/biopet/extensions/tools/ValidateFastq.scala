@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class ValidateFastq(val root: Configurable) extends ToolCommandFunction {
+class ValidateFastq(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.ValidateFastq
 
   @Input(doc = "Input R1 fastq file", required = true)

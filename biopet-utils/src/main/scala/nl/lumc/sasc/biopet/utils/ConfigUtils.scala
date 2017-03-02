@@ -122,6 +122,10 @@ object ConfigUtils extends Logging {
     }
   }
 
+  def jsonTextToMap(json: String): Map[String, Any] = {
+    jsonToMap(textToJson(json))
+  }
+
   /** Make json aboject from a file */
   def textToJson(jsonText: String): Json = {
     logger.debug("jsonText: " + jsonText)
@@ -240,6 +244,12 @@ object ConfigUtils extends Logging {
       case i: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         i.toInt
+      case Some(i: Int)    => i
+      case Some(i: Double) => i.toInt
+      case Some(i: Long)   => i.toInt
+      case Some(i: String) =>
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        i.toInt
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
@@ -251,6 +261,12 @@ object ConfigUtils extends Logging {
       case l: Int    => l.toLong
       case l: Long   => l
       case l: String =>
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        l.toLong
+      case Some(l: Double) => l.toLong
+      case Some(l: Int)    => l.toLong
+      case Some(l: Long)   => l
+      case Some(l: String) =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         l.toLong
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")

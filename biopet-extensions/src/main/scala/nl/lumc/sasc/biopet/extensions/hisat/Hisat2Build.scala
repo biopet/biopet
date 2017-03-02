@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by pjvan_thof on 7-6-16.
  */
-class Hisat2Build(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Hisat2Build(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(required = true)
   var inputFasta: File = _

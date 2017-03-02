@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Created by pjvan_thof on 1/16/15.
  */
-class BwaAln(val root: Configurable) extends Bwa with Reference {
+class BwaAln(val parent: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file", required = true)
   var fastq: File = _
 

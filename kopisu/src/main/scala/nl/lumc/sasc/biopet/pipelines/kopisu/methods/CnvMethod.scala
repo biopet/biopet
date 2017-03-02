@@ -30,9 +30,6 @@ trait CnvMethod extends QScript with SummaryQScript with Reference {
 
   var inputBams: Map[String, File] = Map.empty
 
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, s"$name.summary.json")
-
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any] = Map()
 

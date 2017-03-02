@@ -1,13 +1,16 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] = None %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var runId: Int %>
 <table class="table">
 <thead><tr><th>Libraries</th></tr></thead>
 <tbody>
-#for (lib <- summary.libraries(sampleId.get).toList.sorted)
-    <tr><td><a href="${rootPath}Samples/${sampleId}/Libraries/${lib}/index.html">${lib}</a></td></tr>
+#for (lib <- Await.result(summary.getLibraries(runId = Some(runId)), Duration.Inf))
+    <tr><td><a href="${rootPath}Samples/${Await.result(summary.getSampleName(lib.sampleId), Duration.Inf)}/Libraries/${lib.name}/index.html">${lib}</a></td></tr>
 #end
 </tbody>
 </table>

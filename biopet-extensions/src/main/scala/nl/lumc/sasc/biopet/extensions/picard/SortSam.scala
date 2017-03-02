@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard SortSam */
-class SortSam(val root: Configurable) extends Picard {
+class SortSam(val parent: Configurable) extends Picard {
   javaMainClass = new picard.sam.SortSam().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)

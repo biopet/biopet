@@ -30,7 +30,7 @@ import scala.util.matching.Regex
  * Started with version 1.5
  * Updated to version 1.9 (18-01-2016 by wyleung)
  */
-class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
+class Cutadapt(val parent: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "Input fastq file")
   var fastqInput: File = _
 
