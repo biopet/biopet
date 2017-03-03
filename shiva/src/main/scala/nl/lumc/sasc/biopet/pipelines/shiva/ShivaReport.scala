@@ -25,6 +25,8 @@ import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scalaz._
+import Scalaz._
 
 /**
  * With this extension the report is executed within a pipeline
@@ -41,7 +43,7 @@ object ShivaReport extends ShivaReportTrait
 /** Trait for report generation for Shiva pipeline, this can be extended */
 trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
-  def variantcallingExecuted = summary.getSettingKeys(runId, Right("shiva"), None, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
+  def variantcallingExecuted = summary.getSettingKeys(runId, "shiva".right, None, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
     .flatten match {
       case Some(true) => true
       case _          => false
@@ -65,8 +67,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
-    val roi = summary.getSetting(runId, Right("shiva")).get("regions_of_interest")
-    val amplicon = summary.getSetting(runId, Right("shiva")).get("amplicon_bed")
+    val roi = summary.getSetting(runId, "shiva".right).get("regions_of_interest")
+    val amplicon = summary.getSetting(runId, "shiva".right).get("amplicon_bed")
 
     var regionPages: Map[String, ReportPage] = Map()
 
@@ -155,7 +157,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case _       => s"multisample-vcfstats-$caller"
     }
 
-    val results = summary.getStatKeys(runId, Right("shivavariantcalling"), Some(Right(moduleName)), sampleId.map(Left(_)), keyValues = statsPaths)
+    val results = summary.getStatKeys(runId, "shivavariantcalling".right, Some(moduleName.right), sampleId.map(_.left), keyValues = statsPaths)
 
     for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
       tsvWriter.println(sample.name + "\t" + field.map(f => results(s"${sample.name};$f").getOrElse("")).mkString("\t"))

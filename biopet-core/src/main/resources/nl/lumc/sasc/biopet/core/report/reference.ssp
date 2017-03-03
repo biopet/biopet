@@ -2,7 +2,8 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
-
+#import(scalaz._)
+#import(Scalaz._)
 <%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
 <%@ var pipeline: String %>
@@ -10,7 +11,7 @@
 
 #{
 
-    val settings = summary.getSettingKeys(runId, Right(pipeline),
+    val settings = summary.getSettingKeys(runId, pipeline.right,
       keyValues = Map(
         "contigs" -> List("reference", "contigs"),
         "species" -> List("reference", "species"),
@@ -18,7 +19,7 @@
     ))
     val contigs = settings.getOrElse("contigs", Some(Map())).getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
 
-    val referenceFile = Await.result(summary.getFile(runId, Right(pipeline), None, None, None, key = "referenceFasta"), Duration.Inf)
+    val referenceFile = Await.result(summary.getFile(runId, pipeline.right, None, None, None, key = "referenceFasta"), Duration.Inf)
 }#
 
 <table class="table">

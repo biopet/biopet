@@ -32,6 +32,8 @@ import org.testng.annotations.{ AfterClass, Test }
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.matching.Regex
+import scalaz._
+import Scalaz._
 
 /**
  * Created by pjvanthof on 15/01/16.
@@ -98,8 +100,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId, "test".right, Some("tool_1".right), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await.result(summary.getFile(qscript.summaryRunId, "test".right, Some("tool_1".right), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -119,8 +121,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId, "test".right, Some("tool_1".right), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await.result(summary.getFile(qscript.summaryRunId, "test".right, Some("tool_1".right), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -140,8 +142,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId, "test".right, Some("tool_1".right), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await.result(summary.getFile(qscript.summaryRunId, "test".right, Some("tool_1".right), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -161,8 +163,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), Some(Right("sampleName")), Some(Right("libName")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), Some(Right("sampleName")), Some(Right("libName")), key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId, "test".right, Some("tool_1".right), Some("sampleName".right), Some("libName".right), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await.result(summary.getFile(qscript.summaryRunId, "test".right, Some("tool_1".right), Some("sampleName".right), Some("libName".right), key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -202,8 +204,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, Right("test"), Some(Right("tool_1")), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId, "test".right, Some("tool_1".right), keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await.result(summary.getFile(qscript.summaryRunId, "test".right, Some("tool_1".right), None, None, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
   }
 
   @AfterClass
