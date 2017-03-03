@@ -57,8 +57,8 @@ class KopisuTest extends TestNGSuite with Matchers {
 
   @Test(dataProvider = "shivaSvCallingOptions")
   def testKopisu(bams: Int,
-                         freec: Boolean,
-                         conifer: Boolean) = {
+                 freec: Boolean,
+                 conifer: Boolean) = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
 

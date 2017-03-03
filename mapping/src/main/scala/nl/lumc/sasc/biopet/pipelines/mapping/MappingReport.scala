@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scalaz._
+import Scalaz._
 
 class MappingReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = MappingReport
@@ -38,12 +40,12 @@ object MappingReport extends ReportBuilder {
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
-  def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, Right("gears"), Some(Right("krakenreport")),
-    sample = sampleId.map(Left(_)), library = libId.map(Left(_))), Duration.Inf) >= 1
+  def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, Some("gears".right), Some(Some("krakenreport".right)),
+    sample = Some(sampleId.map(_.left)), library = Some(libId.map(_.left))), Duration.Inf) >= 1
 
   /** Root page for single BamMetrcis report */
   def indexPage = {
-    val mappingSettings = summary.getSettingKeys(runId, Right("mapping"), None, sample = sampleId.map(Left(_)), library = libId.map(Left(_)),
+    val mappingSettings = summary.getSettingKeys(runId, "mapping".right, None, sample = sampleId.map(_.left), library = libId.map(_.left),
       keyValues = Map("skip_flexiprep" -> List("skip_flexiprep"), "skip_metrics" -> List("skip_metrics")))
     val skipFlexiprep = mappingSettings.get("skip_flexiprep").flatten.getOrElse(false) == true
     val bamMetricsPage = if (mappingSettings.get("skip_metrics").flatten.getOrElse(false) == true) {

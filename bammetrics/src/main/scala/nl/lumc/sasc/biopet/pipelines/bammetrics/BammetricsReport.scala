@@ -66,8 +66,8 @@ object BammetricsReport extends ReportBuilder {
 
     //val pipelineId: Int = summary.getPipelineId(runId, metricsTag).map(_.get)
 
-    val wgsExecuted = summary.getStatsSize(runId, metricsTag.right, Some("wgs".right), sample = sampleId.map(_.left), library = libId.map(_.left)) >= 1
-    val rnaExecuted = summary.getStatsSize(runId, metricsTag.right, Some("rna".right), sample = sampleId.map(_.left), library = libId.map(_.left)) >= 1
+    val wgsExecuted = summary.getStatsSize(runId, Some(metricsTag.right), Some(Some("wgs".right)), sample = sampleId.map(x => Some(x.left)), library = libId.map(x => Some(x.left))) >= 1
+    val rnaExecuted = summary.getStatsSize(runId, Some(metricsTag.right), Some(Some("rna".right)), sample = sampleId.map(x => Some(x.left)), library = libId.map(x => Some(x.left))) >= 1
 
     val insertsizeMetrics = summary.getStatKeys(runId, metricsTag.right, Some("CollectInsertSizeMetrics".right),
       sample = sampleId.map(_.left), library = libId.map(_.left), Map("metrics" -> List("metrics")))
