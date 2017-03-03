@@ -4,6 +4,8 @@
 #import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
+#import(scalaz._)
+#import(Scalaz._)
 <%@ var summary: SummaryDb %>
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
@@ -82,7 +84,7 @@
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
                         val statsPaths = fields.map(x => x -> List("clipping", "general", x)).toMap
-                        val results = summary.getStatKeys(runId, Right("bammetrics"), Some(Right("bamstats")), sample = Some(Left(sample.id)), library = libId.map(Left(_)), keyValues = statsPaths)
+                        val results = summary.getStatKeys(runId, "bammetrics".right, Some("bamstats".right), sample = Some(sample.id.left), library = libId.map(_.left), keyValues = statsPaths)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
