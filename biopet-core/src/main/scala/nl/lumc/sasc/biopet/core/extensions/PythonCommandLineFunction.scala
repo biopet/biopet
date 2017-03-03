@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.Logging
