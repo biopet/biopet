@@ -33,7 +33,7 @@
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetUtils</artifactId>
-            <version>${project.version}</version>
+            <version>summary-${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
