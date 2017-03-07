@@ -49,14 +49,17 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val runId = Await.result(db.createRun("name", "dir", "version", "hash", date), Duration.Inf)
     Await.result(db.getSamples(), Duration.Inf) shouldBe empty
     val sampleId = Await.result(db.createSample("test_sample", runId), Duration.Inf)
+    Await.result(db.createOrUpdateSample("test_sample", runId), Duration.Inf) shouldBe sampleId
     Await.result(db.getSamples(), Duration.Inf) shouldBe Seq(Schema.Sample(sampleId, "test_sample", runId, None))
     Await.result(db.getSampleName(sampleId), Duration.Inf) shouldBe Some("test_sample")
     Await.result(db.getSampleId(runId, "test_sample"), Duration.Inf) shouldBe Some(sampleId)
     Await.result(db.getSampleTags(sampleId), Duration.Inf) shouldBe None
+    Await.result(db.createOrUpdateSample("test_sample", runId, Some("""{"test": "test"}""")), Duration.Inf) shouldBe sampleId
+    Await.result(db.getSampleTags(sampleId), Duration.Inf) shouldBe Some(Map("test" -> "test"))
 
     val sampleId2 = Await.result(db.createSample("test_sample2", runId, Some("""{"test": "test"}""")), Duration.Inf)
     Await.result(db.getSampleTags(sampleId2), Duration.Inf) shouldBe Some(Map("test" -> "test"))
-    Await.result(db.getSamples(), Duration.Inf) shouldBe Seq(Schema.Sample(sampleId, "test_sample", runId, None), Schema.Sample(sampleId2, "test_sample2", runId, Some("""{"test": "test"}""")))
+    Await.result(db.getSamples(), Duration.Inf) shouldBe Seq(Schema.Sample(sampleId, "test_sample", runId, Some("""{"test": "test"}""")), Schema.Sample(sampleId2, "test_sample2", runId, Some("""{"test": "test"}""")))
 
     db.close()
   }
@@ -74,6 +77,7 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val sampleId = Await.result(db.createSample("test_sample", runId), Duration.Inf)
     Await.result(db.getLibraries(), Duration.Inf) shouldBe empty
     val libraryId = Await.result(db.createLibrary("test_lib", runId, sampleId), Duration.Inf)
+    Await.result(db.createOrUpdateLibrary("test_lib", runId, sampleId), Duration.Inf) shouldBe libraryId
 
     Await.result(db.getLibraries(), Duration.Inf) shouldBe Seq(Schema.Library(libraryId, "test_lib", runId, sampleId, None))
     Await.result(db.getLibraryName(libraryId), Duration.Inf) shouldBe Some("test_lib")

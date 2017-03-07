@@ -264,12 +264,12 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     for ((sampleName, sample) <- samples) {
       val sampleTags = if (sample.sampleTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
       val sampleId: Int = if (!namesOld.contains(sampleName))
-        Await.result(db.createSample(sampleName, summaryRunId, sampleTags), Duration.Inf)
+        Await.result(db.createOrUpdateSample(sampleName, summaryRunId, sampleTags), Duration.Inf)
       else Await.result(db.getSamples(runId = Some(summaryRunId), name = Some(sampleName)).map(_.head.id), Duration.Inf)
       val libNamesOld = Await.result(db.getLibraries(runId = summaryRunId, sampleId = sampleId).map(_.map(_.name)), Duration.Inf)
       for ((libName, lib) <- sample.libraries) {
         val libraryTags = if (lib.libTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
-        if (!libNamesOld.contains(libName)) Await.result(db.createLibrary(libName, summaryRunId, sampleId, libraryTags), Duration.Inf)
+        if (!libNamesOld.contains(libName)) Await.result(db.createOrUpdateLibrary(libName, summaryRunId, sampleId, libraryTags), Duration.Inf)
       }
     }
   }

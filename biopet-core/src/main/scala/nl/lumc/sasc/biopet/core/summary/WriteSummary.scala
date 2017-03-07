@@ -67,11 +67,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         case t: SampleLibraryTag => t.sampleId.foreach {
           case sampleName =>
             val sampleId = Await.result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-              Await.result(db.createSample(sampleName, qscript.summaryRunId), Duration.Inf)
+              Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId), Duration.Inf)
             }
             t.libId.foreach { libName =>
               val libId = Await.result(db.getSamples(name = Some(libName), runId = Some(qscript.summaryRunId), sampleId = Some(sampleId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-                Await.result(db.createLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
+                Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
               }
             }
         }

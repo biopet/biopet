@@ -62,6 +62,16 @@ class SummaryDb(val db: Database) extends Closeable {
     db.run(samples.forceInsert(Sample(id, name, runId, tags))).map(_ => id)
   }
 
+  def createOrUpdateSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
+    getSampleId(runId, name).flatMap(_ match {
+      case Some(id: Int) =>
+        db.run(samples.filter(_.name === name).filter(_.id === id).map(_.tags).update(tags))
+          .map(_ => id)
+      case _ => createSample(name, runId, tags)
+    })
+  }
+
+
   /** This will return all samples that match given criteria */
   def getSamples(sampleId: Option[Int] = None, runId: Option[Int] = None, name: Option[String] = None): Future[Seq[Sample]] = {
     val q = samples.filter { sample =>
@@ -94,6 +104,15 @@ class SummaryDb(val db: Database) extends Closeable {
   def createLibrary(name: String, runId: Int, sampleId: Int, tags: Option[String] = None): Future[Int] = {
     val id = Await.result(db.run(libraries.size.result), Duration.Inf)
     db.run(libraries.forceInsert(Library(id, name, runId, sampleId, tags))).map(_ => id)
+  }
+
+  def createOrUpdateLibrary(name: String, runId: Int, sampleId: Int, tags: Option[String] = None): Future[Int] = {
+    getLibraryId(runId, sampleId, name).flatMap(_ match {
+      case Some(id: Int) =>
+        db.run(libraries.filter(_.name === name).filter(_.id === id).filter(_.sampleId === sampleId).map(_.tags).update(tags))
+          .map(_ => id)
+      case _ => createLibrary(name, runId, sampleId, tags)
+    })
   }
 
   /** This returns all libraries that match the given criteria */
