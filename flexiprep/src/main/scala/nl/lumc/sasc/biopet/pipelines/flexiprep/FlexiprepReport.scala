@@ -20,11 +20,10 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scalaz._
-import Scalaz._
 
 class FlexiprepReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = FlexiprepReport
@@ -97,15 +96,15 @@ object FlexiprepReport extends ReportBuilder {
     tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some(("seqstat_" + read).right), keyValues = seqstatPaths)
-    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some(("seqstat_" + read + "_qc").right), keyValues = seqstatPaths)
+    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = seqstatPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read + "_qc", keyValues = seqstatPaths)
 
     val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
       "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-    val clippingStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some(("clipping_" + read).right), keyValues = clippingPaths)
+    val clippingStats = summary.getStatsForLibraries(runId, "flexiprep", "clipping_" + read, keyValues = clippingPaths)
 
     val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
-    val trimmingStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some("trimming".right), keyValues = trimmingPaths)
+    val trimmingStats = summary.getStatsForLibraries(runId, "flexiprep", "trimming", keyValues = trimmingPaths)
 
     val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
 
@@ -156,8 +155,8 @@ object FlexiprepReport extends ReportBuilder {
     tsvWriter.println("Library\tAfter_QC\tDiscarded")
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
-    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some(("seqstat_" + read).right), keyValues = statsPaths)
-    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep".right, Some(("seqstat_" + read + "_qc").right), keyValues = statsPaths)
+    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = statsPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read + "_qc", keyValues = statsPaths)
 
     val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
 

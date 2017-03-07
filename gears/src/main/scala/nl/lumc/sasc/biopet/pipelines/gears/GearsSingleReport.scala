@@ -16,11 +16,11 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ LibraryId, SampleId }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scalaz._
-import Scalaz._
 
 class GearsSingleReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = GearsSingleReport
@@ -35,8 +35,8 @@ object GearsSingleReport extends ReportBuilder {
     val sampleName = sampleId.flatMap(x => Await.result(summary.getSampleName(x), Duration.Inf))
     val libraryName = libId.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
 
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, Some("gearskraken".right), Some(Some("krakenreport".right)), sample = Some(sampleId.map(_.left)), library = Some(libId.map(_.left))), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Some("gearscentrifuge".right), Some(Some("centrifuge_report".right)), sample = Some(sampleId.map(_.left)), library = Some(libId.map(_.left))), Duration.Inf) == 1
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport", sample = sampleId.map(SampleId), library = libId.map(LibraryId)), Duration.Inf) == 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", sample = sampleId.map(SampleId), library = libId.map(LibraryId)), Duration.Inf) == 1
 
     ReportPage(
       List(

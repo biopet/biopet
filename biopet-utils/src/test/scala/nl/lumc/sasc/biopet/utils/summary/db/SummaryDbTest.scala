@@ -9,9 +9,8 @@ import org.testng.annotations.Test
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-
-import scalaz._
-import Scalaz._
+import SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoModule, NoSample }
 
 /**
  * Testing voor [[SummaryDb]]
@@ -140,9 +139,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     db.createTables()
 
     Await.result(db.createOrUpdateSetting(0, 0, None, None, None, """{"content": "test" }"""), Duration.Inf)
-    Await.result(db.getSetting(0, 0.left, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
+    Await.result(db.getSetting(0, 0, NoModule, NoSample, NoLibrary), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.createOrUpdateSetting(0, 0, None, None, None, """{"content": "test2" }"""), Duration.Inf)
-    Await.result(db.getSetting(0, 0.left, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
+    Await.result(db.getSetting(0, 0, NoModule, NoSample, NoLibrary), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
     db.close()
   }
 
@@ -162,9 +161,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getSettingKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map()) shouldBe Map()
-    db.getSettingKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
-    db.getSettingKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
+    db.getSettingKeys(0, 0, 0, 0, 0, keyValues = Map()) shouldBe Map()
+    db.getSettingKeys(0, 0, 0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
+    db.getSettingKeys(0, 0, 0, 0, 0, keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
 
     db.close()
   }
@@ -187,8 +186,8 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getSettingsForSamples(0, 0.left, Some(0.left), keyValues = Map()) shouldBe Map(0 -> Map())
-    db.getSettingsForSamples(0, 0.left, Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
+    db.getSettingsForSamples(0, 0, 0, keyValues = Map()) shouldBe Map(0 -> Map())
+    db.getSettingsForSamples(0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
 
     db.close()
   }
@@ -212,8 +211,8 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getSettingsForLibraries(0, 0.left, Some(0.left), keyValues = Map()) shouldBe Map((0, 0) -> Map())
-    db.getSettingsForLibraries(0, 0.left, Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map((0, 0) -> Map("content" -> Some("test")))
+    db.getSettingsForLibraries(0, 0, 0, keyValues = Map()) shouldBe Map((0, 0) -> Map())
+    db.getSettingsForLibraries(0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map((0, 0) -> Map("content" -> Some("test")))
 
     db.close()
   }
@@ -234,15 +233,15 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     Await.result(db.getStatsSize(), Duration.Inf) shouldBe 0
 
     Await.result(db.createOrUpdateStat(runId, pipelineId, None, None, None, """{"content": "test" }"""), Duration.Inf)
-    Await.result(db.getStat(runId, pipelineId.left, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test"))
+    Await.result(db.getStat(runId, pipelineId, NoModule, NoSample, NoLibrary), Duration.Inf) shouldBe Some(Map("content" -> "test"))
     Await.result(db.getStatsSize(), Duration.Inf) shouldBe 1
     Await.result(db.createOrUpdateStat(runId, pipelineId, None, None, None, """{"content": "test2" }"""), Duration.Inf)
-    Await.result(db.getStat(runId, pipelineId.left, None, None, None), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
+    Await.result(db.getStat(runId, pipelineId, NoModule, NoSample, NoLibrary), Duration.Inf) shouldBe Some(Map("content" -> "test2"))
     Await.result(db.getStatsSize(), Duration.Inf) shouldBe 1
 
     // Test join queries
     Await.result(db.createOrUpdateStat(runId, pipelineId, Some(moduleId), Some(sampleId), Some(libraryId), """{"content": "test3" }"""), Duration.Inf)
-    Await.result(db.getStat(runId, "test_pipeline".right, Some("test_module".right), Some("test_sample".right), Some("test_library".right)), Duration.Inf) shouldBe Some(Map("content" -> "test3"))
+    Await.result(db.getStat(runId, "test_pipeline", "test_module", "test_sample", "test_library"), Duration.Inf) shouldBe Some(Map("content" -> "test3"))
     Await.result(db.getStatsSize(), Duration.Inf) shouldBe 2
 
     db.close()
@@ -264,9 +263,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map()) shouldBe Map()
-    db.getStatKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
-    db.getStatKeys(0, 0.left, Some(0.left), Some(0.left), Some(0.left), keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
+    db.getStatKeys(0, 0, 0, 0, 0, keyValues = Map()) shouldBe Map()
+    db.getStatKeys(0, 0, 0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map("content" -> Some("test"))
+    db.getStatKeys(0, 0, 0, 0, 0, keyValues = Map("content" -> List("content2", "key"))) shouldBe Map("content" -> Some("value"))
 
     db.close()
   }
@@ -289,8 +288,8 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatsForSamples(0, 0.left, Some(0.left), keyValues = Map()) shouldBe Map(0 -> Map())
-    db.getStatsForSamples(0, 0.left, Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
+    db.getStatsForSamples(0, 0, 0, keyValues = Map()) shouldBe Map(0 -> Map())
+    db.getStatsForSamples(0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map(0 -> Map("content" -> Some("test")))
 
     db.close()
   }
@@ -314,8 +313,8 @@ class SummaryDbTest extends TestNGSuite with Matchers {
         |}
         | }""".stripMargin), Duration.Inf)
 
-    db.getStatsForLibraries(0, 0.left, Some(0.left), keyValues = Map()) shouldBe Map((0, 0) -> Map())
-    db.getStatsForLibraries(0, 0.left, Some(0.left), keyValues = Map("content" -> List("content"))) shouldBe Map((0, 0) -> Map("content" -> Some("test")))
+    db.getStatsForLibraries(0, 0, 0, keyValues = Map()) shouldBe Map((0, 0) -> Map())
+    db.getStatsForLibraries(0, 0, 0, keyValues = Map("content" -> List("content"))) shouldBe Map((0, 0) -> Map("content" -> Some("test")))
 
     db.close()
   }
@@ -334,15 +333,15 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val libraryId = Await.result(db.createLibrary("test_library", runId, sampleId), Duration.Inf)
 
     Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, pipelineId.left, None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path", "md5", link = false, 1))
+    Await.result(db.getFile(runId, pipelineId, NoModule, NoSample, NoLibrary, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path", "md5", link = false, 1))
     Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path", "md5", link = false, 1))
     Await.result(db.createOrUpdateFile(runId, pipelineId, None, None, None, "key", "path2", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, pipelineId.left, None, None, None, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1))
+    Await.result(db.getFile(runId, pipelineId, NoModule, NoSample, NoLibrary, "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1))
     Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1))
 
     // Test join queries
     Await.result(db.createOrUpdateFile(runId, pipelineId, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1), Duration.Inf)
-    Await.result(db.getFile(runId, "test_pipeline".right, Some("test_module".right), Some("test_sample".right), Some("test_library".right), "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1))
+    Await.result(db.getFile(runId, "test_pipeline", "test_module", "test_sample", "test_library", "key"), Duration.Inf) shouldBe Some(Schema.File(0, 0, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1))
     Await.result(db.getFiles(), Duration.Inf) shouldBe Seq(Schema.File(0, 0, None, None, None, "key", "path2", "md5", link = false, 1), Schema.File(0, 0, Some(moduleId), Some(sampleId), Some(libraryId), "key", "path3", "md5", link = false, 1))
 
     db.close()

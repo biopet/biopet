@@ -21,12 +21,11 @@ import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoModule, NoSample, SampleId }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scalaz._
-import Scalaz._
 
 /**
  * With this extension the report is executed within a pipeline
@@ -43,7 +42,7 @@ object ShivaReport extends ShivaReportTrait
 /** Trait for report generation for Shiva pipeline, this can be extended */
 trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
-  def variantcallingExecuted = summary.getSettingKeys(runId, "shiva".right, None, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
+  def variantcallingExecuted = summary.getSettingKeys(runId, "shiva", NoModule, keyValues = Map("multisample_variantcalling" -> List("multisample_variantcalling"))).get("multisample_variantcalling")
     .flatten match {
       case Some(true) => true
       case _          => false
@@ -67,8 +66,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
-    val roi = summary.getSetting(runId, "shiva".right).get("regions_of_interest")
-    val amplicon = summary.getSetting(runId, "shiva".right).get("amplicon_bed")
+    val roi = summary.getSetting(runId, "shiva").get("regions_of_interest")
+    val amplicon = summary.getSetting(runId, "shiva").get("amplicon_bed")
 
     var regionPages: Map[String, ReportPage] = Map()
 
@@ -157,7 +156,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case _       => s"multisample-vcfstats-$caller"
     }
 
-    val results = summary.getStatKeys(runId, "shivavariantcalling".right, Some(moduleName.right), sampleId.map(_.left), keyValues = statsPaths)
+    val results = summary.getStatKeys(runId, "shivavariantcalling", moduleName, sampleId.map(SampleId).getOrElse(NoSample), keyValues = statsPaths)
 
     for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
       tsvWriter.println(sample.name + "\t" + field.map(f => results(s"${sample.name};$f").getOrElse("")).mkString("\t"))

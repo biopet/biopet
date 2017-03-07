@@ -21,12 +21,12 @@ import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportBuilderExtension, 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.rscript.{ LinePlot, StackedBarPlot }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scalaz._
-import Scalaz._
 
 class BammetricsReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = BammetricsReport
@@ -66,14 +66,15 @@ object BammetricsReport extends ReportBuilder {
 
     //val pipelineId: Int = summary.getPipelineId(runId, metricsTag).map(_.get)
 
-    val wgsExecuted = summary.getStatsSize(runId, Some(metricsTag.right), Some(Some("wgs".right)), sample = sampleId.map(x => Some(x.left)), library = libId.map(x => Some(x.left))) >= 1
-    val rnaExecuted = summary.getStatsSize(runId, Some(metricsTag.right), Some(Some("rna".right)), sample = sampleId.map(x => Some(x.left)), library = libId.map(x => Some(x.left))) >= 1
+    val wgsExecuted = summary.getStatsSize(runId, metricsTag, "wgs", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
+    val rnaExecuted = summary.getStatsSize(runId, metricsTag, "rna", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
 
-    val insertsizeMetrics = summary.getStatKeys(runId, metricsTag.right, Some("CollectInsertSizeMetrics".right),
-      sample = sampleId.map(_.left), library = libId.map(_.left), Map("metrics" -> List("metrics")))
+    val insertsizeMetrics = summary.getStatKeys(runId, metricsTag, "CollectInsertSizeMetrics",
+      sampleId.map(SampleId).getOrElse(NoSample), libId.map(LibraryId).getOrElse(NoLibrary), Map("metrics" -> List("metrics")))
       .exists(_._2.isDefined)
 
-    val targetSettings = summary.getSettingKeys(runId, metricsTag.right, None, sample = sampleId.map(_.left), library = libId.map(_.left),
+    val targetSettings = summary.getSettingKeys(runId, metricsTag, NoModule,
+      sample = sampleId.map(SampleId).getOrElse(NoSample), library = libId.map(LibraryId).getOrElse(NoLibrary),
       Map("amplicon_name" -> List("amplicon_name"), "roi_name" -> List("roi_name")))
     val targets = (
       targetSettings("amplicon_name"),
@@ -134,10 +135,10 @@ object BammetricsReport extends ReportBuilder {
     )
 
     val results: Map[(Int, Option[Int]), Map[String, Option[Any]]] = if (libraryLevel) {
-      summary.getStatsForLibraries(runId, "bammetrics".right, Some("bamstats".right),
+      summary.getStatsForLibraries(runId, "bammetrics", "bamstats",
         sampleId = sampleId, keyValues = statsPaths).map(x => (x._1._1, Some(x._1._2)) -> x._2)
-    } else summary.getStatsForSamples(runId, "bammetrics".right, Some("bamstats".right),
-      sample = sampleId.map(_.left), keyValues = statsPaths).map(x => (x._1, None) -> x._2)
+    } else summary.getStatsForSamples(runId, "bammetrics", "bamstats",
+      sample = sampleId.map(SampleId), keyValues = statsPaths).map(x => (x._1, None) -> x._2)
 
     for (((s, l), result) <- results) {
       val sampleName: String = summary.getSampleName(s).map(_.get)
@@ -177,8 +178,8 @@ object BammetricsReport extends ReportBuilder {
                            statsPaths: Map[String, List[String]],
                            xKey: String,
                            yKey: String,
-                           pipeline: \/[Int, String],
-                           module: Option[\/[Int, String]],
+                           pipeline: PipelineQuery,
+                           module: ModuleQuery,
                            xlabel: Option[String] = None,
                            ylabel: Option[String] = None,
                            title: Option[String] = None,
@@ -189,7 +190,7 @@ object BammetricsReport extends ReportBuilder {
     val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
       summary.getStatsForLibraries(runId, pipeline, module, sampleId = sampleId, keyValues = statsPaths)
         .map(x => (x._1._1, Some(x._1._2)) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
-    } else summary.getStatsForSamples(runId, pipeline, module, sample = sampleId.map(_.left), keyValues = statsPaths)
+    } else summary.getStatsForSamples(runId, pipeline, module, sample = sampleId.map(SampleId), keyValues = statsPaths)
       .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
 
     val tables: Array[Map[String, Array[Any]]] = results.map {
@@ -199,7 +200,7 @@ object BammetricsReport extends ReportBuilder {
         val libraryName = library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
         Map(
           yKey -> map(yKey).getOrElse(Array()),
-          (sampleName + libraryName.map("-" + _) getOrElse ("")) -> map(xKey).getOrElse(Array())
+          (sampleName + libraryName.map("-" + _).getOrElse("")) -> map(xKey).getOrElse(Array())
         )
     }.toArray
 
@@ -233,7 +234,7 @@ object BammetricsReport extends ReportBuilder {
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "insert_size", "count", "bammetrics".right, Some("CollectInsertSizeMetrics".right),
+      "insert_size", "count", "bammetrics", "CollectInsertSizeMetrics",
       "Insert size", "Reads", "Insert size")
   }
 
@@ -249,7 +250,7 @@ object BammetricsReport extends ReportBuilder {
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "mapping_quality", "count", "bammetrics".right, Some("bamstats".right),
+      "mapping_quality", "count", "bammetrics", "bamstats",
       "Mapping quality", "Reads", "Mapping quality")
   }
 
@@ -265,7 +266,7 @@ object BammetricsReport extends ReportBuilder {
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "clipping", "count", "bammetrics".right, Some("bamstats".right),
+      "clipping", "count", "bammetrics", "bamstats",
       "Clipping", "Reads", "Clipping")
   }
 
@@ -290,7 +291,7 @@ object BammetricsReport extends ReportBuilder {
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "coverage", "count", "bammetrics".right, Some("wgs".right),
+      "coverage", "count", "bammetrics", "wgs",
       "Coverage", "Bases", "Whole genome coverage")
   }
 
@@ -315,7 +316,7 @@ object BammetricsReport extends ReportBuilder {
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "coverage", "count", "bammetrics".right, Some("rna".right),
+      "coverage", "count", "bammetrics", "rna",
       "Relative position", "Coverage", "Rna coverage")
   }
 
