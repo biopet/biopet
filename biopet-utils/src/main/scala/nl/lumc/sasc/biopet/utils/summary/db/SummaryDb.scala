@@ -12,7 +12,6 @@ import java.sql.Date
 
 import scalaz._
 import Scalaz._
-import SummaryDb.Implicts._
 
 /**
  * This class interface wityh a summary database
@@ -495,10 +494,52 @@ class SummaryDb(val db: Database) extends Closeable {
 
 object SummaryDb {
 
+  trait PipelineQuery
+  case class PipelineId(id: Int) extends PipelineQuery
+  case class PipelineName(name: String) extends PipelineQuery
+
+  trait SampleQuery
+  case object NoSample extends SampleQuery
+  case class SampleId(id: Int) extends SampleQuery
+  case class SampleName(name: String) extends SampleQuery
+
+  trait LibraryQuery
+  case object NoLibrary extends LibraryQuery
+  case class LibraryId(id: Int) extends LibraryQuery
+  case class LibraryName(name: String) extends LibraryQuery
+
+  trait ModuleQuery
+  case object NoModule extends ModuleQuery
+  case class ModuleId(id: Int) extends ModuleQuery
+  case class ModuleName(name: String) extends ModuleQuery
+
   object Implicts {
-    implicit def toRight(x: String): \/[Int, String] = x.right
-    implicit def toLeft(x: Int): \/[Int, String] = x.left
+
+    implicit def intToPipelineQuery(x: Int): PipelineQuery = PipelineId(x)
+    implicit def intToPipelineQuery(x: String): PipelineQuery = PipelineName(x)
+    implicit def intToOptionPipelineQuery(x: Int): Option[PipelineQuery] = Some(PipelineId(x))
+    implicit def intToOptionPipelineQuery(x: String): Option[PipelineQuery] = Some(PipelineName(x))
+    implicit def sampleQueryToOptionPipelineQuery(x: PipelineQuery): Option[PipelineQuery] = Some(x)
+
+    implicit def intToModuleQuery(x: Int): ModuleQuery = ModuleId(x)
+    implicit def intToModuleQuery(x: String): ModuleQuery = ModuleName(x)
+    implicit def intToOptionModuleQuery(x: Int): Option[ModuleQuery] = Some(ModuleId(x))
+    implicit def intToOptionModuleQuery(x: String): Option[ModuleQuery] = Some(ModuleName(x))
+    implicit def moduleQueryToOptionModuleQuery(x: ModuleQuery): Option[ModuleQuery] = Some(x)
+
+    implicit def intToSampleQuery(x: Int): SampleQuery = SampleId(x)
+    implicit def intToSampleQuery(x: String): SampleQuery = SampleName(x)
+    implicit def intToOptionSampleQuery(x: Int): Option[SampleQuery] = Some(SampleId(x))
+    implicit def intToOptionSampleQuery(x: String): Option[SampleQuery] = Some(SampleName(x))
+    implicit def sampleQueryToOptionSampleQuery(x: SampleQuery): Option[SampleQuery] = Some(x)
+
+    implicit def intToLibraryQuery(x: Int): LibraryQuery = LibraryId(x)
+    implicit def intToLibraryQuery(x: String): LibraryQuery = LibraryName(x)
+    implicit def intToOptionLibraryQuery(x: Int): Option[LibraryQuery] = Some(LibraryId(x))
+    implicit def intToOptionLibraryQuery(x: String): Option[LibraryQuery] = Some(LibraryName(x))
+    implicit def libraryQueryToOptionLibraryQuery(x: LibraryQuery): Option[LibraryQuery] = Some(x)
   }
+
 
   private var summaryConnections = Map[File, SummaryDb]()
 
