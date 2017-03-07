@@ -74,7 +74,7 @@ object VcfStats extends ToolCommand {
     opt[File]('o', "outputDir") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     } validate {
-      x => if (x.exists) succes else failure ("Valid output directory required") 
+      x => if (x == null) failure("Valid output directory required") else if (x.exists) success else failure(s"Output directory does not exist: $x")
     } text "Path to directory for output (required)"
     opt[File]('i', "intervals") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(intervals = Some(x))
