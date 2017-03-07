@@ -1,12 +1,12 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(org.apache.commons.io.FileUtils)
 #import(java.io.File)
-#import(scalaz._)
-#import(Scalaz._)
 <%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
 <%@ var sampleId: Option[Int] %>
@@ -14,7 +14,7 @@
 <%@ var plot: String %>
 <%@ var outputDir: File %>
 #{
-    val settings = summary.getSettingKeys(runId, "flexiprep".right, None, sampleId.map(_.left), libId.map(_.left), keyValues = Map(
+    val settings = summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
 
     val paired: Boolean = settings("paired") == Some(true)
@@ -22,7 +22,7 @@
     val skipTrim: Boolean = settings("skip_trim") == Some(true)
 
     def getPlot(read:String) = {
-        val file = Await.result(summary.getFile(runId, "flexiprep".right, Some(read.right), sampleId.map(_.left), libId.map(_.left), plot), Duration.Inf)
+        val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.collect {
             case path => {
                 val file = new File(path.path.toString)
@@ -34,7 +34,7 @@
     }
 
     def plotAvailable(read:String) = {
-        val file = Await.result(summary.getFile(runId, "flexiprep".right, Some(read.right), sampleId.map(_.left), libId.map(_.left), plot), Duration.Inf)
+        val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.map(x => new File(x.path).exists()).getOrElse(false)
     }
 

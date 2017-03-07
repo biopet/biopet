@@ -21,13 +21,13 @@ import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Sample }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
-import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 import scala.collection.mutable
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
+import scala.language.implicitConversions
 
 /**
  * This trait is meant to make an extension for a report object

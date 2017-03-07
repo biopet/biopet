@@ -1,11 +1,11 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
 #import(java.io.File)
 #import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
-#import(scalaz._)
-#import(Scalaz._)
 <%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
 <%@ var sampleId: Option[Int] = None %>
@@ -19,7 +19,7 @@
 #{
     val samples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
-    val settings = summary.getSettingsForLibraries(runId, "flexiprep".right, keyValues = Map(
+    val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
     val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
@@ -27,7 +27,7 @@
     val librariesCount = libraries.size
 
     val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-        summary.getSettingKeys(runId, "flexiprep".right, None, sampleId.map(_.left), libId.map(_.left), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
+        summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
     else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 }#
 
@@ -144,15 +144,15 @@
                     #if (read == "R2") </tr><tr> #end
                     #{
                         val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-                        val seqstatStats = summary.getStatKeys(runId, "flexiprep".right, Some(("seqstat_" + read).right), sample = Some(sample.id.left), library = Some(lib.id.left), keyValues = seqstatPaths)
-                        val seqstatQcStats = summary.getStatKeys(runId, "flexiprep".right, Some(("seqstat_" + read + "_qc").right), sample = Some(sample.id.left), library = Some(lib.id.left), keyValues = seqstatPaths)
+                        val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = seqstatPaths)
+                        val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = seqstatPaths)
 
                         val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
                         "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-                        val clippingStats = summary.getStatKeys(runId, "flexiprep".right, Some(("clipping_" + read).right), sample = Some(sample.id.left), library = Some(lib.id.left), keyValues = clippingPaths)
+                        val clippingStats = summary.getStatKeys(runId, "flexiprep", "clipping_" + read, sample = sample.id, library = lib.id, keyValues = clippingPaths)
 
                         val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
-                        val trimmingStats = summary.getStatKeys(runId, "flexiprep".right, Some("trimming".right), sample = Some(sample.id.left), library = Some(lib.id.left), keyValues = trimmingPaths)
+                        val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming", sample = sample.id, library = lib.id, keyValues = trimmingPaths)
 
                         val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
                         val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong

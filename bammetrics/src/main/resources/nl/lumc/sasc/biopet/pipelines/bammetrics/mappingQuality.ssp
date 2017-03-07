@@ -1,11 +1,11 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-#import(scalaz._)
-#import(Scalaz._)
 <%@ var summary: SummaryDb %>
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
@@ -85,7 +85,7 @@
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
                         val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics".right, Some("bamstats".right), sample = Some(sample.id.left), library = libId.map(_.left), keyValues = statsPaths)
+                        val results = summary.getStatKeys(runId, "bammetrics", "bamstats", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
