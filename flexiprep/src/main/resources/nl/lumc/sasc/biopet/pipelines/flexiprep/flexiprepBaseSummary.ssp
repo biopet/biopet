@@ -122,7 +122,7 @@
             #if (multisample)
                 <a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a>
             #else
-                ${sample}
+                ${sample.name}
             #end
             </td>
             #for (lib <- libraries.filter(_.sampleId == sample.id))
