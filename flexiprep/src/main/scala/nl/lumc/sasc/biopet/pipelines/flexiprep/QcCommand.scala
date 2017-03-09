@@ -16,12 +16,12 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript}
-import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle}
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 9/22/15.
@@ -123,7 +123,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
           Some(cutadapt)
         } else None
       case (None, _) => None
-      case (c, _) => c
+      case (c, _)    => c
     }
 
     trim.foreach { t =>
