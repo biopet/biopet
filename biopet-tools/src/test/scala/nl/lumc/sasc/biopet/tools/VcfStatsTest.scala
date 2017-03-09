@@ -15,10 +15,10 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.{SampleStats, SampleToSampleStats, Stats, VcfStats}
+import nl.lumc.sasc.biopet.tools.vcfstats.{ SampleStats, SampleToSampleStats, Stats, VcfStats }
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -170,7 +170,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val vcf = resourcePath("/chrQ.vcf.gz")
     val ref = resourcePath("/fake_chrQ.fa")
 
-    an [IllegalArgumentException] should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
+    an[IllegalArgumentException] should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
   }
 
   @Test
