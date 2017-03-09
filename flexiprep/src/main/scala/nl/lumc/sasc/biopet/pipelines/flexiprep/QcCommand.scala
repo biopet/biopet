@@ -123,7 +123,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
           Some(cutadapt)
         } else None
       case (None, _) => None
-      case (Some(c), _)    =>
+      case (Some(c), _) =>
         c.fastqInput = seqtk.output
         c.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         c.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
