@@ -43,7 +43,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "flexiprepOptions")
-  def flexiprepOptions = {
+  def flexiprepOptions: Array[Array[Any]] = {
     val paired = Array(true, false)
     val skipTrims = Array(true, false)
     val skipClips = Array(true, false)
@@ -66,7 +66,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
                     skipTrim: Boolean,
                     skipClip: Boolean,
                     zipped: Boolean,
-                    abortOnCorruptFastq: Boolean) = {
+                    abortOnCorruptFastq: Boolean): Unit = {
     val outputDir = FlexiprepTest.outputDir
     dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
@@ -76,8 +76,8 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
-    flexiprep.inputR1 = (if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1)
-    if (paired) flexiprep.inputR2 = Some((if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2))
+    flexiprep.inputR1 = if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1
+    if (paired) flexiprep.inputR2 = Some(if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2)
     flexiprep.sampleId = Some("1")
     flexiprep.libId = Some("1")
     flexiprep.script()
@@ -91,7 +91,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNoSample: Unit = {
+  def testNoSample(): Unit = {
     val outputDir = FlexiprepTest.outputDir
     dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map(
@@ -105,15 +105,15 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object FlexiprepTest {
-  def outputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
 
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
