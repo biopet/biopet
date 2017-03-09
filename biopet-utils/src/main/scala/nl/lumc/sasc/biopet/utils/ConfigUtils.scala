@@ -106,9 +106,9 @@ object ConfigUtils extends Logging {
       val value = map.get(path.head)
       if (path.tail.isEmpty || value.isEmpty) value
       else value.get match {
-        case map: Map[_, _] => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
+        case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
         case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
-        case _ => None
+        case _                                  => None
       }
     } else Some(map)
   }

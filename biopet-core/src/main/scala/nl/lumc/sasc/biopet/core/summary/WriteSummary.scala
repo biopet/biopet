@@ -168,7 +168,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
 
     val pipeFunctions = (for (f <- qscript.functions) yield f match {
       case f: BiopetCommandLineFunction => f.pipesJobs
-      case _ => Nil
+      case _                            => Nil
     }).flatten
     (for (f <- qscript.functions ++ pipeFunctions) yield {
       f match {
