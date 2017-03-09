@@ -30,7 +30,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var inputR1: File = _
 
   @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", fullName = "inputR2", required = false)
-  var inputR2: Option[File] = None
+  var inputR2:     Option[File] = None
 
   /** Skip Trim fastq files */
   var skipTrim: Boolean = config("skip_trim", default = false)

@@ -21,6 +21,10 @@ node('local') {
             junit '*/target/surefire-reports/*.xml'
         }
 
+        stage('Check git on changes') {
+            sh 'if [ $(git diff | wc -l) -eq 0 ]; then true; else echo "[ERROR] Git is not clean anymore after build"; false; fi'
+        }
+
         stage('Check Documentation') {
             sh 'mkdocs build --clean --strict'
         }
