@@ -16,12 +16,12 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction }
-import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript}
+import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle}
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
  * Created by pjvan_thof on 9/22/15.
@@ -106,24 +106,25 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
     if (seqtk.Q.isDefined) seqtk.V = true
     addPipeJob(seqtk)
 
-    clip = if (!flexiprep.skipClip) {
-      val cutadapt = clip.getOrElse(new Cutadapt(parent, fastqc))
+    clip = (clip, BiopetQScript.safeIsDone(fastqc)) match {
+      case (Some(cutadapt), Some(true)) =>
+        val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
+          fastqc.foundAdapters.map(_.seq)
+        } else Set()
 
-      val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
-        fastqc.foundAdapters.map(_.seq)
-      } else Set()
-
-      if (foundAdapters.nonEmpty || cutadapt.adapter.nonEmpty || cutadapt.front.nonEmpty || cutadapt.anywhere.nonEmpty) {
-        cutadapt.fastqInput = seqtk.output
-        cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
-        cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
-        if (cutadapt.defaultClipMode == "3") cutadapt.adapter ++= foundAdapters
-        else if (cutadapt.defaultClipMode == "5") cutadapt.front ++= foundAdapters
-        else if (cutadapt.defaultClipMode == "both") cutadapt.anywhere ++= foundAdapters
-        addPipeJob(cutadapt)
-        Some(cutadapt)
-      } else None
-    } else None
+        if (foundAdapters.nonEmpty || cutadapt.adapter.nonEmpty || cutadapt.front.nonEmpty || cutadapt.anywhere.nonEmpty) {
+          cutadapt.fastqInput = seqtk.output
+          cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
+          cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
+          if (cutadapt.defaultClipMode == "3") cutadapt.adapter ++= foundAdapters
+          else if (cutadapt.defaultClipMode == "5") cutadapt.front ++= foundAdapters
+          else if (cutadapt.defaultClipMode == "both") cutadapt.anywhere ++= foundAdapters
+          addPipeJob(cutadapt)
+          Some(cutadapt)
+        } else None
+      case (None, _) => None
+      case (c, _) => c
+    }
 
     trim.foreach { t =>
       t.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
