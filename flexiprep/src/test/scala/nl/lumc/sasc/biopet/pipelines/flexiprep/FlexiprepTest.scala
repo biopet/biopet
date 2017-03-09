@@ -62,8 +62,11 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @Test(dataProvider = "flexiprepOptions")
-  def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean,
-                    zipped: Boolean, abortOnCorruptFastq: Boolean) = {
+  def testFlexiprep(f: String, paired: Boolean,
+                    skipTrim: Boolean,
+                    skipClip: Boolean,
+                    zipped: Boolean,
+                    abortOnCorruptFastq: Boolean) = {
     val outputDir = FlexiprepTest.outputDir
     dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
