@@ -8,6 +8,7 @@
 <%@ var runId: Int %>
 #{
     val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
+    val samples = Await.result(summary.getSamples(Some(runId)), Duration.Inf)
 }#
 <table class="table">
 <tbody>
@@ -15,6 +16,7 @@
     <tr><th>Version</th><td>${run.version}</td></tr>
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Number of samples</th><td>${samples.size}</td></tr>
 </tbody>
 </table>
 <br/>
