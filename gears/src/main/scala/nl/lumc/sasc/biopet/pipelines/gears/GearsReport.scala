@@ -14,6 +14,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.report.{ MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -57,10 +59,10 @@ object GearsReport extends MultisampleReportBuilder {
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
       else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
       else Nil) ::: List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map(
           "Versions" -> ReportPage(List(), List(
@@ -97,10 +99,10 @@ object GearsReport extends MultisampleReportBuilder {
       )), Map()))
     else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-      )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+      )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
     else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-      )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+      )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
     else Nil) ::: List(
       "Libraries" -> generateLibraryPage(args)
     ), List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -133,10 +135,10 @@ object GearsReport extends MultisampleReportBuilder {
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
       else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
       else Nil), List(
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")

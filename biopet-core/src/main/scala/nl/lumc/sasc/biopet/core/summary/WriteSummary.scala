@@ -149,14 +149,14 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
           // Sample level
           val sampleId = Await.result(db.getSampleId(qscript.summaryRunId, sampleName), Duration.Inf).getOrElse(throw new IllegalStateException("Sample should already exist in database"))
           for ((key, file) <- sample.summaryFiles.par)
-            Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), None, None, key, file, outputDir), Duration.Inf)
+            Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), None, key, file, outputDir), Duration.Inf)
           db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), None, ConfigUtils.mapToJson(sample.summarySettings).nospaces)
 
           for ((libName, lib) <- sample.libraries) {
             // Library level
             val libId = Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, libName), Duration.Inf).getOrElse(throw new IllegalStateException("Library should already exist in database"))
             for ((key, file) <- lib.summaryFiles.par)
-              Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), Some(libId), None, key, file, outputDir), Duration.Inf)
+              Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), key, file, outputDir), Duration.Inf)
             db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), ConfigUtils.mapToJson(lib.summarySettings).nospaces)
           }
         }

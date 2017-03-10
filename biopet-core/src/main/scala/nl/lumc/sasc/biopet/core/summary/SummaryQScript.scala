@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.LastCommitHash
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -64,7 +65,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
    * @param libraryId Id of libary
    * @param forceSingle If true it replaces summarizable instead of adding to it
    */
-  def addSummarizable(summarizable: Summarizable, name: String,
+  def addSummarizable(summarizable: Summarizable,
+                      name: String,
                       sampleId: Option[String] = None,
                       libraryId: Option[String] = None,
                       forceSingle: Boolean = false): Unit = {
@@ -90,7 +92,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       val id = reader.getLines().next().toInt
       reader.close()
       id
-    } else createRun
+    } else createRun()
   }
 
   private def runIdFile = root match {
@@ -104,7 +106,11 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: BiopetQScript => q.outputDir
       case _                => throw new IllegalStateException("Root should be a BiopetQscript")
     }
-    val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
+    val name = root match {
+      case q: SummaryQScript => q.summaryName
+      case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
+    }
+    val id = Await.result(db.createRun(name, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
       LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
     runIdFile.getParentFile.mkdir()
     val writer = new PrintWriter(runIdFile)
@@ -181,6 +187,22 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
+    }
+
+    qscript match {
+      case q: MultiSampleQScript =>
+        // Global level
+        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
+
+        for ((sampleName, sample) <- q.samples) {
+          // Sample level
+          for ((key, file) <- sample.summaryFiles) addChecksum(file)
+          for ((libName, lib) <- sample.libraries) {
+            // Library level
+            for ((key, file) <- lib.summaryFiles) addChecksum(file)
+          }
+        }
+      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
     }
 
     addedJobs = true
