@@ -14,14 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.LastCommitHash
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -186,6 +187,22 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
+    }
+
+    qscript match {
+      case q: MultiSampleQScript =>
+        // Global level
+        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
+
+        for ((sampleName, sample) <- q.samples) {
+          // Sample level
+          for ((key, file) <- sample.summaryFiles) addChecksum(file)
+          for ((libName, lib) <- sample.libraries) {
+            // Library level
+            for ((key, file) <- lib.summaryFiles) addChecksum(file)
+          }
+        }
+      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
     }
 
     addedJobs = true
