@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -43,9 +44,9 @@ object FlexiprepReport extends ReportBuilder {
     val flexiprepPage = this.flexiprepPage
     ReportPage(List("Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
     )), Map()),
-      "Files" -> ReportPage(List(), List(
-        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
+      "Files" -> ReportPage(List(), List( //TODO: Fix files
+      //        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
+      //        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
       ), Map())
     ), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
@@ -95,15 +96,15 @@ object FlexiprepReport extends ReportBuilder {
     tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-    val seqstatStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read), keyValues = seqstatPaths)
-    val seqstatQcStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read + "_qc"), keyValues = seqstatPaths)
+    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = seqstatPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read + "_qc", keyValues = seqstatPaths)
 
     val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
       "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-    val clippingStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("clipping_" + read), keyValues = clippingPaths)
+    val clippingStats = summary.getStatsForLibraries(runId, "flexiprep", "clipping_" + read, keyValues = clippingPaths)
 
     val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
-    val trimmingStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("trimming"), keyValues = trimmingPaths)
+    val trimmingStats = summary.getStatsForLibraries(runId, "flexiprep", "trimming", keyValues = trimmingPaths)
 
     val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
 
@@ -154,8 +155,8 @@ object FlexiprepReport extends ReportBuilder {
     tsvWriter.println("Library\tAfter_QC\tDiscarded")
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
-    val seqstatStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read), keyValues = statsPaths)
-    val seqstatQcStats = summary.getStatsForLibraries(runId, Right("flexiprep"), Right("seqstat_" + read + "_qc"), keyValues = statsPaths)
+    val seqstatStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = statsPaths)
+    val seqstatQcStats = summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read + "_qc", keyValues = statsPaths)
 
     val libraries = Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
 

@@ -38,6 +38,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
+  require(parent != null)
+
   /** To access qscript for this summary */
   val qscript = parent
 
@@ -53,6 +55,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   }
 
   def init(): Unit = {
+    qscript.summarizables.foreach(_._2.foreach { s =>
+      if (!s.addToQscriptSummaryDone) s.addToQscriptSummary(qscript)
+      s.addToQscriptSummaryDone = true
+    })
+
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     if (qscript == root) { // This initialize the database
       qscript match {
@@ -60,11 +67,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         case t: SampleLibraryTag => t.sampleId.foreach {
           case sampleName =>
             val sampleId = Await.result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-              Await.result(db.createSample(sampleName, qscript.summaryRunId), Duration.Inf)
+              Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId), Duration.Inf)
             }
             t.libId.foreach { libName =>
               val libId = Await.result(db.getSamples(name = Some(libName), runId = Some(qscript.summaryRunId), sampleId = Some(sampleId)).map(_.headOption.map(_.id)), Duration.Inf).getOrElse {
-                Await.result(db.createLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
+                Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId), Duration.Inf)
               }
             }
         }
@@ -142,14 +149,14 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
           // Sample level
           val sampleId = Await.result(db.getSampleId(qscript.summaryRunId, sampleName), Duration.Inf).getOrElse(throw new IllegalStateException("Sample should already exist in database"))
           for ((key, file) <- sample.summaryFiles.par)
-            Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), None, None, key, file, outputDir), Duration.Inf)
+            Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), None, key, file, outputDir), Duration.Inf)
           db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), None, ConfigUtils.mapToJson(sample.summarySettings).nospaces)
 
           for ((libName, lib) <- sample.libraries) {
             // Library level
             val libId = Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, libName), Duration.Inf).getOrElse(throw new IllegalStateException("Library should already exist in database"))
             for ((key, file) <- lib.summaryFiles.par)
-              Await.result(createFile(db, q.summaryRunId, pipelineId, Some(sampleId), Some(libId), None, key, file, outputDir), Duration.Inf)
+              Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), key, file, outputDir), Duration.Inf)
             db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), ConfigUtils.mapToJson(lib.summarySettings).nospaces)
           }
         }
@@ -159,15 +166,21 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
-    (for (f <- qscript.functions.par) yield f match {
-      case f: BiopetJavaCommandLineFunction with Version =>
-        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, f.getJavaVersion,
-          javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Option(f.jarFile).map(_.getAbsolutePath)))
-      case f: BiopetCommandLineFunction with Version =>
-        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, Option(f.executable)))
-      case f: Configurable with Version =>
-        Some(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion))
-      case _ => None
+    val pipeFunctions = (for (f <- qscript.functions) yield f match {
+      case f: BiopetCommandLineFunction => f.pipesJobs
+      case _                            => Nil
+    }).flatten
+    (for (f <- qscript.functions ++ pipeFunctions) yield {
+      f match {
+        case f: BiopetJavaCommandLineFunction with Version =>
+          List(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, f.getJavaVersion,
+            javaMd5 = BiopetCommandLineFunction.executableMd5Cache.get(f.executable), jarPath = Option(f.jarFile).map(_.getAbsolutePath)))
+        case f: BiopetCommandLineFunction with Version =>
+          List(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion, Option(f.executable)))
+        case f: Configurable with Version =>
+          List(db.createOrUpdateExecutable(qscript.summaryRunId, f.configNamespace, f.getVersion))
+        case _ => List()
+      }
     }).flatten.foreach(Await.ready(_, Duration.Inf))
   }
 

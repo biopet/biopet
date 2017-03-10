@@ -1,18 +1,25 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] %>
-
+<%@ var runId: Int %>
+<%@ var sampleId: Option[Int] %>
+<%@ var libId: Option[Int] %>
+#{
+    val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
+}#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Flexiprep</td></tr>
-    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
-    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
-    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
-    <tr><th>Sample ID</th><td>${sampleId}</td></tr>
-    <tr><th>Library ID</th><td>${libId}</td></tr>
+    <tr><th>Version</th><td>${run.version}</td></tr>
+    <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
+    <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Sample ID</th><td>${Await.result(summary.getSampleName(sampleId.get), Duration.Inf)}</td></tr>
+    <tr><th>Library ID</th><td>${Await.result(summary.getLibraryName(libId.get), Duration.Inf)}</td></tr>
 </tbody>
 </table>
 <br/>

@@ -1,4 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
@@ -12,7 +14,7 @@
 <%@ var plot: String %>
 <%@ var outputDir: File %>
 #{
-    val settings = summary.getSettingKeys(runId, Right("flexiprep"), None, sampleId.map(Left(_)), libId.map(Left(_)), keyValues = Map(
+    val settings = summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
 
     val paired: Boolean = settings("paired") == Some(true)
@@ -20,7 +22,7 @@
     val skipTrim: Boolean = settings("skip_trim") == Some(true)
 
     def getPlot(read:String) = {
-        val file = Await.result(summary.getFile(runId, Right("flexiprep"), Some(Right(read)), sampleId.map(Left(_)), libId.map(Left(_)), plot), Duration.Inf)
+        val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.collect {
             case path => {
                 val file = new File(path.path.toString)
@@ -32,7 +34,7 @@
     }
 
     def plotAvailable(read:String) = {
-        val file = Await.result(summary.getFile(runId, Right("flexiprep"), Some(Right(read)), sampleId.map(Left(_)), libId.map(Left(_)), plot), Duration.Inf)
+        val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.map(x => new File(x.path).exists()).getOrElse(false)
     }
 

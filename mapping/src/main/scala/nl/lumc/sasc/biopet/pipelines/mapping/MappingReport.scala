@@ -18,6 +18,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -38,12 +40,13 @@ object MappingReport extends ReportBuilder {
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
-  def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, Right("gears"), Some(Right("krakenreport")),
-    sample = sampleId.map(Left(_)), library = libId.map(Left(_))), Duration.Inf) >= 1
+  def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, "gears", "krakenreport",
+    sample = sampleId.map(SampleId), library = libId.map(LibraryId)), Duration.Inf) >= 1
 
   /** Root page for single BamMetrcis report */
   def indexPage = {
-    val mappingSettings = summary.getSettingKeys(runId, Right("mapping"), None, sample = sampleId.map(Left(_)), library = libId.map(Left(_)),
+    val mappingSettings = summary.getSettingKeys(runId, "mapping", NoModule,
+      sample = sampleId.map(SampleId).getOrElse(NoSample), library = libId.map(LibraryId).getOrElse(NoLibrary),
       keyValues = Map("skip_flexiprep" -> List("skip_flexiprep"), "skip_metrics" -> List("skip_metrics")))
     val skipFlexiprep = mappingSettings.get("skip_flexiprep").flatten.getOrElse(false) == true
     val bamMetricsPage = if (mappingSettings.get("skip_metrics").flatten.getOrElse(false) == true) {

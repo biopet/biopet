@@ -14,10 +14,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.utils.implicits.Either._
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.report.{ MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoModule, SampleId }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -39,10 +42,10 @@ object GearsReport extends MultisampleReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
-    val krakenExecuted = summary.getStatsSize(runId = runId, pipeline = Right("gearskraken"), module = Some(Right("krakenreport")), library = Some(None), mustHaveSample = true) >= samples.size
-    val centrifugeExecuted = summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), library = Some(None), mustHaveSample = true) >= samples.size
-    val qiimeClosesOtuTable = summary.getFile(runId, Right("gears"), None, None, None, key = "qiime_closed_otu_table")
-    val qiimeOpenOtuTable = summary.getFile(runId, Right("gears"), None, None, None, key = "qiime_open_otu_table")
+    val krakenExecuted = summary.getStatsSize(runId = runId, pipeline = "gearskraken", module = "krakenreport", library = NoLibrary, mustHaveSample = true) >= samples.size
+    val centrifugeExecuted = summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", library = NoLibrary, mustHaveSample = true) >= samples.size
+    val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
+    val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
     ReportPage(
       (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -56,10 +59,10 @@ object GearsReport extends MultisampleReportBuilder {
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
       else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
       else Nil) ::: List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map(
           "Versions" -> ReportPage(List(), List(
@@ -80,10 +83,10 @@ object GearsReport extends MultisampleReportBuilder {
 
   /** Single sample page */
   def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = Left(sampleId), library = Some(None)), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = Left(sampleId), library = None), Duration.Inf) == 1
-    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, Right("gears"), None, Some(Left(sampleId)), None, "qiime_closed_otu_table"), Duration.Inf)
-    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, Right("gears"), None, Some(Left(sampleId)), None, "qiime_open_otu_table"), Duration.Inf)
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport", sample = sampleId, library = NoLibrary), Duration.Inf) == 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", sample = sampleId, library = None), Duration.Inf) == 1
+    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, NoLibrary, "qiime_closed_otu_table"), Duration.Inf)
+    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"), Duration.Inf)
 
     ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
       Map("summaryStatsTag" -> "centrifuge_report")
@@ -96,10 +99,10 @@ object GearsReport extends MultisampleReportBuilder {
       )), Map()))
     else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-      )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+      )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
     else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-      )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+      )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
     else Nil) ::: List(
       "Libraries" -> generateLibraryPage(args)
     ), List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -112,12 +115,12 @@ object GearsReport extends MultisampleReportBuilder {
     val sName = Await.result(summary.getSampleName(sampleId), Duration.Inf)
     val lName = Await.result(summary.getLibraryName(libId), Duration.Inf)
 
-    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, Some(Right("flexiprep")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) >= 1
+    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, "flexiprep", sample = sampleId, library = libId), Duration.Inf) >= 1
 
-    val krakenExecuted = Await.result(summary.getStatsSize(runId, Right("gearskraken"), Some(Right("krakenreport")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) == 1
-    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, Right("gearscentrifuge"), Some(Right("centrifuge_report")), sample = Some(Left(sampleId)), library = Some(Left(libId))), Duration.Inf) == 1
-    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, Right("gears"), None, Some(Left(sampleId)), Some(Left(libId)), "qiime_closed_otu_table"), Duration.Inf)
-    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, Right("gears"), None, Some(Left(sampleId)), Some(Left(libId)), "qiime_open_otu_table"), Duration.Inf)
+    val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport", sample = sampleId, library = libId), Duration.Inf) == 1
+    val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", sample = sampleId, library = libId), Duration.Inf) == 1
+    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, libId, "qiime_closed_otu_table"), Duration.Inf)
+    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, libId, "qiime_open_otu_table"), Duration.Inf)
 
     ReportPage(
       (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
@@ -132,10 +135,10 @@ object GearsReport extends MultisampleReportBuilder {
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path))))
       else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> qiimeOpenOtuTable.get)))
+        )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path))))
       else Nil), List(
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")

@@ -47,6 +47,8 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 class TinyCapTest extends TestNGSuite with Matchers {
 
+  private var dirs: List[File] = Nil
+
   def initPipeline(map: Map[String, Any]): TinyCap = {
     new TinyCap() {
       override def configNamespace = "tinycap"
@@ -69,8 +71,10 @@ class TinyCapTest extends TestNGSuite with Matchers {
 
   @Test(dataProvider = "tinyCapOptions")
   def testTinyCap(dummy: String, sample1: Boolean): Unit = {
+    val outputDir = TinyCapTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = TinyCapTest.config
+      var m: Map[String, Any] = TinyCapTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(TinyCapTest.sample1, m)
       m
     }
@@ -90,35 +94,34 @@ class TinyCapTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(TinyCapTest.outputDir)
+    dirs.foreach(FileUtils.deleteDirectory)
   }
-
 }
 
 object TinyCapTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  val r1 = new File(inputDir, "R1.fq.gz")
   Files.touch(r1)
-  val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
 
-  val referenceFasta = new File(outputDir, "ref.fa")
+  val referenceFasta = new File(inputDir, "ref.fa")
   Files.touch(referenceFasta)
-  val referenceFastaDict = new File(outputDir, "ref.dict")
+  val referenceFastaDict = new File(inputDir, "ref.dict")
   Files.touch(referenceFastaDict)
-  val bowtieIndex = new File(outputDir, "ref.1.ebwt")
+  val bowtieIndex = new File(inputDir, "ref.1.ebwt")
   Files.touch(bowtieIndex)
 
-  val annotationGFF = new File(outputDir, "annot.gff")
-  val annotationGTF = new File(outputDir, "annot.gtf")
-  val annotationRefflat = new File(outputDir, "annot.refflat")
+  val annotationGFF = new File(inputDir, "annot.gff")
+  val annotationGTF = new File(inputDir, "annot.gtf")
+  val annotationRefflat = new File(inputDir, "annot.refflat")
   Files.touch(annotationGFF)
   Files.touch(annotationGTF)
   Files.touch(annotationRefflat)
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "reference_fasta" -> (referenceFasta.getAbsolutePath),

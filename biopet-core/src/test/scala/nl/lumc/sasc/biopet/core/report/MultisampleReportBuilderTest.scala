@@ -18,9 +18,13 @@ import java.io.File
 import java.nio.file.Paths
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * Created by pjvanthof on 24/02/16.
@@ -41,10 +45,25 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
 
       def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = ReportPage(Nil, Nil, Map())
     }
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    val sample = Some("sampleName")
+    val lib = Some("libName")
+
+    sample.foreach { sampleName =>
+      val sampleId = Await.result(db.createSample(sampleName, 0), Duration.Inf)
+      lib.foreach { libName =>
+        Await.result(db.createLibrary(libName, 0, sampleId), Duration.Inf)
+      }
+
+    }
 
     val tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
-    val args = Array("-s", resourcePath("/empty_summary.json"), "-o", tempDir.getAbsolutePath)
+    val args = Array("-s", dbFile.getAbsolutePath, "-o", tempDir.getAbsolutePath)
     builder.main(args)
     builder.extFiles.foreach(x => new File(tempDir, "ext" + File.separator + x.targetPath) should exist)
 
@@ -55,6 +74,8 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     createFile("Samples", "sampleName", "index.html") should exist
     createFile("Samples", "sampleName", "Libraries", "index.html") should exist
     createFile("Samples", "sampleName", "Libraries", "libName", "index.html") should exist
+
+    db.close()
   }
 
 }

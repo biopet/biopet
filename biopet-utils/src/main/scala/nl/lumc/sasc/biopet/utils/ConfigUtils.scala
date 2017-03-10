@@ -102,13 +102,15 @@ object ConfigUtils extends Logging {
    * @return Some(value) or None if not found
    */
   def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
-    val value = map.get(path.head)
-    if (path.tail.isEmpty || value.isEmpty) value
-    else value.get match {
-      case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
-      case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
-      case _                                  => None
-    }
+    if (path.nonEmpty) {
+      val value = map.get(path.head)
+      if (path.tail.isEmpty || value.isEmpty) value
+      else value.get match {
+        case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
+        case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
+        case _                                  => None
+      }
+    } else Some(map)
   }
 
   /** Make json aboject from a file */

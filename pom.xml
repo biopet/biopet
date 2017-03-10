@@ -122,6 +122,7 @@
                                 <arg>-deprecation</arg>
                                 <arg>-feature</arg>
                             </args>
+                            <scalaVersion>${scalaVersion}</scalaVersion>
                         </configuration>
                     </execution>
                 </executions>
