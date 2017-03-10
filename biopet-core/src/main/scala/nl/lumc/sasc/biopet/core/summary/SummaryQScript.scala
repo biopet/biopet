@@ -107,7 +107,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     }
     val name = root match {
       case q: SummaryQScript => q.summaryName
-      case _                => throw new IllegalStateException("Root should be a SummaryQScript")
+      case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
     }
     val id = Await.result(db.createRun(name, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
       LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
