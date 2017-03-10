@@ -91,7 +91,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       val id = reader.getLines().next().toInt
       reader.close()
       id
-    } else createRun
+    } else createRun()
   }
 
   private def runIdFile = root match {
@@ -105,7 +105,11 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: BiopetQScript => q.outputDir
       case _                => throw new IllegalStateException("Root should be a BiopetQscript")
     }
-    val id = Await.result(db.createRun(summaryName, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
+    val name = root match {
+      case q: SummaryQScript => q.summaryName
+      case _                => throw new IllegalStateException("Root should be a SummaryQScript")
+    }
+    val id = Await.result(db.createRun(name, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
       LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
     runIdFile.getParentFile.mkdir()
     val writer = new PrintWriter(runIdFile)
