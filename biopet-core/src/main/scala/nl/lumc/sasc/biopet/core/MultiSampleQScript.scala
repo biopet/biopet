@@ -62,7 +62,6 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
-        qscript.addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
         currentLib = None
         currentSample = None
       }
@@ -170,7 +169,6 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         Logging.addError(s"Sample '$sampleId' $nameError")
       currentSample = Some(sampleId)
       addJobs()
-      qscript.addSummarizable(this, "pipeline", Some(sampleId))
       currentSample = None
     }
 

@@ -64,7 +64,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
    * @param libraryId Id of libary
    * @param forceSingle If true it replaces summarizable instead of adding to it
    */
-  def addSummarizable(summarizable: Summarizable, name: String,
+  def addSummarizable(summarizable: Summarizable,
+                      name: String,
                       sampleId: Option[String] = None,
                       libraryId: Option[String] = None,
                       forceSingle: Boolean = false): Unit = {
