@@ -20,7 +20,7 @@
 }#
 <table class="table">
 <tbody>
-    <tr><th>Pipeline</th><td>${run.name}</td></tr>
+    <tr><th>Pipeline</th><td>Mapping</td></tr>
     <tr><th>Version</th><td>${run.version}</td></tr>
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
