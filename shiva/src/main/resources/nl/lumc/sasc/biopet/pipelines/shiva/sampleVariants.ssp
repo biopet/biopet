@@ -76,7 +76,7 @@
         #for (field <- fields) <th>${field}</th> #end
     </tr></thead>
     <tbody>
-    #for (sample <- samples.toList.sorted)
+    #for (sample <- samples.sortBy(_.name))
     <tr><td><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
     #{
     fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
