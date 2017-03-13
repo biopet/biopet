@@ -2,6 +2,7 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.shiva.ShivaReport)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
