@@ -148,7 +148,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     val samples = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
     val statsPaths = {
       (for (sample <- Await.result(summary.getSamples(runId = runId), Duration.Inf)) yield {
-        field.map(f => s"${sample.name};HomVar" -> List("total", "genotype", "general", sample.name, f)).toMap
+        field.map(f => s"${sample.name};$f" -> List("total", "genotype", "general", sample.name, f)).toMap
       }).fold(Map())(_ ++ _)
     }
 
@@ -160,7 +160,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     val results = summary.getStatKeys(runId, "shivavariantcalling", moduleName, sampleId.map(SampleId).getOrElse(NoSample), keyValues = statsPaths)
 
     for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
-      tsvWriter.println(sample.name + "\t" + field.map(f => results(s"${sample.name};$f").getOrElse("")).mkString("\t"))
+      tsvWriter.println(sample.name + "\t" + field.map(f => results.get(s"${sample.name};$f").getOrElse(Some("0")).get).mkString("\t"))
     }
 
     tsvWriter.close()

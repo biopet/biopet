@@ -9,6 +9,7 @@
 #import(java.io.File)
 <%@ var summary: SummaryDb %>
 <%@ var sampleId: Option[Int] = None %>
+<%@ var multisample: Boolean = true %>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
 <%@ var showPlot: Boolean = false %>
@@ -82,7 +83,8 @@
     #{
     fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
         val statsPaths = fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
-        val results = summary.getStatKeys(runId, "shivavariantcalling", "vcfstatsKey", sample = sample.id, keyValues = statsPaths)
+        val sampleQuery: SampleQuery = if (multisample) NoSample else SampleId(sampleId.get)
+        val results = summary.getStatKeys(runId, "shivavariantcalling", vcfstatsKey, sampleQuery, keyValues = statsPaths)
     }#
 
     #for (field <- fields)
