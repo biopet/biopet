@@ -106,13 +106,13 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Files page, can be used general or at sample level */
   //TODO: fix files pages
-//  override def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
-//    val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-//      Map("sampleId" -> sampleId)))
-//    else Nil
-//    val oldPage = super.filesPage(sampleId, libraryId)
-//    oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
-//  }
+  //  override def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
+  //    val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
+  //      Map("sampleId" -> sampleId)))
+  //    else Nil
+  //    val oldPage = super.filesPage(sampleId, libraryId)
+  //    oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
+  //  }
 
   /** Single sample page */
   override def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
