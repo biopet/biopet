@@ -1,4 +1,5 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.File)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Pipeline)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -9,7 +10,9 @@
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
 <%@ var runId: Int %>
-<%@ var pipelineNames: List[Option[String]] %>
+<%@ var pipelineIds: List[Int] %>
+<%@ var allPipelines: Seq[Pipeline] %>
+#{ val pipelineNames = pipelineIds.map(x => allPipelines.find(_.id == x).map(_.name)) }#
 <table class="table">
 <thead><tr>
     <th>Pipeline</th>

@@ -116,25 +116,28 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Files page, can be used general or at sample level */
   def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
-    val dbFiles = summary.getFiles(runId, sample = Some(sampleId.map(SampleId).getOrElse(NoSample)),
-      library = Some(libraryId.map(LibraryId).getOrElse(NoLibrary)))
+    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
+      library = libraryId.map(LibraryId))
       .map(_.groupBy(_.pipelineId))
     val modulePages = dbFiles.map(_.map {
-        case (pipelineId, files) =>
-          val moduleSections = files.groupBy(_.moduleId).map {
-            case (moduleId, files) =>
-              val moduleName: Future[String] = moduleId match {
-                case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
-                case _        => Future("Pipeline")
-              }
-              moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
-          }
-          summary.getPipelineName(pipelineId = pipelineId).map(_.get -> ReportPage(Nil, Await.result(Future.sequence(moduleSections), Duration.Inf).toList, Map()))
-      })
+      case (pipelineId, files) =>
+        val moduleSections = files.groupBy(_.moduleId).map {
+          case (moduleId, files) =>
+            val moduleName: Future[String] = moduleId match {
+              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
+              case _        => Future("Pipeline")
+            }
+            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
+        }
+        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
+        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map()))
+    })
 
-    val pipelineNames = dbFiles.flatMap(x => Future.sequence(x.map(y => summary.getPipelineName(y._1))))
+    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
 
-    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList, "Pipelines" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineNames" -> Await.result(pipelineNames, Duration.Inf).toList)) ::Nil, Map()))
+    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
+      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
+        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
   }
 
   /** Single sample page */
