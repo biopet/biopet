@@ -164,6 +164,22 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       }
     }
 
+    qscript match {
+      case q: MultiSampleQScript =>
+        // Global level
+        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
+
+        for ((sampleName, sample) <- q.samples) {
+          // Sample level
+          for ((key, file) <- sample.summaryFiles) addChecksum(file)
+          for ((libName, lib) <- sample.libraries) {
+            // Library level
+            for ((key, file) <- lib.summaryFiles) addChecksum(file)
+          }
+        }
+      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
+    }
+
     for (inputFile <- inputFiles) {
       inputFile.md5 match {
         case Some(checksum) => {
@@ -187,22 +203,6 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
-    }
-
-    qscript match {
-      case q: MultiSampleQScript =>
-        // Global level
-        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
-
-        for ((sampleName, sample) <- q.samples) {
-          // Sample level
-          for ((key, file) <- sample.summaryFiles) addChecksum(file)
-          for ((libName, lib) <- sample.libraries) {
-            // Library level
-            for ((key, file) <- lib.summaryFiles) addChecksum(file)
-          }
-        }
-      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
     }
 
     addedJobs = true
