@@ -66,8 +66,9 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
-    val roi = summary.getSetting(runId, "shiva").get("regions_of_interest")
-    val amplicon = summary.getSetting(runId, "shiva").get("amplicon_bed")
+    val shivaSettings = Await.result(summary.getSetting(runId, "shiva"), Duration.Inf).get
+    val roi = shivaSettings.get("regions_of_interest")
+    val amplicon = shivaSettings.get("amplicon_bed")
 
     var regionPages: Map[String, ReportPage] = Map()
 
