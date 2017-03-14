@@ -96,14 +96,6 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     jobOutputFile = new File(qscript.outputDir, s".${qscript.summaryName}.summary.out")
   }
 
-  def createFile(db: SummaryDb, runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libId: Option[Int], key: String, file: File, outputDir: File) = {
-    val path = file.getAbsolutePath.replace(s"^${outputDir.getAbsolutePath}", ".")
-    val md5 = WriteSummary.parseChecksum(SummaryQScript.md5sumCache(file))
-    val size = if (file.exists()) file.length() else 0L
-    val link = if (file.exists()) java.nio.file.Files.isSymbolicLink(file.toPath) else false
-    db.createOrUpdateFile(qscript.summaryRunId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
-  }
-
   /** Function to create summary */
   def run(): Unit = {
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
@@ -129,7 +121,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         sampleId, libId, stats.nospaces)
 
       for ((key, file) <- summarizables.head.summaryFiles.par)
-        Await.result(createFile(db, qscript.summaryRunId, pipelineId, Some(moduleId), sampleId, libId, key, file, outputDir), Duration.Inf)
+        Await.result(WriteSummary.createFile(db, qscript.summaryRunId, pipelineId, Some(moduleId), sampleId, libId, key, file, outputDir), Duration.Inf)
     }
 
     qscript match {
@@ -137,32 +129,32 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         val sampleId = tag.sampleId.flatMap(name => Await.result(db.getSampleId(qscript.summaryRunId, name), Duration.Inf))
         val libId = tag.libId.flatMap(name => sampleId.flatMap(sampleId => Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
         for ((key, file) <- qscript.summaryFiles.par)
-          Await.result(createFile(db, qscript.summaryRunId, pipelineId, None, sampleId, libId, key, file, outputDir), Duration.Inf)
+          Await.result(WriteSummary.createFile(db, qscript.summaryRunId, pipelineId, None, sampleId, libId, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, sampleId, libId, ConfigUtils.mapToJson(tag.summarySettings).nospaces)
       case q: MultiSampleQScript =>
         // Global level
         for ((key, file) <- qscript.summaryFiles.par)
-          Await.result(createFile(db, q.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
+          Await.result(WriteSummary.createFile(db, q.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
 
         for ((sampleName, sample) <- q.samples) {
           // Sample level
           val sampleId = Await.result(db.getSampleId(qscript.summaryRunId, sampleName), Duration.Inf).getOrElse(throw new IllegalStateException("Sample should already exist in database"))
           for ((key, file) <- sample.summaryFiles.par)
-            Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), None, key, file, outputDir), Duration.Inf)
+            Await.result(WriteSummary.createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), None, key, file, outputDir), Duration.Inf)
           db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), None, ConfigUtils.mapToJson(sample.summarySettings).nospaces)
 
           for ((libName, lib) <- sample.libraries) {
             // Library level
             val libId = Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, libName), Duration.Inf).getOrElse(throw new IllegalStateException("Library should already exist in database"))
             for ((key, file) <- lib.summaryFiles.par)
-              Await.result(createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), key, file, outputDir), Duration.Inf)
+              Await.result(WriteSummary.createFile(db, q.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), key, file, outputDir), Duration.Inf)
             db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, Some(sampleId), Some(libId), ConfigUtils.mapToJson(lib.summarySettings).nospaces)
           }
         }
       case q =>
         for ((key, file) <- q.summaryFiles.par)
-          Await.result(createFile(db, qscript.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
+          Await.result(WriteSummary.createFile(db, qscript.summaryRunId, pipelineId, None, None, None, key, file, outputDir), Duration.Inf)
         db.createOrUpdateSetting(qscript.summaryRunId, pipelineId, None, None, None, ConfigUtils.mapToJson(q.summarySettings).nospaces)
     }
 
@@ -221,5 +213,15 @@ object WriteSummary {
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
+  }
+
+  def createFile(db: SummaryDb, runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libId: Option[Int], key: String, file: File, outputDir: File) = {
+    val path = if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath + File.separator)) {
+      "." + file.getAbsolutePath.stripPrefix(s"${outputDir.getAbsolutePath}")
+    } else file.getAbsolutePath
+    val md5 = SummaryQScript.md5sumCache.get(file).map(WriteSummary.parseChecksum(_))
+    val size = if (file.exists()) file.length() else 0L
+    val link = if (file.exists()) java.nio.file.Files.isSymbolicLink(file.toPath) else false
+    db.createOrUpdateFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5.getOrElse("checksum_not_found"), link, size)
   }
 }
