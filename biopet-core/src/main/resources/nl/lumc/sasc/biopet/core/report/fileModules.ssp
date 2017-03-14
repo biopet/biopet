@@ -9,15 +9,14 @@
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
 <%@ var runId: Int %>
-<%@ var files: Seq[File]%>
+<%@ var pipelineNames: List[Option[String]] %>
 <table class="table">
 <thead><tr>
-    <th data-sorted="true" data-sorted-direction="ascending">Key</th>
-    <th>path</th><th>md5</th>
+    <th>Pipeline</th>
 </tr></thead>
 <tbody>
-#for (file <- files)
-    <tr><td>${file.key}</td><td>${file.path}</td><td>${file.md5}</td></tr>
-#end
+    #for (pipelineName <- pipelineNames)
+        <tr><td><a href="./${pipelineName}/index.html" >${pipelineName}</a></td></tr>
+    #end
 </tbody>
 </table>

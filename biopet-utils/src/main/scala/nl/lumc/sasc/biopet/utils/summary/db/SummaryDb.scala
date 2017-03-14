@@ -177,6 +177,11 @@ class SummaryDb(val db: Database) extends Closeable {
     getPipelines(runId = Some(runId), name = Some(pipelineName)).map(_.headOption.map(_.id))
   }
 
+  /** Return name of a pipeline */
+  def getPipelineName(pipelineId: Int): Future[Option[String]] = {
+    getPipelines(pipelineId = Some(pipelineId)).map(_.headOption.map(_.name))
+  }
+
   /** Creates a new module, even if it already exist. This may give a database exeption */
   def forceCreateModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
     val id = Await.result(db.run(modules.size.result), Duration.Inf)
@@ -209,6 +214,11 @@ class SummaryDb(val db: Database) extends Closeable {
   /** Return moduleId of a specific moduleName */
   def getmoduleId(runId: Int, moduleName: String, pipelineId: Int): Future[Option[Int]] = {
     getModules(runId = Some(runId), name = Some(moduleName), pipelineId = Some(pipelineId)).map(_.headOption.map(_.id))
+  }
+
+  /** Returns name of a module */
+  def getModuleName(pipelineId: Int, moduleId: Int): Future[Option[String]] = {
+    getModules(pipelineId = Some(pipelineId), moduleId = Some(moduleId)).map(_.headOption.map(_.name))
   }
 
   /** Create a new stat in the database, This method is need checking before */
