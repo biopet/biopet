@@ -87,7 +87,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private var addedJobs = false
 
   final lazy val summaryRunId: Int = {
-    if (runIdFile.exists()) {
+    if (runIdFile.exists() && summaryDbFile.exists()) {
       val reader = Source.fromFile(runIdFile)
       val id = reader.getLines().next().toInt
       reader.close()
