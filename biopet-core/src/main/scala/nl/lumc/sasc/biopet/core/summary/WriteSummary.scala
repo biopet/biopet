@@ -14,15 +14,14 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.LastCommitHash
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.{ SummaryDb, SummaryDbWrite }
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.Input
 
 import scala.collection.mutable
 import scala.io.Source
@@ -215,7 +214,7 @@ object WriteSummary {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }
 
-  def createFile(db: SummaryDb, runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libId: Option[Int], key: String, file: File, outputDir: File) = {
+  def createFile(db: SummaryDbWrite, runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libId: Option[Int], key: String, file: File, outputDir: File) = {
     val path = if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath + File.separator)) {
       "." + file.getAbsolutePath.stripPrefix(s"${outputDir.getAbsolutePath}")
     } else file.getAbsolutePath

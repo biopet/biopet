@@ -164,7 +164,7 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
-    setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
+    setSummary = SummaryDb.openReadOnlySqliteSummary(cmdArgs.summaryDbFile)
     setRunId = cmdArgs.runId
 
     cmdArgs.pageArgs.get("sampleId") match {
