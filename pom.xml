@@ -137,6 +137,9 @@
                         <goals>
                             <goal>precompile</goal>
                         </goals>
+                        <configuration>
+                            <contextClass>org.fusesource.scalate.DefaultRenderContext</contextClass>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
