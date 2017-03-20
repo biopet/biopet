@@ -14,7 +14,9 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
+
+import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.sortAnyAny
 
 import scala.collection.mutable
@@ -87,6 +89,18 @@ class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric
     val writer = new PrintWriter(file)
     aggregateStats.foreach(x => writer.println(x._1 + "\t" + x._2))
     writer.close()
+  }
+
+  def writeFilesAndPlot(outputDir: File, prefix: String, xlabel: String, ylabel: String, title: String): Unit = {
+    writeHistogramToTsv(new File(outputDir, prefix + ".histogram.tsv"))
+    writeAggregateToTsv(new File(outputDir, prefix + ".stats.tsv"))
+    val plot = new LinePlot(null)
+    plot.input = new File(outputDir, prefix + ".histogram.tsv")
+    plot.output = new File(outputDir, prefix + ".histogram.png")
+    plot.xlabel = Some(xlabel)
+    plot.ylabel = Some(ylabel)
+    plot.title = Some(title)
+    plot.runLocal()
   }
 
 }

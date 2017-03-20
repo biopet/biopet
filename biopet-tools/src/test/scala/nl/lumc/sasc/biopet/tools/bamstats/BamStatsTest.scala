@@ -34,6 +34,15 @@ class BamStatsTest extends TestNGSuite with Matchers {
 
     new File(outputDir, "bamstats.json") should exist
     new File(outputDir, "bamstats.summary.json") should exist
+
+    new File(outputDir, "flagstats.tsv") should exist
+    new File(outputDir, "insertsize.stats.tsv") should exist
+    new File(outputDir, "insertsize.histogram.tsv") should exist
+    new File(outputDir, "mappingQuality.stats.tsv") should exist
+    new File(outputDir, "mappingQuality.histogram.tsv") should exist
+    new File(outputDir, "clipping.stats.tsv") should exist
+    new File(outputDir, "clipping.histogram.tsv") should exist
+
     new File(outputDir, "flagstats") shouldNot exist
     new File(outputDir, "flagstats.summary.json") shouldNot exist
     new File(outputDir, "mapping_quality.tsv") shouldNot exist

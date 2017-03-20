@@ -104,21 +104,14 @@ object BamStats extends ToolCommand {
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
     stats.flagstat.writeAsTsv(new File(outputDir, "flagstats.tsv"))
-    stats.insertSizeHistogram.writeHistogramToTsv(new File(outputDir, "insertsize.histogram.tsv"))
-    stats.insertSizeHistogram.writeAggregateToTsv(new File(outputDir, "insertsize.stats.tsv"))
-    stats.mappingQualityHistogram.writeHistogramToTsv(new File(outputDir, "mappingQuality.histogram.tsv"))
-    stats.mappingQualityHistogram.writeAggregateToTsv(new File(outputDir, "mappingQualityHistogram.stats.tsv"))
-    stats.clippingHistogram.writeHistogramToTsv(new File(outputDir, "clipping.histogram.tsv"))
-    stats.clippingHistogram.writeAggregateToTsv(new File(outputDir, "clipping.stats.tsv"))
+    stats.insertSizeHistogram.writeFilesAndPlot(outputDir, "insertsize", "Insertsize", "Reads", "Insertsize distribution")
+    stats.mappingQualityHistogram.writeFilesAndPlot(outputDir, "mappingQuality", "Mapping Quality", "Reads", "Mapping Quality distribution")
+    stats.clippingHistogram.writeFilesAndPlot(outputDir, "clipping", "CLipped bases", "Reads", "Clipping distribution")
 
-    stats.leftClippingHistogram.writeHistogramToTsv(new File(outputDir, "left_clipping.histogram.tsv"))
-    stats.leftClippingHistogram.writeAggregateToTsv(new File(outputDir, "left_clipping.stats.tsv"))
-    stats.rightClippingHistogram.writeHistogramToTsv(new File(outputDir, "right_clipping.histogram.tsv"))
-    stats.rightClippingHistogram.writeAggregateToTsv(new File(outputDir, "right_clipping.stats.tsv"))
-    stats._3_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "3prime_clipping.histogram.tsv"))
-    stats._3_ClippingHistogram.writeAggregateToTsv(new File(outputDir, "3prime_clipping.stats.tsv"))
-    stats._5_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "5prime_clipping.histogram.tsv"))
-    stats._5_ClippingHistogram.writeAggregateToTsv(new File(outputDir, "5prime_clipping.stats.tsv"))
+    stats.leftClippingHistogram.writeFilesAndPlot(outputDir, "left_clipping", "CLipped bases", "Reads", "Left Clipping distribution")
+    stats.rightClippingHistogram.writeFilesAndPlot(outputDir, "right_clipping", "CLipped bases", "Reads", "Right Clipping distribution")
+    stats._3_ClippingHistogram.writeFilesAndPlot(outputDir, "3prime_clipping", "CLipped bases", "Reads", "3 Prime Clipping distribution")
+    stats._5_ClippingHistogram.writeFilesAndPlot(outputDir, "5prime_clipping", "CLipped bases", "Reads", "5 Prime Clipping distribution")
 
     val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
     val totalStats = stats.toSummaryMap
