@@ -24,6 +24,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 import nl.lumc.sasc.biopet.utils.sortAnyAny
+import org.apache.commons.io.FileUtils
 
 import scala.collection.mutable
 
@@ -160,6 +161,16 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     valueFromTsv(i, "Sample_ID_1", "bam") should be(Some("MyFirst.bam"))
     valueFromTsv(i, "Sample_ID_2", "bam") should be(Some("MySecond.bam"))
     valueFromTsv(i, "Sample_ID_3", "bam") should be(empty)
+  }
+
+  @Test
+  def testNoExistOutputDir: Unit = {
+    val tmp = Files.createTempDirectory("vcfStats")
+    FileUtils.deleteDirectory(new File(tmp.toAbsolutePath.toString))
+    val vcf = resourcePath("/chrQ.vcf.gz")
+    val ref = resourcePath("/fake_chrQ.fa")
+
+    an[IllegalArgumentException] should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
   }
 
   @Test

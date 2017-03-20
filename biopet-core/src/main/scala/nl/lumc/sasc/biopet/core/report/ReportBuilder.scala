@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, 
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
+import org.fusesource.scalate.TemplateEngine
 
 import scala.collection.mutable
 import scala.concurrent.{ Await, Future }
@@ -273,9 +273,7 @@ object ReportBuilder {
 
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
-
-  /** Cache of temp file for templates from the classpath / jar */
-  private[report] var templateCache: Map[String, File] = Map()
+  engine.allowReload = false
 
   /** This will give the total number of pages including all nested pages */
   def countPages(page: ReportPage): Int = {
@@ -291,15 +289,6 @@ object ReportBuilder {
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
     Logging.logger.info("Rendering: " + location)
 
-    val templateFile: File = templateCache.get(location) match {
-      case Some(template) => template
-      case _ =>
-        val tempFile = File.createTempFile("ssp-template", new File(location).getName)
-        tempFile.deleteOnExit()
-        IoUtils.copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
-        templateCache += location -> tempFile
-        tempFile
-    }
-    engine.layout(TemplateSource.fromFile(templateFile), args)
+    engine.layout(location, args)
   }
 }

@@ -5,7 +5,7 @@
 
 Biopet (Bio Pipeline Execution Toolkit) is the main pipeline development framework of the LUMC Sequencing Analysis Support Core team. It contains our main pipelines and some of the command line tools we develop in-house. It is meant to be used in the main [SHARK](https://humgenprojects.lumc.nl/trac/shark) computing cluster. While usage outside of SHARK is technically possible, some adjustments may need to be made in order to do so.
 
-Full documantation is here: [Biopet documantation](http://biopet-docs.readthedocs.io/en/latest/)
+Full documentation is here: [Biopet documentation](http://biopet-docs.readthedocs.io/en/latest/)
 
 ## Quick Start
 
@@ -60,7 +60,7 @@ Biopet is based on the Queue framework developed by the Broad Institute as part 
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://github.com/biopet/biopet](https://github.com/biopet/biopet/issues), along with our issue tracker.
 
-For more information please go to our [Developer documantation](http://biopet-docs.readthedocs.io/en/develop/developer/getting-started/)
+For more information please go to our [Developer documentation](http://biopet-docs.readthedocs.io/en/develop/developer/getting-started/)
 
 ## About
 
