@@ -104,7 +104,21 @@ object BamStats extends ToolCommand {
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
     stats.flagstat.writeAsTsv(new File(outputDir, "flagstats.tsv"))
-    stats.insertSizeHistogram
+    stats.insertSizeHistogram.writeHistogramToTsv(new File(outputDir, "insertsize.histogram.tsv"))
+    stats.insertSizeHistogram.writeAggregateToTsv(new File(outputDir, "insertsize.stats.tsv"))
+    stats.mappingQualityHistogram.writeHistogramToTsv(new File(outputDir, "mappingQuality.histogram.tsv"))
+    stats.mappingQualityHistogram.writeAggregateToTsv(new File(outputDir, "mappingQualityHistogram.stats.tsv"))
+    stats.clippingHistogram.writeHistogramToTsv(new File(outputDir, "clipping.histogram.tsv"))
+    stats.clippingHistogram.writeAggregateToTsv(new File(outputDir, "clipping.stats.tsv"))
+
+    stats.leftClippingHistogram.writeHistogramToTsv(new File(outputDir, "left_clipping.histogram.tsv"))
+    stats.leftClippingHistogram.writeAggregateToTsv(new File(outputDir, "left_clipping.stats.tsv"))
+    stats.rightClippingHistogram.writeHistogramToTsv(new File(outputDir, "right_clipping.histogram.tsv"))
+    stats.rightClippingHistogram.writeAggregateToTsv(new File(outputDir, "right_clipping.stats.tsv"))
+    stats._3_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "3prime_clipping.histogram.tsv"))
+    stats._3_ClippingHistogram.writeAggregateToTsv(new File(outputDir, "3prime_clipping.stats.tsv"))
+    stats._5_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "5prime_clipping.histogram.tsv"))
+    stats._5_ClippingHistogram.writeAggregateToTsv(new File(outputDir, "5prime_clipping.stats.tsv"))
 
     val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
     val totalStats = stats.toSummaryMap
