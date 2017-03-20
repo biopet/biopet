@@ -82,4 +82,11 @@ class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric
     } else Map()
   }
 
+  /** Write histogram to a tsv/count file */
+  def writeAggregateToTsv(file: File): Unit = {
+    val writer = new PrintWriter(file)
+    aggregateStats.foreach(x => writer.println(x._1 + "\t" + x._2))
+    writer.close()
+  }
+
 }
