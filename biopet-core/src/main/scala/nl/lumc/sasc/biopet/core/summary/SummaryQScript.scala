@@ -14,15 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.LastCommitHash
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 
 import scala.collection.mutable
 import scala.concurrent.Await
