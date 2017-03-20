@@ -43,7 +43,7 @@ class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T
   }
 
   /** Write histogram to a tsv/count file */
-  def writeToTsv(file: File): Unit = {
+  def writeHistogramToTsv(file: File): Unit = {
     val writer = new PrintWriter(file)
     writer.println("value\tcount")
     counts.keys.toList.sorted.foreach(x => writer.println(s"$x\t${counts(x)}"))

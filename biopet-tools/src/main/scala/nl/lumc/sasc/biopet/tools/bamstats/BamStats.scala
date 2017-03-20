@@ -103,6 +103,9 @@ object BamStats extends ToolCommand {
 
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
 
+    stats.flagstat.writeAsTsv(new File(outputDir, "flagstats.tsv"))
+    stats.insertSizeHistogram
+
     val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
     val totalStats = stats.toSummaryMap
     val statsMap = Map(
