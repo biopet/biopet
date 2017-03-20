@@ -150,6 +150,7 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
       centrifuge.fastqR2 = r2
       centrifuge.outputName = outputName
       add(centrifuge)
+      outputFiles += "centrifuge_output" -> centrifuge.centrifugeOutput
     }
 
     qiimeRatx foreach { qiimeRatx =>
@@ -163,18 +164,21 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqInput = combinedFastq
       add(qiimeClosed)
+      outputFiles += "qiime_closed_otu_table" -> qiimeClosed.otuTable
     }
 
     qiimeOpen foreach { qiimeOpen =>
       qiimeOpen.outputDir = new File(outputDir, "qiime_open")
       qiimeOpen.fastqInput = combinedFastq
       add(qiimeOpen)
+      outputFiles += "qiime_open_otu_table" -> qiimeOpen.otuTable
     }
 
     seqCount.foreach { seqCount =>
       seqCount.fastqInput = combinedFastq
       seqCount.outputDir = new File(outputDir, "seq_count")
       add(seqCount)
+      outputFiles += "seq_count_count_file" -> seqCount.countFile
     }
 
     addSummaryJobs()

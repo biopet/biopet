@@ -85,8 +85,8 @@ object GearsReport extends MultisampleReportBuilder {
   def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport", sample = sampleId, library = NoLibrary), Duration.Inf) == 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", sample = sampleId, library = None), Duration.Inf) == 1
-    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, NoLibrary, "qiime_closed_otu_table"), Duration.Inf)
-    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gears", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"), Duration.Inf)
+    val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_closed_otu_table"), Duration.Inf)
+    val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"), Duration.Inf)
 
     ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
       Map("summaryStatsTag" -> "centrifuge_report")
