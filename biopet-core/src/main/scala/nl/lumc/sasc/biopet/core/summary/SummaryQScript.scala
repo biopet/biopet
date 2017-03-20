@@ -14,15 +14,15 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.LastCommitHash
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -185,8 +185,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
         case Some(checksum) => {
           val checkMd5 = new CheckChecksum
           checkMd5.inputFile = inputFile.file
-          require(SummaryQScript.md5sumCache.contains(inputFile.file),
-            s"Md5 job is not executed, checksum file can't be found for: ${inputFile.file}")
+          if (!SummaryQScript.md5sumCache.contains(inputFile.file))
+            addChecksum(inputFile.file)
           checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
           checkMd5.checksum = checksum
           checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile, checkMd5.checksumFile.getName + ".check.out")
