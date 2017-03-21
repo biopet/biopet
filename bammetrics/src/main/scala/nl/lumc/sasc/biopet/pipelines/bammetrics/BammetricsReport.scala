@@ -162,9 +162,7 @@ object BammetricsReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    if (libraryLevel) {
-      plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size) * 10)
-    } else plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
+    plot.width = Some(200 + (results.size * 10))
     plot.title = Some("Aligned reads")
     plot.runLocal()
   }
