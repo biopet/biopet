@@ -81,7 +81,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     samtoolsView.input = bamFile
     samtoolsView.L = Some(annotationBed)
     val samtoolsFlagstat = new SamtoolsFlagstat(this)
-    samtoolsFlagstat.output = new File(outputDir, s"$sampleName.$name.exon.flagstats")
+    samtoolsFlagstat.output = new File(outputDir, s"$sampleName.exon.flagstat")
     add(samtoolsView | samtoolsFlagstat)
 
     (geneAggr.output, exonAggr.output)
