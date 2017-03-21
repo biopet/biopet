@@ -208,6 +208,7 @@ object BammetricsReport extends ReportBuilder {
       xlabel = xlabel,
       ylabel = ylabel,
       title = title,
+      hideLegend = results.size > 40,
       removeZero = removeZero).runLocal()
   }
 
