@@ -86,7 +86,7 @@ class CountsTest extends TestNGSuite with Matchers {
     val tsvFile = File.createTempFile("counts.", ".tsv")
     tsvFile.deleteOnExit()
 
-    c1.writeToTsv(tsvFile)
+    c1.writeHistogramToTsv(tsvFile)
 
     val reader = Source.fromFile(tsvFile)
     reader.getLines().toList shouldBe List("value\tcount", "1\t1", "2\t2", "3\t3")
