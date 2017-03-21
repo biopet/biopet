@@ -14,7 +14,7 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.sortAnyAny
