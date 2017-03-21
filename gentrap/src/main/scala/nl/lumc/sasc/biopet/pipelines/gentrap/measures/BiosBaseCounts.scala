@@ -17,7 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, Hist2count }
+import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsFlagstat, SamtoolsView}
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{AggrBaseCount, Hist2count}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -75,6 +76,13 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     exonAggr.mode = "exon"
     exonAggr.inputLabel = sampleName
     add(exonAggr)
+
+    val samtoolsView = new SamtoolsView(this)
+    samtoolsView.input = bamFile
+    samtoolsView.L = Some(annotationBed)
+    val samtoolsFlagstat = new SamtoolsFlagstat(this)
+    samtoolsFlagstat.output = new File(outputDir, s"$sampleName.$name.exon.flagstats")
+    add(samtoolsView | samtoolsFlagstat)
 
     (geneAggr.output, exonAggr.output)
   }
