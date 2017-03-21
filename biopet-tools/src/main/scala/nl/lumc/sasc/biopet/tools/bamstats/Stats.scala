@@ -50,13 +50,13 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
   def writeStatsToFiles(outputDir: File): Unit = {
     this.flagstat.writeReportToFile(new File(outputDir, "flagstats"))
     this.flagstat.writeSummaryTofile(new File(outputDir, "flagstats.summary.json"))
-    this.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
-    this.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
-    this.clippingHistogram.writeToTsv(new File(outputDir, "clipping.tsv"))
-    this.leftClippingHistogram.writeToTsv(new File(outputDir, "left_clipping.tsv"))
-    this.rightClippingHistogram.writeToTsv(new File(outputDir, "right_clipping.tsv"))
-    this._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
-    this._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
+    this.mappingQualityHistogram.writeHistogramToTsv(new File(outputDir, "mapping_quality.tsv"))
+    this.insertSizeHistogram.writeHistogramToTsv(new File(outputDir, "insert_size.tsv"))
+    this.clippingHistogram.writeHistogramToTsv(new File(outputDir, "clipping.tsv"))
+    this.leftClippingHistogram.writeHistogramToTsv(new File(outputDir, "left_clipping.tsv"))
+    this.rightClippingHistogram.writeHistogramToTsv(new File(outputDir, "right_clipping.tsv"))
+    this._5_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "5_prime_clipping.tsv"))
+    this._3_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "3_prime_clipping.tsv"))
   }
 
   def toSummaryMap = {
