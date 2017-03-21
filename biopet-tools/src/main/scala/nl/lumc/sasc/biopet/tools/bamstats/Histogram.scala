@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{ File, PrintWriter }
+import java.io.{ File, IOException, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
-import nl.lumc.sasc.biopet.utils.sortAnyAny
+import nl.lumc.sasc.biopet.utils.{ Logging, sortAnyAny }
 
 import scala.collection.mutable
 
@@ -100,7 +100,12 @@ class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric
     plot.xlabel = Some(xlabel)
     plot.ylabel = Some(ylabel)
     plot.title = Some(title)
-    plot.runLocal()
+    try {
+      plot.runLocal()
+    } catch {
+      // If plotting fails the tools should not fail, this depens on R to be installed
+      case e: IOException => Logging.logger.warn(s"Error found while plotting ${plot.output}: ${e.getMessage}")
+    }
   }
 
 }
