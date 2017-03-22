@@ -59,8 +59,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
     val rnaExecuted = Await.result(summary.getStatsSize(runId, "bammetrics", "rna",
       library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
-    val insertsizeExecuted = Await.result(summary.getStatsSize(runId, "bammetrics", "CollectInsertSizeMetrics",
-      library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
+    val insertsizeExecuted = summary.getSettingsForSamples(runId, pipelineName, NoModule, keyValues = Map()).count(_._2("paired") == Some(true)) >= 1
     val mappingExecuted = Await.result(summary.getStatsSize(runId, "mapping", NoModule, mustHaveLibrary = true), Duration.Inf) >= 1
     val mappingSettings = summary.getSettingsForLibraries(runId, "mapping", NoModule, keyValues = Map("paired" -> List("paired")))
     val pairedFound = !mappingExecuted || mappingSettings.exists(_._2.exists(_._2 == Option(true)))
