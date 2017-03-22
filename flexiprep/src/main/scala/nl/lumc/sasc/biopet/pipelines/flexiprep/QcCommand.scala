@@ -47,9 +47,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
   val seqtk = new SeqtkSeq(parent)
   var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(parent, fastqc)) else None
   var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
-    val sickle = new Sickle(parent)
-    sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-    Some(sickle)
+    Some(new Sickle(root))
   } else None
 
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
@@ -136,6 +134,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
         case Some(c) => c.fastqOutput
         case _       => seqtk.output
       }
+      t.outputStats = new File(output.getParentFile, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       addPipeJob(t)
     }
 
@@ -170,7 +169,6 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
       case _                  => new BiopetFifoPipe(parent, seqtk :: outputCommand :: Nil)
     }
 
-    //val cmds = (Some(seqtk) :: clip :: trim :: Some(new Gzip(root)) :: Nil).flatten
     cmd.beforeGraph()
     cmd.commandLine
   }
