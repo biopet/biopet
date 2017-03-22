@@ -135,6 +135,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
         case _       => seqtk.output
       }
       t.outputStats = new File(output.getParentFile, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+      outputFiles :+= t.outputStats
       addPipeJob(t)
     }
 
