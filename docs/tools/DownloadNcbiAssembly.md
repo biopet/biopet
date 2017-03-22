@@ -20,11 +20,11 @@ Usage: DownloadNcbiAssembly [options]
   -o <file> | --output <file>
         output Fasta file
   --report <file>
-        where to write report from ncbi
+        where to write report from NCBI
   --nameHeader <string>
         
- What column to use from the NCBI report for the name of the contigs.
- All columns in the report can be used but this are the most common field to choose from:
+ Which column to use from the NCBI report to name the contigs.
+ All columns from the report can be used but these are the most common fields to choose from:
  - 'Sequence-Name': Name of the contig within the assembly
  - 'UCSC-style-name': Name of the contig used by UCSC ( like hg19 )
  - 'RefSeq-Accn': Unique name of the contig at RefSeq (default for NCBI)
