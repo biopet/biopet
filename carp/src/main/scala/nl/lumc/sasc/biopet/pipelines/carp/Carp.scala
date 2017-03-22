@@ -82,8 +82,6 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
       bamMetricsFilter.summaryName = "bammetrics-filter"
       addSummaryQScript(bamMetricsFilter)
 
-      add(Bam2Wig(qscript, preProcessBam.get))
-
       val buildBamIndex = new BuildBamIndex(qscript)
       buildBamIndex.input = preProcessBam.get
       buildBamIndex.output = swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
