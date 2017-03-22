@@ -77,6 +77,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
 
+      override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
+
       lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
       lazy val useBaseRecalibration: Boolean = {
         val c: Boolean = config("use_base_recalibration", default = true)
@@ -140,6 +142,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     override def preProcessBam = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
       bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
     } else bamFile
+
+    override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
 
     /** This will add sample jobs */
     override def addJobs(): Unit = {
