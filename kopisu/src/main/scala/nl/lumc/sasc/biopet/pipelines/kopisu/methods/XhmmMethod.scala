@@ -64,13 +64,6 @@ class XhmmMethod(val parent: Configurable) extends CnvMethod with Reference {
     val firstMatrix = new XhmmMatrix(this)
     firstMatrix.inputMatrix = merged.output
     firstMatrix.outputMatrix = swapExt(xhmmDir, merged.output, ".depths.data", ".filtered_centered.data")
-    firstMatrix.minTargetSize = 10
-    firstMatrix.maxTargetSize = 10000
-    firstMatrix.minMeanTargetRD = 10
-    firstMatrix.maxMeanTargetRD = 500
-    firstMatrix.minMeanSampleRD = 25
-    firstMatrix.maxMeanSampleRD = 200
-    firstMatrix.maxSdSampleRD = 150
     firstMatrix.outputExcludedSamples = Some(swapExt(xhmmDir, merged.output, ".depths.data", ".filtered.samples.txt"))
     firstMatrix.outputExcludedTargets = Some(swapExt(xhmmDir, merged.output, ".depths.data", ".filtered.targets.txt"))
     add(firstMatrix)

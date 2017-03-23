@@ -32,6 +32,12 @@ class FlagstatCollector {
   protected[FlagstatCollector] var totalCounts: Array[Long] = Array()
   protected[FlagstatCollector] var crossCounts = Array.ofDim[Long](1, 1)
 
+  def writeAsTsv(file: File): Unit = {
+    val writer = new PrintWriter(file)
+    names.foreach(x => writer.println(x._2 + "\t" + totalCounts(x._1)))
+    writer.close()
+  }
+
   def loadDefaultFunctions() {
     addFunction("All", record => true)
     addFunction("Mapped", record => !record.getReadUnmappedFlag)

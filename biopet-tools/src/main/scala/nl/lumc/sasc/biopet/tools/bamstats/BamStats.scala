@@ -39,7 +39,8 @@ object BamStats extends ToolCommand {
                   bamFile: File = null,
                   referenceFasta: Option[File] = None,
                   binSize: Int = 10000,
-                  threadBinSize: Int = 10000000) extends AbstractArgs
+                  threadBinSize: Int = 10000000,
+                  tsvOutputs: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('R', "reference") valueName "<file>" action { (x, c) =>
@@ -57,6 +58,9 @@ object BamStats extends ToolCommand {
     opt[Int]("threadBinSize") valueName "<int>" action { (x, c) =>
       c.copy(threadBinSize = x)
     } text "Size of region per thread"
+    opt[Unit]("tsvOutputs") action { (x, c) =>
+      c.copy(tsvOutputs = true)
+    } text "Also output tsv files, default there is only a json"
   }
 
   /** This is the main entry to [[BamStats]], this will do the argument parsing. */
@@ -68,7 +72,7 @@ object BamStats extends ToolCommand {
 
     val sequenceDict = validateReferenceInBam(cmdArgs.bamFile, cmdArgs.referenceFasta)
 
-    init(cmdArgs.outputDir, cmdArgs.bamFile, sequenceDict, cmdArgs.binSize, cmdArgs.threadBinSize)
+    init(cmdArgs.outputDir, cmdArgs.bamFile, sequenceDict, cmdArgs.binSize, cmdArgs.threadBinSize, cmdArgs.tsvOutputs)
 
     logger.info("Done")
   }
@@ -96,12 +100,25 @@ object BamStats extends ToolCommand {
    * @param binSize stats binsize
    * @param threadBinSize Thread binsize
    */
-  def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
+  def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int, tsvOutput: Boolean): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
       contig.chr -> processContig(contig, bamFile, binSize, threadBinSize, outputDir)
     }.toList
 
     val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.map(_._2))
+
+    if (tsvOutput) {
+      stats.flagstat.writeAsTsv(new File(outputDir, "flagstats.tsv"))
+
+      stats.insertSizeHistogram.writeFilesAndPlot(outputDir, "insertsize", "Insertsize", "Reads", "Insertsize distribution")
+      stats.mappingQualityHistogram.writeFilesAndPlot(outputDir, "mappingQuality", "Mapping Quality", "Reads", "Mapping Quality distribution")
+      stats.clippingHistogram.writeFilesAndPlot(outputDir, "clipping", "CLipped bases", "Reads", "Clipping distribution")
+
+      stats.leftClippingHistogram.writeFilesAndPlot(outputDir, "left_clipping", "CLipped bases", "Reads", "Left Clipping distribution")
+      stats.rightClippingHistogram.writeFilesAndPlot(outputDir, "right_clipping", "CLipped bases", "Reads", "Right Clipping distribution")
+      stats._3_ClippingHistogram.writeFilesAndPlot(outputDir, "3prime_clipping", "CLipped bases", "Reads", "3 Prime Clipping distribution")
+      stats._5_ClippingHistogram.writeFilesAndPlot(outputDir, "5prime_clipping", "CLipped bases", "Reads", "5 Prime Clipping distribution")
+    }
 
     val statsWriter = new PrintWriter(new File(outputDir, "bamstats.json"))
     val totalStats = stats.toSummaryMap
