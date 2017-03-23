@@ -87,7 +87,10 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
     require(read != null)
     deps ::= input
     outputFiles :+= output
-    trim.foreach(outputFiles :+= _.outputStats)
+    trim.foreach { t =>
+      t.outputStats = new File(output.getParentFile, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+      outputFiles :+= t.outputStats
+    }
   }
 
   override def beforeCmd(): Unit = {
@@ -134,8 +137,6 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) 
         case Some(c) => c.fastqOutput
         case _       => seqtk.output
       }
-      t.outputStats = new File(output.getParentFile, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-      outputFiles :+= t.outputStats
       addPipeJob(t)
     }
 
