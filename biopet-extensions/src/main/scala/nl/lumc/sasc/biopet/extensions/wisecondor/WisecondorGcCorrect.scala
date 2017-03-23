@@ -18,16 +18,14 @@ class WisecondorGcCorrect(val root: Configurable) extends Wisecondor {
   var nIter: Option[Int] = config("iter", namespace = "wisecondor", default = None)
   var fracLowess: Option[Float] = config("frac_lowess", namespace = "wisecondor", default = None)
 
-  def cmdLine = {
-    executable + required("gc-correct") +
-      required("-I", inputBed) +
-      required("-R", referenceFasta()) +
-      required("-O", output) +
-      binCommand +
-      optional("-n", fracN) +
-      optional("-r", fracR) +
-      optional("-t", nIter) +
-      optional("-l", fracLowess)
-
-  }
+  def cmdLine = executable +
+    required("gc-correct") +
+    required("-I", inputBed) +
+    required("-R", referenceFasta()) +
+    required("-O", output) +
+    binCommand +
+    optional("-n", fracN) +
+    optional("-r", fracR) +
+    optional("-t", nIter) +
+    optional("-l", fracLowess)
 }

@@ -16,12 +16,11 @@ class WisecondorZscore(val root: Configurable) extends Wisecondor {
   @Input
   var referenceDictionary: File = config("reference_dictionary", namespace = "wisecondor")
 
-  def cmdLine = {
-    executable + required("zscore") +
-      required("-I", inputBed) +
-      required("-O", output) +
-      required("-R", referenceFasta()) +
-      required("-D", referenceDictionary) +
-      binCommand
-  }
+  def cmdLine = executable +
+    required("zscore") +
+    required("-I", inputBed) +
+    required("-O", output) +
+    required("-R", referenceFasta()) +
+    required("-D", referenceDictionary) +
+    binCommand
 }
