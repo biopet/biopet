@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsFlagstat, SamtoolsView}
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{AggrBaseCount, Hist2count}
+import nl.lumc.sasc.biopet.extensions.samtools.{ SamtoolsFlagstat, SamtoolsView }
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, Hist2count }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
