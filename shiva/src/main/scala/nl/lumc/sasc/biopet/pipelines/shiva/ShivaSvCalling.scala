@@ -109,7 +109,13 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> (if (inputBams.size > 1) outputMergedVCF else outputMergedVCFbySample.values.head))
+  def summaryFiles: Map[String, File] = outputMergedVCFbySample ++ (if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Nil)
+
 }
 
 object ShivaSvCalling extends PipelineCommand
+
+object StructuralVariantType extends Enumeration {
+  val Deletion = Value("DEL")
+  val Inversion = Value("INV")
+}
