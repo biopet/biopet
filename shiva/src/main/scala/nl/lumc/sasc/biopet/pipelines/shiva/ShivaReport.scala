@@ -42,6 +42,11 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     case _          => false
   }
 
+  def svCallingExecuted = summary.getValue("shiva", "settings", "sv_calling") match {
+    case Some(true) => true
+    case _          => false
+  }
+
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
 
   override def pipelineName = "shiva"
@@ -100,11 +105,15 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Files page, can be used general or at sample level */
   override def filesPage: ReportPage = {
-    val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-      Map("sampleId" -> None)))
-    else Nil
-    val oldPage = super.filesPage
-    oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
+    if (!variantcallingExecuted && !svCallingExecuted) super.filesPage
+    else {
+      var sections: List[(String, ReportSection)] = List()
+      if (variantcallingExecuted) sections = sections :+ ("Result files from SNV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp", Map("sampleId" -> None)))
+      if (svCallingExecuted) sections = sections :+ ("Result files from SV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFilesSv.ssp"))
+
+      val oldPage = super.filesPage
+      oldPage.copy(sections = oldPage.sections ++ sections)
+    }
   }
 
   /** Single sample page */
@@ -181,4 +190,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     } else plot.width = Some(200 + (summary.samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.runLocal()
   }
+
+  def formatVcfFilePath(vcfFilePath: Option[Any]): Any = {
+    val prefix = summary.getValue("meta", "output_dir").getOrElse("").toString
+    vcfFilePath.collect { case a => "./" + a.toString.stripPrefix(prefix + File.separator) }
+  }
+
 }

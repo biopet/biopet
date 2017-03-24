@@ -10,13 +10,6 @@
 <%@ var outputDir: File %>
 #{
     val variantCallers = summary.getValue(sampleId, libId, "shivavariantcalling", "settings", "variantcallers").get.asInstanceOf[List[String]]
-    val pipelineOutputDir = summary.getValue("meta", "output_dir").getOrElse("").toString
-    def removeDir(value: Option[Any]): Option[Any] = {
-        value.collect { case a =>
-            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir + File.separator)
-            else a
-        }
-    }
 }#
 
 <div class="panel-body">
@@ -31,15 +24,15 @@
         #if (variantCallers.size > 1)
             <tr>
                 <td>Final (merged)</td>
-                <td>${removeDir(summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", "final", "path"))}</td>
+                <td>${ShivaReport.formatVcfFilePath(summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", "final", "path"))}</td>
                 <td>${summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", "final", "md5")}</td>
             </tr>
         #end
         #for (variantCaller <- variantCallers)
             <tr>
                 <td>${variantCaller}</td>
-                <td>${removeDir(summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", variantCaller, "path"))}</td>
-                <td>${summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", variantCaller, "md5")}</td>
+                <td>${ShivaReport.formatVcfFilePath(summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", variantCaller, "path"))}</td>
+                <td>${ShivaReport.formatVcfFilePath(summary.getValue(sampleId, libId, "shivavariantcalling", "files", "pipeline", variantCaller, "md5"))}</td>
             </tr>
         #end
     </tbody>
