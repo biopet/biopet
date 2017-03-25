@@ -90,6 +90,7 @@ class Gentrap(val root: Configurable) extends QScript
       case otherwise                  => throw new IllegalStateException(otherwise.toString)
     }))
     else Map()),
+    "merge_count_files" -> false,
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
       "novelsplicing" -> 1,
