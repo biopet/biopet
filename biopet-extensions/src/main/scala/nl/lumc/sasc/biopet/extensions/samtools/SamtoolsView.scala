@@ -36,19 +36,16 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   @Input(required = false)
   var L: Option[File] = None
 
-  def cmdBase = required(executable) +
+  def cmdLine = required(executable) +
     required("view") +
     optional("-q", q) +
     optional("-L", L) +
     repeat("-f", f) +
     repeat("-F", F) +
     conditional(b, "-b") +
-    conditional(h, "-h")
-  def cmdPipeInput = cmdBase + "-"
-  def cmdPipe = cmdBase + required(input)
-
-  /** Returns command to execute */
-  def cmdLine = cmdPipe + " > " + required(output)
+    conditional(h, "-h") +
+    (if (inputAsStdin) "-" else required(input)) +
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object SamtoolsView {
