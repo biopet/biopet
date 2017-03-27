@@ -34,17 +34,19 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   var F: List[String] = config("F", default = List.empty[String])
 
   def cmdBase = required(executable) +
+  @Input(required = false)
+  var L: Option[File] = None
+
+  def cmdLine = required(executable) +
     required("view") +
     optional("-q", q) +
+    optional("-L", L) +
     repeat("-f", f) +
     repeat("-F", F) +
     conditional(b, "-b") +
-    conditional(h, "-h")
-  def cmdPipeInput = cmdBase + "-"
-  def cmdPipe = cmdBase + required(input)
-
-  /** Returns command to execute */
-  def cmdLine = cmdPipe + " > " + required(output)
+    conditional(h, "-h") +
+    (if (inputAsStdin) "-" else required(input)) +
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object SamtoolsView {
