@@ -14,6 +14,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
+import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
@@ -110,6 +111,44 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = outputMergedVCFbySample ++ (if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Nil)
+
+  def getVariantCounts(vcfFile: File, breaks: Array[Int]): (Map[String, Array[Int]], Option[Int]) = {
+    val delCounts, insCounts, dupCounts, invCounts = Array.fill(breaks.size + 1) { 0 }
+    var traCount = 0
+
+    val iterator = new VCFFileReader(vcfFile, false).iterator
+    while (iterator.hasNext) {
+      val record = iterator.next
+      val svType = record.getAttributeAsString("SVTYPE", "")
+      if (svType == "TRA" || svType == "CTX" || svType == "ITX") {
+        traCount += 1
+      } else {
+        val size = record.getEnd - record.getStart
+        var i = 0
+        while (i < breaks.size && size > breaks(i)) i += 1
+        svType match {
+          case "DEL" => delCounts(i) += 1
+          case "INS" => insCounts(i) += 1
+          case "DUP" => dupCounts(i) += 1
+          case "INV" => invCounts(i) += 1
+          case _     => logger.warn(s"Vcf file contains a record of unknown type: file-$vcfFile, type-$svType")
+        }
+      }
+    }
+    iterator.close()
+
+    var counts: Map[String, Array[Int]] = Map()
+    if (isConfiguredForType("DEL")) counts = Map("DEL" -> delCounts)
+    if (isConfiguredForType("INS")) counts = counts + ("INS" -> insCounts)
+    if (isConfiguredForType("DUP")) counts = counts + ("DUP" -> dupCounts)
+    if (isConfiguredForType("INV")) counts = counts + ("INV" -> invCounts)
+
+    (counts, if (isConfiguredForType("TRA")) Some(traCount) else None)
+  }
+
+  def isConfiguredForType(svType: String): Boolean = {
+    true
+  }
 
 }
 
