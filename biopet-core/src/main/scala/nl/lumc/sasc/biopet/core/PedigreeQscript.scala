@@ -69,17 +69,17 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
    * @return
    */
   def pedSamplesFromConfig(): List[PedSample] = {
-    val totalSampleIds = samples.values.map(_.sampleId).toList
     val withFam = samples.values.filter(_.family.isDefined)
-    val fathers = withFam.filter(_.father.isDefined).flatMap(_.father)
-    val mothers = withFam.filter(_.mother.isDefined).flatMap(_.mother)
+    val sampleIds = withFam.map(_.sampleId).toSet
+    val fathers = withFam.flatMap(_.father)
+    val mothers = withFam.flatMap(_.mother)
     fathers.foreach { f =>
-      if (!withFam.map(_.sampleId).toList.contains(f)) {
+      if (!sampleIds.contains(f)) {
         Logging.addError(s"Father $f does not exist in samples")
       }
     }
     mothers.foreach { m =>
-      if (!withFam.map(_.sampleId).toList.contains(m)) {
+      if (!sampleIds.contains(m)) {
         Logging.addError(s"Mother $m does not exist in samples")
       }
     }
