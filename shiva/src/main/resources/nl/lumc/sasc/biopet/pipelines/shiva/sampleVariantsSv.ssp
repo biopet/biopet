@@ -1,0 +1,70 @@
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(java.io.File)
+<%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var summary: Summary %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true %>
+
+#{
+    val svTypes = List(("DEL", "Deletion"), ("DUP", "Duplication"), ("INS", "Insertion"), ("INV", "Inversion"))
+}#
+
+
+#if (showPlot)
+    <div class="panel-body">
+    <img src="svSummary.png" class="img-responsive" />
+    </div>
+    <div class="panel-footer">
+    #if (showTable)
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">Hide table</button>
+    #else
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">Show table</button>
+    #end
+    <i class="glyphicon glyphicon-file"></i> <a href="svSummary.tsv">tsv file</a>
+    </div>
+#end
+
+<div class="panel-body collapse #if (showTable)in#end" id="svSummaryTable">
+
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        <th>Variant Type</th> <!-- TODO: use values from summary.getValue("shivasvcalling", "stats", "histBreaksForCounts")  -->
+        <th>&le;100bp</th>
+        <th>0.1-1kb</th>
+        <th>1-10kb</th>
+        <th>10-100kb</th>
+        <th>0.1-1Mb</th>
+        <th>1-10Mb</th>
+        <th>&gt;10Mb</th>
+    </tr></thead>
+    <tbody>
+        #for (sample <- summary.samples.toList.sorted)
+            #{
+                val counts:Map[String, Option[Any]] = summary.getSampleValue(sample, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Option[Any]]]
+                var firstRow = true
+            }#
+
+            #for ((svType, displayLabel) <- svTypes)
+                <tr>
+                #if (counts.contains(svType))
+                    #if (firstRow)
+                        <td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+                        #{ firstRow = false }#
+                    #else
+                        <td></td>
+                    #end
+
+                        <td>${displayLabel}</td>
+
+                    #for (countForSize <- counts.get(svType).get.asInstanceOf[List[Long]])
+                        <td>${countForSize}</td>
+                    #end
+                #end
+                </tr>
+            #end
+        #end
+    </tbody>
+</table>
+</div>
