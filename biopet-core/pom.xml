@@ -42,18 +42,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
-            <version>2.2.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
             <version>3.6</version>
@@ -71,7 +59,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-core_2.10</artifactId>
+            <artifactId>scalate-core_2.11</artifactId>
             <version>1.7.0</version>
         </dependency>
     </dependencies>
