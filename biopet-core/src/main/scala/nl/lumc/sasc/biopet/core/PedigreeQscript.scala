@@ -10,12 +10,12 @@ import scala.io.Source
 
 /**
  * Created by Sander Bollen on 28-3-17.
-  *
-  * A multi-sample Qscript with additional Pedigree information.
-  * Pedigrees follow the PED standard.
-  * See: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml for the format
-  *
-  * Pedigrees may be parsed from the sample config and/or a supplied PED file.
+ *
+ * A multi-sample Qscript with additional Pedigree information.
+ * Pedigrees follow the PED standard.
+ * See: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml for the format
+ *
+ * Pedigrees may be parsed from the sample config and/or a supplied PED file.
  */
 trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
 
