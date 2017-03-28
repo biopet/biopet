@@ -162,9 +162,7 @@ object BammetricsReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    if (libraryLevel) {
-      plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size) * 10)
-    } else plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
+    plot.width = Some(200 + (results.size * 10))
     plot.title = Some("Aligned reads")
     plot.runLocal()
   }
@@ -176,8 +174,8 @@ object BammetricsReport extends ReportBuilder {
                            sampleId: Option[Int] = None,
                            libraryId: Option[Int] = None,
                            statsPaths: Map[String, List[String]],
-                           xKey: String,
                            yKey: String,
+                           xKey: String,
                            pipeline: PipelineQuery,
                            module: ModuleQuery,
                            xlabel: Option[String] = None,
@@ -210,6 +208,7 @@ object BammetricsReport extends ReportBuilder {
       xlabel = xlabel,
       ylabel = ylabel,
       title = title,
+      hideLegend = results.size > 40,
       removeZero = removeZero).runLocal()
   }
 
@@ -286,8 +285,8 @@ object BammetricsReport extends ReportBuilder {
                        sampleId: Option[Int] = None,
                        libraryId: Option[Int] = None): Unit = {
     val statsPaths = Map(
-      "coverage" -> List("wgs", "histogram", "coverage"),
-      "count" -> List("wgs", "histogram", "count")
+      "coverage" -> List("histogram", "coverage"),
+      "count" -> List("histogram", "count")
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,

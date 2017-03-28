@@ -105,7 +105,7 @@ object Schema {
   }
   val settings = TableQuery[Settings]
 
-  case class File(runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], library: Option[Int], key: String, path: String, md5: String, link: Boolean, size: Long)
+  case class File(runId: Int, pipelineId: Int, moduleId: Option[Int], sampleId: Option[Int], libraryId: Option[Int], key: String, path: String, md5: String, link: Boolean, size: Long)
   class Files(tag: Tag) extends Table[File](tag, "Files") {
     def runId = column[Int]("runId")
     def pipelineId = column[Int]("pipelineId")

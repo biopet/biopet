@@ -74,7 +74,7 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val statsPaths = fields.map(x => x -> List("metrics", x)).toMap
+                        val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
                         val results = summary.getStatKeys(runId, "bammetrics", "wgs", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
                     }#
                     #for (field <- fields)

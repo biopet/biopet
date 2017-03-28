@@ -101,7 +101,9 @@ class SummaryDbTest extends TestNGSuite with Matchers {
 
     val runId = Await.result(db.createRun("name", "dir", "version", "hash", date), Duration.Inf)
     Await.result(db.getPipelines(), Duration.Inf) shouldBe empty
+    Await.result(db.getPipelineName(0), Duration.Inf) shouldBe None
     val pipelineId = Await.result(db.createPipeline("test", runId), Duration.Inf)
+    Await.result(db.getPipelineName(pipelineId), Duration.Inf) shouldBe Some("test")
     Await.result(db.getPipelines(), Duration.Inf) shouldBe Seq(Schema.Pipeline(pipelineId, "test", runId))
     Await.result(db.getPipelineId(runId, "test"), Duration.Inf) shouldBe Some(pipelineId)
     Await.result(db.createPipeline("test", runId), Duration.Inf) shouldBe pipelineId
@@ -122,8 +124,10 @@ class SummaryDbTest extends TestNGSuite with Matchers {
     val runId = Await.result(db.createRun("name", "dir", "version", "hash", date), Duration.Inf)
     val pipelineId = Await.result(db.createPipeline("test", runId), Duration.Inf)
     Await.result(db.getModules(), Duration.Inf) shouldBe empty
+    Await.result(db.getModuleName(pipelineId, 0), Duration.Inf) shouldBe None
     val moduleId = Await.result(db.createModule("test", runId, pipelineId), Duration.Inf)
     Await.result(db.getmoduleId(runId, "test", pipelineId), Duration.Inf) shouldBe Some(moduleId)
+    Await.result(db.getModuleName(pipelineId, moduleId), Duration.Inf) shouldBe Some("test")
     Await.result(db.getModules(), Duration.Inf) shouldBe Seq(Schema.Module(pipelineId, "test", runId, pipelineId))
     Await.result(db.createModule("test", runId, pipelineId), Duration.Inf) shouldBe pipelineId
     Await.result(db.getModules(), Duration.Inf) shouldBe Seq(Schema.Module(pipelineId, "test", runId, pipelineId))

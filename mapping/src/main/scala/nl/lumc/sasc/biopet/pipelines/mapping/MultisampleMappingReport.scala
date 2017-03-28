@@ -19,10 +19,11 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoModule }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 11/01/16.
@@ -58,8 +59,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
     val rnaExecuted = Await.result(summary.getStatsSize(runId, "bammetrics", "rna",
       library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
-    val insertsizeExecuted = Await.result(summary.getStatsSize(runId, "bammetrics", "CollectInsertSizeMetrics",
-      library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
+    val insertsizeExecuted = summary.getStatsForSamples(runId, "bammetrics", "CollectInsertSizeMetrics", keyValues = Map("metrics" -> List("metrics"))).exists(_._2("metrics").isDefined)
     val mappingExecuted = Await.result(summary.getStatsSize(runId, "mapping", NoModule, mustHaveLibrary = true), Duration.Inf) >= 1
     val mappingSettings = summary.getSettingsForLibraries(runId, "mapping", NoModule, keyValues = Map("paired" -> List("paired")))
     val pairedFound = !mappingExecuted || mappingSettings.exists(_._2.exists(_._2 == Option(true)))
@@ -80,7 +80,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         List("Reference" -> ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
         ), Map()),
-          "Files" -> filesPage(),
+          "Files" -> Await.result(filesPage(), Duration.Inf),
           "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
           )), Map())
         ),
@@ -114,10 +114,29 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   }
 
   /** Files page, can be used general or at sample level */
-  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
-    val flexiprepExecuted = Await.result(summary.getStatsSize(runId, "flexiprep", NoModule, mustHaveLibrary = true), Duration.Inf) >= 1
+  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
+    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
+      library = libraryId.map(LibraryId))
+      .map(_.groupBy(_.pipelineId))
+    val modulePages = dbFiles.map(_.map {
+      case (pipelineId, files) =>
+        val moduleSections = files.groupBy(_.moduleId).map {
+          case (moduleId, files) =>
+            val moduleName: Future[String] = moduleId match {
+              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
+              case _        => Future("Pipeline")
+            }
+            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
+        }
+        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
+        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map()))
+    })
 
-    ReportPage(List(), Nil, Map())
+    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
+
+    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
+      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
+        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
   }
 
   /** Single sample page */
@@ -142,7 +161,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ++
-      List("Files" -> filesPage()
+      List("Files" -> Await.result(filesPage(sampleId = sampleId), Duration.Inf)
       ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),
@@ -174,7 +193,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map()))
-        else Nil),
+        else Nil) ::: List("Files" -> Await.result(filesPage(sampleId = sampleId, libraryId = libId), Duration.Inf)),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))

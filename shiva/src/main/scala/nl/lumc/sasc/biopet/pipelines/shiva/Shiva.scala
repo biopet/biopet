@@ -51,7 +51,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
   )
 
   /** Method to make the variantcalling namespace of shiva */
-  def makeVariantcalling(multisample: Boolean = false): ShivaVariantcalling with QScript = {
+  def makeVariantcalling(multisample: Boolean, sample: Option[String] = None, library: Option[String] = None): ShivaVariantcalling with QScript = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
@@ -59,6 +59,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     }
     else new ShivaVariantcalling(qscript) {
       override def configNamespace = "shivavariantcalling"
+      sampleId = sample
+      libId = library
     }
   }
 
@@ -76,6 +78,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
+
+      override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
 
       lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
       lazy val useBaseRecalibration: Boolean = {
@@ -102,7 +106,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
       lazy val variantcalling = if (config("library_variantcalling", default = false).asBoolean &&
         (bamFile.isDefined || preProcessBam.isDefined)) {
-        Some(makeVariantcalling(multisample = false))
+        Some(makeVariantcalling(multisample = false, sample = Some(sampleId), library = Some(libId)))
       } else None
 
       /** This will add jobs for this library */
@@ -130,7 +134,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     }
 
     lazy val variantcalling = if (config("single_sample_variantcalling", default = false).asBoolean) {
-      Some(makeVariantcalling(multisample = false))
+      Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
     } else None
 
     override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner)
@@ -140,6 +144,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     override def preProcessBam = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
       bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
     } else bamFile
+
+    override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
 
     /** This will add sample jobs */
     override def addJobs(): Unit = {

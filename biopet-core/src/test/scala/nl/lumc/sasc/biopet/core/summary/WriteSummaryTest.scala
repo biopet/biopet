@@ -40,6 +40,25 @@ import scala.util.matching.Regex
 class WriteSummaryTest extends TestNGSuite with Matchers {
 
   @Test
+  def testCreateFile: Unit = {
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+
+    val outputDir = new File("/tmp")
+    Await.ready(WriteSummary.createFile(db, 0, 0, Some(0), Some(0), Some(0), "test", new File(outputDir, "test.tsv"), outputDir), Duration.Inf)
+    val file = Await.result(db.getFile(0, 0, 0, 0, 0, "test"), Duration.Inf)
+    file.map(_.path) shouldBe Some("./test.tsv")
+
+    Await.ready(WriteSummary.createFile(db, 0, 0, Some(0), Some(0), Some(0), "test", new File("/tmp2/test.tsv"), outputDir), Duration.Inf)
+    val file2 = Await.result(db.getFile(0, 0, 0, 0, 0, "test"), Duration.Inf)
+    file2.map(_.path) shouldBe Some("/tmp2/test.tsv")
+
+    db.close()
+  }
+
+  @Test
   def testWrongRoot(): Unit = {
     intercept[IllegalArgumentException] {
       makeWriter(null)

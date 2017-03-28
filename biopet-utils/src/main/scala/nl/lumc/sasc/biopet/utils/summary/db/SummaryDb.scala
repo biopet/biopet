@@ -10,6 +10,9 @@ import scala.concurrent.{ Await, Future }
 import java.io.{ Closeable, File }
 import java.sql.Date
 
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+
 import scala.language.implicitConversions
 
 /**
@@ -17,36 +20,16 @@ import scala.language.implicitConversions
  *
  * Created by pjvanthof on 05/02/2017.
  */
-class SummaryDb(val db: Database) extends Closeable {
+trait SummaryDb extends Closeable {
 
-  import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
-  import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
+  def db: Database
 
   def close(): Unit = db.close()
 
-  /** This method will create all tables */
-  def createTables(): Unit = {
-    try {
-      val setup = DBIO.seq(
-        (runs.schema ++ samples.schema ++
-          libraries.schema ++ pipelines.schema ++
-          modules.schema ++ stats.schema ++ settings.schema ++
-          files.schema ++ executables.schema).create
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    }
-  }
-
-  /** This method will create a new run and return the runId */
-  def createRun(runName: String, outputDir: String, version: String, commitHash: String,
-                creationDate: Date): Future[Int] = {
-    val id = Await.result(db.run(runs.size.result), Duration.Inf)
-    db.run(runs.forceInsert(Run(id, runName, outputDir, version, commitHash, creationDate))).map(_ => id)
-  }
-
   /** This will return all runs that match the critiria given */
-  def getRuns(runId: Option[Int] = None, runName: Option[String] = None, outputDir: Option[String] = None): Future[Seq[Run]] = {
+  def getRuns(runId: Option[Int] = None,
+              runName: Option[String] = None,
+              outputDir: Option[String] = None): Future[Seq[Run]] = {
     val q = runs.filter { run =>
       List(
         runId.map(run.id === _),
@@ -57,23 +40,10 @@ class SummaryDb(val db: Database) extends Closeable {
     db.run(q.result)
   }
 
-  /** This creates a new sample and return the sampleId */
-  def createSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
-    val id = Await.result(db.run(samples.size.result), Duration.Inf)
-    db.run(samples.forceInsert(Sample(id, name, runId, tags))).map(_ => id)
-  }
-
-  def createOrUpdateSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
-    getSampleId(runId, name).flatMap(_ match {
-      case Some(id: Int) =>
-        db.run(samples.filter(_.name === name).filter(_.id === id).map(_.tags).update(tags))
-          .map(_ => id)
-      case _ => createSample(name, runId, tags)
-    })
-  }
-
   /** This will return all samples that match given criteria */
-  def getSamples(sampleId: Option[Int] = None, runId: Option[Int] = None, name: Option[String] = None): Future[Seq[Sample]] = {
+  def getSamples(sampleId: Option[Int] = None,
+                 runId: Option[Int] = None,
+                 name: Option[String] = None): Future[Seq[Sample]] = {
     val q = samples.filter { sample =>
       List(
         sampleId.map(sample.id === _),
@@ -100,23 +70,11 @@ class SummaryDb(val db: Database) extends Closeable {
       .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
   }
 
-  /** This will create a new library */
-  def createLibrary(name: String, runId: Int, sampleId: Int, tags: Option[String] = None): Future[Int] = {
-    val id = Await.result(db.run(libraries.size.result), Duration.Inf)
-    db.run(libraries.forceInsert(Library(id, name, runId, sampleId, tags))).map(_ => id)
-  }
-
-  def createOrUpdateLibrary(name: String, runId: Int, sampleId: Int, tags: Option[String] = None): Future[Int] = {
-    getLibraryId(runId, sampleId, name).flatMap(_ match {
-      case Some(id: Int) =>
-        db.run(libraries.filter(_.name === name).filter(_.id === id).filter(_.sampleId === sampleId).map(_.tags).update(tags))
-          .map(_ => id)
-      case _ => createLibrary(name, runId, sampleId, tags)
-    })
-  }
-
   /** This returns all libraries that match the given criteria */
-  def getLibraries(libId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None, sampleId: Option[Int] = None): Future[Seq[Library]] = {
+  def getLibraries(libId: Option[Int] = None,
+                   name: Option[String] = None,
+                   runId: Option[Int] = None,
+                   sampleId: Option[Int] = None): Future[Seq[Library]] = {
     val q = libraries.filter { lib =>
       List(
         libId.map(lib.id === _),
@@ -129,7 +87,9 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return a libraryId for a specific combination */
-  def getLibraryId(runId: Int, sampleId: Int, name: String): Future[Option[Int]] = {
+  def getLibraryId(runId: Int,
+                   sampleId: Int,
+                   name: String): Future[Option[Int]] = {
     getLibraries(runId = Some(runId), sampleId = Some(sampleId), name = Some(name)).map(_.headOption.map(_.id))
   }
 
@@ -144,24 +104,10 @@ class SummaryDb(val db: Database) extends Closeable {
       .map(_.headOption.flatten.map(ConfigUtils.jsonTextToMap))
   }
 
-  /** Creates a new pipeline, even if it already exist. This may give a database exeption */
-  def forceCreatePipeline(name: String, runId: Int): Future[Int] = {
-    val id = Await.result(db.run(pipelines.size.result), Duration.Inf)
-    db.run(pipelines.forceInsert(Pipeline(id, name, runId))).map(_ => id)
-  }
-
-  /** Creates a new pipeline if it does not yet exist */
-  def createPipeline(name: String, runId: Int): Future[Int] = {
-    getPipelines(name = Some(name), runId = Some(runId))
-      .flatMap {
-        m =>
-          if (m.isEmpty) forceCreatePipeline(name, runId)
-          else Future(m.head.id)
-      }
-  }
-
   /** Get all pipelines that match given criteria */
-  def getPipelines(pipelineId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None): Future[Seq[Pipeline]] = {
+  def getPipelines(pipelineId: Option[Int] = None,
+                   name: Option[String] = None,
+                   runId: Option[Int] = None): Future[Seq[Pipeline]] = {
     val q = pipelines.filter { lib =>
       List(
         pipelineId.map(lib.id === _),
@@ -173,28 +119,21 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return pipelineId of a specific pipelineName */
-  def getPipelineId(runId: Int, pipelineName: String): Future[Option[Int]] = {
+  def getPipelineId(runId: Int,
+                    pipelineName: String): Future[Option[Int]] = {
     getPipelines(runId = Some(runId), name = Some(pipelineName)).map(_.headOption.map(_.id))
   }
 
-  /** Creates a new module, even if it already exist. This may give a database exeption */
-  def forceCreateModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
-    val id = Await.result(db.run(modules.size.result), Duration.Inf)
-    db.run(modules.forceInsert(Module(id, name, runId, pipelineId))).map(_ => id)
-  }
-
-  /** Creates a new module if it does not yet exist */
-  def createModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
-    getModules(name = Some(name), runId = Some(runId), pipelineId = Some(pipelineId))
-      .flatMap {
-        m =>
-          if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
-          else Future(m.head.id)
-      }
+  /** Return name of a pipeline */
+  def getPipelineName(pipelineId: Int): Future[Option[String]] = {
+    getPipelines(pipelineId = Some(pipelineId)).map(_.headOption.map(_.name))
   }
 
   /** Return all module with given criteria */
-  def getModules(moduleId: Option[Int] = None, name: Option[String] = None, runId: Option[Int] = None, pipelineId: Option[Int] = None): Future[Seq[Module]] = {
+  def getModules(moduleId: Option[Int] = None,
+                 name: Option[String] = None,
+                 runId: Option[Int] = None,
+                 pipelineId: Option[Int] = None): Future[Seq[Module]] = {
     val q = modules.filter { lib =>
       List(
         moduleId.map(lib.id === _),
@@ -207,30 +146,26 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return moduleId of a specific moduleName */
-  def getmoduleId(runId: Int, moduleName: String, pipelineId: Int): Future[Option[Int]] = {
+  def getmoduleId(runId: Int,
+                  moduleName: String,
+                  pipelineId: Int): Future[Option[Int]] = {
     getModules(runId = Some(runId), name = Some(moduleName), pipelineId = Some(pipelineId)).map(_.headOption.map(_.id))
   }
 
-  /** Create a new stat in the database, This method is need checking before */
-  def createStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                 sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    db.run(stats.forceInsert(Stat(runId, pipelineId, moduleId, sampleId, libId, content)))
-  }
-
-  /** This create or update a stat */
-  def createOrUpdateStat(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                         sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    val filter = statsFilter(Some(runId), pipelineId, Some(moduleId.map(ModuleId(_)).getOrElse(NoModule)),
-      Some(sampleId.map(SampleId(_)).getOrElse(NoSample)), Some(libId.map(LibraryId(_)).getOrElse(NoLibrary)))
-    val r = Await.result(db.run(filter.size.result), Duration.Inf)
-    if (r == 0) createStat(runId, pipelineId, moduleId, sampleId, libId, content)
-    else db.run(filter.map(_.content).update(content))
+  /** Returns name of a module */
+  def getModuleName(pipelineId: Int,
+                    moduleId: Int): Future[Option[String]] = {
+    getModules(pipelineId = Some(pipelineId), moduleId = Some(moduleId)).map(_.headOption.map(_.name))
   }
 
   /** Return a Query for [[Stats]] */
-  def statsFilter(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-                  sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
-                  mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
+  def statsFilter(runId: Option[Int] = None,
+                  pipeline: Option[PipelineQuery] = None,
+                  module: Option[ModuleQuery] = None,
+                  sample: Option[SampleQuery] = None,
+                  library: Option[LibraryQuery] = None,
+                  mustHaveSample: Boolean = false,
+                  mustHaveLibrary: Boolean = false): slick.driver.H2Driver.api.Query[Stats, Stat, Seq] = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
@@ -263,28 +198,42 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return all stats that match given criteria */
-  def getStats(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-               sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
-               mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false): Future[Seq[Stat]] = {
+  def getStats(runId: Option[Int] = None,
+               pipeline: Option[PipelineQuery] = None,
+               module: Option[ModuleQuery] = None,
+               sample: Option[SampleQuery] = None,
+               library: Option[LibraryQuery] = None,
+               mustHaveSample: Boolean = false,
+               mustHaveLibrary: Boolean = false): Future[Seq[Stat]] = {
     db.run(statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).result)
   }
 
   /** Return number of results */
-  def getStatsSize(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-                   sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
-                   mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false): Future[Int] = {
+  def getStatsSize(runId: Option[Int] = None,
+                   pipeline: Option[PipelineQuery] = None,
+                   module: Option[ModuleQuery] = None,
+                   sample: Option[SampleQuery] = None,
+                   library: Option[LibraryQuery] = None,
+                   mustHaveSample: Boolean = false,
+                   mustHaveLibrary: Boolean = false): Future[Int] = {
     db.run(statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).size.result)
   }
 
   /** Get a single stat as [[Map[String, Any]] */
-  def getStat(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-              sample: SampleQuery = NoSample, library: LibraryQuery = NoLibrary): Future[Option[Map[String, Any]]] = {
+  def getStat(runId: Int,
+              pipeline: PipelineQuery,
+              module: ModuleQuery = NoModule,
+              sample: SampleQuery = NoSample,
+              library: LibraryQuery = NoLibrary): Future[Option[Map[String, Any]]] = {
     getStats(Some(runId), pipeline, module, sample, library)
       .map(_.headOption.map(x => ConfigUtils.jsonTextToMap(x.content)))
   }
 
-  def getStatKeys(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-                  sample: SampleQuery = NoSample, library: LibraryQuery = NoLibrary,
+  def getStatKeys(runId: Int,
+                  pipeline: PipelineQuery,
+                  module: ModuleQuery = NoModule,
+                  sample: SampleQuery = NoSample,
+                  library: LibraryQuery = NoLibrary,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
     keyValues.map {
@@ -296,31 +245,35 @@ class SummaryDb(val db: Database) extends Closeable {
     }
   }
 
-  def getStatsForSamples(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-                         sample: Option[SampleQuery] = None, keyValues: Map[String, List[String]]) = {
+  def getStatsForSamples(runId: Int,
+                         pipeline: PipelineQuery,
+                         module: ModuleQuery = NoModule,
+                         sample: Option[SampleQuery] = None,
+                         keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
     val samples = Await.result(getSamples(runId = Some(runId), sampleId = sample.collect { case s: SampleId => s.id }, name = sample.collect { case s: SampleName => s.name }), Duration.Inf)
     (for (s <- samples) yield {
       s.id -> getStatKeys(runId, pipeline, module, SampleId(s.id), NoLibrary, keyValues = keyValues)
     }).toMap
   }
 
-  def getStatsForLibraries(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-                           sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
+  def getStatsForLibraries(runId: Int,
+                           pipeline: PipelineQuery,
+                           module: ModuleQuery = NoModule,
+                           sampleId: Option[Int] = None,
+                           keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
     val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
       (lib.sampleId, lib.id) -> getStatKeys(runId, pipeline, module, SampleId(lib.sampleId), LibraryId(lib.id), keyValues = keyValues)
     }).toMap
   }
 
-  /** This method creates a new setting. This method need checking before */
-  def createSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                    sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    db.run(settings.forceInsert(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
-  }
-
-  def settingsFilter(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-                     sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
-                     mustHaveSample: Boolean = false, mustHaveLibrary: Boolean = false) = {
+  def settingsFilter(runId: Option[Int] = None,
+                     pipeline: Option[PipelineQuery] = None,
+                     module: Option[ModuleQuery] = None,
+                     sample: Option[SampleQuery] = None,
+                     library: Option[LibraryQuery] = None,
+                     mustHaveSample: Boolean = false,
+                     mustHaveLibrary: Boolean = false): slick.driver.H2Driver.api.Query[Settings, Setting, Seq] = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
@@ -352,30 +305,30 @@ class SummaryDb(val db: Database) extends Closeable {
     f
   }
 
-  /** This method creates or update a setting. */
-  def createOrUpdateSetting(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                            sampleId: Option[Int] = None, libId: Option[Int] = None, content: String): Future[Int] = {
-    val filter = settingsFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId))
-    val r = Await.result(db.run(filter.size.result), Duration.Inf)
-    if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
-    else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
-  }
-
   /** Return all settings that match the given criteria */
-  def getSettings(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-                  sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None): Future[Seq[Setting]] = {
+  def getSettings(runId: Option[Int] = None,
+                  pipeline: Option[PipelineQuery] = None,
+                  module: Option[ModuleQuery] = None,
+                  sample: Option[SampleQuery] = None,
+                  library: Option[LibraryQuery] = None): Future[Seq[Setting]] = {
     db.run(settingsFilter(runId, pipeline, module, sample, library).result)
   }
 
   /** Return a specific setting as [[Map[String, Any]] */
-  def getSetting(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-                 sample: SampleQuery = NoSample, library: LibraryQuery = NoLibrary): Future[Option[Map[String, Any]]] = {
+  def getSetting(runId: Int,
+                 pipeline: PipelineQuery,
+                 module: ModuleQuery = NoModule,
+                 sample: SampleQuery = NoSample,
+                 library: LibraryQuery = NoLibrary): Future[Option[Map[String, Any]]] = {
     getSettings(Some(runId), Some(pipeline), module, sample, library)
       .map(_.headOption.map(x => ConfigUtils.jsonTextToMap(x.content)))
   }
 
-  def getSettingKeys(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule,
-                     sample: SampleQuery = NoSample, library: LibraryQuery = NoLibrary,
+  def getSettingKeys(runId: Int,
+                     pipeline: PipelineQuery,
+                     module: ModuleQuery = NoModule,
+                     sample: SampleQuery = NoSample,
+                     library: LibraryQuery = NoLibrary,
                      keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getSetting(runId, pipeline, module, sample, library), Duration.Inf)
     keyValues.map {
@@ -387,14 +340,22 @@ class SummaryDb(val db: Database) extends Closeable {
     }
   }
 
-  def getSettingsForSamples(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
+  def getSettingsForSamples(runId: Int,
+                            pipeline: PipelineQuery,
+                            module: ModuleQuery = NoModule,
+                            sampleId: Option[Int] = None,
+                            keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
     val samples = Await.result(getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (sample <- samples) yield {
       sample.id -> getSettingKeys(runId, pipeline, module, SampleId(sample.id), NoLibrary, keyValues = keyValues)
     }).toMap
   }
 
-  def getSettingsForLibraries(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule, sampleId: Option[Int] = None, keyValues: Map[String, List[String]]) = {
+  def getSettingsForLibraries(runId: Int,
+                              pipeline: PipelineQuery,
+                              module: ModuleQuery = NoModule,
+                              sampleId: Option[Int] = None,
+                              keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
     val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
       (lib.sampleId, lib.id) -> getSettingKeys(runId, pipeline, module, SampleId(lib.sampleId), LibraryId(lib.id), keyValues = keyValues)
@@ -402,10 +363,16 @@ class SummaryDb(val db: Database) extends Closeable {
   }
 
   /** Return a [[Query]] for [[Files]] */
-  def filesFilter(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-                  sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
-                  key: Option[String] = None, pipelineName: Option[String] = None, moduleName: Option[Option[String]] = None,
-                  sampleName: Option[Option[String]] = None, libraryName: Option[Option[String]] = None) = {
+  def filesFilter(runId: Option[Int] = None,
+                  pipeline: Option[PipelineQuery] = None,
+                  module: Option[ModuleQuery] = None,
+                  sample: Option[SampleQuery] = None,
+                  library: Option[LibraryQuery] = None,
+                  key: Option[String] = None,
+                  pipelineName: Option[String] = None,
+                  moduleName: Option[Option[String]] = None,
+                  sampleName: Option[Option[String]] = None,
+                  libraryName: Option[Option[String]] = None): slick.driver.H2Driver.api.Query[Files, Files#TableElementType, Seq] = {
     var f: Query[Files, Files#TableElementType, Seq] = files
     runId.foreach(r => f = f.filter(_.runId === r))
     key.foreach(r => f = f.filter(_.key === r))
@@ -448,25 +415,9 @@ class SummaryDb(val db: Database) extends Closeable {
     db.run(filesFilter(Some(runId), Some(pipeline), Some(module), Some(sample), Some(library), Some(key)).result).map(_.headOption)
   }
 
-  /** Creates a file. This method will raise expection if it already exist */
-  def createFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                 sampleId: Option[Int] = None, libId: Option[Int] = None,
-                 key: String, path: String, md5: String, link: Boolean = false, size: Long): Future[Int] = {
-    db.run(files.forceInsert(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
-  }
-
-  /** Create or update a File */
-  def createOrUpdateFile(runId: Int, pipelineId: Int, moduleId: Option[Int] = None,
-                         sampleId: Option[Int] = None, libId: Option[Int] = None,
-                         key: String, path: String, md5: String, link: Boolean = false, size: Long): Future[Int] = {
-    val filter = filesFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId), Some(key))
-    val r = Await.result(db.run(filter.size.result), Duration.Inf)
-    if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
-    else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
-  }
-
   /** Returns a [[Query]] for [[Executables]] */
-  def executablesFilter(runId: Option[Int], toolName: Option[String]) = {
+  def executablesFilter(runId: Option[Int],
+                        toolName: Option[String]): slick.driver.H2Driver.api.Query[Executables, Executable, Seq] = {
     var q: Query[Executables, Executables#TableElementType, Seq] = executables
     runId.foreach(r => q = q.filter(_.runId === r))
     toolName.foreach(r => q = q.filter(_.toolName === r))
@@ -478,20 +429,206 @@ class SummaryDb(val db: Database) extends Closeable {
     db.run(executablesFilter(runId, toolName).result)
   }
 
+}
+
+class SummaryDbReadOnly(val db: Database) extends SummaryDb
+
+class SummaryDbWrite(val db: Database) extends SummaryDb {
+  /** This method will create all tables */
+  def createTables(): Unit = {
+    try {
+      val setup = DBIO.seq(
+        (runs.schema ++ samples.schema ++
+          libraries.schema ++ pipelines.schema ++
+          modules.schema ++ stats.schema ++ settings.schema ++
+          files.schema ++ executables.schema).create
+      )
+      val setupFuture = db.run(setup)
+      Await.result(setupFuture, Duration.Inf)
+    }
+  }
+
+  /** This method will create a new run and return the runId */
+  def createRun(runName: String, outputDir: String, version: String, commitHash: String,
+                creationDate: Date): Future[Int] = {
+    val id = Await.result(db.run(runs.size.result), Duration.Inf)
+    db.run(runs.forceInsert(Run(id, runName, outputDir, version, commitHash, creationDate))).map(_ => id)
+  }
+
+  /** This creates a new sample and return the sampleId */
+  def createSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
+    val id = Await.result(db.run(samples.size.result), Duration.Inf)
+    db.run(samples.forceInsert(Sample(id, name, runId, tags))).map(_ => id)
+  }
+
+  def createOrUpdateSample(name: String,
+                           runId: Int,
+                           tags: Option[String] = None): Future[Int] = {
+    getSampleId(runId, name).flatMap {
+      case Some(id: Int) =>
+        db.run(samples.filter(_.name === name).filter(_.id === id).map(_.tags).update(tags))
+          .map(_ => id)
+      case _ => createSample(name, runId, tags)
+    }
+  }
+
+  /** This will create a new library */
+  def createLibrary(name: String,
+                    runId: Int,
+                    sampleId: Int,
+                    tags: Option[String] = None): Future[Int] = {
+    val id = Await.result(db.run(libraries.size.result), Duration.Inf)
+    db.run(libraries.forceInsert(Library(id, name, runId, sampleId, tags))).map(_ => id)
+  }
+
+  def createOrUpdateLibrary(name: String,
+                            runId: Int,
+                            sampleId: Int,
+                            tags: Option[String] = None): Future[Int] = {
+    getLibraryId(runId, sampleId, name).flatMap {
+      case Some(id: Int) =>
+        db.run(libraries.filter(_.name === name).filter(_.id === id).filter(_.sampleId === sampleId).map(_.tags).update(tags))
+          .map(_ => id)
+      case _ => createLibrary(name, runId, sampleId, tags)
+    }
+  }
+
+  /** Creates a new pipeline, even if it already exist. This may give a database exeption */
+  def forceCreatePipeline(name: String,
+                          runId: Int): Future[Int] = {
+    val id = Await.result(db.run(pipelines.size.result), Duration.Inf)
+    db.run(pipelines.forceInsert(Pipeline(id, name, runId))).map(_ => id)
+  }
+
+  /** Creates a new pipeline if it does not yet exist */
+  def createPipeline(name: String,
+                     runId: Int): Future[Int] = {
+    getPipelines(name = Some(name), runId = Some(runId))
+      .flatMap {
+        m =>
+          if (m.isEmpty) forceCreatePipeline(name, runId)
+          else Future(m.head.id)
+      }
+  }
+
+  /** Creates a new module, even if it already exist. This may give a database exeption */
+  def forceCreateModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
+    val id = Await.result(db.run(modules.size.result), Duration.Inf)
+    db.run(modules.forceInsert(Module(id, name, runId, pipelineId))).map(_ => id)
+  }
+
+  /** Creates a new module if it does not yet exist */
+  def createModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
+    getModules(name = Some(name), runId = Some(runId), pipelineId = Some(pipelineId))
+      .flatMap {
+        m =>
+          if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
+          else Future(m.head.id)
+      }
+  }
+
+  /** Create a new stat in the database, This method is need checking before */
+  def createStat(runId: Int,
+                 pipelineId: Int,
+                 moduleId: Option[Int] = None,
+                 sampleId: Option[Int] = None,
+                 libId: Option[Int] = None,
+                 content: String): Future[Int] = {
+    db.run(stats.forceInsert(Stat(runId, pipelineId, moduleId, sampleId, libId, content)))
+  }
+
+  /** This create or update a stat */
+  def createOrUpdateStat(runId: Int,
+                         pipelineId: Int,
+                         moduleId: Option[Int] = None,
+                         sampleId: Option[Int] = None,
+                         libId: Option[Int] = None,
+                         content: String): Future[Int] = {
+    val filter = statsFilter(Some(runId), pipelineId, Some(moduleId.map(ModuleId).getOrElse(NoModule)),
+      Some(sampleId.map(SampleId).getOrElse(NoSample)), Some(libId.map(LibraryId).getOrElse(NoLibrary)))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createStat(runId, pipelineId, moduleId, sampleId, libId, content)
+    else db.run(filter.map(_.content).update(content))
+  }
+
+  /** This method creates a new setting. This method need checking before */
+  def createSetting(runId: Int,
+                    pipelineId: Int,
+                    moduleId: Option[Int] = None,
+                    sampleId: Option[Int] = None,
+                    libId: Option[Int] = None,
+                    content: String): Future[Int] = {
+    db.run(settings.forceInsert(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
+  }
+
+  /** This method creates or update a setting. */
+  def createOrUpdateSetting(runId: Int,
+                            pipelineId: Int,
+                            moduleId: Option[Int] = None,
+                            sampleId: Option[Int] = None,
+                            libId: Option[Int] = None,
+                            content: String): Future[Int] = {
+    val filter = settingsFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
+    else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
+  }
+
+  /** Creates a file. This method will raise expection if it already exist */
+  def createFile(runId: Int,
+                 pipelineId: Int,
+                 moduleId: Option[Int] = None,
+                 sampleId: Option[Int] = None,
+                 libId: Option[Int] = None,
+                 key: String,
+                 path: String,
+                 md5: String,
+                 link: Boolean = false,
+                 size: Long): Future[Int] = {
+    db.run(files.forceInsert(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+  }
+
+  /** Create or update a File */
+  def createOrUpdateFile(runId: Int,
+                         pipelineId: Int,
+                         moduleId: Option[Int] = None,
+                         sampleId: Option[Int] = None,
+                         libId: Option[Int] = None,
+                         key: String,
+                         path: String,
+                         md5: String,
+                         link: Boolean = false,
+                         size: Long): Future[Int] = {
+    val filter = filesFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId), Some(key))
+    val r = Await.result(db.run(filter.size.result), Duration.Inf)
+    if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
+    else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+  }
+
   /** Creates a exeutable. This method will raise expection if it already exist */
-  def createExecutable(runId: Int, toolName: String, version: Option[String] = None, path: Option[String] = None,
+  def createExecutable(runId: Int,
+                       toolName: String,
+                       version: Option[String] = None,
+                       path: Option[String] = None,
                        javaVersion: Option[String] = None, exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None): Future[Int] = {
     db.run(executables.forceInsert(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
   }
 
   /** Create or update a [[Executable]] */
-  def createOrUpdateExecutable(runId: Int, toolName: String, version: Option[String] = None, path: Option[String] = None,
-                               javaVersion: Option[String] = None, exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None): Future[Int] = {
+  def createOrUpdateExecutable(runId: Int,
+                               toolName: String,
+                               version: Option[String] = None,
+                               path: Option[String] = None,
+                               javaVersion: Option[String] = None,
+                               exeMd5: Option[String] = None,
+                               javaMd5: Option[String] = None,
+                               jarPath: Option[String] = None): Future[Int] = {
     val filter = executablesFilter(Some(runId), Some(toolName))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createExecutable(runId, toolName, version, javaVersion, exeMd5, javaMd5)
     else db.run(filter.update(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
   }
+
 }
 
 object SummaryDb {
@@ -542,7 +679,7 @@ object SummaryDb {
     implicit def libraryQueryToOptionLibraryQuery(x: LibraryQuery): Option[LibraryQuery] = Some(x)
   }
 
-  private var summaryConnections = Map[File, SummaryDb]()
+  private var summaryConnections = Map[File, SummaryDbWrite]()
 
   /** This closing all summary that are still in the cache */
   def closeAll(): Unit = {
@@ -551,18 +688,29 @@ object SummaryDb {
   }
 
   /** This will open a sqlite database and create tables when the database did not exist yet */
-  def openSqliteSummary(file: File): SummaryDb = {
+  def openSqliteSummary(file: File): SummaryDbWrite = {
     if (!summaryConnections.contains(file)) {
       val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
       config.enforceForeignKeys(true)
       config.setBusyTimeout("10000")
-      config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.OFF)
+      config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.FULL)
       val exist = file.exists()
       val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties, executor = AsyncExecutor("single_thread", 1, 1000))
-      val s = new SummaryDb(db)
+      val s = new SummaryDbWrite(db)
       if (!exist) s.createTables()
       summaryConnections += file -> s
     }
     summaryConnections(file)
+  }
+
+  def openReadOnlySqliteSummary(file: File): SummaryDbReadOnly = {
+    require(file.exists(), s"File does not exist: $file")
+    val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
+    config.enforceForeignKeys(true)
+    config.setBusyTimeout("10000")
+    config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.FULL)
+    config.setReadOnly(true)
+    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties)
+    new SummaryDbReadOnly(db)
   }
 }

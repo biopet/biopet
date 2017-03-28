@@ -66,8 +66,9 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
-    val roi = summary.getSetting(runId, "shiva").get("regions_of_interest")
-    val amplicon = summary.getSetting(runId, "shiva").get("amplicon_bed")
+    val shivaSettings = Await.result(summary.getSetting(runId, "shiva"), Duration.Inf).get
+    val roi = shivaSettings.get("regions_of_interest")
+    val amplicon = shivaSettings.get("amplicon_bed")
 
     var regionPages: Map[String, ReportPage] = Map()
 
@@ -104,15 +105,6 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     else None
   }
 
-  /** Files page, can be used general or at sample level */
-  override def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): ReportPage = {
-    val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-      Map("sampleId" -> sampleId)))
-    else Nil
-    val oldPage = super.filesPage(sampleId, libraryId)
-    oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
-  }
-
   /** Single sample page */
   override def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
     val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
@@ -147,7 +139,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     val samples = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
     val statsPaths = {
       (for (sample <- Await.result(summary.getSamples(runId = runId), Duration.Inf)) yield {
-        field.map(f => s"${sample.name};HomVar" -> List("total", "genotype", "general", sample.name, f)).toMap
+        field.map(f => s"${sample.name};$f" -> List("total", "genotype", "general", sample.name, f)).toMap
       }).fold(Map())(_ ++ _)
     }
 
@@ -159,7 +151,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     val results = summary.getStatKeys(runId, "shivavariantcalling", moduleName, sampleId.map(SampleId).getOrElse(NoSample), keyValues = statsPaths)
 
     for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
-      tsvWriter.println(sample.name + "\t" + field.map(f => results(s"${sample.name};$f").getOrElse("")).mkString("\t"))
+      tsvWriter.println(sample.name + "\t" + field.map(f => results.get(s"${sample.name};$f").getOrElse(Some("0")).get).mkString("\t"))
     }
 
     tsvWriter.close()

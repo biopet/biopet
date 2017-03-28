@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Sample }
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
@@ -118,6 +118,10 @@ trait ReportBuilder extends ToolCommand {
 
   final def runId = setRunId
 
+  private var _setPipelines = Seq[Pipeline]()
+  final def pipelines = _setPipelines
+  private var _setModules = Seq[Module]()
+  final def modules = _setModules
   private var _setSamples = Seq[Sample]()
   final def samples = _setSamples
   private var _setLibraries = Seq[Library]()
@@ -160,7 +164,7 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
-    setSummary = SummaryDb.openSqliteSummary(cmdArgs.summaryDbFile)
+    setSummary = SummaryDb.openReadOnlySqliteSummary(cmdArgs.summaryDbFile)
     setRunId = cmdArgs.runId
 
     cmdArgs.pageArgs.get("sampleId") match {
@@ -177,6 +181,8 @@ trait ReportBuilder extends ToolCommand {
       case _ =>
     }
 
+    _setPipelines = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf)
+    _setModules = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf)
     _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
@@ -236,7 +242,11 @@ trait ReportBuilder extends ToolCommand {
       Map("page" -> page,
         "path" -> path,
         "outputDir" -> pageOutputDir,
-        "rootPath" -> rootPath
+        "rootPath" -> rootPath,
+        "allPipelines" -> pipelines,
+        "allModules" -> modules,
+        "allSamples" -> samples,
+        "allLibraries" -> libraries
       )
 
     // Generating subpages

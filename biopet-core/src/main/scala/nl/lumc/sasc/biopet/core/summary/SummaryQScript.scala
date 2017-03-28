@@ -86,7 +86,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private var addedJobs = false
 
   final lazy val summaryRunId: Int = {
-    if (runIdFile.exists()) {
+    if (runIdFile.exists() && summaryDbFile.exists()) {
       val reader = Source.fromFile(runIdFile)
       val id = reader.getLines().next().toInt
       reader.close()
@@ -163,13 +163,29 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       }
     }
 
+    qscript match {
+      case q: MultiSampleQScript =>
+        // Global level
+        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
+
+        for ((sampleName, sample) <- q.samples) {
+          // Sample level
+          for ((key, file) <- sample.summaryFiles) addChecksum(file)
+          for ((libName, lib) <- sample.libraries) {
+            // Library level
+            for ((key, file) <- lib.summaryFiles) addChecksum(file)
+          }
+        }
+      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
+    }
+
     for (inputFile <- inputFiles) {
       inputFile.md5 match {
         case Some(checksum) => {
           val checkMd5 = new CheckChecksum
           checkMd5.inputFile = inputFile.file
-          require(SummaryQScript.md5sumCache.contains(inputFile.file),
-            s"Md5 job is not executed, checksum file can't be found for: ${inputFile.file}")
+          if (!SummaryQScript.md5sumCache.contains(inputFile.file))
+            addChecksum(inputFile.file)
           checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
           checkMd5.checksum = checksum
           checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile, checkMd5.checksumFile.getName + ".check.out")
