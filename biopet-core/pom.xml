@@ -36,12 +36,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>6.8</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
             <version>3.6</version>
@@ -56,11 +50,6 @@
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-public</artifactId>
             <version>3.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-core_2.11</artifactId>
-            <version>1.7.0</version>
         </dependency>
     </dependencies>
 
