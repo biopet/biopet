@@ -26,7 +26,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <version>summary-0.9.0-SNAPSHOT</version>
     <artifactId>BiopetUtils</artifactId>
     <packaging>jar</packaging>
 

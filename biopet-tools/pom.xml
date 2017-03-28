@@ -50,7 +50,7 @@
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetUtils</artifactId>
-            <version>summary-${project.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
