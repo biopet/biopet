@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.PrintWriter
 
 import nl.lumc.sasc.biopet.core.PedigreeQscript.PedMergeStrategy
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.io.Source
@@ -56,21 +57,32 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
   /**
    * Get pedSamples from sample tags in config
    * May return empty list if no pedigree can be constructed
+   * PedSamples can only be constructed for those samples where family is defined
+   * Furthermore, if a father or mother is given, another sample with this id must also exist
    *
    * @return
    */
   def pedSamplesFromConfig(): List[PedSample] = {
     val totalSampleIds = samples.values.map(_.sampleId).toList
-    samples.values.filter(x => x.father.isDefined && x.mother.isDefined && x.family.isDefined).map { x =>
-      (totalSampleIds.contains(x.mother.get), totalSampleIds.contains(x.father.get)) match {
-        case (true, true)  => PedSample(x.family.get, x.sampleId, x.father, x.mother, x.gender, None)
-        case (true, false) => PedSample(x.family.get, x.sampleId, None, x.mother, x.gender, None)
-        case (false, true) => PedSample(x.family.get, x.sampleId, x.father, None, x.gender, None)
-        case _             => PedSample(x.family.get, x.sampleId, None, None, x.gender, None)
+    val withFam = samples.values.filter(_.family.isDefined)
+    val fathers = withFam.filter(_.father.isDefined).flatMap(_.father)
+    val mothers = withFam.filter(_.mother.isDefined).flatMap(_.mother)
+    fathers.foreach { f =>
+      if (!withFam.map(_.sampleId).toList.contains(f)) {
+        Logging.addError(s"Father $f does not exist in samples")
       }
+    }
+    mothers.foreach { m =>
+      if (!withFam.map(_.sampleId).toList.contains(m)) {
+        Logging.addError(s"Mother $m does not exist in samples")
+      }
+    }
+    withFam.map { s =>
+      PedSample(s.family.get, s.sampleId, s.father, s.mother, s.gender, None)
     }.toList
   }
 
+  /* Parse ped file to list of PedSamples */
   def parsePedFile(): List[PedSample] = {
     ped match {
       case Some(p) => Source.fromFile(p).getLines().map { x => parseSinglePedLine(x) }.toList
@@ -78,6 +90,7 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
     }
   }
 
+  /* Parse a single Ped line to a PedSample */
   def parseSinglePedLine(line: String): PedSample = {
     val arr = line.split("\\s")
     var genotypeFields: List[String] = Nil
@@ -109,11 +122,13 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
     PedSample(arr(0), arr(1), paternalId, maternalId, gender, affected, genotypeFields)
   }
 
+  /* Check whether sample is a mother */
   def isMother(pedSample: PedSample): Boolean = {
     val motherIds = pedSamples.flatMap(_.maternalId)
     motherIds.contains(pedSample.individualId)
   }
 
+  /* Check whether sample is a father */
   def isFather(pedSample: PedSample): Boolean = {
     val fatherIds = pedSamples.flatMap(_.paternalId)
     fatherIds.contains(pedSample.individualId)

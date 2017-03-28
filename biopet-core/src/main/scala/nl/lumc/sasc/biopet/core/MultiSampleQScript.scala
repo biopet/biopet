@@ -109,7 +109,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       g.foreach { father =>
         if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
         if (samples.contains(father)) if (samples(father).gender != Gender.Male)
-          Logging.addError(s"Father of $sampleId is not a female")
+          Logging.addError(s"Father of $sampleId is not a male")
         else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
       }
       g
