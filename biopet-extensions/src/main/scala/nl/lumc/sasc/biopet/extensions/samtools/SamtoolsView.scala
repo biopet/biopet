@@ -36,6 +36,7 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   @Input(required = false)
   var L: Option[File] = None
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("view") +
     optional("-q", q) +
