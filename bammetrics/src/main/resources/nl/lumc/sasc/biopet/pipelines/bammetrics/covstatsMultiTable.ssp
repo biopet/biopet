@@ -1,5 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.IoUtils)
 #import(org.apache.commons.io.FileUtils)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -18,11 +19,14 @@
 <%@ var target: Option[String] %>
 <%@ var runId: Int %>
 <%@ var fields: List[String] = List("mean", "median", "max", "horizontal", "frac_min_10x", "frac_min_20x", "frac_min_30x", "frac_min_40x", "frac_min_50x") %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
-    val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
+    val samples = sampleId match {
+    case Some(id) => allSamples.filter(_.id == id).toList
+    case _ => allSamples.toList
+    }
 }#
-
-
 <table class="table">
 <thead><tr>
     <th>sample</th>
@@ -36,7 +40,7 @@
             val libs: List[Option[Int]] = (libId, sampleLevel) match {
                 case (_, true) => List(None)
                 case (Some(_), _) => List(libId)
-                case _ => Await.result(summary.getLibraries(sampleId = Some(sample.id), runId = Some(runId)), Duration.Inf).map(x => Some(x.id)).toList
+                case _ => allLibraries.filter(_.sampleId == sample.id).map(x => Some(x.id)).toList
             }
         }#
         <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>

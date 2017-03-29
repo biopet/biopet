@@ -1,16 +1,18 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
-#import(nl.lumc.sasc.biopet.core.report.ReportPage)
-#import(scala.concurrent.Await)
-#import(scala.concurrent.duration.Duration)
-<%@ var summary: SummaryDb %>
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
 <%@ var rootPath: String %>
 <%@ var sampleId: Option[Int] = None %>
-<%@ var runId: Int %>
+<%@ var allLibraries: Seq[Library] %>
+<%@ var allSamples: Seq[Sample] %>
 <table class="table">
 <thead><tr><th>Libraries</th></tr></thead>
 <tbody>
-#for (lib <- Await.result(summary.getLibraries(runId = Some(runId)), Duration.Inf))
-    <tr><td><a href="${rootPath}Samples/${Await.result(summary.getSampleName(lib.sampleId), Duration.Inf)}/Libraries/${lib.name}/index.html">${lib}</a></td></tr>
+#{ val libs = sampleId match {
+    case Some(id) => allLibraries.filter(_.sampleId == id)
+    case _ => allLibraries
+} }#
+#for (lib <- libs)
+    #{ val sampleName: String = allSamples.find(_.id == lib.sampleId).get.name }#
+    <tr><td><a href="${rootPath}Samples/${sampleName}/Libraries/${lib.name}/index.html">${lib}</a></td></tr>
 #end
 </tbody>
 </table>
