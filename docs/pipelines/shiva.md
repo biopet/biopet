@@ -13,7 +13,6 @@ The pipeline accepts ```.fastq & .bam``` files as input.
 * [Metagenomics analysis](gears.md)
 * [Mapping](mapping.md)
 * [VEP annotation](toucan.md)
-* [Structual variant analysis](yamsvp.md)
 * [CNV analysis](kopisu.md)
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
 * <a href="https://www.broadinstitute.org/gatk/" target="_blank">GATK tools</a>:
@@ -211,9 +210,6 @@ toucan:
 
 In addition to standard variant calling, Shiva also supports SV calling. 
 One can enable this option by setting the `sv_calling` config option to `true`.
-
-For SV calling Shiva uses the [yamsvp](yamsvp.md) as a sub-pipeline. 
-Please see the documentation for yamsvp.
 
 **example config**
 ```yaml
