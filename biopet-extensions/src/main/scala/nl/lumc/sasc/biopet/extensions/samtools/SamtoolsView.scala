@@ -33,7 +33,6 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   var f: List[String] = config("f", default = List.empty[String])
   var F: List[String] = config("F", default = List.empty[String])
 
-  def cmdBase = required(executable) +
   @Input(required = false)
   var L: Option[File] = None
 
