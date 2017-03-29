@@ -14,8 +14,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
+import java.io.File
+
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
@@ -97,6 +99,18 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     // group by "tags"
     // sample tagging is however not available within this pipeline
 
+    for ((sample, mergedResultFile) <- outputMergedVCFbySample) {
+      lazy val counts = getVariantCounts(mergedResultFile, ShivaSvCalling.histogramBinBoundaries)
+      addSummarizable(new Summarizable {
+        def summaryFiles = Map.empty
+        def summaryStats = counts
+      }, "variantsBySizeAndType", Some(sample))
+    }
+    addSummarizable(new Summarizable {
+      def summaryFiles = Map.empty
+      def summaryStats = ShivaSvCalling.histogramBinBoundaries
+    }, "histBreaksForCounts")
+
     addSummaryJobs()
   }
 
@@ -112,7 +126,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   /** Files for the summary */
   def summaryFiles: Map[String, File] = outputMergedVCFbySample ++ (if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Nil)
 
-  def getVariantCounts(vcfFile: File, breaks: Array[Int]): (Map[String, Array[Int]], Option[Int]) = {
+  def getVariantCounts(vcfFile: File, breaks: Array[Int]): Map[String, Any] = {
     val delCounts, insCounts, dupCounts, invCounts = Array.fill(breaks.size + 1) { 0 }
     var traCount = 0
 
@@ -137,13 +151,13 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     }
     iterator.close()
 
-    var counts: Map[String, Array[Int]] = Map()
+    var counts: Map[String, Any] = Map()
     if (isConfiguredForType("DEL")) counts = Map("DEL" -> delCounts)
     if (isConfiguredForType("INS")) counts = counts + ("INS" -> insCounts)
     if (isConfiguredForType("DUP")) counts = counts + ("DUP" -> dupCounts)
     if (isConfiguredForType("INV")) counts = counts + ("INV" -> invCounts)
-
-    (counts, if (isConfiguredForType("TRA")) Some(traCount) else None)
+    if (isConfiguredForType("TRA")) counts = counts + ("TRA" -> traCount)
+    counts
   }
 
   def isConfiguredForType(svType: String): Boolean = {
@@ -152,7 +166,9 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
 }
 
-object ShivaSvCalling extends PipelineCommand
+object ShivaSvCalling extends PipelineCommand {
+  val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
+}
 
 object StructuralVariantType extends Enumeration {
   val Deletion = Value("DEL")

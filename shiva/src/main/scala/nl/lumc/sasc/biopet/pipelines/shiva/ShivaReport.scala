@@ -51,9 +51,12 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   override def pipelineName = "shiva"
 
-  override def additionalSections = super.additionalSections ++ (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-    Map("showPlot" -> true, "showTable" -> false)))
-  else Nil)
+  override def additionalSections = {
+    val params = Map("showPlot" -> true, "showTable" -> false)
+    super.additionalSections ++
+      (if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)) else Nil) ++
+      (if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp", params)) else Nil)
+  }
 
   /** Root page for the shiva report */
   override def indexPage = {
