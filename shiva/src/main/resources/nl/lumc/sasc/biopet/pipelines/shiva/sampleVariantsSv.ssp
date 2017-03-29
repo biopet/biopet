@@ -8,13 +8,22 @@
 <%@ var showIntro: Boolean = true %>
 
 #{
-    val svTypes = List(("DEL", "Deletion"), ("DUP", "Duplication"), ("INS", "Insertion"), ("INV", "Inversion"))
+    val svTypes = List(
+    SvTypeForReport("DEL", "Deletion", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
+    SvTypeForReport("DUP", "Duplication", "svSummaryDuplications.tsv", "svSummaryDuplications.png"),
+    SvTypeForReport("INS", "Insertion", "svSummaryInsertions.tsv", "svSummaryInsertions.png"),
+    SvTypeForReport("INV", "Inversion", "svSummaryInversions.tsv", "svSummaryInversions.png"))
+
+    val counts: Map[String, Map[String, Array[Any]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
+
+    ShivaSvCallingReport.writeTsvForPlots(counts, svTypes, outputDir)
+    ShivaSvCallingReport.createPlots(svTypes, outputDir)
 }#
 
 
 #if (showPlot)
     <div class="panel-body">
-    <img src="svSummary.png" class="img-responsive" />
+    <img src="svSummaryDeletions.png" class="img-responsive" />
     </div>
     <div class="panel-footer">
     #if (showTable)
@@ -40,25 +49,25 @@
         <th>&gt;10Mb</th>
     </tr></thead>
     <tbody>
-        #for (sample <- summary.samples.toList.sorted)
+        #for (sampleName <- summary.samples.toList.sorted)
             #{
-                val counts:Map[String, Option[Any]] = summary.getSampleValue(sample, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Option[Any]]]
+                val sampleCounts:Map[String, Array[Any]] = counts.get(sampleName).get
                 var firstRow = true
             }#
 
-            #for ((svType, displayLabel) <- svTypes)
+            #for (sv <- svTypes)
                 <tr>
-                #if (counts.contains(svType))
+                #if (counts.contains(sv.svType))
                     #if (firstRow)
-                        <td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+                        <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
                         #{ firstRow = false }#
                     #else
                         <td></td>
                     #end
 
-                        <td>${displayLabel}</td>
+                        <td>${sv.displayText}</td>
 
-                    #for (countForSize <- counts.get(svType).get.asInstanceOf[List[Long]])
+                    #for (countForSize <- counts.get(sv.svType).get.asInstanceOf[List[Long]])
                         <td>${countForSize}</td>
                     #end
                 #end

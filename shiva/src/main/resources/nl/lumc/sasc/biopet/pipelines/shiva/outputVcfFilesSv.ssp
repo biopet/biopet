@@ -22,7 +22,7 @@
             </tr>
         #end
 
-        #for (sampleName <- summary.samples)
+        #for (sampleName <- summary.samples.toList.sorted)
             <tr>
             <tr>
                 <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
