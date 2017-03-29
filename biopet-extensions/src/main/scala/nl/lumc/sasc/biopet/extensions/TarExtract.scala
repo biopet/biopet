@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 /**
  * Created by pjvan_thof on 8/11/15.
  */
-class TarExtract(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class TarExtract(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(required = true)
   var inputTar: File = _
 

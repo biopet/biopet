@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, Output }
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweSamplesImport(val root: Configurable) extends Manwe {
+class ManweSamplesImport(val parent: Configurable) extends Manwe {
 
   /**
    * Creates sample and imports vcf and bed files immediately

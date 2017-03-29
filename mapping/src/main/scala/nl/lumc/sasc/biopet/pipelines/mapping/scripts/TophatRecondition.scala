@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * NOTE: we are modifying the input and output to be the BAM files directly so the wrapper works nice with Queue.
  */
-class TophatRecondition(val root: Configurable) extends PythonCommandLineFunction {
+class TophatRecondition(val parent: Configurable) extends PythonCommandLineFunction {
 
   setPythonScript("tophat-recondition.py")
 

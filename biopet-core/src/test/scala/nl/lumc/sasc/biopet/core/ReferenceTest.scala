@@ -105,7 +105,7 @@ object ReferenceTest {
            r: Configurable = null,
            fai: Boolean = false,
            dict: Boolean = false) = new Reference {
-    val root = r
+    val parent = r
     override def globalConfig = new Config(configs
       .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
     override def dictRequired = if (dict) true else super.dictRequired

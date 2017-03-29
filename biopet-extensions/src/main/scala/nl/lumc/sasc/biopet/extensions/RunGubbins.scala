@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * See; https://github.com/sanger-pathogens/gubbins
  * No version known
  */
-class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
+class RunGubbins(val parent: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
   var startingTree: Option[File] = config("starting_tree")

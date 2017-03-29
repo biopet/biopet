@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SageCountFastq(val root: Configurable) extends ToolCommandFunction {
+class SageCountFastq(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.SageCountFastq
 
   @Input(doc = "Input fasta", shortName = "input", required = true)

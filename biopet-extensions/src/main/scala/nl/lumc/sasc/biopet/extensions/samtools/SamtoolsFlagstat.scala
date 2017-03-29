@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for samtools flagstat */
-class SamtoolsFlagstat(val root: Configurable) extends Samtools {
+class SamtoolsFlagstat(val parent: Configurable) extends Samtools {
   @Input(doc = "Bam File")
   var input: File = _
 

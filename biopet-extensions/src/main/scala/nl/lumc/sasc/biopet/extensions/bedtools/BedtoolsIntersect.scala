@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for bedtools intersect */
-class BedtoolsIntersect(val root: Configurable) extends Bedtools {
+class BedtoolsIntersect(val parent: Configurable) extends Bedtools {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
   var input: File = null

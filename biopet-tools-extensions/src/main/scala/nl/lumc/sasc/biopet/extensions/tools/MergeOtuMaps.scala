@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeOtuMaps(val root: Configurable) extends ToolCommandFunction {
+class MergeOtuMaps(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.MergeOtuMaps
 
   @Input(doc = "Input", shortName = "input", required = true)

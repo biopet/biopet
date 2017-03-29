@@ -1,19 +1,31 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
 <%@ var pipeline: String %>
-
+<%@ var runId: Int %>
 #{
-    val contigs = summary.getValue(pipeline, "settings", "reference", "contigs").getOrElse(Map.empty).asInstanceOf[Map[String, Map[String, Any]]]
+    val settings = summary.getSettingKeys(runId, pipeline,
+      keyValues = Map(
+        "contigs" -> List("reference", "contigs"),
+        "species" -> List("reference", "species"),
+        "name" -> List("reference", "name")
+    ))
+    val contigs = settings.getOrElse("contigs", Some(Map())).getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
+
+    val referenceFile = Await.result(summary.getFile(runId, pipeline, key = "referenceFasta"), Duration.Inf)
 }#
 
 <table class="table">
     <tbody>
-        <tr><th>Species</th><td>${summary.getValue(pipeline, "settings", "reference", "species")}</td></tr>
-        <tr><th>Name</th><td>${summary.getValue(pipeline, "settings", "reference", "name")}</td></tr>
-        <tr><th>File</th><td>${summary.getValue(pipeline, "files", "pipeline", "referenceFasta", "path")}</td></tr>
-        <tr><th>MD5</th><td>${summary.getValue(pipeline, "files", "pipeline", "referenceFasta", "md5")}</td></tr>
+        <tr><th>Species</th><td>${settings.get("species")}</td></tr>
+        <tr><th>Name</th><td>${settings.get("name")}</td></tr>
+        <tr><th>File</th><td>${referenceFile.map(_.path)}</td></tr>
+        <tr><th>MD5</th><td>${referenceFile.map(_.md5)}</td></tr>
     </tbody>
 </table>
 

@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 /**
  * Created by pjvanthof on 10/05/16.
  */
-class ConiferMethod(val root: Configurable) extends CnvMethod {
+class ConiferMethod(val parent: Configurable) extends CnvMethod {
   def name = "conifer"
 
   /** Exon definitions in bed format */

@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class ConiferCall(val root: Configurable) extends Conifer {
+class ConiferCall(val parent: Configurable) extends Conifer {
 
   @Input(doc = "Input analysis.hdf5", required = true)
   var input: File = _

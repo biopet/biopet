@@ -78,7 +78,7 @@ class AnnotationTest extends TestNGSuite with Matchers {
 object AnnotationTest {
   class Script(c: Map[String, Any]) extends QScript with BiopetQScript {
     override def globalConfig: Config = new Config(c)
-    val root = null
+    val parent = null
 
     /** Init for pipeline */
     def init(): Unit = ???

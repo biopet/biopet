@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CoverageStats(val root: Configurable) extends PythonCommandLineFunction with Summarizable {
+class CoverageStats(val parent: Configurable) extends PythonCommandLineFunction with Summarizable {
   setPythonScript("bedtools_cov_stats.py")
 
   @Input(doc = "Input file", required = false)

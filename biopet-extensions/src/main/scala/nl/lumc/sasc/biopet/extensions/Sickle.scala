@@ -28,7 +28,7 @@ import scala.io.Source
  * Extension for sickle
  * Based on version 1.33
  */
-class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
+class Sickle(val parent: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "R1 input")
   var inputR1: File = _
 

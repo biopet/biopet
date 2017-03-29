@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the seqtk sample subcommand.
  * Written based on seqtk version 1.0-r63-dirty.
  */
-class SeqtkSample(val root: Configurable) extends Seqtk {
+class SeqtkSample(val parent: Configurable) extends Seqtk {
 
   /** input file */
   @Input(doc = "Input file (FASTQ or FASTA)", required = true)

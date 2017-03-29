@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  *
  */
-class SnptestToVcf(val root: Configurable) extends ToolCommandFunction with Reference {
+class SnptestToVcf(val parent: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.SnptestToVcf
 
   @Input(doc = "input Info file", required = true)

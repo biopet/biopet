@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   override def defaults = Map("max_walltime_limit" -> 7200)
 

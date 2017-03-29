@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Wrapper for the plot_heatmap.R script, used internally in Gentrap
  */
-class PlotHeatmap(val root: Configurable) extends RscriptCommandLineFunction {
+class PlotHeatmap(val parent: Configurable) extends RscriptCommandLineFunction {
 
   protected var script: File = config("script", default = "plot_heatmap.R")
 

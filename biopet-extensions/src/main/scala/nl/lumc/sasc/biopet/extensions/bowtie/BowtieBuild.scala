@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by pjvan_thof on 8/15/15.
  */
-class BowtieBuild(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class BowtieBuild(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(required = true)
   var reference: File = _
 

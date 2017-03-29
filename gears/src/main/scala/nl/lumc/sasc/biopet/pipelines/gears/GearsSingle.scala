@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by wyleung
  */
-class GearsSingle(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
@@ -73,7 +73,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   override def reportClass = {
     val gears = new GearsSingleReport(this)
     gears.outputDir = new File(outputDir, "report")
-    gears.summaryFile = summaryFile
+    gears.summaryDbFile = summaryDbFile
     sampleId.foreach(gears.args += "sampleId" -> _)
     libId.foreach(gears.args += "libId" -> _)
     Some(gears)
@@ -150,6 +150,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       centrifuge.fastqR2 = r2
       centrifuge.outputName = outputName
       add(centrifuge)
+      outputFiles += "centrifuge_output" -> centrifuge.centrifugeOutput
     }
 
     qiimeRatx foreach { qiimeRatx =>
@@ -163,25 +164,25 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqInput = combinedFastq
       add(qiimeClosed)
+      outputFiles += "qiime_closed_otu_table" -> qiimeClosed.otuTable
     }
 
     qiimeOpen foreach { qiimeOpen =>
       qiimeOpen.outputDir = new File(outputDir, "qiime_open")
       qiimeOpen.fastqInput = combinedFastq
       add(qiimeOpen)
+      outputFiles += "qiime_open_otu_table" -> qiimeOpen.otuTable
     }
 
     seqCount.foreach { seqCount =>
       seqCount.fastqInput = combinedFastq
       seqCount.outputDir = new File(outputDir, "seq_count")
       add(seqCount)
+      outputFiles += "seq_count_count_file" -> seqCount.countFile
     }
 
     addSummaryJobs()
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".gears.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map(

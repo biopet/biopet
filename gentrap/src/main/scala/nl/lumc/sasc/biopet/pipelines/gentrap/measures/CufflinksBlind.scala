@@ -21,6 +21,6 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 1/12/16.
  */
-class CufflinksBlind(val root: Configurable) extends QScript with CufflinksMeasurement with AnnotationGtf {
+class CufflinksBlind(val parent: Configurable) extends QScript with CufflinksMeasurement with AnnotationGtf {
 
 }
