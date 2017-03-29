@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
   qscript =>
 
   def this() = this(null)
@@ -101,9 +101,6 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   /** Will generate all available variantcallers */
   protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")
 
   /** Settings for the summary */
   def summarySettings = Map("sv_callers" -> configCallers.toList)

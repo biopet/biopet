@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
 import org.broadinstitute.gatk.queue.QScript
 
-class BamMetrics(val root: Configurable) extends QScript
+class BamMetrics(val parent: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
   with Reference
@@ -43,13 +43,6 @@ class BamMetrics(val root: Configurable) extends QScript
 
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
-  /** return location of summary file */
-  def summaryFile = (sampleId, libId) match {
-    case (Some(s), Some(l)) => new File(outputDir, s + "-" + l + ".BamMetrics.summary.json")
-    case (Some(s), _)       => new File(outputDir, s + ".BamMetrics.summary.json")
-    case _                  => new File(outputDir, "BamMetrics.summary.json")
-  }
-
   /** returns files to store in summary */
   def summaryFiles = Map("reference" -> referenceFasta(),
     "input_bam" -> inputBam) ++
@@ -63,7 +56,7 @@ class BamMetrics(val root: Configurable) extends QScript
   override def reportClass = {
     val bammetricsReport = new BammetricsReport(this)
     bammetricsReport.outputDir = new File(outputDir, "report")
-    bammetricsReport.summaryFile = summaryFile
+    bammetricsReport.summaryDbFile = summaryDbFile
     bammetricsReport.args = if (libId.isDefined) Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

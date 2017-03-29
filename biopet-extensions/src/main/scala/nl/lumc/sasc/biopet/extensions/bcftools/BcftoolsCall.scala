@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** This extension is based on bcftools 1.1-134 */
-class BcftoolsCall(val root: Configurable) extends Bcftools {
+class BcftoolsCall(val parent: Configurable) extends Bcftools {
   @Input(doc = "Input File", required = false)
   var input: File = _
 

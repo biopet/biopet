@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline._
  * Based on version 0.2.5b8
  */
 
-class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "pindel")
 
   override def defaultCoreMemory = 4.0

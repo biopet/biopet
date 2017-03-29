@@ -20,10 +20,11 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCCNVPlot }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -33,14 +34,16 @@ import scala.collection.mutable.ListBuffer
  * Created by pjvan_thof on 3/2/15.
  */
 class KopisuTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): Kopisu = {
+  def initPipeline(map: Map[String, Any], dir: File): Kopisu = {
     new Kopisu() {
       override def configNamespace = "kopisu"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, KopisuTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, KopisuTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
   }
+
+  private var dirs: List[File] = Nil
 
   @DataProvider(name = "shivaSvCallingOptions")
   def shivaSvCallingOptions = {
@@ -53,15 +56,18 @@ class KopisuTest extends TestNGSuite with Matchers {
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
-  def testShivaSvCalling(bams: Int,
-                         freec: Boolean,
-                         conifer: Boolean) = {
+  def testKopisu(bams: Int,
+                 freec: Boolean,
+                 conifer: Boolean) = {
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+
     val callers: ListBuffer[String] = ListBuffer()
     val map = Map("sv_callers" -> callers.toList)
     val pipeline = initPipeline(map ++ Map(
       "use_freec_method" -> freec,
       "use_conifer_method" -> conifer
-    ))
+    ), outputDir)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> KopisuTest.inputTouch("bam_" + n + ".bam")).toMap
 
@@ -84,21 +90,26 @@ class KopisuTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[FreeCCNVPlot]) shouldBe (if (freec) bams else 0)
     }
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object KopisuTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   private def inputTouch(name: String): File = {
-    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    val file = new File(inputDir, name).getAbsoluteFile
     Files.touch(file)
     file
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -108,14 +119,16 @@ object KopisuTest {
   copyFile("ref.fa.fai")
 
   val controlDir = Files.createTempDir()
-  controlDir.deleteOnExit()
   Files.touch(new File(controlDir, "test.txt"))
 
-  val config = Map(
+  val coniferScript = File.createTempFile("conifer.", ".py")
+  coniferScript.deleteOnExit()
+
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
@@ -123,7 +136,7 @@ object KopisuTest {
     "tabix" -> Map("exe" -> "test"),
     "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" -> "test"),
     "controls_dir" -> controlDir.getAbsolutePath,
-    "conifer" -> Map("script" -> "/usr/bin/test"),
+    "conifer" -> Map("script" -> coniferScript.getAbsolutePath),
     "probe_file" -> "test",
     "rscript" -> Map("exe" -> "test")
   )

@@ -50,10 +50,14 @@ class CarpTest extends TestNGSuite with Matchers {
     for (s1 <- bool; s2 <- bool; s3 <- bool; t <- bool; c <- bool) yield Array("", s1, s2, s3, t, c)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "carpOptions")
   def testCarp(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean, threatment: Boolean, control: Boolean): Unit = {
+    val outputDir = CarpTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m = ConfigUtils.mergeMaps(Map("output_dir" -> CarpTest.outputDir
+      var m = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir
       ), CarpTest.executables)
 
       if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m)
@@ -92,22 +96,23 @@ class CarpTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(CarpTest.outputDir)
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object CarpTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): String = {
-    val file = new File(outputDir, "input" + File.separator + name)
+    val file = new File(inputDir, name)
     Files.touch(file)
     file.getAbsolutePath
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -118,7 +123,7 @@ object CarpTest {
 
   val executables = Map(
     "skip_write_dependencies" -> true,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

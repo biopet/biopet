@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Gvcf mode for haplotypecaller */
-class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
+class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   val name = "haplotypecaller_gvcf"
   protected def defaultPrio = 5
 

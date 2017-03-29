@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.extensions.samtools.{ FixMpileup, SamtoolsMpileup }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** default mode of bcftools */
-class Bcftools(val root: Configurable) extends Variantcaller {
+class Bcftools(val parent: Configurable) extends Variantcaller {
   val name = "bcftools"
   protected def defaultPrio = 8
 

@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Allele mode for GenotyperAllele */
-class UnifiedGenotyperAllele(val root: Configurable) extends Variantcaller {
+class UnifiedGenotyperAllele(val parent: Configurable) extends Variantcaller {
   val name = "unifiedgenotyper_allele"
   protected def defaultPrio = 9
 

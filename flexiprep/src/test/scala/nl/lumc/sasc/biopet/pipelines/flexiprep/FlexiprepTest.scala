@@ -43,7 +43,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "flexiprepOptions")
-  def flexiprepOptions = {
+  def flexiprepOptions: Array[Array[Any]] = {
     val paired = Array(true, false)
     val skipTrims = Array(true, false)
     val skipClips = Array(true, false)
@@ -59,18 +59,25 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     ) yield Array("", pair, skipTrim, skipClip, zip, abortOnCorruptFastq)
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "flexiprepOptions")
-  def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean,
-                    zipped: Boolean, abortOnCorruptFastq: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir,
+  def testFlexiprep(f: String, paired: Boolean,
+                    skipTrim: Boolean,
+                    skipClip: Boolean,
+                    zipped: Boolean,
+                    abortOnCorruptFastq: Boolean): Unit = {
+    val outputDir = FlexiprepTest.outputDir
+    dirs :+= outputDir
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
       "skip_trim" -> skipTrim,
       "skip_clip" -> skipClip,
       "abort_on_corrupt_fastq" -> abortOnCorruptFastq
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
-    flexiprep.inputR1 = (if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1)
-    if (paired) flexiprep.inputR2 = Some((if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2))
+    flexiprep.inputR1 = if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1
+    if (paired) flexiprep.inputR2 = Some(if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2)
     flexiprep.sampleId = Some("1")
     flexiprep.libId = Some("1")
     flexiprep.script()
@@ -84,9 +91,11 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNoSample: Unit = {
+  def testNoSample(): Unit = {
+    val outputDir = FlexiprepTest.outputDir
+    dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map(
-      "output_dir" -> FlexiprepTest.outputDir
+      "output_dir" -> outputDir
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
@@ -96,23 +105,28 @@ class FlexiprepTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(FlexiprepTest.outputDir)
+  @AfterClass def removeTempOutputDir(): Unit = {
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object FlexiprepTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  def outputDir: File = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  val inputDir: File = Files.createTempDir()
+
+  val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  r1.deleteOnExit()
+  val r2 = new File(inputDir, "R2.fq")
   Files.touch(r2)
-  val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  r2.deleteOnExit()
+  val r1Zipped = new File(inputDir, "R1.fq.gz")
   Files.touch(r1Zipped)
-  val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
+  r1Zipped.deleteOnExit()
+  val r2Zipped = new File(inputDir, "R2.fq.gz")
   Files.touch(r2Zipped)
+  r2Zipped.deleteOnExit()
 
   val executables = Map(
     "skip_write_dependencies" -> true,

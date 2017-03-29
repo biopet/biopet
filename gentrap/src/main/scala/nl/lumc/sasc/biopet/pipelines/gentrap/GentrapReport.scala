@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvanthof on 25/06/15.
  */
-class GentrapReport(val root: Configurable) extends ReportBuilderExtension {
+class GentrapReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = GentrapReport
 }
 

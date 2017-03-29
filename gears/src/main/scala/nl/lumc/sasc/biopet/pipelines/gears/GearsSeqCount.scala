@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 12/29/15.
  */
-class GearsSeqCount(val root: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
+class GearsSeqCount(val parent: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
 
   var fastqInput: File = _
 

@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 import org.broadinstitute.gatk.utils.report.{ GATKReport, GATKReportTable }
 
-class GenotypeConcordance(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction with Summarizable {
+class GenotypeConcordance(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction with Summarizable {
   analysisName = "GenotypeConcordance"
   val analysis_type = "GenotypeConcordance"
   scatterClass = classOf[LocusScatterFunction]

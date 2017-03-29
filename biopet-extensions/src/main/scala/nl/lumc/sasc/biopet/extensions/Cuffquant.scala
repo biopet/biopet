@@ -26,7 +26,7 @@ import scala.util.matching.Regex
  * Wrapper for the cuffquant command line tool.
  * Written based on cuffquant version v2.2.1 (md5: 0765b82b11db9256f5be341a7da884d6)
  */
-class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Cuffquant(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cuffquant")

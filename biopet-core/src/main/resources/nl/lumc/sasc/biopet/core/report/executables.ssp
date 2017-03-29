@@ -1,12 +1,12 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
-<%@ var pipeline: String = summary.getValue("meta", "pipeline_name").getOrElse("").toString %>
+<%@ var runId: Int %>
 #{
-    val executables = summary.getValue(sampleId, libId, pipeline, "executables").getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
+    val executables = Await.result(summary.getExecutables(runId = Some(runId)), Duration.Inf)
 }#
 
 <table class="table">
@@ -17,11 +17,11 @@
         </tr>
     </thead>
     <tbody>
-        #for (name <- executables.keySet.toList.sorted)
+        #for (exe <- executables.sortBy(_.toolName))
             <tr>
-                <td>${name}</td>
+                <td>${exe.toolName}</td>
                 #{
-                val version = executables(name).get("version") match {
+                val version = exe.version match {
                 case Some(x) if x != None => x.toString
                 case _ => "N/A"
                 }

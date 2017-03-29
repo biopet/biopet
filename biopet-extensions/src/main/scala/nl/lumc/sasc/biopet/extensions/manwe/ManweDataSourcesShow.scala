@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweDataSourcesShow(val root: Configurable) extends Manwe {
+class ManweDataSourcesShow(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "uri of data source")
   var uri: Option[String] = _

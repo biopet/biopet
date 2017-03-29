@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
  * Wrapper for the gsnap command line tool
  * Written based on gsnap version 2014-05-15
  */
-class GmapBuild(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class GmapBuild(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   /** default executable */
   executable = config("exe", default = "gmap_build", freeVar = false)

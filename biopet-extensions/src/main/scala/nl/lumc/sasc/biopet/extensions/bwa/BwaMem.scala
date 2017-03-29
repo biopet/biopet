@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 0.7.12-r1039
  */
-class BwaMem(val root: Configurable) extends Bwa with Reference {
+class BwaMem(val parent: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
 

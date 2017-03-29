@@ -29,7 +29,7 @@ import scala.io.Source
  *
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats(val root: Configurable) extends ToolCommandFunction with Summarizable with Reference {
+class VcfStats(val parent: Configurable) extends ToolCommandFunction with Summarizable with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.vcfstats.VcfStats
 
   mainFunction = false

@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Makes a vcf file from a mpileup without statistics */
-class RawVcf(val root: Configurable) extends Variantcaller {
+class RawVcf(val parent: Configurable) extends Variantcaller {
   val name = "raw"
 
   // This caller is designed as fallback when other variantcallers fails to report
