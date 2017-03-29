@@ -38,17 +38,16 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Input(doc = "Reference")
   var reference: File = _
 
-  protected def cleverOutputDir: File = new File(cleverWorkDir, "work")
   var cleverWorkDir: File = _
 
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
-    new File(cleverOutputDir, "predictions.vcf")
+    new File(cleverWorkDir, "predictions.vcf")
   }
 
   @Output(doc = "Clever raw output")
   lazy val outputraw: File = {
-    new File(cleverOutputDir, "predictions.raw.txt")
+    new File(cleverWorkDir, "predictions.raw.txt")
   }
 
   //  var T: Option[Int] = config("T", default = defaultThreads)
@@ -60,13 +59,13 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (cleverOutputDir == null) throw new Exception("Clever :: Workdirectory is not defined")
+    if (cleverWorkDir == null) throw new Exception("Clever :: Workdirectory is not defined")
     if (reference == null) reference = referenceFasta()
   }
 
   def cmdLine = required(executable) +
-    " --sorted " +
-    " --use_xa " +
+    required("--sorted") +
+    required("--use_xa") +
     optional("-T", threads) +
     conditional(f, "-f") +
     conditional(a, "-a") +
@@ -74,7 +73,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     conditional(r, "-r") +
     required(input) +
     required(reference) +
-    required(cleverOutputDir)
+    required(cleverWorkDir)
 }
 
 object CleverCaller {
