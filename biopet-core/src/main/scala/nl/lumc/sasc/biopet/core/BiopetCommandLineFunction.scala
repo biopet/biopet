@@ -54,7 +54,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     }
     writer.println("set -eubf")
     writer.println("set -o pipefail")
-    //lines.foreach(writer.println)
     writer.println(this.commandLine)
     jobDelayTime.foreach(x => writer.println(s"sleep $x"))
     writer.close()
