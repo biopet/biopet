@@ -15,11 +15,11 @@ The pipeline accepts ```.fastq & .bam``` files as input.
 * [VEP annotation](toucan.md)
 * [CNV analysis](kopisu.md)
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
-* <a href="https://www.broadinstitute.org/gatk/" target="_blank">GATK tools</a>:
-* Freebayes
-* Varscan
-* Bcftools
-* Samtools
+* <a href="https://www.broadinstitute.org/gatk/" target="_blank">GATK tools</a>
+* <a href="https://github.com/ekg/freebayes" target="_blank">Freebayes</a>
+* <a href="http://dkoboldt.github.io/varscan/" target="_blank">Varscan</a>
+* <a href="https://samtools.github.io/bcftools/bcftools.html" target="_blank">Bcftools</a>
+* <a href="http://www.htslib.org/" target="_blank">Samtools</a>
 
 ----
 
@@ -51,11 +51,6 @@ biopet pipeline shiva -config MySamples.yml -config MySettings.yml -run
 
 A dry run can be performed by simply removing the `-run` flag from the command line call.
 
-[Gears](gears.md) is run automatically for the data analysed with `Shiva`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
-
-*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
-*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
-*`mapping_to_gears: none` : Disable this functionality.
 
 An example of MySettings.yml file is provided here and more detailed config options are explained in [config options](#config-options).
 ``` yaml
@@ -104,32 +99,32 @@ At this moment the following variant callers can be used
 ## Config options
 
 ### Required settings
-| Confignamespace | Name | Type | Default | Function |
+| ConfigNamespace | Name | Type | Default | Function |
 | ----------- | ---- | ---- | ------- | -------- |
 | - | output_dir | String |  | Path to output directory |
 | Shiva | variantcallers | List[String] | | Which variant callers to use |
 
 ### Config options
 
-| ConfignNamespace | Name |  Type | Default | Function |
-| ----------- | ---- | ----- | ------- | -------- |
-| shiva | species | String | unknown_species | Name of species, like H.sapiens |
-| shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 |
-| shiva | reference_fasta | String |  | reference to align to |
-| shiva | dbsnp_vcf | String |  | vcf file of dbsnp records |
-| shiva | variantcallers | List[String] |  | variantcaller to use, see list |
-| shiva | input_alleles | String |  | vcf file contains sites of interest for genotyping (including HOM REF calls). Only used when haplotypecaller_allele or unifiedgenotyper_allele is used.  |
-| shiva | use_indel_realigner | Boolean | true | Realign indels |
-| shiva | use_base_recalibration | Boolean | true | Base recalibrate |
-| shiva | use_analyze_covariates | Boolean | false | Analyze covariates during base recalibration step |
-| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files |
-| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups |
-| shiva | amplicon_bed | Path | Path to target bed file |
-| shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files |
-| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage |
-| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele |
-| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) |
-| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls |
+| ConfigNamespace | Name |  Type | Default | Function | Applicable variant caller |
+| ----------- | ---- | ----- | ------- | -------- | -------- |
+| shiva | species | String | unknown_species | Name of species, like H.sapiens | all |
+| shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 | all |
+| shiva | reference_fasta | String |  | reference to align to | all |
+| shiva | dbsnp_vcf | String |  | vcf file of dbsnp records | haplotypecaller, haplotypecaller_gvcf, haplotypecaller_allele, unifiedgenotyper, unifiedgenotyper_allele|
+| shiva | variantcallers | List[String] |  | variantcaller to use, see list | all |
+| shiva | input_alleles | String |  | vcf file contains sites of interest for genotyping (including HOM REF calls). Only used when haplotypecaller_allele or unifiedgenotyper_allele is used.  | all |
+| shiva | use_indel_realigner | Boolean | true | Realign indels | all |
+| shiva | use_base_recalibration | Boolean | true | Base recalibrate | all |
+| shiva | use_analyze_covariates | Boolean | false | Analyze covariates during base recalibration step | all |
+| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files | all |
+| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | all |
+| shiva | amplicon_bed | Path | Path to target bed file | all |
+| shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files | all |
+| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | all |
+| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | all |
+| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | all |
+| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls | all |
 
 Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
@@ -158,6 +153,15 @@ The config for these therefore is:
 | shiva | multisample_variantcalling | Boolean | true | Default, multisample calling |
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |
 | shiva | library_variantcalling | Boolean | false | Not-recommended, single sample, per library |
+
+### Additional metagenomics analysis
+
+[Gears](gears.md) can be ran for the data analysed with `Shiva`. There are two stages at which this metagenomics sub-pipeline can be called 
+and this should be specified in the [config](../general/config) file. To call Gears, please use the following config values.
+
+*`mapping_to_gears: none` : Disable this functionality. (default)
+*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
+*`mapping_to_gears: unmapped` : Only send unmapped reads after alignment to Gears, e.g., a kind of "trash bin" analysis.
 
 ### Only variant calling
 
