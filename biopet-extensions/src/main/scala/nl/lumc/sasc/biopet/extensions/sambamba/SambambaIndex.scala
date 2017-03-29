@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba index  */
-class SambambaIndex(val root: Configurable) extends Sambamba {
+class SambambaIndex(val parent: Configurable) extends Sambamba {
   override def defaultThreads = 2
 
   @Input(doc = "Bam File")

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 30/08/15.
  */
-class MultisamplePipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+class MultisamplePipeline(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
@@ -36,8 +36,6 @@ class MultisamplePipeline(val root: Configurable) extends QScript with MultiSamp
   def addMultiSampleJobs: Unit = {
     // this code will be executed after all code of all samples is executed
   }
-
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 
   //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()

@@ -38,7 +38,7 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.math._
 
 // TODO: documentation
-class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class Mapping(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
 
@@ -101,9 +101,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     new File(outputDir, outputName + ".bam")
   } else new File(outputDir, outputName + ".dedup.bam")
 
-  /** location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
-
   override def defaults: Map[String, Any] = Map(
     "gsnap" -> Map("batch" -> 4),
     "star" -> Map("outsamunmapped" -> "Within")
@@ -135,12 +132,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "aligner" -> aligner,
     "chunking" -> chunking,
     "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
-  ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
+  ) ++ (if (parent == null) Map("reference" -> referenceSummary) else Map())
 
   override def reportClass: Some[MappingReport] = {
     val mappingReport = new MappingReport(this)
     mappingReport.outputDir = new File(outputDir, "report")
-    mappingReport.summaryFile = summaryFile
+    mappingReport.summaryDbFile = summaryDbFile
     mappingReport.args = Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

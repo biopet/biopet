@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 /**
  * Created by ahbbollen on 5-1-16.
  */
-class BedtoolsMerge(val root: Configurable) extends Bedtools {
+class BedtoolsMerge(val parent: Configurable) extends Bedtools {
 
   @Input(doc = "Input bed file")
   var input: File = _

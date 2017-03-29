@@ -23,9 +23,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * Wrapper for the bedtools groupby tool
  * Written based on bedtools v2.21.0 (md5: b5a9a64bad721d96f6cbf2b3805b0fbe)
  *
- * @param root [[Configurable]] object
+ * @param parent [[Configurable]] object
  */
-class BedtoolsGroupby(val root: Configurable) extends Bedtools {
+class BedtoolsGroupby(val parent: Configurable) extends Bedtools {
 
   // input can be from stdin or a file
   @Input(doc = "Input file", required = false)

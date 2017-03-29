@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 20/06/16.
  */
-class GffRead(val root: Configurable) extends BiopetCommandLineFunction {
+class GffRead(val parent: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "gffread", freeVar = false)
 

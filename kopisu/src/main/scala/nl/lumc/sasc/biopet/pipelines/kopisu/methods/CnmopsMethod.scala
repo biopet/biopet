@@ -24,7 +24,7 @@ import scala.collection.JavaConversions._
 /**
  * Created by wyleung on 2-6-16.
  */
-class CnmopsMethod(val root: Configurable) extends CnvMethod with Reference {
+class CnmopsMethod(val parent: Configurable) extends CnvMethod with Reference {
   def name = "cnmops"
 
   def biopetScript: Unit = {

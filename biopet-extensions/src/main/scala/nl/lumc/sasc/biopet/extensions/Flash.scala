@@ -25,7 +25,7 @@ import scala.util.matching.Regex
 /**
  * Created by pjvanthof on 16/12/15.
  */
-class Flash(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Flash(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "flash", freeVar = false)
 
   /** Command to get version of executable */

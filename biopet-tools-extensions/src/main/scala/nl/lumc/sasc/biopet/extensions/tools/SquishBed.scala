@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 22/08/15.
  */
-class SquishBed(val root: Configurable) extends ToolCommandFunction {
+class SquishBed(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.SquishBed
 
   @Input(doc = "Input Bed file", required = true)

@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Breakdancer */
-class Breakdancer(val root: Configurable) extends SvCaller {
+class Breakdancer(val parent: Configurable) extends SvCaller {
   def name = "breakdancer"
 
   def biopetScript() {

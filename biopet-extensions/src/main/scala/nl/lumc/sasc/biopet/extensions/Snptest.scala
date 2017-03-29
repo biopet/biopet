@@ -25,7 +25,7 @@ import scala.util.matching.Regex
 /**
  * Created by pjvan_thof on 3/25/16.
  */
-class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Snptest(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(required = true)
   var inputGenotypes: List[File] = Nil
 

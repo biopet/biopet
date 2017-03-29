@@ -31,7 +31,7 @@ import scala.collection.JavaConversions._
 /**
  * Created by pjvan_thof on 27-5-16.
  */
-class Impute2Vcf(val root: Configurable) extends QScript with BiopetQScript with Reference {
+class Impute2Vcf(val parent: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
   val specsFile: Option[File] = config("imute_specs_file")

@@ -1,0 +1,25 @@
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.File)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Pipeline)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
+<%@ var runId: Int %>
+<%@ var pipelineIds: List[Int] %>
+<%@ var allPipelines: Seq[Pipeline] %>
+#{ val pipelineNames = pipelineIds.map(x => allPipelines.find(_.id == x).map(_.name)) }#
+<table class="table">
+<thead><tr>
+    <th>Pipeline</th>
+</tr></thead>
+<tbody>
+    #for (pipelineName <- pipelineNames)
+        <tr><td><a href="./${pipelineName}/index.html" >${pipelineName}</a></td></tr>
+    #end
+</tbody>
+</table>

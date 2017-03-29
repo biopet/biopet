@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CollectGcBiasMetrics */
-class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+class CollectGcBiasMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)

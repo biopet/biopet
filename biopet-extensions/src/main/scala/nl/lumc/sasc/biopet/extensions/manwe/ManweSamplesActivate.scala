@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweSamplesActivate(val root: Configurable) extends Manwe {
+class ManweSamplesActivate(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "uri to sample to activate")
   var uri: String = _

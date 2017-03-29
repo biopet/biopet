@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 /**
  * Created by ahbbollen on 23-9-15.
  */
-class ManweSamplesList(val root: Configurable) extends Manwe {
+class ManweSamplesList(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "filter by user URI", required = false)
   var user: Option[String] = None

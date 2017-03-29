@@ -25,7 +25,7 @@ import scala.io.Source
 /**
  * Created by Sander Bollen on 23-11-16.
  */
-class XhmmDiscover(val root: Configurable) extends Xhmm with Summarizable {
+class XhmmDiscover(val parent: Configurable) extends Xhmm with Summarizable {
 
   @Input
   var inputMatrix: File = _

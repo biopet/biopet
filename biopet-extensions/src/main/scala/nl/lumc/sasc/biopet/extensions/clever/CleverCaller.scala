@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class CleverCaller(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "clever")
 
   private lazy val versionExecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")

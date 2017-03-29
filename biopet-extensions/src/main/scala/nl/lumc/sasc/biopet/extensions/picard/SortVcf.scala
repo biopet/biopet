@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for picard SortVcf */
-class SortVcf(val root: Configurable) extends Picard with Reference {
+class SortVcf(val parent: Configurable) extends Picard with Reference {
   javaMainClass = new picard.vcf.SortVcf().getClass.getName
 
   @Input(doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)", required = true)

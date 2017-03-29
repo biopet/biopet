@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  *
  */
-class BaseCounter(val root: Configurable) extends ToolCommandFunction {
+class BaseCounter(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BaseCounter
 
   @Input(doc = "Input Bed file", required = true)

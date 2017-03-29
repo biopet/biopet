@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard MarkDuplicates */
-class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
+class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable {
 
   javaMainClass = new picard.sam.markduplicates.MarkDuplicates().getClass.getName
 

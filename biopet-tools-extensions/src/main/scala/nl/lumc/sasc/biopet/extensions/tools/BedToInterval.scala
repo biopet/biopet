@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * @deprecated Use picard.util.BedToIntervalList instead
  */
-class BedToInterval(val root: Configurable) extends ToolCommandFunction {
+class BedToInterval(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BedToInterval
 
   @Input(doc = "Input Bed file", required = true)

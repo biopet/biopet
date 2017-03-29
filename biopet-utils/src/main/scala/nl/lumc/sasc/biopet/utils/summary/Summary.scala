@@ -22,6 +22,8 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  * This class can read in a summary and extract values from it
  *
  * Created by pjvan_thof on 3/26/15.
+ *
+ * @deprecated
  */
 class Summary(val map: Map[String, Any]) {
 

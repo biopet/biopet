@@ -22,9 +22,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Queue extension for the FastqSplitter
- * @param root Parent object
+ * @param parent Parent object
  */
-class FastqSplitter(val root: Configurable) extends ToolCommandFunction {
+class FastqSplitter(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.FastqSplitter
 
   @Input(doc = "Input fastq", shortName = "input", required = true)

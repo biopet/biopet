@@ -30,7 +30,7 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.collection.JavaConversions._
 import scala.language.reflectiveCalls
 
-class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript {
+class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
   @Argument(required = true)
