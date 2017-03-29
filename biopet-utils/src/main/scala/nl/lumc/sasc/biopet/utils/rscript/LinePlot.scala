@@ -38,7 +38,7 @@ class LinePlot(val root: Configurable) extends Rscript {
   var title: Option[String] = config("title")
   var removeZero: Boolean = config("removeZero", default = false)
 
-  // whether to use log scale for x and y axis
+  //whether to use log scale for x and y axis
   var xLog10: Boolean = false
   var yLog10: Boolean = false
 

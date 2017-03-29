@@ -42,6 +42,7 @@ plot = ggplot(DF1, aes(x = Rank, y = value, group = variable, color = variable))
   theme_bw() +
   geom_line()
 
+
 if (arguments$xLog10 == "true") {
   if (!is.null(arguments$xLog10Labels)) {
     scale_x <- scale_x_log10(breaks = arguments$xLog10Breaks, labels=arguments$xLog10Labels)
