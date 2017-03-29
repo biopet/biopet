@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Default mode for UnifiedGenotyper */
-class UnifiedGenotyper(val root: Configurable) extends Variantcaller {
+class UnifiedGenotyper(val parent: Configurable) extends Variantcaller {
   val name = "unifiedgenotyper"
   protected def defaultPrio = 20
 

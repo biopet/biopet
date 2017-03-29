@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, Input }
 
-class BaseRecalibrator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class BaseRecalibrator(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "BaseRecalibrator"
   scatterClass = classOf[ContigScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }

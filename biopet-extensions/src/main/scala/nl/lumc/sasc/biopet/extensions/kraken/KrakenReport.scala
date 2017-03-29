@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for Kraken */
-class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class KrakenReport(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", default = "kraken-report")
   def versionRegex = """Kraken version (.*)""".r

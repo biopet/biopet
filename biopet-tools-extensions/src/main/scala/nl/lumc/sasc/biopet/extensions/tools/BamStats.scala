@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 18/11/2016.
  */
-class BamStats(val root: Configurable) extends ToolCommandFunction with Reference with Summarizable {
+class BamStats(val parent: Configurable) extends ToolCommandFunction with Reference with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.bamstats.BamStats
 
   @Input(required = true)

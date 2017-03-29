@@ -18,9 +18,13 @@ import java.io.File
 import java.nio.file.Paths
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * Created by pjvanthof on 24/02/16.
@@ -36,7 +40,7 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
     val sample = Array(Some("sampleName"), None)
     val lib = Array(Some("libName"), None)
     val nested = Array(false, true)
-    for (s <- sample; l <- lib; n <- nested) yield Array(s, l, n)
+    for (s <- sample; l <- lib; n <- nested if (!(l.isDefined && s.isEmpty))) yield Array(s, l, n)
   }
 
   @Test(dataProvider = "testGeneratePages")
@@ -47,17 +51,30 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
         (if (nested) "p1" -> ReportPage(Nil, Nil, Map()) :: Nil else Nil), Nil, Map())
     }
 
+    val dbFile = File.createTempFile("summary.", ".db")
+    dbFile.deleteOnExit()
+    val db = SummaryDb.openSqliteSummary(dbFile)
+    db.createTables()
+    sample.foreach { sampleName =>
+      val sampleId = Await.result(db.createSample(sampleName, 0), Duration.Inf)
+      lib.foreach { libName =>
+        Await.result(db.createLibrary(libName, 0, sampleId), Duration.Inf)
+      }
+    }
+
     val tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
-    val args = Array("-s", resourcePath("/empty_summary.json"), "-o", tempDir.getAbsolutePath) ++
+    val args = Array("-s", dbFile.getAbsolutePath, "-o", tempDir.getAbsolutePath) ++
       sample.map(x => Array("-a", s"sampleId=$x")).getOrElse(Array()) ++
       lib.map(x => Array("-a", s"libId=$x")).getOrElse(Array())
     builder.main(args)
-    builder.sampleId shouldBe sample
-    builder.libId shouldBe lib
+    builder.sampleId shouldBe sample.flatMap(s => Await.result(db.getSampleId(0, s), Duration.Inf))
+    builder.libId shouldBe lib.flatMap(l => Await.result(db.getLibraryId(0, builder.sampleId.get, l), Duration.Inf))
     builder.extFiles.foreach(x => new File(tempDir, "ext" + File.separator + x.targetPath) should exist)
     new File(tempDir, "index.html") should exist
     new File(tempDir, "p1" + File.separator + "index.html").exists() shouldBe nested
+
+    db.close()
   }
 
   @Test

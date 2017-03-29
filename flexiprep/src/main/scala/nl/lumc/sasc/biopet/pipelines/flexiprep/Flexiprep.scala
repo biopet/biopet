@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq 
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
-class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", fullName = "inputR1", required = true)
@@ -39,10 +39,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var skipClip: Boolean = config("skip_clip", default = false)
 
   /** Make a final fastq files, by default only when flexiprep is the main pipeline */
-  var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = root == null)
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
+  var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = parent == null)
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
@@ -65,7 +62,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   override def reportClass: Some[FlexiprepReport] = {
     val flexiprepReport = new FlexiprepReport(this)
     flexiprepReport.outputDir = new File(outputDir, "report")
-    flexiprepReport.summaryFile = summaryFile
+    flexiprepReport.summaryDbFile = summaryDbFile
     flexiprepReport.args = Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))

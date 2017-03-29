@@ -130,7 +130,7 @@ object SummaryQScriptTest {
       def summaryFile: File = tempFile
       def init(): Unit = ???
       def biopetScript(): Unit = ???
-      def root: Configurable = null
+      def parent: Configurable = null
     }
 
   def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) = new Summarizable {

@@ -1,50 +1,46 @@
 #import(nl.lumc.sasc.biopet.utils.IoUtils)
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
-#import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(org.apache.commons.io.FileUtils)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+#import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] = None %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] %>
+<%@ var libId: Option[Int] = None %>
 <%@ var outputDir: File %>
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var target: Option[String] %>
+<%@ var runId: Int %>
+<%@ var fields: List[String] = List("mean", "median", "max", "horizontal", "frac_min_10x", "frac_min_20x", "frac_min_30x", "frac_min_40x", "frac_min_50x") %>
 #{
-    val originalPlot = new File(summary.getValue(sampleId, libId, metricsTag, "files", target.get + "_cov_stats", "plot", "path")
-        .getOrElse(throw new IllegalArgumentException("No plot found in summary")).toString)
+    val moduleName = target.get + "_cov_stats"
+
+    val statsPaths = fields.map(x => x -> List("coverage", "_all", x)).toMap
+    val plotFile = Await.result(summary.getFile(runId, PipelineName(metricsTag), ModuleName(moduleName), sampleId.map(SampleId).get, libId.map(LibraryId).getOrElse(NoLibrary), "plot"), Duration.Inf)
+    val originalPlot = new File(plotFile.get.path)
     val plot = new File(outputDir, target.get + "_cov_stats.png")
 
-    val values = summary.getValue(sampleId, libId, metricsTag, "stats", target.get + "_cov_stats", "coverage", "_all")
-        .getOrElse(throw new IllegalArgumentException("No plot found in summary")).asInstanceOf[Map[String, Any]]
+    val values = summary.getStatKeys(runId, PipelineName(metricsTag), ModuleName(moduleName), sampleId.map(SampleId).get, libId.map(LibraryId).getOrElse(NoLibrary), statsPaths)
 
     if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
 }#
-
 <img src="${plot.getName}">
 
 <table class="table">
 <thead><tr>
-    <th>mean</th>
-    <th>median</th>
-    <th>max</th>
-    <th>horizontal</th>
-    <th>frac min 10x</th>
-    <th>frac min 20x</th>
-    <th>frac min 30x</th>
-    <th>frac min 40x</th>
-    <th>frac min 50x</th>
+#for (field <- fields)
+    <th>${field}</th>
+#end
 </tr></thead>
 <tbody>
 <tr>
-    <td>${values.get("mean")}</td>
-    <td>${values.get("median")}</td>
-    <td>${values.get("max")}</td>
-    <td>${values.get("horizontal")}</td>
-    <td>${values.get("frac_min_10x")}</td>
-    <td>${values.get("frac_min_20x")}</td>
-    <td>${values.get("frac_min_30x")}</td>
-    <td>${values.get("frac_min_40x")}</td>
-    <td>${values.get("frac_min_50x")}</td>
+    #for (field <- fields)
+        <th>${values(field)}</th>
+    #end
 </tr>
 </tbody>
 </table>

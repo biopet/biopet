@@ -25,7 +25,7 @@ import scala.sys.process.{ Process, ProcessLogger }
 /**
  * This class can execute ln as InProcessFunction or used to only generate the ln command
  */
-class Ln(val root: Configurable) extends InProcessFunction with Configurable {
+class Ln(val parent: Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
   @Input(doc = "Input file")

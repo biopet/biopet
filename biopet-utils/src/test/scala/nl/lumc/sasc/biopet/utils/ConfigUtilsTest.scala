@@ -38,6 +38,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     getValueFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
     getValueFromPath(map1, List("notexist", "dummy")) shouldBe None
     getValueFromPath(map1, List("dummy", "notexist")) shouldBe None
+    getValueFromPath(map1, List()) shouldBe Some(map1)
   }
 
   @Test def testGetMapFromPath(): Unit = {

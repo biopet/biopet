@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class DellyCaller(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "delly")
 
   private lazy val versionexecutable: File = new File(executable)

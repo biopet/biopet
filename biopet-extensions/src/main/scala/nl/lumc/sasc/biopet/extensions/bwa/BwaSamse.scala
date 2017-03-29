@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * based on executable version 0.7.10-r789
  *
  */
-class BwaSamse(val root: Configurable) extends Bwa with Reference {
+class BwaSamse(val parent: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file", required = true)
   var fastq: File = _
 

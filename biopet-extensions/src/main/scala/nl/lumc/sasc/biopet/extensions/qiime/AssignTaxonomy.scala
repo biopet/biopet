@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class AssignTaxonomy(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "assign_taxonomy.py")
 
   @Input(required = true)

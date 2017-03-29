@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by Sander Bollen on 26-5-16.
  */
-class BedtoolsSort(val root: Configurable) extends Bedtools with Reference {
+class BedtoolsSort(val parent: Configurable) extends Bedtools with Reference {
 
   @Input
   var input: File = null

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Extension for STAR
  */
-class Star(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Star(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "The reference file for the bam files.", required = false)
   var reference: File = null
 

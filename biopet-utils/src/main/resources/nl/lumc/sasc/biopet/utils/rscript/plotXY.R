@@ -11,6 +11,7 @@ parser$add_argument('--xlabel', dest='xlabel', type='character')
 parser$add_argument('--ylabel', dest='ylabel', type='character', required=TRUE)
 parser$add_argument('--llabel', dest='llabel', type='character')
 parser$add_argument('--title', dest='title', type='character')
+parser$add_argument('--hideLegend', dest='hideLegend', type='character', default="false")
 parser$add_argument('--removeZero', dest='removeZero', type='character', default="false")
 
 arguments <- parser$parse_args()
@@ -20,6 +21,8 @@ png(filename = arguments$output, width = arguments$width, height = arguments$hei
 DF <- read.table(arguments$input, header=TRUE)
 
 if (is.null(arguments$xlabel)) xlab <- colnames(DF)[1] else xlab <- arguments$xlabel
+
+if (is.null(arguments$hideLegend) || arguments$hideLegend == "false") legendPosition <- "right" else legendPosition <- "none"
 
 colnames(DF)[1] <- "Rank"
 
@@ -35,6 +38,7 @@ ggplot(DF1, aes(x = Rank, y = value, group = variable, color = variable)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) +
   ggtitle(arguments$title) +
   theme_bw() +
+  theme(legend.position = legendPosition) +
   geom_line()
 
 dev.off()

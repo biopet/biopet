@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Allele mode for Haplotypecaller */
-class HaplotypeCallerAllele(val root: Configurable) extends Variantcaller {
+class HaplotypeCallerAllele(val parent: Configurable) extends Variantcaller {
   val name = "haplotypecaller_allele"
   protected def defaultPrio = 5
 

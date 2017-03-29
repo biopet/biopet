@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for stampy */
-class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Stampy(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
 

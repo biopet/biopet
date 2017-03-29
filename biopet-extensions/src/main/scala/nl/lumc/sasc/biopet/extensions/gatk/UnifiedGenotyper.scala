@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
-class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "UnifiedGenotyper"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }

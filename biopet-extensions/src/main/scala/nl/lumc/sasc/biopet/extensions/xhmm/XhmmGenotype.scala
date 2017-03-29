@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by Sander Bollen on 23-11-16.
  */
-class XhmmGenotype(val root: Configurable) extends Xhmm with Reference {
+class XhmmGenotype(val parent: Configurable) extends Xhmm with Reference {
 
   @Input
   var inputMatrix: File = _

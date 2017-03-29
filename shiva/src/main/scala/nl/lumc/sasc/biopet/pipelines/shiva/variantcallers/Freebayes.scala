@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** default mode of freebayes */
-class Freebayes(val root: Configurable) extends Variantcaller {
+class Freebayes(val parent: Configurable) extends Variantcaller {
   val name = "freebayes"
   protected def defaultPrio = 7
 

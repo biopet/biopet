@@ -27,13 +27,13 @@ trait SampleLibraryTag extends Configurable {
   //FIXME: not possible to have required sample / lib
 
   @Argument(doc = "Sample ID", shortName = "sample", required = false)
-  var sampleId: Option[String] = root match {
+  var sampleId: Option[String] = parent match {
     case tag: SampleLibraryTag => tag.sampleId
     case _                     => None
   }
 
   @Argument(doc = "Library ID", shortName = "library", required = false)
-  var libId: Option[String] = root match {
+  var libId: Option[String] = parent match {
     case tag: SampleLibraryTag => tag.libId
     case _                     => None
   }

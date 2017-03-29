@@ -38,7 +38,7 @@ import scala.language.reflectiveCalls
  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-class Gentrap(val root: Configurable) extends QScript
+class Gentrap(val parent: Configurable) extends QScript
   with MultisampleMappingTrait with AnnotationRefFlat with RibosomalRefFlat { qscript =>
 
   // alternative constructor for initialization with empty configuration
@@ -47,7 +47,7 @@ class Gentrap(val root: Configurable) extends QScript
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new GentrapReport(this)
     report.outputDir = new File(outputDir, "report")
-    report.summaryFile = summaryFile
+    report.summaryDbFile = summaryDbFile
     Some(report)
   }
 
@@ -151,9 +151,6 @@ class Gentrap(val root: Configurable) extends QScript
     pipeline.outputDir = new File(outputDir, "variantcalling")
     Some(pipeline)
   } else None
-
-  /** Output summary file */
-  def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
   /** Files that will be listed in the summary file */
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(

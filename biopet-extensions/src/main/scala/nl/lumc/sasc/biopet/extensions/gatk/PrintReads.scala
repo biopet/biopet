@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-class PrintReads(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class PrintReads(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "PrintReads"
   scatterClass = classOf[ContigScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = true }

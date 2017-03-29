@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
-class VariantEval(val root: Configurable) extends CommandLineGATK {
+class VariantEval(val parent: Configurable) extends CommandLineGATK {
   def analysis_type = "VariantEval"
 
   /** An output file created by the walker.  Will overwrite contents if file exists */

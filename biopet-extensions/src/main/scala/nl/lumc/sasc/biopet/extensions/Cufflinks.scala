@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the cufflinks command line tool.
  * Written based on cufflinks version v2.2.1 (md5: 07c831c4f8b4e161882731ea5694ff80)
  */
-class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Cufflinks(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cufflinks")

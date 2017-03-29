@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class PindelConfig(val parent: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
   @Input(doc = "Bam File")
   var input: File = _
