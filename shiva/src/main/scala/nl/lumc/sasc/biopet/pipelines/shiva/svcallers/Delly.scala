@@ -36,6 +36,7 @@ class Delly(val root: Configurable) extends SvCaller {
       val catVariants = new CatVariants(this)
       catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf")
       catVariants.isIntermediate = true
+      catVariants.writeHeaderToEmptyOutput = true
 
       if (del) {
         val delly = new DellyCaller(this)

@@ -90,6 +90,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
+    def metricsPreprogressBam = true
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) { lib =>
 
@@ -263,7 +265,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       if (mergeStrategy != MergeStrategy.None && libraries.flatMap(_._2.bamFile).nonEmpty) {
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
-        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.inputBam = if (metricsPreprogressBam) preProcessBam.get else bamFile.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         add(bamMetrics)
 

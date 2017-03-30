@@ -138,7 +138,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
         "hisat2" -> classOf[Hisat2]
       )
 
-      val alignerClass = classMap.get(aligner.getOrElse("gsnap"))
+      val alignerClass = classMap.get(aligner.getOrElse("star"))
 
       alignerClass.foreach(c => assert(functions.keys.exists(_ == c)))
       classMap.values.filterNot(Some(_) == alignerClass).foreach(x => assert(!functions.keys.exists(_ == x)))
