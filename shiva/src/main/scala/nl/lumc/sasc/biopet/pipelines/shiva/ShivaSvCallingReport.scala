@@ -8,6 +8,7 @@ import nl.lumc.sasc.biopet.utils.summary.Summary
 object ShivaSvCallingReport {
 
   val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
+  val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
   val histogramText: List[String] = List("<=100bp", "0.1-1kb", "1-10kb", "10-100kb", "0.1-1Mb", "1-10Mb", ">10Mb")
 
   def parseSummaryForSvCounts(summary: Summary): Map[String, Map[String, Array[Any]]] = {
@@ -60,15 +61,11 @@ object ShivaSvCallingReport {
     sampleNames.foreach(sampleName => tsvWriter.print("\t" + sampleName))
     tsvWriter.println()
 
-    for (i <- histogramBinBoundaries.indices) {
-      tsvWriter.print(histogramBinBoundaries(i))
+    for (i <- histogramPlotTicks.indices) {
+      tsvWriter.print(histogramPlotTicks(i))
       sampleNames.foreach(sampleName => tsvWriter.print("\t" + counts.get(sampleName).get(i)))
       tsvWriter.println()
     }
-    val i = histogramBinBoundaries.length
-    tsvWriter.print(histogramBinBoundaries(i - 1) * 10)
-    sampleNames.foreach(sampleName => tsvWriter.print("\t" + counts.get(sampleName).get(i)))
-    tsvWriter.println()
 
     tsvWriter.close()
   }
@@ -87,6 +84,8 @@ object ShivaSvCallingReport {
       plot.llabel = Some("Sample")
       plot.xLog10 = true
       plot.yLog10 = true
+      plot.xLog10AxisTicks = histogramPlotTicks.collect({ case x => x.toString() })
+      plot.xLog10AxisLabels = histogramText
       plot.runLocal()
     }
 
