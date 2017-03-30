@@ -36,7 +36,7 @@ if (arguments$removeZero == "true") print("Removed 0 values")
 plot = ggplot(DF1, aes(x = Rank, y = value, group = variable, color = variable)) +
   xlab(xlab) +
   ylab(arguments$ylabel) +
-  guides(fill=guide_legend(title=arguments$llabel)) +
+  guides(color=guide_legend(title=arguments$llabel)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) +
   ggtitle(arguments$title) +
   theme_bw() +
