@@ -23,8 +23,9 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 24/02/16.
@@ -38,12 +39,12 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
   def testGeneratePages(): Unit = {
     val builder = new MultisampleReportBuilder {
       def reportName: String = "test"
-      def indexPage: ReportPage = ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map())
+      def indexPage: Future[ReportPage] = Future(ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map()))
 
-      def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage =
-        ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map())
+      def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] =
+        Future(ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map()))
 
-      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = ReportPage(Nil, Nil, Map())
+      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = Future(ReportPage(Nil, Nil, Map()))
     }
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()

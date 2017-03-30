@@ -28,6 +28,7 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.language.implicitConversions
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * This trait is meant to make an extension for a report object
@@ -74,7 +75,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 trait ReportBuilder extends ToolCommand {
 
   implicit def toOption[T](x: T): Option[T] = Option(x)
-  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
+  //  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
@@ -186,6 +187,7 @@ trait ReportBuilder extends ToolCommand {
     _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
+    // TODO: switch to future for base files
     logger.info("Copy Base files")
 
     // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
@@ -200,21 +202,23 @@ trait ReportBuilder extends ToolCommand {
           createDirs = true)
     )
 
-    total = ReportBuilder.countPages(indexPage)
+    val rootPage = indexPage
+
+    //    total = ReportBuilder.countPages(rootPage)
     logger.info(total + " pages to be generated")
 
     done = 0
 
     logger.info("Generate pages")
-    val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
+    val jobs = generatePage(summary, rootPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
-        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage, "runId" -> cmdArgs.runId))
+        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
 
-    logger.info(jobs + " Done")
+    Await.result(jobs, Duration.Inf)
   }
 
   /** This must be implemented, this will be the root page of the report */
-  def indexPage: ReportPage
+  def indexPage: Future[ReportPage]
 
   /** This must be implemented, this will become the title of the report */
   def reportName: String
@@ -223,49 +227,50 @@ trait ReportBuilder extends ToolCommand {
    * This method will render the page and the subpages recursivly
    *
    * @param summary The summary object
-   * @param page Page to render
+   * @param pageFuture Page to render
    * @param outputDir Root output dir of the report
    * @param path Path from root to current page
    * @param args Args to add to this sub page, are args from current page are passed automaticly
    * @return Number of pages including all subpages that are rendered
    */
   def generatePage(summary: SummaryDb,
-                   page: ReportPage,
+                   pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): Int = {
+                   args: Map[String, Any] = Map()): Future[_] = {
+    pageFuture.flatMap { page =>
+      val pageOutputDir = new File(outputDir, path.mkString(File.separator))
+      pageOutputDir.mkdirs()
+      val rootPath = "./" + Array.fill(path.size)("../").mkString
+      val pageArgs = args ++ page.args ++
+        Map("page" -> page,
+          "path" -> path,
+          "outputDir" -> pageOutputDir,
+          "rootPath" -> rootPath,
+          "allPipelines" -> pipelines,
+          "allModules" -> modules,
+          "allSamples" -> samples,
+          "allLibraries" -> libraries
+        )
 
-    val pageOutputDir = new File(outputDir, path.mkString(File.separator))
-    pageOutputDir.mkdirs()
-    val rootPath = "./" + Array.fill(path.size)("../").mkString
-    val pageArgs = args ++ page.args ++
-      Map("page" -> page,
-        "path" -> path,
-        "outputDir" -> pageOutputDir,
-        "rootPath" -> rootPath,
-        "allPipelines" -> pipelines,
-        "allModules" -> modules,
-        "allSamples" -> samples,
-        "allLibraries" -> libraries
-      )
+      // Generating subpages
+      val jobs = Future.sequence(page.subPages.map {
+        case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
+      })
 
-    // Generating subpages
-    val jobs = page.subPages.par.flatMap {
-      case (name, subPage) => Some(generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs))
-      case _               => None
+      val renderFuture = Future {
+        val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
+          pageArgs ++ Map("args" -> pageArgs))
+
+        val file = new File(pageOutputDir, "index.html")
+        val writer = new PrintWriter(file)
+        writer.println(output)
+        writer.close()
+      }
+
+      Future.sequence(renderFuture :: jobs :: Nil)
     }
 
-    val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
-      pageArgs ++ Map("args" -> pageArgs))
-
-    val file = new File(pageOutputDir, "index.html")
-    val writer = new PrintWriter(file)
-    writer.println(output)
-    writer.close()
-
-    done += 1
-    if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
-    jobs.sum + 1
   }
 }
 
@@ -276,9 +281,9 @@ object ReportBuilder {
   engine.allowReload = false
 
   /** This will give the total number of pages including all nested pages */
-  def countPages(page: ReportPage): Int = {
-    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
-  }
+  //  def countPages(page: ReportPage): Int = {
+  //    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
+  //  }
 
   /**
    * This method will render a template that is located in the classpath / jar

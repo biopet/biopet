@@ -1,5 +1,7 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 <%@ var summary: SummaryDb %>
 <%@ var indexPage: ReportPage %>
 <%@ var reportName: String %>
@@ -15,11 +17,13 @@
             buffer.append("<ul class=\"dropdown-menu list-group\">")
         }
 
-        for (subPage <- page.subPages.sortBy(_._1)) {
+        for (subPageFuture <- page.subPages.sortBy(_._1)) {
 
+            val subPageName = subPageFuture._1
+            val subPage = Await.result(subPageFuture._2, Duration.Inf)
             val href: String = {
-                if (path.isEmpty) rootPath + subPage._1 + "/index.html"
-                else rootPath + path.mkString("","/","/") + subPage._1 + "/index.html"
+                if (path.isEmpty) rootPath + subPageName + "/index.html"
+                else rootPath + path.mkString("","/","/") + subPageName + "/index.html"
             }
 
 //            buffer.append("<li")
@@ -30,16 +34,16 @@
 //            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false))
 //            buffer.append("</li>")
 
-            val listSubmenu = if(subPage._2.subPages.nonEmpty) "dropdown-submenu" else ""
+            val listSubmenu = if(subPage.subPages.nonEmpty) "dropdown-submenu" else ""
 //            val subMenuBadgeCount = if(subPage._2.subPages.nonEmpty && first) "<span class='badge'>%d</span>".format(subPage._2.subPages.size) else ""
             val tabIndex = if (first) " tabindex='-1'" else ""
 //            val listGroupA = if(subPage._2.subPages.nonEmpty) "list-group-item" else ""
 
             var menuItem: String = "<li class='%s'>".format(listSubmenu) +
             "<a href='%s' class='%s'%s>".format(href, "", tabIndex) +
-            "%s".format(subPage._1) +
+            "%s".format(subPageName) +
             "</a>" +
-            createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false) +
+            createMenu(subPage, path ::: subPageName :: Nil, first = false) +
             "</li>"
             buffer.append(menuItem)
 
@@ -54,7 +58,7 @@
         path.foldLeft(indexPage)((c, p) => {
             val foundPages = c.subPages.filter(_._1 == p)
             require(foundPages.size == 1, "Name of page not found or duplicate is found, page:: " + p + " in path: " + path)
-            foundPages.head._2
+            Await.result(foundPages.head._2, Duration.Inf)
         })
     }
 }#
