@@ -14,11 +14,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.File
-
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -100,7 +98,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     // sample tagging is however not available within this pipeline
 
     for ((sample, mergedResultFile) <- outputMergedVCFbySample) {
-      lazy val counts = getVariantCounts(mergedResultFile, ShivaSvCalling.histogramBinBoundaries)
+      lazy val counts = getVariantCounts(mergedResultFile, ShivaSvCallingReport.histogramBinBoundaries)
       addSummarizable(new Summarizable {
         def summaryFiles = Map.empty
         def summaryStats = counts
@@ -108,7 +106,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     }
     addSummarizable(new Summarizable {
       def summaryFiles = Map.empty
-      def summaryStats = ShivaSvCalling.histogramBinBoundaries
+      def summaryStats = ShivaSvCallingReport.histogramBinBoundaries
     }, "histBreaksForCounts")
 
     addSummaryJobs()
@@ -164,13 +162,4 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     true
   }
 
-}
-
-object ShivaSvCalling extends PipelineCommand {
-  val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
-}
-
-object StructuralVariantType extends Enumeration {
-  val Deletion = Value("DEL")
-  val Inversion = Value("INV")
 }

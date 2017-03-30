@@ -8,22 +8,28 @@
 <%@ var showIntro: Boolean = true %>
 
 #{
-    val svTypes = List(
-    SvTypeForReport("DEL", "Deletion", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
-    SvTypeForReport("DUP", "Duplication", "svSummaryDuplications.tsv", "svSummaryDuplications.png"),
-    SvTypeForReport("INS", "Insertion", "svSummaryInsertions.tsv", "svSummaryInsertions.png"),
-    SvTypeForReport("INV", "Inversion", "svSummaryInversions.tsv", "svSummaryInversions.png"))
+    val sampleNames: List[String] = summary.samples.toList.sorted
 
     val counts: Map[String, Map[String, Array[Any]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
 
-    ShivaSvCallingReport.writeTsvForPlots(counts, svTypes, outputDir)
+    var svTypes = List(
+    SvTypeForReport("DEL", "Deletions", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
+    SvTypeForReport("DUP", "Duplications", "svSummaryDuplications.tsv", "svSummaryDuplications.png"),
+    SvTypeForReport("INS", "Insertions", "svSummaryInsertions.tsv", "svSummaryInsertions.png"),
+    SvTypeForReport("INV", "Inversions", "svSummaryInversions.tsv", "svSummaryInversions.png"))
+    svTypes = svTypes.filter(sv => counts.contains(sv.svType))
+    val tsvAllTypes = "svSummary.tsv"
+
+    ShivaSvCallingReport.writeTsvFiles(sampleNames, counts, svTypes, tsvAllTypes, outputDir)
     ShivaSvCallingReport.createPlots(svTypes, outputDir)
 }#
 
 
 #if (showPlot)
     <div class="panel-body">
-    <img src="svSummaryDeletions.png" class="img-responsive" />
+    #for (sv <- svTypes)
+        <img src="${sv.pngFileName}" />
+    #end
     </div>
     <div class="panel-footer">
     #if (showTable)
@@ -31,49 +37,34 @@
     #else
         <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">Show table</button>
     #end
-    <i class="glyphicon glyphicon-file"></i> <a href="svSummary.tsv">tsv file</a>
+    <i class="glyphicon glyphicon-file"></i> <a href="${tsvAllTypes}">tsv file</a>
     </div>
 #end
 
 <div class="panel-body collapse #if (showTable)in#end" id="svSummaryTable">
 
+#for (sv <- svTypes)
+#{
+    val countsForSvType: Map[String, Array[Any]] = counts.get(sv.svType).get
+}#
+<h3>${sv.displayText}</h3>
 <table class="table sortable-theme-bootstrap" data-sortable>
     <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th>
-        <th>Variant Type</th> <!-- TODO: use values from summary.getValue("shivasvcalling", "stats", "histBreaksForCounts")  -->
-        <th>&le;100bp</th>
-        <th>0.1-1kb</th>
-        <th>1-10kb</th>
-        <th>10-100kb</th>
-        <th>0.1-1Mb</th>
-        <th>1-10Mb</th>
-        <th>&gt;10Mb</th>
+        #for (text <- ShivaSvCallingReport.histogramText)
+            <th>${text}</th>
+         #end
     </tr></thead>
     <tbody>
-        #for (sampleName <- summary.samples.toList.sorted)
-            #{
-                val sampleCounts:Map[String, Array[Any]] = counts.get(sampleName).get
-                var firstRow = true
-            }#
-
-            #for (sv <- svTypes)
-                <tr>
-                #if (counts.contains(sv.svType))
-                    #if (firstRow)
-                        <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
-                        #{ firstRow = false }#
-                    #else
-                        <td></td>
-                    #end
-
-                        <td>${sv.displayText}</td>
-
-                    #for (countForSize <- counts.get(sv.svType).get.asInstanceOf[List[Long]])
-                        <td>${countForSize}</td>
-                    #end
-                #end
-                </tr>
+        #for (sampleName <- sampleNames)
+            <tr>
+            <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
+            #for (countForSize <- countsForSvType.get(sampleName).get)
+                <td>${countForSize}</td>
             #end
+            </tr>
         #end
     </tbody>
 </table>
+
+#end
 </div>
