@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
 class FlexiprepReport(val parent: Configurable) extends ReportBuilderExtension {
@@ -40,23 +40,23 @@ object FlexiprepReport extends ReportBuilder {
   override def pageArgs = Map("multisample" -> false)
 
   /** Index page for a flexiprep report */
-  def indexPage = {
+  def indexPage: Future[ReportPage] = Future {
     val flexiprepPage = this.flexiprepPage
-    ReportPage(List("Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-    )), Map()),
-      "Files" -> ReportPage(List(), List( //TODO: Fix files
+    ReportPage(List("Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+    )), Map())),
+      "Files" -> Future(ReportPage(List(), List( //TODO: Fix files
       //        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
       //        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
-      ), Map())
+      ), Map()))
     ), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
-    ) ::: flexiprepPage.sections,
+    ) ::: Await.result(flexiprepPage, Duration.Inf).sections,
       Map()
     )
   }
 
   /** Generate a QC report page for 1 single library, sampleId and libId must be defined in the arguments */
-  def flexiprepPage: ReportPage = ReportPage(
+  def flexiprepPage: Future[ReportPage] = Future(ReportPage(
     List(),
     List(
       "Read Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -71,7 +71,7 @@ object FlexiprepReport extends ReportBuilder {
       fastqcPlotSection("Length distribution", "plot_sequence_length_distribution")
     ),
     Map()
-  )
+  ))
 
   protected def fastqcPlotSection(name: String, tag: String) = {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp", Map("plot" -> tag))
