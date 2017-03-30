@@ -24,11 +24,10 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
 import scala.collection.mutable
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{ Await, ExecutionContextExecutor, Future }
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.language.implicitConversions
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * This trait is meant to make an extension for a report object
@@ -74,8 +73,9 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
+  implicit lazy val global: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
   implicit def toOption[T](x: T): Option[T] = Option(x)
-  //  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
+  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
