@@ -2,14 +2,17 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
+#import(scala.concurrent.Future)
 <%@ var summary: SummaryDb %>
-<%@ var indexPage: ReportPage %>
+<%@ var indexPage: Future[ReportPage] %>
 <%@ var reportName: String %>
 <%@ var page: ReportPage %>
 <%@ var path: List[String] %>
 <%@ var args: Map[String, Any] %>
 <%@ var rootPath: String %>
 #{
+    val iPage = Await.result(indexPage, Duration.Inf)
+
     def createMenu(page: ReportPage, path: List[String] = Nil, first: Boolean = true): String = {
         val buffer: StringBuffer = new StringBuffer()
 
@@ -55,7 +58,7 @@
     }
 
     def getSubPage(path:List[String]): ReportPage = {
-        path.foldLeft(indexPage)((c, p) => {
+        path.foldLeft(iPage)((c, p) => {
             val foundPages = c.subPages.filter(_._1 == p)
             require(foundPages.size == 1, "Name of page not found or duplicate is found, page:: " + p + " in path: " + path)
             Await.result(foundPages.head._2, Duration.Inf)
@@ -115,9 +118,9 @@
         <ul class="nav navbar-nav">
             <li class="root #if (path.isEmpty) active #end">
                 <a class="navbar-brand" href="${rootPath}index.html">${reportName}
-                    #if (indexPage.subPages.nonEmpty) <b class="caret"></b> #end
+                    #if (iPage.subPages.nonEmpty) <b class="caret"></b> #end
                 </a>
-                ${unescape(createMenu(indexPage))}
+                ${unescape(createMenu(iPage))}
             </li>
         </ul>
     </div>
@@ -130,9 +133,9 @@
                 #if(t == 0)
                     <li class="root">
                         <a href="${rootPath}index.html">Home
-                            #if (indexPage.subPages.nonEmpty) <b class="caret"></b> #end
+                            #if (iPage.subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
-                        ${unescape(createMenu(indexPage, Nil, false))}
+                        ${unescape(createMenu(iPage, Nil, false))}
                     </li>
                 #else
                     <li class="root #if (t == path.size) active #end">
