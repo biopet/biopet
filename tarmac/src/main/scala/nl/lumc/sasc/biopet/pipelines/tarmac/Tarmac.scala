@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.{PedigreeQscript, PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
@@ -10,8 +10,9 @@ import nl.lumc.sasc.biopet.extensions.wisecondor.WisecondorCount
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
 
-import scalaz.{ -\/, \/, \/- }
+import scalaz.{-\/, \/, \/-}
 
 /**
  * Created by Sander Bollen on 23-3-17.
@@ -47,25 +48,32 @@ class Tarmac(val root: Configurable) extends QScript with PedigreeQscript with S
      * Returns a disjunction where right is the file, and left is
      * a potential error message
      */
-    lazy val outputXhmmCountFile: String \/ File = {
+    protected lazy val outputXhmmCountJob: String \/ QFunction = {
       val outFile = new File(sampleDir + File.separator + s"$name.dcov")
       (inputXhmmCountFile, bamFile) match {
         case (Some(f), _) => {
           val ln = new Ln(root)
           ln.input = f
           ln.output = outFile
-          add(ln)
-          \/-(ln.output)
+          \/-(ln)
         }
         case (None, Some(bam)) => {
           val dcov = DepthOfCoverage(root, List(bam), outFile, List(targets))
-          add(dcov)
-          \/-(dcov.out)
+          \/-(dcov)
         }
         case _ => -\/(s"Cannot find bam file or xhmm count file for sample" +
           s" $name in config. At least one must be given.")
       }
 
+    }
+
+    /* Get count file for Xhmm method */
+    lazy val outputXhmmCountFile: String \/ File = {
+      outputXhmmCountJob match {
+        case \/-(ln: Ln) => \/-(ln.output)
+        case \/-(doc: DepthOfCoverage) => \/-(doc.out)
+        case _ => _
+      }
     }
 
     /**
@@ -74,23 +82,21 @@ class Tarmac(val root: Configurable) extends QScript with PedigreeQscript with S
      * Returns a disjunction where right is the file, and left is
      * a potential error message
      */
-    lazy val outputWisecondorCountFile: String \/ File = {
+    protected lazy val outputWisecondorCountJob: String \/ QFunction = {
       val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.bed")
       (inputWisecondorCountFile, bamFile) match {
         case (Some(f), _) => {
           val ln = new Ln(root)
           ln.input = f
           ln.output = outFile
-          add(ln)
-          \/-(ln.output)
+          \/-(ln)
         }
         case (None, Some(bam)) => {
           val counter = new WisecondorCount(root)
           counter.inputBam = bam
           counter.output = outFile
           counter.binFile = Some(targets)
-          add(counter)
-          \/-(counter.output)
+          \/-(counter)
         }
         case _ => -\/(s"Cannot find bam file or wisecondor count for sample" +
           s" $name. At least one must be given.")
@@ -98,11 +104,20 @@ class Tarmac(val root: Configurable) extends QScript with PedigreeQscript with S
 
     }
 
+    /* Get count file for wisecondor method */
+    lazy val outputWisecondorCountFile: String \/ File = {
+      outputWisecondorCountJob match {
+        case \/-(ln: Ln) => \/-(ln.output)
+        case \/-(count: WisecondorCount) => \/-(count.output)
+        case _ => _
+      }
+    }
+
     /** Function to add sample jobs */
     def addJobs(): Unit = {
-      (outputWisecondorCountFile :: outputXhmmCountFile :: Nil).foreach {
+      (outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
         case -\/(error) => Logging.addError(error)
-        case _          =>
+        case \/-(function)          => add(function)
       }
     }
 
