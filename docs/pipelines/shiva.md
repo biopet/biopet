@@ -82,7 +82,6 @@ At this moment the following variant callers can be used
 
 | ConfigName | Tool | Description |
 | ---------- | ---- | ----------- |
-
 | haplotypecaller_gvcf | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running HaplotypeCaller in gvcf mode |
 | haplotypecaller_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Only genotype a given list of alleles with HaplotypeCaller |
 | unifiedgenotyper_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a> | Only genotype a given list of alleles with UnifiedGenotyper |
@@ -220,6 +219,7 @@ shiva:
 sv_callers:
 - breakdancer
 - delly
+- clever
 pysvtools:
   flanking: 100
 ```
