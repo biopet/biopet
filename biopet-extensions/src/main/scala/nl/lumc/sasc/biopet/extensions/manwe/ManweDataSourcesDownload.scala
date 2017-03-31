@@ -20,7 +20,7 @@ import org.broadinstitute.gatk.utils.commandline.Argument
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweDataSourcesDownload(val root: Configurable) extends Manwe {
+class ManweDataSourcesDownload(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "uri to data source to download")
   var uri: String = _

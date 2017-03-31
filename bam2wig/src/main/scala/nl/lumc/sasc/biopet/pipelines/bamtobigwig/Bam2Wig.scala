@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by pjvan_thof on 1/29/15.
  */
-class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
+class Bam2Wig(val parent: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
   @Input(doc = "Input bam file", required = true)

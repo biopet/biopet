@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 /**
  * Created by ahbbollen on 13-10-15.
  */
-class GvcfToBed(val root: Configurable) extends ToolCommandFunction {
+class GvcfToBed(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.GvcfToBed
 
   @Input(doc = "input vcf")

@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard MergeSamFiles */
-class MergeSamFiles(val root: Configurable) extends Picard {
+class MergeSamFiles(val parent: Configurable) extends Picard {
   javaMainClass = new picard.sam.MergeSamFiles().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by Sander Bollen on 24-11-16.
  */
-class XcnvToBed(val root: Configurable) extends ToolCommandFunction {
+class XcnvToBed(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.XcnvToBed
 
   @Input

@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class Gzip(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Gzip(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 

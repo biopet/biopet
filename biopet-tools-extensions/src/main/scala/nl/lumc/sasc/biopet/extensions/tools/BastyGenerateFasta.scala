@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BastyGenerateFasta(val root: Configurable) extends ToolCommandFunction with Reference {
+class BastyGenerateFasta(val parent: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 
   @Input(doc = "Input vcf file", required = false)

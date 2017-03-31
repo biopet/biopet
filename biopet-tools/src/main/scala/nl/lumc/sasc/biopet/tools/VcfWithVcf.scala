@@ -154,7 +154,10 @@ object VcfWithVcf extends ToolCommand {
    * @param header: header of secondary reader
    * @return Map of fields and their values in secondary records
    */
-  def createFieldMap(fields: List[Fields], record: VariantContext, secondaryRecords: List[VariantContext], header: VCFHeader): Map[String, List[Any]] = {
+  def createFieldMap(fields: List[Fields],
+                     record: VariantContext,
+                     secondaryRecords: List[VariantContext],
+                     header: VCFHeader): Map[String, List[Any]] = {
     val fieldMap = (for (
       f <- fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
     ) yield {
@@ -236,8 +239,8 @@ object VcfWithVcf extends ToolCommand {
    * @return
    */
   def numberA(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
-    val refValues = referenceRecord.getAttributeAsList(field).toArray
-    annotateRecord.
+    val refValues = annotateRecord.getAttributeAsList(field).toArray
+    referenceRecord.
       getAlternateAlleles.filter(referenceRecord.hasAlternateAllele).
       map(x => referenceRecord.getAlternateAlleles.indexOf(x)).
       flatMap(x => refValues.lift(x)).
@@ -252,8 +255,8 @@ object VcfWithVcf extends ToolCommand {
    * @return
    */
   def numberR(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
-    val refValues = referenceRecord.getAttributeAsList(field).toArray
-    annotateRecord.
+    val refValues = annotateRecord.getAttributeAsList(field).toArray
+    referenceRecord.
       getAlleles.
       filter(referenceRecord.hasAllele).
       map(x => referenceRecord.getAlleles.indexOf(x)).

@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class ReorderSam(val root: Configurable) extends Picard with Reference {
+class ReorderSam(val parent: Configurable) extends Picard with Reference {
 
   javaMainClass = new picard.sam.ReorderSam().getClass.getName
 

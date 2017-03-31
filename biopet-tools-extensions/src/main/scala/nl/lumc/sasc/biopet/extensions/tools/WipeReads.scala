@@ -23,9 +23,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * WipeReads function class for usage in Biopet pipelines
  *
- * @param root Configuration object for the pipeline
+ * @param parent Configuration object for the pipeline
  */
-class WipeReads(val root: Configurable) extends ToolCommandFunction {
+class WipeReads(val parent: Configurable) extends ToolCommandFunction {
 
   def toolObject = nl.lumc.sasc.biopet.tools.WipeReads
 

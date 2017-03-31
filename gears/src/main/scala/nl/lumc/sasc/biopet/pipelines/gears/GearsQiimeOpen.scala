@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsQiimeOpen(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqInput: File = _
 
@@ -69,9 +69,6 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "summary.open_reference.json")
 
   val downSample: Option[Double] = config("downsample")
 

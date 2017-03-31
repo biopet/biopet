@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.extensions.tools.{ BedtoolsCoverageToCounts, PrefixFa
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
-class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
+class Sage(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
@@ -51,8 +51,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       "skip_trim" -> true
     ), "strandSensitive" -> true
   )
-
-  def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
   def summaryFiles: Map[String, File] = Map()
 

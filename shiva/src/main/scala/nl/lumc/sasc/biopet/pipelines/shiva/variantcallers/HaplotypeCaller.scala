@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Default mode for the haplotypecaller */
-class HaplotypeCaller(val root: Configurable) extends Variantcaller {
+class HaplotypeCaller(val parent: Configurable) extends Variantcaller {
   val name = "haplotypecaller"
   protected def defaultPrio = 1
 

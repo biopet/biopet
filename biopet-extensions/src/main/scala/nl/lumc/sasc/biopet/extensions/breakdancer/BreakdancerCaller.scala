@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class BreakdancerCaller(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
   override def defaultThreads = 1 // breakdancer can only work on 1 single thread

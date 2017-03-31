@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class VcfFilter(val root: Configurable) extends ToolCommandFunction {
+class VcfFilter(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfFilter
 
   @Input(doc = "Input vcf", shortName = "I", required = true)

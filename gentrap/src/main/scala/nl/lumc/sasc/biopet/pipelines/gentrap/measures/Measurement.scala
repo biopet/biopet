@@ -83,7 +83,4 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = extraSummaryFiles ++ bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, s"$name.summary.json")
 }

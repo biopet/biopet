@@ -28,7 +28,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 1/29/15.
  */
-class BamToChromSizes(val root: Configurable) extends InProcessFunction with Configurable {
+class BamToChromSizes(val parent: Configurable) extends InProcessFunction with Configurable {
   @Input
   var bamFile: File = _
 

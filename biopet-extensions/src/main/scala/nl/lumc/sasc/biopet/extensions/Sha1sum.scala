@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sha1sum */
-class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
+class Sha1sum(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file")
   var input: File = _
 

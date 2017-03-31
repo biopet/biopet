@@ -18,8 +18,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
@@ -57,7 +62,6 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
-        qscript.addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
         currentLib = None
         currentSample = None
       }
@@ -169,7 +173,6 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         Logging.addError(s"Sample '$sampleId' $nameError")
       currentSample = Some(sampleId)
       addJobs()
-      qscript.addSummarizable(this, "pipeline", Some(sampleId))
       currentSample = None
     }
 
@@ -255,6 +258,22 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       case _       => Nil
     }
     sample ::: lib ::: super.configFullPath
+  }
+
+  def initSummaryDb: Unit = {
+    val db = SummaryDb.openSqliteSummary(summaryDbFile)
+    val namesOld = Await.result(db.getSamples(runId = Some(summaryRunId)).map(_.map(_.name).toSet), Duration.Inf)
+    for ((sampleName, sample) <- samples) {
+      val sampleTags = if (sample.sampleTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
+      val sampleId: Int = if (!namesOld.contains(sampleName))
+        Await.result(db.createOrUpdateSample(sampleName, summaryRunId, sampleTags), Duration.Inf)
+      else Await.result(db.getSamples(runId = Some(summaryRunId), name = Some(sampleName)).map(_.head.id), Duration.Inf)
+      val libNamesOld = Await.result(db.getLibraries(runId = summaryRunId, sampleId = sampleId).map(_.map(_.name)), Duration.Inf)
+      for ((libName, lib) <- sample.libraries) {
+        val libraryTags = if (lib.libTags.nonEmpty) Some(ConfigUtils.mapToJson(sample.sampleTags).nospaces) else None
+        if (!libNamesOld.contains(libName)) Await.result(db.createOrUpdateLibrary(libName, summaryRunId, sampleId, libraryTags), Duration.Inf)
+      }
+    }
   }
 }
 

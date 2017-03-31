@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by wyleung on 20-1-16.
  */
-class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class PindelVCF(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "pindel2vcf")
 
   override def defaultCoreMemory = 2.0

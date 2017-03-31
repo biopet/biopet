@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.queue.QScript
  * Created by pjvanthof on 30/08/15.
  */
 //TODO: Replace class name, must be the same as the class of the pipeline
-class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript {
+class SimplePipeline(val parent: Configurable) extends QScript with BiopetQScript {
   // A constructor without arguments is needed if this pipeline is a root pipeline
   def this() = this(null)
 

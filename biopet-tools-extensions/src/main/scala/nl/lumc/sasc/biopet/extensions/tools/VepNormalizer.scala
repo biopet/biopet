@@ -30,7 +30,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Created by ahbbollen on 10/27/14.
  */
 
-class VepNormalizer(val root: Configurable) extends ToolCommandFunction {
+class VepNormalizer(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VepNormalizer
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
