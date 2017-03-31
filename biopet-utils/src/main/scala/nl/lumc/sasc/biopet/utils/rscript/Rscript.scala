@@ -14,13 +14,13 @@
  */
 package nl.lumc.sasc.biopet.utils.rscript
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.process.Sys
 
-import scala.sys.process.{Process, ProcessLogger}
+import scala.sys.process.ProcessLogger
 
 /**
  * Trait for rscripts, can be used to execute rscripts locally
