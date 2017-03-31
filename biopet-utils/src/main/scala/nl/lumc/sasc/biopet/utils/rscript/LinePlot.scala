@@ -58,7 +58,7 @@ class LinePlot(val root: Configurable) extends Rscript {
     (if (xLog10) Seq("--xLog10", "true") else Seq()) ++
     (if (yLog10) Seq("--yLog10", "true") else Seq()) ++
     (if (xLog10AxisTicks.nonEmpty) xLog10AxisTicks.+:("--xLog10Breaks") else Seq()) ++
-    (if (xLog10AxisTicks.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
+    (if (xLog10AxisLabels.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
 
 }
 
