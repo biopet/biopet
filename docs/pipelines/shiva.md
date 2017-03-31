@@ -80,21 +80,19 @@ unifiedgenotyper:
 ## Supported variant callers
 At this moment the following variant callers can be used
 
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a>
-    * Running default HaplotypeCaller
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_gvcf</a>
-    * Running HaplotypeCaller in gvcf mode
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_allele</a>
-    * Only genotype a given list of alleles with HaplotypeCaller
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a>
-    * Running default UnifiedGenotyper
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper_allele</a>
-    * Only genotype a given list of alleles with UnifiedGenotyper
-* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a>
-* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools_singlesample</a>
-* <a href="https://github.com/ekg/freebayes">freebayes</a>
-* <a href="http://varscan.sourceforge.net/">varscan</a>
-* [Naive variant caller](../tools/MpileupToVcf)
+| ConfigName | Tool | Description |
+| ---------- | ---- | ----------- |
+
+| haplotypecaller_gvcf | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running HaplotypeCaller in gvcf mode |
+| haplotypecaller_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Only genotype a given list of alleles with HaplotypeCaller |
+| unifiedgenotyper_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a> | Only genotype a given list of alleles with UnifiedGenotyper |
+| unifiedgenotyper | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a> | Running default UnifiedGenotyper |
+| haplotypecaller | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running default HaplotypeCaller |
+| freebayes | <a href="https://github.com/ekg/freebayes">freebayes</a> |  |
+| raw | [Naive variant caller](../tools/MpileupToVcf) |  |
+| bcftools | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
+| bcftools_singlesample | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
+| varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
 
 ## Config options
 
@@ -111,20 +109,20 @@ At this moment the following variant callers can be used
 | shiva | species | String | unknown_species | Name of species, like H.sapiens | all |
 | shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 | all |
 | shiva | reference_fasta | String |  | reference to align to | all |
-| shiva | dbsnp_vcf | String |  | vcf file of dbsnp records | haplotypecaller, haplotypecaller_gvcf, haplotypecaller_allele, unifiedgenotyper, unifiedgenotyper_allele|
+| shiva | dbsnp_vcf | String |  | vcf file of dbsnp records | haplotypecaller, haplotypecaller_gvcf, haplotypecaller_allele, unifiedgenotyper, unifiedgenotyper_allele |
 | shiva | variantcallers | List[String] |  | variantcaller to use, see list | all |
-| shiva | input_alleles | String |  | vcf file contains sites of interest for genotyping (including HOM REF calls). Only used when haplotypecaller_allele or unifiedgenotyper_allele is used.  | all |
+| shiva | input_alleles | String |  | vcf file contains sites of interest for genotyping (including HOM REF calls). Only used when haplotypecaller_allele or unifiedgenotyper_allele is used.  | haplotypecaller_allele, unifiedgenotyper_allele |
 | shiva | use_indel_realigner | Boolean | true | Realign indels | all |
 | shiva | use_base_recalibration | Boolean | true | Base recalibrate | all |
-| shiva | use_analyze_covariates | Boolean | false | Analyze covariates during base recalibration step | all |
-| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files | all |
-| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | all |
+| shiva | use_analyze_covariates | Boolean | true | Analyze covariates during base recalibration step | all |
+| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files | Only used when input is a bam file |
+| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | Only used when input is a bam file |
 | shiva | amplicon_bed | Path | Path to target bed file | all |
 | shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files | all |
-| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | all |
-| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | all |
-| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | all |
-| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls | all |
+| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | raw |
+| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | raw |
+| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | raw |
+| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls | raw |
 
 Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
