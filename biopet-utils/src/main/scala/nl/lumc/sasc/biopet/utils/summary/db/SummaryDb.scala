@@ -6,8 +6,8 @@ import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
-import java.io.{ Closeable, File }
+import scala.concurrent.{Await, ExecutionContext, Future}
+import java.io.{Closeable, File}
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
@@ -710,7 +710,13 @@ object SummaryDb {
     config.setBusyTimeout("10000")
     config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.FULL)
     config.setReadOnly(true)
-    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties)
+
+    val asyncExecutor = new AsyncExecutor {
+      override def executionContext: ExecutionContext = global
+      override def close(): Unit = {}
+    }
+
+    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties, executor = asyncExecutor)
     new SummaryDbReadOnly(db)
   }
 }
