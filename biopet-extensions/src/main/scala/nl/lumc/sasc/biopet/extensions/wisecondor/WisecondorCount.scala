@@ -8,7 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by Sander Bollen on 20-3-17.
  */
-class WisecondorCount(val root: Configurable) extends Wisecondor {
+class WisecondorCount(val parent: Configurable) extends Wisecondor {
 
   @Input
   var inputBam: File = _
