@@ -187,20 +187,21 @@ trait ReportBuilder extends ToolCommand {
     _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
-    // TODO: switch to future for base files
-    logger.info("Copy Base files")
+    val baseFilesFuture = Future {
+      logger.info("Copy Base files")
 
-    // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
-    val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
+      // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
+      val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
 
-    // Copy each resource files out to the report destination
-    extFiles.par.foreach(
-      resource =>
-        IoUtils.copyStreamToFile(
-          getClass.getResourceAsStream(resource.resourcePath),
-          new File(extOutputDir, resource.targetPath),
-          createDirs = true)
-    )
+      // Copy each resource files out to the report destination
+      extFiles.foreach(
+        resource =>
+          IoUtils.copyStreamToFile(
+            getClass.getResourceAsStream(resource.resourcePath),
+            new File(extOutputDir, resource.targetPath),
+            createDirs = true)
+      )
+    }
 
     val rootPage = indexPage
 
@@ -215,6 +216,7 @@ trait ReportBuilder extends ToolCommand {
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
 
     Await.result(jobs, Duration.Inf)
+    Await.result(baseFilesFuture, Duration.Inf)
   }
 
   /** This must be implemented, this will be the root page of the report */
