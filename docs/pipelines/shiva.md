@@ -116,8 +116,8 @@ At this moment the following variant callers can be used
 | shiva | use_analyze_covariates | Boolean | true | Analyze covariates during base recalibration step | all |
 | shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files | Only used when input is a bam file |
 | shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | Only used when input is a bam file |
-| shiva | amplicon_bed | Path | Path to target bed file | all |
-| shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files | all |
+| shiva | amplicon_bed | Path |  | Path to target bed file | all |
+| shiva | regions_of_interest | Array of paths |  | Array of paths to region of interest (e.g. gene panels) bed files | all |
 | vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | raw |
 | vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | raw |
 | vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | raw |
