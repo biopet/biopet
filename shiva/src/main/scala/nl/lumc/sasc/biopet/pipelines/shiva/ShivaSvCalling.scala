@@ -15,12 +15,12 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, SampleLibraryTag}
 import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -153,3 +153,5 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
 }
+
+object ShivaSvCalling extends PipelineCommand
