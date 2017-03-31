@@ -11,6 +11,7 @@
     val sampleNames: List[String] = summary.samples.toList.sorted
 
     val counts: Map[String, Map[String, Array[Long]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
+    val traCounts: Map[String, Long] = ShivaSvCallingReport.parseSummaryForTranslocations(summary)
 
     var svTypes = List(
     SvTypeForReport("DEL", "Deletions", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
@@ -31,12 +32,29 @@
         <img src="${sv.pngFileName}" />
     #end
     </div>
+    #if (traCounts.nonEmpty)
+        <div class="panel-body">
+        <h5>Number of translocation events detected:</h5>
+        <table class="table table-condensed" style="width:auto">
+            <thead><tr>
+            #for (sampleName <- sampleNames)
+                <th>${sampleName}</th>
+            #end
+            </tr></thead>
+            <tbody><tr>
+            #for (sampleName <- sampleNames)
+                <td>${traCounts.get(sampleName).get}</td>
+            #end
+            </tr></tbody>
+        </table>
+        </div>
+    #end
     <div class="panel-footer">
         <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">
             #if (showTable)
-                <i class="glyphicon glyphicon-eye-close"></i> Hide table
+                <i class="glyphicon glyphicon-eye-close"></i> Hide tables
             #else
-                <i class="glyphicon glyphicon-eye-open"></i> Show table
+                <i class="glyphicon glyphicon-eye-open"></i> Show tables
             #end
         </button>
         <a href="${tsvAllTypes}"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>

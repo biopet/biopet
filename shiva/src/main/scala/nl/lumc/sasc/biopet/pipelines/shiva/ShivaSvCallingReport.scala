@@ -35,6 +35,15 @@ object ShivaSvCallingReport {
     result
   }
 
+  def parseSummaryForTranslocations(summary: Summary): Map[String, Long] = {
+    var traCounts: Map[String, Long] = Map()
+    for (sampleName <- summary.samples) {
+      var counts: Map[String, Any] = summary.getSampleValue(sampleName, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Any]]
+      traCounts += (sampleName -> counts.get("TRA").get.asInstanceOf[Long])
+    }
+    if (traCounts.exists(elem => elem._2 > 0)) traCounts else Map.empty
+  }
+
   def writeTsvFiles(sampleNames: List[String], counts: Map[String, Map[String, Array[Long]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
 
     val tsvWriter = new PrintWriter(new File(outDir, outFileAllTypes))
