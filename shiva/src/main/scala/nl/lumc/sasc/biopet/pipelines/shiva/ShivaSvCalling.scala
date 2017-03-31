@@ -149,17 +149,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     }
     iterator.close()
 
-    var counts: Map[String, Any] = Map()
-    if (isConfiguredForType("DEL")) counts = Map("DEL" -> delCounts)
-    if (isConfiguredForType("INS")) counts = counts + ("INS" -> insCounts)
-    if (isConfiguredForType("DUP")) counts = counts + ("DUP" -> dupCounts)
-    if (isConfiguredForType("INV")) counts = counts + ("INV" -> invCounts)
-    if (isConfiguredForType("TRA")) counts = counts + ("TRA" -> traCount)
-    counts
-  }
-
-  def isConfiguredForType(svType: String): Boolean = {
-    true
+    Map("DEL" -> delCounts, "INS" -> insCounts, "DUP" -> dupCounts, "INV" -> invCounts, "TRA" -> traCount)
   }
 
 }

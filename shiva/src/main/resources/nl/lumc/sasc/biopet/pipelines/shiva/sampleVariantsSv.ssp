@@ -10,7 +10,7 @@
 #{
     val sampleNames: List[String] = summary.samples.toList.sorted
 
-    val counts: Map[String, Map[String, Array[Any]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
+    val counts: Map[String, Map[String, Array[Long]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
 
     var svTypes = List(
     SvTypeForReport("DEL", "Deletions", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
@@ -32,12 +32,14 @@
     #end
     </div>
     <div class="panel-footer">
-    #if (showTable)
-        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">Hide table</button>
-    #else
-        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">Show table</button>
-    #end
-    <i class="glyphicon glyphicon-file"></i> <a href="${tsvAllTypes}">tsv file</a>
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#svSummaryTable">
+            #if (showTable)
+                <i class="glyphicon glyphicon-eye-close"></i> Hide table
+            #else
+                <i class="glyphicon glyphicon-eye-open"></i> Show table
+            #end
+        </button>
+        <a href="${tsvAllTypes}"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
     </div>
 #end
 
@@ -45,7 +47,7 @@
 
 #for (sv <- svTypes)
 #{
-    val countsForSvType: Map[String, Array[Any]] = counts.get(sv.svType).get
+    val countsForSvType: Map[String, Array[Long]] = counts.get(sv.svType).get
 }#
 <h3>${sv.displayText}</h3>
 <table class="table sortable-theme-bootstrap" data-sortable>

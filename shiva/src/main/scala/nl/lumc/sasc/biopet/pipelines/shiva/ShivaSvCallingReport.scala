@@ -11,30 +11,31 @@ object ShivaSvCallingReport {
   val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
   val histogramText: List[String] = List("<=100bp", "0.1-1kb", "1-10kb", "10-100kb", "0.1-1Mb", "1-10Mb", ">10Mb")
 
-  def parseSummaryForSvCounts(summary: Summary): Map[String, Map[String, Array[Any]]] = {
-    var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Any]] = Map()
+  def parseSummaryForSvCounts(summary: Summary): Map[String, Map[String, Array[Long]]] = {
+    var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Long]] = Map()
 
     for (sampleName <- summary.samples) {
       var sampleCounts: Map[String, Any] = summary.getSampleValue(sampleName, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Any]]
       for ((svType, counts) <- sampleCounts.collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
+        val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
-          case "DEL" => delCounts = delCounts + (sampleName -> counts)
-          case "INS" => insCounts = insCounts + (sampleName -> counts)
-          case "DUP" => dupCounts = dupCounts + (sampleName -> counts)
-          case "INV" => invCounts = invCounts + (sampleName -> counts)
+          case "DEL" => delCounts += elem
+          case "INS" => insCounts += elem
+          case "DUP" => dupCounts += elem
+          case "INV" => invCounts += elem
         }
       }
     }
 
-    var result: Map[String, Map[String, Array[Any]]] = Map()
-    if (!delCounts.isEmpty) result = Map("DEL" -> delCounts)
-    if (!insCounts.isEmpty) result = result + ("INS" -> insCounts)
-    if (!dupCounts.isEmpty) result = result + ("DUP" -> dupCounts)
-    if (!invCounts.isEmpty) result = result + ("INV" -> invCounts)
+    var result: Map[String, Map[String, Array[Long]]] = Map()
+    if (delCounts.exists(elem => (elem._2.sum > 0))) result = Map("DEL" -> delCounts)
+    if (insCounts.exists(elem => (elem._2.sum > 0))) result += ("INS" -> insCounts)
+    if (dupCounts.exists(elem => (elem._2.sum > 0))) result += ("DUP" -> dupCounts)
+    if (invCounts.exists(elem => (elem._2.sum > 0))) result += ("INV" -> invCounts)
     result
   }
 
-  def writeTsvFiles(sampleNames: List[String], counts: Map[String, Map[String, Array[Any]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
+  def writeTsvFiles(sampleNames: List[String], counts: Map[String, Map[String, Array[Long]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
 
     val tsvWriter = new PrintWriter(new File(outDir, outFileAllTypes))
     tsvWriter.print("sv_type\tsample")
@@ -42,7 +43,7 @@ object ShivaSvCallingReport {
     tsvWriter.println()
 
     for (sv <- svTypes) {
-      val countsForSvType: Map[String, Array[Any]] = counts.get(sv.svType).get
+      val countsForSvType: Map[String, Array[Long]] = counts.get(sv.svType).get
 
       writeTsvFileForSvType(sv, countsForSvType, sampleNames, outDir)
 
@@ -54,7 +55,7 @@ object ShivaSvCallingReport {
     tsvWriter.close()
   }
 
-  def writeTsvFileForSvType(svType: SvTypeForReport, counts: Map[String, Array[Any]], sampleNames: List[String], outDir: File): Unit = {
+  def writeTsvFileForSvType(svType: SvTypeForReport, counts: Map[String, Array[Long]], sampleNames: List[String], outDir: File): Unit = {
     val tsvWriter = new PrintWriter(new File(outDir, svType.tsvFileName))
 
     tsvWriter.print("histogramBin")
