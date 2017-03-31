@@ -14,12 +14,13 @@
  */
 package nl.lumc.sasc.biopet.utils.rscript
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.process.Sys
 
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 
 /**
  * Trait for rscripts, can be used to execute rscripts locally
@@ -70,8 +71,12 @@ trait Rscript extends Configurable {
 
     Logging.logger.info("Running: " + cmd.mkString(" "))
 
-    val process = Process(cmd).run(logger)
-    Logging.logger.info(process.exitValue())
+    val (exitcode, stdout, stderr) = Sys.exec(cmd)
+
+    Logging.logger.info("stdout:\n" + stdout + "\n")
+    Logging.logger.info("stderr:\n" + stderr)
+
+    Logging.logger.info(exitcode)
   }
 
   /**
