@@ -70,9 +70,9 @@ In the `tags` key inside a sample or library users can supply tags that belong t
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
 This config file should be written in either JSON or YAML format. It can contain setup settings like:
 
- * references,
- * cut offs,
- * program modes and memory limits (program specific),
+ * references
+ * cut offs
+ * program modes and memory limits (program specific)
  * Whether chunking should be used
  * set program executables (if for some reason the user does not want to use the systems default tools)
  * One could set global variables containing settings for all tools used in the pipeline or set tool specific options one layer 
@@ -128,9 +128,13 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
 # More advanced use of config files.
 ### 4 levels of configuring settings
 In biopet, a value of a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
+
  * Level-4: As a fixed value hardcoded in biopet source code
+ 
  * Level-3: As a user specified value in the user config file
+ 
  * Level-2: As a system specified value in the global config files. On the LUMC's SHARK cluster, these global config files are located at /usr/local/sasc/config.
+ 
  * Level-1: As a default value provided in biopet source code.
 
 During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-4 to level-1. Hence, a value defined in the a higher level will overwrite a value define in a lower level for the same ConfigNamespace.
