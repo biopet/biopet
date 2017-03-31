@@ -2,13 +2,17 @@
 #import(java.io.File)
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
+<%@ var sampleId: Option[String] = None %>
 <%@ var summary: Summary %>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
 
 #{
-    val sampleNames: List[String] = summary.samples.toList.sorted
+    val sampleNames: List[String] = sampleId match {
+        case Some(sampleName) => List(sampleName.toString)
+        case _ => summary.samples.toList.sorted
+    }
 
     val counts: Map[String, Map[String, Array[Long]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
     val traCounts: Map[String, Long] = ShivaSvCallingReport.parseSummaryForTranslocations(summary)

@@ -111,8 +111,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     if (!variantcallingExecuted && !svCallingExecuted) super.filesPage
     else {
       var sections: List[(String, ReportSection)] = List()
-      if (variantcallingExecuted) sections = sections :+ ("Result files from SNV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp", Map("sampleId" -> None)))
-      if (svCallingExecuted) sections = sections :+ ("Result files from SV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFilesSv.ssp"))
+      if (variantcallingExecuted) sections = sections :+ ("VCF files from SNV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp", Map("sampleId" -> None)))
+      if (svCallingExecuted) sections = sections :+ ("VCF files from SV calling", ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFilesSv.ssp"))
 
       val oldPage = super.filesPage
       oldPage.copy(sections = oldPage.sections ++ sections)
@@ -121,9 +121,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Single sample page */
   override def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
-    val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val variantcallingSection = if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val svSection = if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")) else Nil
     val oldPage = super.samplePage(sampleId, args)
-    oldPage.copy(sections = variantcallingSection ++ oldPage.sections)
+    oldPage.copy(sections = variantcallingSection ++ svSection ++ oldPage.sections)
   }
 
   /** Name of the report */

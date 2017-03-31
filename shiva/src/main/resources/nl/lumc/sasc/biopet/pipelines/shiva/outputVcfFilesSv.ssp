@@ -2,8 +2,14 @@
 #import(nl.lumc.sasc.biopet.utils.summary.Summary)
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
 <%@ var rootPath: String %>
+
+#{
+    val sampleNames: List[String] = sampleId match {
+        case Some(sampleName) => List(sampleName.toString)
+        case _ => summary.samples.toList.sorted
+    }
+}#
 
 <div class="panel-body">
 <!-- Table -->
@@ -14,20 +20,20 @@
         <th>MD5</th>
     </tr></thead>
     <tbody>
-        #if (summary.samples.size > 1)
+        #if (sampleNames.size > 1)
             <tr>
                 <td>Merged</td>
-                <td>${ShivaReport.formatVcfFilePath(summary.getValue(sampleId, libId, "shivasvcalling", "files", "pipeline", "final_mergedvcf", "path"))}</td>
-                <td>${summary.getValue(sampleId, libId, "shivasvcalling", "files", "pipeline", "final_mergedvcf", "md5")}</td>
+                <td>${ShivaReport.formatVcfFilePath(summary.getValue("shivasvcalling", "files", "pipeline", "final_mergedvcf", "path"))}</td>
+                <td>${summary.getValue("shivasvcalling", "files", "pipeline", "final_mergedvcf", "md5")}</td>
             </tr>
         #end
 
-        #for (sampleName <- summary.samples.toList.sorted)
+        #for (sampleName <- sampleNames)
             <tr>
             <tr>
                 <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
-                <td>${ShivaReport.formatVcfFilePath(summary.getValue(sampleId, libId, "shivasvcalling", "files", "pipeline", sampleName, "path"))}</td>
-                <td>${summary.getValue(sampleId, libId, "shivasvcalling", "files", "pipeline", sampleName, "md5")}</td>
+                <td>${ShivaReport.formatVcfFilePath(summary.getValue("shivasvcalling", "files", "pipeline", sampleName, "path"))}</td>
+                <td>${summary.getValue("shivasvcalling", "files", "pipeline", sampleName, "md5")}</td>
             </tr>
         #end
     </tbody>
