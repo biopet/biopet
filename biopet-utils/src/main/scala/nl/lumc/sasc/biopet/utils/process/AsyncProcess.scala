@@ -17,8 +17,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.sys.process.{Process, ProcessLogger}
+import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.Try
 
 object Sys extends Sys {
@@ -28,38 +28,37 @@ object Sys extends Sys {
 
   type ExecResult = (ExitValue, Stdout, Stderr)
 
-
   trait AsyncExecResult {
     /**
-      * @see [[scala.concurrent.Future#map]]
-      */
+     * @see [[scala.concurrent.Future#map]]
+     */
     def map[T](f: ExecResult => T): Future[T]
 
     /**
-      * @see [[scala.concurrent.Future#foreach]]
-      */
+     * @see [[scala.concurrent.Future#foreach]]
+     */
     def foreach(f: ExecResult => Unit): Unit
 
     /**
-      * @see [[scala.concurrent.Future#onComplete]]
-      */
+     * @see [[scala.concurrent.Future#onComplete]]
+     */
     def onComplete[T](pf: Try[ExecResult] => T): Unit
 
     /**
-      * cancels the running process
-      */
+     * cancels the running process
+     */
     def cancel(): Unit
 
     /**
-      * check if the process is still running
-      * @return `true` if the process is already completed, `false` otherwise
-      */
+     * check if the process is still running
+     * @return `true` if the process is already completed, `false` otherwise
+     */
     def isRunning: Boolean
 
     /**
-      * the underlying future
-      * @return the future, in which the process runs
-      */
+     * the underlying future
+     * @return the future, in which the process runs
+     */
     def get: Future[ExecResult]
   }
 
@@ -68,19 +67,17 @@ object Sys extends Sys {
   case class ExecutionCanceled(msg: String) extends Exception(msg)
 }
 
-
 trait Sys {
   import Sys._
-
 
   def exec(cmd: String): ExecResult = exec(cmd.split(" "))
 
   /**
-    * executes the cmd and blocks until the command exits.
-    *
-    * @return {{{(ExitValue, Stdout, Stderr)}}}
-    *         <pre>if the executable is unable to start, (-1, "", stderr) are returned</pre>
-    */
+   * executes the cmd and blocks until the command exits.
+   *
+   * @return {{{(ExitValue, Stdout, Stderr)}}}
+   *         <pre>if the executable is unable to start, (-1, "", stderr) are returned</pre>
+   */
   def exec(cmd: Seq[String]): ExecResult = {
     val stdout = new OutputSlurper
     val stderr = new OutputSlurper
@@ -89,22 +86,19 @@ trait Sys {
       val proc = Process(cmd).run(ProcessLogger(stdout.appendLine, stderr.appendLine))
       proc.exitValue()
     }.map((_, stdout.get, stderr.get))
-      .recover{
+      .recover {
         case t => (-1, "", t.getMessage)
       }.get
   }
 
-
-
   def execAsync(cmd: String)(implicit ec: ExecutionContext): AsyncExecResult = execAsync(cmd.split(" "))(ec)
 
-
   /**
-    * executes the cmd asynchronous
-    * @see scala.concurrent.Future.map
-    *
-    * @return [[AsyncExecResult]]
-    */
+   * executes the cmd asynchronous
+   * @see scala.concurrent.Future.map
+   *
+   * @return [[AsyncExecResult]]
+   */
   def execAsync(cmd: Seq[String])(implicit ec: ExecutionContext): AsyncExecResult = {
     new AsyncExecResult {
       val (fut, cancelFut) = runAsync(cmd)
@@ -122,7 +116,6 @@ trait Sys {
       override def get: Future[ExecResult] = fut
     }
   }
-
 
   // helper for 'execAsync' - runs the given cmd asynchronous.
   // returns a tuple with: (the running process in a future, function to cancel the running process)
@@ -153,5 +146,4 @@ trait Sys {
 
     def get: String = sb.toString
   }
-
 }
