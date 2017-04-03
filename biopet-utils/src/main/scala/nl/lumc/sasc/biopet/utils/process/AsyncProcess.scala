@@ -19,7 +19,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 import nl.lumc.sasc.biopet.utils.Logging
 
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.collection.parallel.mutable.ParMap
+import scala.concurrent.duration.Duration
+import scala.concurrent._
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.Try
 
@@ -72,6 +74,10 @@ object Sys extends Sys {
 trait Sys {
   import Sys._
 
+  private val cache: ParMap[Seq[String], AsyncExecResult] = ParMap()
+
+  var maxRunningProcesses: Int = 5
+
   def exec(cmd: String): ExecResult = exec(cmd.split(" "))
 
   /**
@@ -102,7 +108,22 @@ trait Sys {
    * @return [[AsyncExecResult]]
    */
   def execAsync(cmd: Seq[String])(implicit ec: ExecutionContext): AsyncExecResult = {
-    new AsyncExecResult {
+    while (cache.size >= maxRunningProcesses) {
+      for ((cmd, c) <- cache.toList) {
+        val results = Option(c)
+        if (!results.map(_.isRunning).getOrElse(true)) try {
+          cache -= cmd
+        } catch {
+          case e: NullPointerException =>
+        }
+        else try {
+          results.foreach(x => Await.ready(x.get, Duration.fromNanos(100000)))
+        } catch {
+          case e: TimeoutException =>
+        }
+      }
+    }
+    val results = new AsyncExecResult {
       val (fut, cancelFut) = runAsync(cmd)
 
       override def map[T](f: ExecResult => T): Future[T] = fut.map(f)
@@ -117,6 +138,8 @@ trait Sys {
 
       override def get: Future[ExecResult] = fut
     }
+    cache += cmd -> results
+    results
   }
 
   // helper for 'execAsync' - runs the given cmd asynchronous.

@@ -14,10 +14,10 @@
  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{File, IOException, PrintWriter}
+import java.io.{ File, IOException, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
-import nl.lumc.sasc.biopet.utils.{Logging, sortAnyAny}
+import nl.lumc.sasc.biopet.utils.{ Logging, sortAnyAny }
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext

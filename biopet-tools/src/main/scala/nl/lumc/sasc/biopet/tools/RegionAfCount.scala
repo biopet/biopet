@@ -14,13 +14,13 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import java.util
 
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.rscript.ScatterPlot
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
