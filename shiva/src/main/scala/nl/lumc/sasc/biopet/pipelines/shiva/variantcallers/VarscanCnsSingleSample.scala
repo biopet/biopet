@@ -25,7 +25,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 /**
  * Created by sajvanderzeeuw on 15-1-16.
  */
-class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
+class VarscanCnsSingleSample(val parent: Configurable) extends Variantcaller {
   val name = "varscan_cns_singlesample"
   protected def defaultPrio = 25
 

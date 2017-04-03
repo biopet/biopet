@@ -27,7 +27,7 @@ import nl.lumc.sasc.biopet.utils.getSemanticVersion
  * Wrapper for the Cnmops command line tool.
  * Written based on Cnmops version v2.2.1.
  */
-class Cnmops(val root: Configurable) extends RscriptCommandLineFunction with Version {
+class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with Version {
 
   override def defaultThreads = 4
   override def defaultCoreMemory: Double = 4.0

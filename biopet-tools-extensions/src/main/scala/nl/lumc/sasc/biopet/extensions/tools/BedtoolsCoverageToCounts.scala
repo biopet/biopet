@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFunction {
+class BedtoolsCoverageToCounts(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 
   @Input(doc = "Input fasta", shortName = "input", required = true)

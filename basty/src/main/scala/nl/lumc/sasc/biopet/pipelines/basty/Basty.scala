@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
+class Basty(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
 
   def this() = this(null)
@@ -51,8 +51,6 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   )
 
   lazy val shiva = new Shiva(qscript)
-
-  def summaryFile: File = new File(outputDir, "Basty.summary.json")
 
   def summaryFiles: Map[String, File] = Map()
 

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.Output
 /**
  * Created by pjvan_thof on 9/29/15.
  */
-class BiopetFifoPipe(val root: Configurable,
+class BiopetFifoPipe(val parent: Configurable,
                      protected var commands: List[BiopetCommandLineFunction]) extends BiopetCommandLineFunction {
 
   def fifos: List[File] = {

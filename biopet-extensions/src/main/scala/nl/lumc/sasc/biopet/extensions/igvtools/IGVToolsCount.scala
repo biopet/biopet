@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * @constructor create a new IGVTools instance from a `.bam` file
  *
  */
-class IGVToolsCount(val root: Configurable) extends IGVTools {
+class IGVToolsCount(val parent: Configurable) extends IGVTools {
   @Input(doc = "Bam File")
   var input: File = _
 

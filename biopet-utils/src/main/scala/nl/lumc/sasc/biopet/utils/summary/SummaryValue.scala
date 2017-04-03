@@ -18,6 +18,8 @@ package nl.lumc.sasc.biopet.utils.summary
  * This case class is used for easy access and calculations on those values
  *
  * Created by pjvan_thof on 4/23/15.
+ *
+ * @deprecated
  */
 case class SummaryValue(value: Option[Any]) {
 

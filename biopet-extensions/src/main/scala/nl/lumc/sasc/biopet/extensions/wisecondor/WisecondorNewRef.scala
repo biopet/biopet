@@ -8,7 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by Sander Bollen on 22-3-17.
  */
-class WisecondorNewRef(val root: Configurable) extends Wisecondor {
+class WisecondorNewRef(val parent: Configurable) extends Wisecondor {
 
   @Input
   var inputBeds: List[File] = Nil

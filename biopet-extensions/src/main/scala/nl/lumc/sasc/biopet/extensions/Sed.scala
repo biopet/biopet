@@ -25,7 +25,7 @@ import scala.util.matching.Regex
 /**
  * Created by pjvanthof on 18/05/16.
  */
-class Sed(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Sed(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "sed", freeVar = false)
 
   /** Command to get version of executable */

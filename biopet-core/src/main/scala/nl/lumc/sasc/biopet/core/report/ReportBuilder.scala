@@ -17,13 +17,17 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.Summary
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
 import scala.collection.mutable
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
+import scala.language.implicitConversions
 
 /**
  * This trait is meant to make an extension for a report object
@@ -38,7 +42,9 @@ trait ReportBuilderExtension extends ToolCommandFunction {
   def toolObject = builder
 
   @Input(required = true)
-  var summaryFile: File = _
+  var summaryDbFile: File = _
+
+  var runId: Option[Int] = None
 
   /** OutputDir for the report  */
   var outputDir: File = _
@@ -58,7 +64,8 @@ trait ReportBuilderExtension extends ToolCommandFunction {
   /** Command to generate the report */
   override def cmdLine: String = {
     super.cmdLine +
-      required("--summary", summaryFile) +
+      required("--summaryDb", summaryDbFile) +
+      optional("--runId", runId) +
       required("--outputDir", outputDir) +
       args.map(x => required("-a", x._1 + "=" + x._2)).mkString
   }
@@ -66,8 +73,12 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null,
+  implicit def toOption[T](x: T): Option[T] = Option(x)
+  implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
+
+  case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
+                  runId: Int = 0,
                   pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -78,8 +89,8 @@ trait ReportBuilder extends ToolCommand {
        """.stripMargin
     )
 
-    opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(summary = x)
+    opt[File]('s', "summaryDb") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(summaryDbFile = x)
     } validate {
       x => if (x.exists) success else failure("Summary JSON file not found!")
     } text "Biopet summary JSON file"
@@ -88,16 +99,33 @@ trait ReportBuilder extends ToolCommand {
       c.copy(outputDir = x)
     } text "Output HTML report files to this directory"
 
+    opt[Int]("runId") unbounded () maxOccurs 1 valueName "<int>" action { (x, c) =>
+      c.copy(runId = x)
+    }
+
     opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
 
   /** summary object internaly */
-  private var setSummary: Summary = _
+  private var setSummary: SummaryDb = _
 
   /** Retrival of summary, read only */
   final def summary = setSummary
+
+  private var setRunId: Int = 0
+
+  final def runId = setRunId
+
+  private var _setPipelines = Seq[Pipeline]()
+  final def pipelines = _setPipelines
+  private var _setModules = Seq[Module]()
+  final def modules = _setModules
+  private var _setSamples = Seq[Sample]()
+  final def samples = _setSamples
+  private var _setLibraries = Seq[Library]()
+  final def libraries = _setLibraries
 
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
@@ -105,9 +133,9 @@ trait ReportBuilder extends ToolCommand {
   private var done = 0
   private var total = 0
 
-  private var _sampleId: Option[String] = None
+  private var _sampleId: Option[Int] = None
   protected[report] def sampleId = _sampleId
-  private var _libId: Option[String] = None
+  private var _libId: Option[Int] = None
   protected[report] def libId = _libId
 
   case class ExtFile(resourcePath: String, targetPath: String)
@@ -136,19 +164,27 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
+    setSummary = SummaryDb.openReadOnlySqliteSummary(cmdArgs.summaryDbFile)
+    setRunId = cmdArgs.runId
+
     cmdArgs.pageArgs.get("sampleId") match {
       case Some(s: String) =>
-        cmdArgs.pageArgs += "sampleId" -> Some(s)
-        _sampleId = Some(s)
+        _sampleId = Await.result(summary.getSampleId(runId, s), Duration.Inf)
+        cmdArgs.pageArgs += "sampleId" -> sampleId
       case _ =>
     }
 
     cmdArgs.pageArgs.get("libId") match {
       case Some(l: String) =>
-        cmdArgs.pageArgs += "libId" -> Some(l)
-        _libId = Some(l)
+        _libId = Await.result(summary.getLibraryId(runId, sampleId.get, l), Duration.Inf)
+        cmdArgs.pageArgs += "libId" -> libId
       case _ =>
     }
+
+    _setPipelines = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf)
+    _setModules = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf)
+    _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
     logger.info("Copy Base files")
 
@@ -164,9 +200,6 @@ trait ReportBuilder extends ToolCommand {
           createDirs = true)
     )
 
-    logger.info("Parsing summary")
-    setSummary = new Summary(cmdArgs.summary)
-
     total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
 
@@ -175,7 +208,7 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Generate pages")
     val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
-        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
+        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage, "runId" -> cmdArgs.runId))
 
     logger.info(jobs + " Done")
   }
@@ -196,7 +229,7 @@ trait ReportBuilder extends ToolCommand {
    * @param args Args to add to this sub page, are args from current page are passed automaticly
    * @return Number of pages including all subpages that are rendered
    */
-  def generatePage(summary: Summary,
+  def generatePage(summary: SummaryDb,
                    page: ReportPage,
                    outputDir: File,
                    path: List[String] = Nil,
@@ -209,7 +242,11 @@ trait ReportBuilder extends ToolCommand {
       Map("page" -> page,
         "path" -> path,
         "outputDir" -> pageOutputDir,
-        "rootPath" -> rootPath
+        "rootPath" -> rootPath,
+        "allPipelines" -> pipelines,
+        "allModules" -> modules,
+        "allSamples" -> samples,
+        "allLibraries" -> libraries
       )
 
     // Generating subpages

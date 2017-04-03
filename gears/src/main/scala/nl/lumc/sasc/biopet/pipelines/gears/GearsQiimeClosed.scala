@@ -31,7 +31,7 @@ import scala.xml.{ Elem, PrettyPrinter }
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsQiimeClosed(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqInput: File = _
 
@@ -76,9 +76,6 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
 
   val downSample: Option[Double] = config("downsample")
 

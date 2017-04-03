@@ -35,7 +35,7 @@ class BedToolsTest extends TestNGSuite with Matchers {
     val file = new File(Paths.get(this.getClass.getResource("/ref.fa.fai").toURI).toString)
     val tmp = File.createTempFile("test", ".bed")
     tmp.deleteOnExit()
-    class TestCov(override val root: Configurable) extends BedtoolsCoverage(root) {
+    class TestCov(override val parent: Configurable) extends BedtoolsCoverage(parent) {
       jobTempDir = tmp
       override def referenceFai = file
 

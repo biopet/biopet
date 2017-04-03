@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for macs2*/
-class Macs2CallPeak(val root: Configurable) extends Macs2 {
+class Macs2CallPeak(val parent: Configurable) extends Macs2 {
   @Input(doc = "Treatment input", required = true)
   var treatment: File = _
 

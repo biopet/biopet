@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CollectAlignmentSummaryMetrics */
-class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+class CollectAlignmentSummaryMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.CollectAlignmentSummaryMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)

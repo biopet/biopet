@@ -31,7 +31,7 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
  * Design based on work from Henk Buermans (e-Mir)
  * Implementation by wyleung started 19/01/16
  */
-class TinyCap(val root: Configurable) extends QScript
+class TinyCap(val parent: Configurable) extends QScript
   with MultisampleMappingTrait
   with AnnotationRefFlat
   with AnnotationGff
@@ -108,8 +108,6 @@ class TinyCap(val root: Configurable) extends QScript
     }
   }
 
-  override def summaryFile = new File(outputDir, "tinycap.summary.json")
-
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
     "annotation_refflat" -> annotationRefFlat(),
     "annotationGtf" -> annotationGtf,
@@ -119,7 +117,7 @@ class TinyCap(val root: Configurable) extends QScript
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new TinyCapReport(this)
     report.outputDir = new File(outputDir, "report")
-    report.summaryFile = summaryFile
+    report.summaryDbFile = summaryDbFile
     Some(report)
   }
 

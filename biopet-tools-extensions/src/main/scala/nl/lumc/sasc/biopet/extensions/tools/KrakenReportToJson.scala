@@ -28,9 +28,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * KrakenReportToJson function class for usage in Biopet pipelines
  *
- * @param root Configuration object for the pipeline
+ * @param parent Configuration object for the pipeline
  */
-class KrakenReportToJson(val root: Configurable) extends ToolCommandFunction with Summarizable {
+class KrakenReportToJson(val parent: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.KrakenReportToJson
 
   @Input(doc = "Input Kraken Full report", shortName = "inputReport", required = true)

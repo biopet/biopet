@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Extension for GNU cat
  */
-class Cat(val root: Configurable) extends BiopetCommandLineFunction {
+class Cat(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 
