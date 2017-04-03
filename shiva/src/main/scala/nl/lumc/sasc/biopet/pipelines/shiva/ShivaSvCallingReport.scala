@@ -3,7 +3,11 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
-import nl.lumc.sasc.biopet.utils.summary.Summary
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ ModuleName, PipelineName, SampleName }
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 object ShivaSvCallingReport {
 
@@ -11,11 +15,11 @@ object ShivaSvCallingReport {
   val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
   val histogramText: List[String] = List("<=100bp", "0.1-1kb", "1-10kb", "10-100kb", "0.1-1Mb", "1-10Mb", ">10Mb")
 
-  def parseSummaryForSvCounts(summary: Summary): Map[String, Map[String, Array[Long]]] = {
+  def parseSummaryForSvCounts(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Map[String, Array[Long]]] = {
     var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Long]] = Map()
 
-    for (sampleName <- summary.samples) {
-      var sampleCounts: Map[String, Any] = summary.getSampleValue(sampleName, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Any]]
+    for (sampleName <- sampleNames) {
+      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("variantsBySizeAndType"), SampleName(sampleName)), Duration.Inf).get
       for ((svType, counts) <- sampleCounts.collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
         val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
@@ -35,16 +39,16 @@ object ShivaSvCallingReport {
     result
   }
 
-  def parseSummaryForTranslocations(summary: Summary): Map[String, Long] = {
+  def parseSummaryForTranslocations(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Long] = {
     var traCounts: Map[String, Long] = Map()
-    for (sampleName <- summary.samples) {
-      var counts: Map[String, Any] = summary.getSampleValue(sampleName, "shivasvcalling", "stats", "variantsBySizeAndType").get.asInstanceOf[Map[String, Any]]
+    for (sampleName <- sampleNames) {
+      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("variantsBySizeAndType"), SampleName(sampleName)), Duration.Inf).get
       traCounts += (sampleName -> counts.get("TRA").get.asInstanceOf[Long])
     }
     if (traCounts.exists(elem => elem._2 > 0)) traCounts else Map.empty
   }
 
-  def writeTsvFiles(sampleNames: List[String], counts: Map[String, Map[String, Array[Long]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
+  def writeTsvFiles(sampleNames: Seq[String], counts: Map[String, Map[String, Array[Long]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
 
     val tsvWriter = new PrintWriter(new File(outDir, outFileAllTypes))
     tsvWriter.print("sv_type\tsample")
@@ -64,7 +68,7 @@ object ShivaSvCallingReport {
     tsvWriter.close()
   }
 
-  def writeTsvFileForSvType(svType: SvTypeForReport, counts: Map[String, Array[Long]], sampleNames: List[String], outDir: File): Unit = {
+  def writeTsvFileForSvType(svType: SvTypeForReport, counts: Map[String, Array[Long]], sampleNames: Seq[String], outDir: File): Unit = {
     val tsvWriter = new PrintWriter(new File(outDir, svType.tsvFileName))
 
     tsvWriter.print("histogramBin")

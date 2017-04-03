@@ -1,21 +1,24 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 #import(java.io.File)
+<%@ var summary: SummaryDb %>
+<%@ var allSamples: Seq[Sample]%>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var summary: Summary %>
+<%@ var runId: Int %>
+<%@ var sampleId: Option[Int] = None %>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
 
 #{
-    val sampleNames: List[String] = sampleId match {
-        case Some(sampleName) => List(sampleName.toString)
-        case _ => summary.samples.toList.sorted
+    val sampleNames: Seq[String] = sampleId match {
+       case Some(sampleId) => Seq(allSamples.filter(s => s.id == sampleId).head.name)
+       case _ => allSamples.collect({case s: Sample => s.name}).sorted
     }
 
-    val counts: Map[String, Map[String, Array[Long]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary)
-    val traCounts: Map[String, Long] = ShivaSvCallingReport.parseSummaryForTranslocations(summary)
+    val counts: Map[String, Map[String, Array[Long]]] = ShivaSvCallingReport.parseSummaryForSvCounts(summary, runId, sampleNames)
+    val traCounts: Map[String, Long] = ShivaSvCallingReport.parseSummaryForTranslocations(summary, runId, sampleNames)
 
     var svTypes = List(
     SvTypeForReport("DEL", "Deletions", "svSummaryDeletions.tsv", "svSummaryDeletions.png"),
