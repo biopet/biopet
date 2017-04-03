@@ -48,6 +48,12 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case _          => false
     }
 
+  def svCallingExecuted = summary.getSettingKeys(runId, "shiva", NoModule, keyValues = Map("sv_calling" -> List("sv_calling"))).get("sv_calling")
+    .flatten match {
+      case Some(true) => true
+      case _          => false
+    }
+
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
 
   override def pipelineName = "shiva"
@@ -107,9 +113,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Single sample page */
   override def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
-    val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val variantcallingSection = if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val svSection = if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")) else Nil
     val oldPage = super.samplePage(sampleId, args)
-    oldPage.copy(sections = variantcallingSection ++ oldPage.sections)
+    oldPage.copy(sections = variantcallingSection ++ svSection ++ oldPage.sections)
   }
 
   /** Name of the report */
@@ -162,5 +169,11 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.ylabel = Some("VCF records")
     plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.runLocal()
+  }
+
+  def formatVcfFilePath(vcfFilePath: Option[Any]): Any = {
+    //val prefix = summary.getValue("meta", "output_dir").getOrElse("").toString
+    //vcfFilePath.collect { case a => "./" + a.toString.stripPrefix(prefix + File.separator) }
+    ""
   }
 }
