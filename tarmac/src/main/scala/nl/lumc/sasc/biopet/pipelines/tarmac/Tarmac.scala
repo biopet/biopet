@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{PedigreeQscript, PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
@@ -12,7 +12,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 
-import scalaz.{-\/, \/, \/-}
+import scalaz.{ -\/, \/, \/- }
 
 /**
  * Created by Sander Bollen on 23-3-17.
@@ -70,9 +70,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     /* Get count file for Xhmm method */
     lazy val outputXhmmCountFile: String \/ File = {
       outputXhmmCountJob match {
-        case \/-(ln: Ln) => \/-(ln.output)
+        case \/-(ln: Ln)               => \/-(ln.output)
         case \/-(doc: DepthOfCoverage) => \/-(doc.out)
-        case _ => _
+        case -\/(error)                => -\/(error)
       }
     }
 
@@ -107,17 +107,17 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     /* Get count file for wisecondor method */
     lazy val outputWisecondorCountFile: String \/ File = {
       outputWisecondorCountJob match {
-        case \/-(ln: Ln) => \/-(ln.output)
+        case \/-(ln: Ln)                 => \/-(ln.output)
         case \/-(count: WisecondorCount) => \/-(count.output)
-        case _ => _
+        case -\/(error)                  => -\/(error)
       }
     }
 
     /** Function to add sample jobs */
     def addJobs(): Unit = {
       (outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
-        case -\/(error) => Logging.addError(error)
-        case \/-(function)          => add(function)
+        case -\/(error)    => Logging.addError(error)
+        case \/-(function) => add(function)
       }
     }
 
