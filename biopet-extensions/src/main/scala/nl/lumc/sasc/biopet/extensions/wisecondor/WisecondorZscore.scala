@@ -8,7 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by Sander Bollen on 20-3-17.
  */
-class WisecondorZscore(val root: Configurable) extends Wisecondor {
+class WisecondorZscore(val parent: Configurable) extends Wisecondor {
 
   @Input
   var inputBed: File = _

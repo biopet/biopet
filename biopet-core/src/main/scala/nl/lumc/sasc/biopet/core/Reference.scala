@@ -33,7 +33,7 @@ trait Reference extends Configurable {
 
   /** Returns species, default to unknown_species */
   def referenceSpecies: String = {
-    root match {
+    parent match {
       case r: Reference if r.referenceSpecies != "unknown_species" => r.referenceSpecies
       case _ => config("species", default = "unknown_species", path = super.configPath)
     }
@@ -41,7 +41,7 @@ trait Reference extends Configurable {
 
   /** Return referencename, default to unknown_ref */
   def referenceName: String = {
-    root match {
+    parent match {
       case r: Reference if r.referenceName != "unknown_ref" => r.referenceName
       case _ =>
         val default: String = config("default", default = "unknown_ref", path = List("references", referenceSpecies))

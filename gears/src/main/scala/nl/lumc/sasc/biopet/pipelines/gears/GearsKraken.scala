@@ -31,7 +31,7 @@ import scala.xml.{ PrettyPrinter, Node }
 /**
  * Created by pjvanthof on 04/12/15.
  */
-class GearsKraken(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsKraken(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -99,9 +99,6 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
     addSummaryJobs()
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()

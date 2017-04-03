@@ -102,13 +102,15 @@ object ConfigUtils extends Logging {
    * @return Some(value) or None if not found
    */
   def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
-    val value = map.get(path.head)
-    if (path.tail.isEmpty || value.isEmpty) value
-    else value.get match {
-      case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
-      case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
-      case _                                  => None
-    }
+    if (path.nonEmpty) {
+      val value = map.get(path.head)
+      if (path.tail.isEmpty || value.isEmpty) value
+      else value.get match {
+        case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
+        case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
+        case _                                  => None
+      }
+    } else Some(map)
   }
 
   /** Make json aboject from a file */
@@ -120,6 +122,10 @@ object ConfigUtils extends Logging {
       case e: IllegalStateException =>
         throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile, e)
     }
+  }
+
+  def jsonTextToMap(json: String): Map[String, Any] = {
+    jsonToMap(textToJson(json))
   }
 
   /** Make json aboject from a file */
@@ -240,6 +246,12 @@ object ConfigUtils extends Logging {
       case i: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         i.toInt
+      case Some(i: Int)    => i
+      case Some(i: Double) => i.toInt
+      case Some(i: Long)   => i.toInt
+      case Some(i: String) =>
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        i.toInt
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
@@ -251,6 +263,12 @@ object ConfigUtils extends Logging {
       case l: Int    => l.toLong
       case l: Long   => l
       case l: String =>
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        l.toLong
+      case Some(l: Double) => l.toLong
+      case Some(l: Int)    => l.toLong
+      case Some(l: Long)   => l
+      case Some(l: String) =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         l.toLong
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")

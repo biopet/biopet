@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline._
 /**
  * Created by wyleung on 8-1-16.
  */
-class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
+class Pysvtools(val parent: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil

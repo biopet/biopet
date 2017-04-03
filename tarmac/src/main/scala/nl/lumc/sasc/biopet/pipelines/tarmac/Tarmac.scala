@@ -17,7 +17,7 @@ import scalaz.{-\/, \/, \/-}
 /**
  * Created by Sander Bollen on 23-3-17.
  */
-class Tarmac(val root: Configurable) extends QScript with PedigreeQscript with SummaryQScript with Reference {
+class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with SummaryQScript with Reference {
   qscript =>
 
   private val targets: File = config("targets")

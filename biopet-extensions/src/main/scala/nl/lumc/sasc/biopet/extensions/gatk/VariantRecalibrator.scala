@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
-class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
+class VariantRecalibrator(val parent: Configurable) extends CommandLineGATK {
   def analysis_type = "VariantRecalibrator"
 
   /** Recalibration mode to employ */

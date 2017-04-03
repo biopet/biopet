@@ -1,6 +1,6 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+<%@ var summary: SummaryDb %>
 <%@ var indexPage: ReportPage %>
 <%@ var reportName: String %>
 <%@ var page: ReportPage %>

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvan_thof on 12/10/15.
  */
-class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class SplitLibrariesFastq(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "split_libraries_fastq.py")
 
   def versionCommand = executable + " --version"

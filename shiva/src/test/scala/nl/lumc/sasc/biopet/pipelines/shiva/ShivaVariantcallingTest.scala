@@ -30,10 +30,11 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -43,10 +44,10 @@ import scala.collection.mutable.ListBuffer
  * Created by pjvan_thof on 3/2/15.
  */
 trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): ShivaVariantcalling = {
+  def initPipeline(map: Map[String, Any], dir: File): ShivaVariantcalling = {
     new ShivaVariantcalling() {
       override def configNamespace = "shivavariantcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -77,6 +78,8 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     ).toArray
   }
 
+  private var dirs: List[File] = Nil
+
   @Test(dataProvider = "shivaVariantcallingOptions")
   def testShivaVariantcalling(bams: Int,
                               raw: Boolean,
@@ -89,6 +92,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
                               unifiedGenotyperAllele: Boolean,
                               freebayes: Boolean,
                               varscanCnsSinglesample: Boolean) = {
+    val outputDir = ShivaVariantcallingTest.outputDir
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
@@ -106,7 +110,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       "execute_vt_decompose" -> decompose,
       "regions_of_interest" -> roiBedFiles.map(_.getAbsolutePath)
     ) ++ referenceVcf.map("reference_vcf" -> _) ++ ampliconBedFile.map("amplicon_bed" -> _.getAbsolutePath)
-    val pipeline = initPipeline(map)
+    val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
@@ -140,6 +144,11 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.summarySettings.get("amplicon_bed") shouldBe Some(ampliconBedFile.map(_.getAbsolutePath))
       pipeline.summarySettings.get("regions_of_interest") shouldBe Some(roiBedFiles.map(_.getAbsolutePath))
     }
+  }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
@@ -209,18 +218,18 @@ class ShivaVariantcallingAmpliconTest extends ShivaVariantcallingTestTrait {
 }
 
 object ShivaVariantcallingTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): File = {
-    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    val file = new File(inputDir, name).getAbsoluteFile
     Files.touch(file)
     file
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -229,14 +238,14 @@ object ShivaVariantcallingTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),

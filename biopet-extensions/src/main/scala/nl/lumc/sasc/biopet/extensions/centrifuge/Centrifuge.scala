@@ -28,7 +28,7 @@ import scala.util.matching.Regex
 /**
  * Created by pjvanthof on 19/09/16.
  */
-class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with Version with Summarizable {
+class Centrifuge(val parent: Configurable) extends BiopetCommandLineFunction with Version with Summarizable {
   @Input(doc = "Input: FastQ or FastA", required = true)
   var inputR1: File = _
 

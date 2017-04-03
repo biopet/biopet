@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * Note that tabix can either index a file (no stdout stream) or retrieve regions from an indexed file (stdout stream)
  *
  */
-class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input bgzipped file", required = true)
   var input: File = null

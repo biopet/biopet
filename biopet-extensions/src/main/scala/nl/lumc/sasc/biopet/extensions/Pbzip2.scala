@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for pbzip2 */
-class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
+class Pbzip2(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Zipped file")
   var input: File = _
 

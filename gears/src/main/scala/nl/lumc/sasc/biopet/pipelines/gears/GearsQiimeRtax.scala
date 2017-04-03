@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
+class GearsQiimeRtax(val parent: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 

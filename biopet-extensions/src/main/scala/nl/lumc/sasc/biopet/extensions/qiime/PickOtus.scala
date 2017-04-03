@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class PickOtus(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class PickOtus(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "pick_otus.py")
 
   @Input(required = true)

@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Clever */
-class Clever(val root: Configurable) extends SvCaller {
+class Clever(val parent: Configurable) extends SvCaller {
   def name = "clever"
 
   def biopetScript() {

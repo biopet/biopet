@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by wyleung on 11-2-16.
  */
-class FragmentsPerSmallRna(val root: Configurable) extends QScript with Measurement with AnnotationGff {
+class FragmentsPerSmallRna(val parent: Configurable) extends QScript with Measurement with AnnotationGff {
   def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 1, fallback = "0")
 
   /** Pipeline itself */

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by Sander Bollen on 23-11-16.
  */
-class XhmmNormalize(val root: Configurable) extends Xhmm {
+class XhmmNormalize(val parent: Configurable) extends Xhmm {
 
   @Input
   var inputMatrix: File = _

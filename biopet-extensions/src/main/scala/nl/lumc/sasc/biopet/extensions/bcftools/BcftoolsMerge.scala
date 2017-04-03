@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by sajvanderzeeuw on 16-10-15.
  */
-class BcftoolsMerge(val root: Configurable) extends Bcftools {
+class BcftoolsMerge(val parent: Configurable) extends Bcftools {
   @Input(doc = "Input File", required = true)
   var input: List[File] = Nil
 

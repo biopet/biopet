@@ -27,13 +27,13 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 03/12/15.
  */
-class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qscript =>
+class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { qscript =>
   def this() = this(null)
 
   override def reportClass = {
     val gearsReport = new GearsReport(this)
     gearsReport.outputDir = new File(outputDir, "report")
-    gearsReport.summaryFile = summaryFile
+    gearsReport.summaryDbFile = summaryDbFile
     Some(gearsReport)
   }
 
@@ -44,9 +44,6 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   /** Init for pipeline */
   def init(): Unit = {
   }
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "gears.summary.json")
 
   /** Pipeline itself */
   def biopetScript(): Unit = {

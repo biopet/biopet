@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeAlleles(val root: Configurable) extends ToolCommandFunction {
+class MergeAlleles(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.MergeAlleles
 
   @Input(doc = "Input vcf files", shortName = "input", required = true)

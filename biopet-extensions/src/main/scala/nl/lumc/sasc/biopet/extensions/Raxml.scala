@@ -26,7 +26,7 @@ import scalaz.std.boolean.option
  * extension for raxml
  * based on version 8.1.3
  */
-class Raxml(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   override def defaultThreads = 1
   def versionCommand = executable + " -v"

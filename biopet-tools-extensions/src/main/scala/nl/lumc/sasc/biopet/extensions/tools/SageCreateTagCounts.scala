@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SageCreateTagCounts(val root: Configurable) extends ToolCommandFunction {
+class SageCreateTagCounts(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.SageCreateTagCounts
 
   @Input(doc = "Raw count file", shortName = "input", required = true)

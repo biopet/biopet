@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 import scala.io.Source
 
 /** Extension for bedtools coverage */
-class BedtoolsCoverage(val root: Configurable) extends Bedtools with Reference {
+class BedtoolsCoverage(val parent: Configurable) extends Bedtools with Reference {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
   var input: File = null

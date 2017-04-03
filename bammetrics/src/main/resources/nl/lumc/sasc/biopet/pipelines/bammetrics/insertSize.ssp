@@ -1,11 +1,14 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-#import(org.apache.commons.io.FileUtils)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var rootPath: String %>
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var sampleLevel: Boolean = false %>
@@ -14,13 +17,9 @@
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
+<%@ var runId: Int %>
 #{
-    val samples = sampleId match {
-    case Some(sample) => {
-    List(sample.toString)
-    }
-    case _ => summary.samples.toList
-    }
+    val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
 }#
 
 #if (showIntro)
@@ -43,7 +42,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
 
     <div class="panel-body">
     <img src="insertsize.png" class="img-responsive" />
@@ -72,28 +71,27 @@
         #end
     </tr></thead>
     <tbody>
-        #for (sample <- samples.toList.sorted)
+        #for (sample <- samples.sortBy(_.name))
             #{
-                val libs = (libId, sampleLevel) match {
-                case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                val libs: List[Option[Int]] = (libId, sampleLevel) match {
+                case (_, true) => List(None)
+                case (Some(_), _) => List(libId)
+                case _ => Await.result(summary.getLibraries(sampleId = Some(sample.id), runId = Some(runId)), Duration.Inf).map(x => Some(x.id)).toList
                 }
             }#
-            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
             #for (libId <- libs)
+                #{ val libName = libId.map(l => Await.result(summary.getLibraryName(l), Duration.Inf)) }#
                 #if (libs.head != libId) <tr> #end
-                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
-                    #{
-                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
-
-                        val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse("N/A")
-                        }
-                    }#
-                    #for (value <- fieldValues)
-                        <td>${value}</td>
-                    #end
+                        #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
+                        #{
+                            val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+                            val results = summary.getStatKeys(runId, "bammetrics", "CollectInsertSizeMetrics", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                        }#
+                        #for (field <- fields)
+                            <td>${results(field)}</td>
+                        #end
+                    </tr>
                 </tr>
             #end
         #end

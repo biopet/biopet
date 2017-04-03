@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class PickRepSet(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class PickRepSet(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "pick_rep_set.py")
 
   @Input(required = true)
