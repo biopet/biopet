@@ -14,12 +14,16 @@
  */
 package nl.lumc.sasc.biopet.utils.rscript
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.process.Sys
+import nl.lumc.sasc.biopet.utils.process.Sys.AsyncExecResult
 
+import scala.collection.parallel.mutable.ParSeq
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 import scala.sys.process.ProcessLogger
 
 /**
@@ -62,16 +66,26 @@ trait Rscript extends Configurable {
     }
   }
 
+  private val cache: ParSeq[AsyncExecResult] = Nil
+
   /**
    * Execute rscript on local system
    * @param logger How to handle stdout and stderr
    */
-  def runLocal(logger: ProcessLogger): Unit = {
+  def runLocal(logger: ProcessLogger)(implicit ec: ExecutionContext): Unit = {
     checkScript()
 
     Logging.logger.info("Running: " + cmd.mkString(" "))
 
-    val (exitcode, stdout, stderr) = Sys.exec(cmd)
+    while (cache.size > 5) for (c <- cache) Thread.
+
+    val results = Sys.execAsync(cmd)
+
+    while(results.isRunning) {
+      Thread.sleep(1000)
+    }
+
+    val (exitcode, stdout, stderr) = Await.result(results.map(x => (x._1, x._2, x._3)), Duration.Inf)
 
     Logging.logger.info("stdout:\n" + stdout + "\n")
     Logging.logger.info("stderr:\n" + stderr)
@@ -83,7 +97,7 @@ trait Rscript extends Configurable {
    * Execute rscript on local system
    * Stdout and stderr will go to biopet logger
    */
-  def runLocal(): Unit = {
+  def runLocal()(implicit ec: ExecutionContext): Unit = {
     runLocal(ProcessLogger(Logging.logger.info(_)))
   }
 }

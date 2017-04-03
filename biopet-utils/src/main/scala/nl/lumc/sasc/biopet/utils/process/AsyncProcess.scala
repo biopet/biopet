@@ -17,6 +17,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import nl.lumc.sasc.biopet.utils.Logging
+
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.Try
@@ -129,12 +131,16 @@ trait Sys {
     val proc = Process(cmd).run(ProcessLogger(stdout.appendLine, stderr.appendLine))
     p.tryCompleteWith(Future(proc.exitValue).map(c => (c, stdout.get, stderr.get)))
 
-    val cancel = {
-      p.tryFailure(new ExecutionCanceled(s"Process: '${cmd.mkString(" ")}' canceled"))
+    val cancel = () => {
+      p.tryFailure {
+        Logging.logger.error("stdout: " + stdout.get)
+        Logging.logger.error("stderr: " + stderr.get)
+        new ExecutionCanceled(s"Process: '${cmd.mkString(" ")}' canceled")
+      }
       proc.destroy()
     }
 
-    (p.future, () => cancel)
+    (p.future, cancel)
   }
 
   class OutputSlurper {

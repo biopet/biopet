@@ -23,7 +23,6 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 11/01/16.

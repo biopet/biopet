@@ -26,8 +26,6 @@ import org.testng.annotations.{ DataProvider, Test }
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 /**
  * Created by pjvanthof on 24/02/16.
  */
@@ -52,6 +50,8 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
       def indexPage: Future[ReportPage] = Future(ReportPage(
         (if (nested) "p1" -> Future(ReportPage(Nil, Nil, Map())) :: Nil else Nil), Nil, Map()))
     }
+
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()

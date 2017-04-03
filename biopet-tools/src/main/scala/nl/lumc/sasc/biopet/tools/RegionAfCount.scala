@@ -14,16 +14,18 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ PrintWriter, InputStream, File }
+import java.io.{File, PrintWriter}
 import java.util
 
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.rscript.ScatterPlot
-import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
@@ -123,7 +125,7 @@ object RegionAfCount extends ToolCommand {
       if (cmdArgs.scatterpPlot) generatePlot(tsvFile)
     }
 
-    def generatePlot(tsvFile: File): Unit = {
+    def generatePlot(tsvFile: File)(implicit ec: ExecutionContext): Unit = {
       logger.info(s"Generate plot for $tsvFile")
 
       val scatterPlot = new ScatterPlot(null)

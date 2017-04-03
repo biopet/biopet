@@ -4,7 +4,6 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 import slick.driver.H2Driver.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import java.io.{ Closeable, File }
@@ -21,6 +20,8 @@ import scala.language.implicitConversions
  * Created by pjvanthof on 05/02/2017.
  */
 trait SummaryDb extends Closeable {
+
+  implicit val ec: ExecutionContext
 
   def db: Database
 
@@ -431,9 +432,9 @@ trait SummaryDb extends Closeable {
 
 }
 
-class SummaryDbReadOnly(val db: Database) extends SummaryDb
+class SummaryDbReadOnly(val db: Database)(implicit val ec: ExecutionContext) extends SummaryDb
 
-class SummaryDbWrite(val db: Database) extends SummaryDb {
+class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extends SummaryDb {
   /** This method will create all tables */
   def createTables(): Unit = {
     try {
@@ -688,7 +689,7 @@ object SummaryDb {
   }
 
   /** This will open a sqlite database and create tables when the database did not exist yet */
-  def openSqliteSummary(file: File): SummaryDbWrite = {
+  def openSqliteSummary(file: File)(implicit ec: ExecutionContext): SummaryDbWrite = {
     if (!summaryConnections.contains(file)) {
       val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
       config.enforceForeignKeys(true)
@@ -703,7 +704,7 @@ object SummaryDb {
     summaryConnections(file)
   }
 
-  def openReadOnlySqliteSummary(file: File): SummaryDbReadOnly = {
+  def openReadOnlySqliteSummary(file: File)(implicit ec: ExecutionContext): SummaryDbReadOnly = {
     require(file.exists(), s"File does not exist: $file")
     val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
     config.enforceForeignKeys(true)
@@ -712,7 +713,7 @@ object SummaryDb {
     config.setReadOnly(true)
 
     val asyncExecutor = new AsyncExecutor {
-      override def executionContext: ExecutionContext = global
+      override def executionContext: ExecutionContext = ec
       override def close(): Unit = {}
     }
 

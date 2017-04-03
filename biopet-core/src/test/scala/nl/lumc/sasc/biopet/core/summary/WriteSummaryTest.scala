@@ -32,6 +32,7 @@ import org.testng.annotations.{ AfterClass, Test }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.matching.Regex
 
 /**

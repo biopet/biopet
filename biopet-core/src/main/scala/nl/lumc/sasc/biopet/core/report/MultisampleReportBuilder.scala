@@ -16,7 +16,6 @@ package nl.lumc.sasc.biopet.core.report
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * This trait will generate a report with added function to generate sample and library pages for those existing in the summary.

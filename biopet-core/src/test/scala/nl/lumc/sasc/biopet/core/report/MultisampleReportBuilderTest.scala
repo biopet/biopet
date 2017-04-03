@@ -25,7 +25,6 @@ import org.testng.annotations.Test
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 24/02/16.
@@ -46,6 +45,9 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
 
       def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = Future(ReportPage(Nil, Nil, Map()))
     }
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)

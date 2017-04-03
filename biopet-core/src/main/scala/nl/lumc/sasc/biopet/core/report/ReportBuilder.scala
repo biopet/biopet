@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
 import scala.collection.mutable
-import scala.concurrent.{ Await, ExecutionContextExecutor, Future }
+import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.language.implicitConversions
@@ -73,7 +73,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  implicit lazy val global: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
+  implicit lazy val ec = ReportBuilder.ec
   implicit def toOption[T](x: T): Option[T] = Option(x)
   implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
@@ -277,6 +277,8 @@ trait ReportBuilder extends ToolCommand {
 }
 
 object ReportBuilder {
+
+  implicit lazy val ec = ExecutionContext.global
 
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
