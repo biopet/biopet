@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with Reference {
   qscript =>
 
   def this() = this(null)
@@ -100,7 +100,7 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
     for ((sample, mergedResultFile) <- outputMergedVCFbySample) {
       lazy val counts = getVariantCounts(mergedResultFile, ShivaSvCallingReport.histogramBinBoundaries)
       addSummarizable(new Summarizable {
-        def summaryFiles = Map.empty
+        def summaryFiles = Map("output_vcf" -> mergedResultFile)
         def summaryStats = counts
       }, "variantsBySizeAndType", Some(sample))
     }
@@ -119,7 +119,7 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
   def summarySettings = Map("sv_callers" -> configCallers.toList)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = outputMergedVCFbySample ++ (if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Nil)
+  def summaryFiles: Map[String, File] = if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Map.empty
 
   def getVariantCounts(vcfFile: File, breaks: Array[Int]): Map[String, Any] = {
     val delCounts, insCounts, dupCounts, invCounts = Array.fill(breaks.size + 1) { 0 }
