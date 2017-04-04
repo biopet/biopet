@@ -39,7 +39,7 @@ class LinePlot(val parent: Configurable) extends Rscript {
   var hideLegend: Boolean = config("hide_legend", default = false)
   var removeZero: Boolean = config("removeZero", default = false)
 
-  //whether to use log scale for x and y axis
+  // whether to use log scale for x and y axis
   var xLog10: Boolean = false
   var yLog10: Boolean = false
 
@@ -60,7 +60,7 @@ class LinePlot(val parent: Configurable) extends Rscript {
     (if (xLog10) Seq("--xLog10", "true") else Seq()) ++
     (if (yLog10) Seq("--yLog10", "true") else Seq()) ++
     (if (xLog10AxisTicks.nonEmpty) xLog10AxisTicks.+:("--xLog10Breaks") else Seq()) ++
-    (if (xLog10AxisTicks.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
+    (if (xLog10AxisLabels.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
 }
 
 object LinePlot {
