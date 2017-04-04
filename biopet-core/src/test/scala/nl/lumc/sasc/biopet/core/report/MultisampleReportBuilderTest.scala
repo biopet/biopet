@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io.File
 import java.nio.file.Paths
+import java.sql.Date
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -23,7 +24,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 /**
@@ -53,6 +54,9 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
     db.createTables()
+
+    Await.ready(db.createPipeline("test", 0), Duration.Inf)
+    Await.ready(db.createRun("test", "", "", "", new Date(System.currentTimeMillis())), Duration.Inf)
 
     val sample = Some("sampleName")
     val lib = Some("libName")

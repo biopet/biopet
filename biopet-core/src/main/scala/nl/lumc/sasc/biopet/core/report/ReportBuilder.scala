@@ -297,7 +297,10 @@ trait ReportBuilder extends ToolCommand {
         summary.getPipelineName(pipelineId = pipelineId).map(_.get -> Future(ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map())))
     })
 
-    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
+    val pipelineFiles = summary.getPipelineId(runId, pipelineName)
+      .flatMap(pipelinelineId => dbFiles
+        .map(x => x.get(pipelinelineId.get).getOrElse(Seq())
+          .filter(_.moduleId.isEmpty)))
 
     modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
       s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::

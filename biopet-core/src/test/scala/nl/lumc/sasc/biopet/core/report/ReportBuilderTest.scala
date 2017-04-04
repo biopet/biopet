@@ -16,14 +16,15 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io.File
 import java.nio.file.Paths
+import java.sql.Date
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 /**
@@ -64,6 +65,8 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
         Await.result(db.createLibrary(libName, 0, sampleId), Duration.Inf)
       }
     }
+    Await.ready(db.createPipeline("test", 0), Duration.Inf)
+    Await.ready(db.createRun("test", "", "", "", new Date(System.currentTimeMillis())), Duration.Inf)
 
     val tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
