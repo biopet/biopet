@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
 
-class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class RealignerTargetCreator(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "RealignerTargetCreator"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }

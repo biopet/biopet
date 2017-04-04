@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
-class IndelRealigner(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class IndelRealigner(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "IndelRealigner"
   scatterClass = classOf[ContigScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = true }

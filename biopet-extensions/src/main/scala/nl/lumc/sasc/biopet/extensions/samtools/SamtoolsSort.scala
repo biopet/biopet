@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 22/09/15.
  */
-class SamtoolsSort(val root: Configurable) extends Samtools {
+class SamtoolsSort(val parent: Configurable) extends Samtools {
 
   @Input(required = true)
   var input: File = _

@@ -20,11 +20,8 @@ import nl.lumc.sasc.biopet.extensions.Fastqc
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-class HelloPipeline(val root: Configurable) extends QScript with SummaryQScript {
+class HelloPipeline(val parent: Configurable) extends QScript with SummaryQScript {
   def this() = this(null)
-
-  /** Only required when using [[SummaryQScript]] */
-  def summaryFile = new File(outputDir, "hello.summary.json")
 
   /** Only required when using [[SummaryQScript]] */
   def summaryFiles: Map[String, File] = Map()

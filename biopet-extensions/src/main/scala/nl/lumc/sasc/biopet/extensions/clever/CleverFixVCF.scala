@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 import scala.io.Source
 
-class CleverFixVCF(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
   @Input(doc = "Input Clever VCF")
   var input: File = _

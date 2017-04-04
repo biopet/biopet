@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Wrapper for the bgzip command */
-class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
+class Bgzip(val parent: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Input files", required = false)
   var input: List[File] = Nil

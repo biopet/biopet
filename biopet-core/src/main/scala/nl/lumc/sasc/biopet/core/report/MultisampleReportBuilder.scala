@@ -14,6 +14,9 @@
  */
 package nl.lumc.sasc.biopet.core.report
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 /**
  * This trait will generate a report with added function to generate sample and library pages for those existing in the summary.
  *
@@ -22,7 +25,7 @@ package nl.lumc.sasc.biopet.core.report
 trait MultisampleReportBuilder extends ReportBuilder {
 
   /** Method to generate a single sample page */
-  def samplePage(sampleId: String, args: Map[String, Any]): ReportPage
+  def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage
 
   /** Default list of samples, can be override */
   def samplesSections: List[(String, ReportSection)] = {
@@ -32,7 +35,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
   }
 
   /** Method to generate a single library page */
-  def libraryPage(sampleId: String, libraryId: String, args: Map[String, Any]): ReportPage
+  def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]): ReportPage
 
   /** Default list of libraries, can be override */
   def librariesSections: List[(String, ReportSection)] = {
@@ -43,22 +46,25 @@ trait MultisampleReportBuilder extends ReportBuilder {
 
   /** Generate the samples page including a single sample page for each sample in the summary */
   def generateSamplesPage(args: Map[String, Any]): ReportPage = {
-    val samplePages = summary.samples
+    val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
+    val samplePages = samples.map(_.id)
       .map(sampleId => sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId))))
       .toList
-    ReportPage(samplePages, samplesSections, args)
+    ReportPage(samplePages.map(x => samples.find(_.id == x._1).get.name -> x._2), samplesSections, args)
   }
 
   /** Generate the libraries page for a single sample with a subpage for eacht library */
   def generateLibraryPage(args: Map[String, Any]): ReportPage = {
     val sampleId = args("sampleId") match {
-      case Some(x) => x.toString
-      case None    => throw new IllegalStateException("Sample not found")
+      case Some(x: Int) => x
+      case None         => throw new IllegalStateException("Sample not found")
     }
 
-    val libPages = summary.libraries(sampleId)
+    val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = Some(sampleId)), Duration.Inf)
+
+    val libPages = libraries.map(_.id)
       .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId))))
       .toList
-    ReportPage(libPages, librariesSections, args)
+    ReportPage(libPages.map(x => libraries.find(_.id == x._1).get.name -> x._2), librariesSections, args)
   }
 }

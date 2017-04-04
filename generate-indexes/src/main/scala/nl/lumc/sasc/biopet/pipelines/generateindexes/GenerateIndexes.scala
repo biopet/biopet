@@ -30,7 +30,7 @@ import scala.collection.mutable.ListBuffer
 /**
  * Created by pjvan_thof on 21-9-16.
  */
-class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
+class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
   @Input(doc = "Input fasta file", shortName = "R")

@@ -214,7 +214,7 @@ object MultiSampleQScriptTest {
       override def globalConfig = new Config(configs
         .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
 
-      val root = null
+      val parent = null
 
       def getLastLogMessage: String = {
         Logging.errors.toList.last.getMessage

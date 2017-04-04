@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SambambaMpileup(val root: Configurable) extends Sambamba {
+class SambambaMpileup(val parent: Configurable) extends Sambamba {
   override val defaultThreads = 4
 
   @Input(doc = "Bam File")

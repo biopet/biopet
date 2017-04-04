@@ -24,7 +24,7 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 /**
  * Wrapper for the Picard CollectRnaSeqMetrics tool
  */
-class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectRnaSeqMetrics(val parent: Configurable) extends Picard with Summarizable {
 
   javaMainClass = new picard.analysis.CollectRnaSeqMetrics().getClass.getName
 

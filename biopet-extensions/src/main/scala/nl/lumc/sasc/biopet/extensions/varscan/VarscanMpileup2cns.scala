@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class VarscanMpileup2cns(val root: Configurable) extends Varscan {
+class VarscanMpileup2cns(val parent: Configurable) extends Varscan {
 
   @Input(doc = "Input mpileup file", required = false) // if not defined, input is stdin
   var input: Option[File] = None

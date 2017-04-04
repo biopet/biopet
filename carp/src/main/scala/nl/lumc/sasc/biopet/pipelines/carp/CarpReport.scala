@@ -19,11 +19,11 @@ import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
- * Class for report for CArp
+ * Class for report for Carp
  *
  * Created by pjvanthof on 25/06/15.
  */
-class CarpReport(val root: Configurable) extends ReportBuilderExtension {
+class CarpReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = CarpReport
 }
 

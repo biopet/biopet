@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 19/09/16.
  */
-class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -76,9 +76,6 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     add(krakenReportJSON)
     addSummarizable(krakenReportJSON, s"${name}_report")
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".centrifuge.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()

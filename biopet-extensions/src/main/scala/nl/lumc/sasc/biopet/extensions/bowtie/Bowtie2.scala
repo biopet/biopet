@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 2.2.6
  */
-class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class Bowtie2(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
 

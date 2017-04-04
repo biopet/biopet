@@ -28,7 +28,7 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
   class CommandLineFunctionMock(c: Map[String, Any] = Map()) extends CommandLineFunction with Configurable {
     override def freezeFieldValues() {}
     def commandLine = "command"
-    val root = null
+    val parent = null
     override def globalConfig = new Config(c)
   }
 

@@ -19,10 +19,11 @@ import java.nio.file.Paths
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{ AfterClass, Test }
 
 /**
  * Created by pjvan_thof on 31-5-16.
@@ -37,9 +38,13 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
     }
   }
 
+  private var dirs: List[File] = Nil
+
   @Test
   def testFromGens: Unit = {
-    val pipeline = initPipeline(Impute2VcfTest.config ++
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
       Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrQ"))
       )
     )
@@ -48,7 +53,9 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
 
   @Test
   def testWrongContig: Unit = {
-    val pipeline = initPipeline(Impute2VcfTest.config ++
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
       Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrBla"))
       )
     )
@@ -59,7 +66,9 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
 
   @Test
   def testFromSpecs: Unit = {
-    val pipeline = initPipeline(Impute2VcfTest.config ++
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
       Map("imute_specs_file" -> Impute2VcfTest.resourcePath("/specs/files.specs"))
     )
     pipeline.script()
@@ -67,12 +76,18 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
 
   @Test
   def testEmpty: Unit = {
-    val pipeline = initPipeline(Impute2VcfTest.config)
+    val outputDir = Files.createTempDir()
+    dirs :+= outputDir
+    val pipeline = initPipeline(Impute2VcfTest.config(outputDir))
     intercept[IllegalArgumentException] {
       pipeline.script()
     }
   }
 
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object Impute2VcfTest {
@@ -83,16 +98,13 @@ object Impute2VcfTest {
   val phenotypeFile = File.createTempFile("gwas.", ".txt")
   phenotypeFile.deleteOnExit()
 
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-
   val reference = new File(resourcePath("/fake_chrQ.fa"))
 
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "reference_fasta" -> reference.toString,
     "phenotype_file" -> phenotypeFile.toString,

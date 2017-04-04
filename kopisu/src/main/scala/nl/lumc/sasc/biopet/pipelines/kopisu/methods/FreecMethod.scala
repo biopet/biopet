@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 /**
  * Created by pjvanthof on 10/05/16.
  */
-class FreecMethod(val root: Configurable) extends CnvMethod {
+class FreecMethod(val parent: Configurable) extends CnvMethod {
   def name = "freec"
 
   var snpFile: Option[File] = config("snp_file", freeVar = false)
