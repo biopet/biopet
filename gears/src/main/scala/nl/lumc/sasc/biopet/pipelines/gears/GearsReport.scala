@@ -78,7 +78,7 @@ object GearsReport extends MultisampleReportBuilder {
     ReportPage(
       List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
         "Samples" -> generateSamplesPage(pageArgs)
-        ),
+      ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsFront.ssp")) ++
         List(

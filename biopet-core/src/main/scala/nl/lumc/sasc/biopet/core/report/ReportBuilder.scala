@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample}
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
-import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ LibraryId, SampleId }
+import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
@@ -204,7 +204,7 @@ trait ReportBuilder extends ToolCommand {
       )
     }
 
-    val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId))}
+    val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId)) }
 
     //    total = ReportBuilder.countPages(rootPage)
     logger.info(total + " pages to be generated")
@@ -276,7 +276,7 @@ trait ReportBuilder extends ToolCommand {
 
   }
 
-  def pipelineName
+  def pipelineName: String
 
   /** Files page, can be used general or at sample level */
   def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {

@@ -56,10 +56,10 @@ object MappingReport extends ReportBuilder {
     } else None
     ReportPage((if (skipFlexiprep) Nil else List("QC" -> FlexiprepReport.flexiprepPage)) :::
       bamMetricsPage.map(_.subPages).getOrElse(Nil) :::
-        (if (krakenExecuted) List("Gears - Metagenomics" -> Future(ReportPage(List(), List(
-          "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
-          )), Map())))
-        else Nil), List(
+      (if (krakenExecuted) List("Gears - Metagenomics" -> Future(ReportPage(List(), List(
+        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+        )), Map())))
+      else Nil), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/mappingFront.ssp")
     ) ::: bamMetricsPage.map(_.sections).getOrElse(Nil),
       Map()
