@@ -174,9 +174,4 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.runLocal()
   }
 
-  def formatVcfFilePath(vcfFilePath: Option[Any]): Any = {
-    //val prefix = summary.getValue("meta", "output_dir").getOrElse("").toString
-    //vcfFilePath.collect { case a => "./" + a.toString.stripPrefix(prefix + File.separator) }
-    ""
-  }
 }
