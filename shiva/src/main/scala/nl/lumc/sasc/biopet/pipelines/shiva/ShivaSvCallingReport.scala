@@ -19,7 +19,7 @@ object ShivaSvCallingReport {
     var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Long]] = Map()
 
     for (sampleName <- sampleNames) {
-      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("variantsBySizeAndType"), SampleName(sampleName)), Duration.Inf).get
+      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("parse_sv_vcf"), SampleName(sampleName)), Duration.Inf).get
       for ((svType, counts) <- sampleCounts.collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
         val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
@@ -42,7 +42,7 @@ object ShivaSvCallingReport {
   def parseSummaryForTranslocations(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Long] = {
     var traCounts: Map[String, Long] = Map()
     for (sampleName <- sampleNames) {
-      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("variantsBySizeAndType"), SampleName(sampleName)), Duration.Inf).get
+      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("parse_sv_vcf"), SampleName(sampleName)), Duration.Inf).get
       traCounts += (sampleName -> counts.get("TRA").get.asInstanceOf[Long])
     }
     if (traCounts.exists(elem => elem._2 > 0)) traCounts else Map.empty

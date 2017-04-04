@@ -102,12 +102,8 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
       addSummarizable(new Summarizable {
         def summaryFiles = Map("output_vcf" -> mergedResultFile)
         def summaryStats = counts
-      }, "variantsBySizeAndType", Some(sample))
+      }, "parse_sv_vcf", Some(sample))
     }
-    addSummarizable(new Summarizable {
-      def summaryFiles = Map.empty
-      def summaryStats = ShivaSvCallingReport.histogramBinBoundaries
-    }, "histBreaksForCounts")
 
     addSummaryJobs()
   }
@@ -116,7 +112,7 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
   protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Settings for the summary */
-  def summarySettings = Map("sv_callers" -> configCallers.toList)
+  def summarySettings = Map("sv_callers" -> configCallers.toList, "hist_bin_boundaries" -> ShivaSvCallingReport.histogramBinBoundaries)
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Map.empty
