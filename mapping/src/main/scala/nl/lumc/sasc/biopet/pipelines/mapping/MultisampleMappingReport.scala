@@ -79,10 +79,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         else Nil) ++
         List("Reference" -> Future(ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
-        ), Map())),
-          "Files" -> filesPage(),
-          "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-          )), Map()))
+        ), Map()))
         ),
       List(
         "Report" -> frontSection) ++
@@ -113,32 +110,6 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     )
   }
 
-  /** Files page, can be used general or at sample level */
-  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
-    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
-      library = libraryId.map(LibraryId))
-      .map(_.groupBy(_.pipelineId))
-    val modulePages = dbFiles.map(_.map {
-      case (pipelineId, files) =>
-        val moduleSections = files.groupBy(_.moduleId).map {
-          case (moduleId, files) =>
-            val moduleName: Future[String] = moduleId match {
-              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
-              case _        => Future("Pipeline")
-            }
-            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
-        }
-        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
-        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> Future(ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map())))
-    })
-
-    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
-
-    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
-      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
-        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
-  }
-
   /** Single sample page */
   def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
     val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport",
@@ -161,9 +132,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future(ReportPage(List(), List(
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map())))
-      else Nil) ++
-      List("Files" -> filesPage(sampleId = sampleId)
-      ), List(
+      else Nil), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
@@ -195,7 +164,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future(ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map())))
-        else Nil) ::: List("Files" -> filesPage(sampleId = sampleId, libraryId = libId)),
+        else Nil),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))

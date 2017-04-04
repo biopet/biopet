@@ -17,9 +17,10 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
+import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
@@ -203,7 +204,7 @@ trait ReportBuilder extends ToolCommand {
       )
     }
 
-    val rootPage = indexPage
+    val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId))}
 
     //    total = ReportBuilder.countPages(rootPage)
     logger.info(total + " pages to be generated")
@@ -274,6 +275,41 @@ trait ReportBuilder extends ToolCommand {
     }
 
   }
+
+  def pipelineName
+
+  /** Files page, can be used general or at sample level */
+  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
+    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
+      library = libraryId.map(LibraryId))
+      .map(_.groupBy(_.pipelineId))
+    val modulePages = dbFiles.map(_.map {
+      case (pipelineId, files) =>
+        val moduleSections = files.groupBy(_.moduleId).map {
+          case (moduleId, files) =>
+            val moduleName: Future[String] = moduleId match {
+              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
+              case _        => Future("Pipeline")
+            }
+            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
+        }
+        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
+        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> Future(ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map())))
+    })
+
+    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
+
+    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
+      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
+        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
+  }
+
+  /** This generate general pages that all reports should have */
+  def generalPages(sampleId: Option[Int], libId: Option[Int]): List[(String, Future[ReportPage])] = List(
+    "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")), Map())),
+    "Files" -> filesPage(sampleId, libId)
+  )
+
 }
 
 object ReportBuilder {

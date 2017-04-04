@@ -37,6 +37,8 @@ object MappingReport extends ReportBuilder {
   /** Name of report */
   val reportName = "Mapping Report"
 
+  def pipelineName = "mapping"
+
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
@@ -53,11 +55,7 @@ object MappingReport extends ReportBuilder {
       Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
     } else None
     ReportPage((if (skipFlexiprep) Nil else List("QC" -> FlexiprepReport.flexiprepPage)) :::
-      bamMetricsPage.map(_.subPages).getOrElse(Nil) ::: List(
-        "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-        )), Map())),
-        "Files" -> Future(ReportPage(List(), Nil, Map()))
-      ) :::
+      bamMetricsPage.map(_.subPages).getOrElse(Nil) :::
         (if (krakenExecuted) List("Gears - Metagenomics" -> Future(ReportPage(List(), List(
           "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
           )), Map())))

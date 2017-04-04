@@ -36,6 +36,8 @@ class GearsReport(val parent: Configurable) extends ReportBuilderExtension {
 
 object GearsReport extends MultisampleReportBuilder {
 
+  def pipelineName = "gears"
+
   def reportName = "Gears Report"
 
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
@@ -49,28 +51,33 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
+    val centrifugePage = (if (centrifugeExecuted) Some("Centriguge analysis" -> Future(ReportPage(List("Non-unique" ->
+      Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+        Map("summaryStatsTag" -> "centrifuge_report")
+      )), Map()))), List(
+      "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+        Map("summaryStatsTag" -> "centrifuge_unique_report")
+      )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
+    else None)
+
+    val krakenPage = (if (krakenExecuted) Some("Kraken analysis" -> Future(ReportPage(List(), List(
+      "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+      ))), Map())))
+    else None)
+
+    val qiimeClosedPage = (if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future(ReportPage(List(), List(
+      "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+      ))), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
+    else None)
+
+    val qiimeOpenPage = (if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future(ReportPage(List(), List(
+      "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+      )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
+    else None)
+
     ReportPage(
-      (if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List("Non-unique" ->
-        Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-          Map("summaryStatsTag" -> "centrifuge_report")
-        )), Map()))), List(
-        "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-          Map("summaryStatsTag" -> "centrifuge_unique_report")
-        )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-      else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> Future(ReportPage(List(), List(
-        "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-        ))), Map())))
-      else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> Future(ReportPage(List(), List(
-        "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        ))), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
-      else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> Future(ReportPage(List(), List(
-        "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
-        )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
-      else Nil) ::: List("Samples" -> generateSamplesPage(pageArgs)) ++
-        Map(
-          "Versions" -> Future(ReportPage(List(), List(
-            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")
-          ), Map()))
+      List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
+        "Samples" -> generateSamplesPage(pageArgs)
         ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsFront.ssp")) ++

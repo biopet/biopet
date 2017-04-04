@@ -37,6 +37,7 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
   @Test
   def testGeneratePages(): Unit = {
     val builder = new MultisampleReportBuilder {
+      def pipelineName = "test"
       def reportName: String = "test"
       def indexPage: Future[ReportPage] = Future(ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map()))
 

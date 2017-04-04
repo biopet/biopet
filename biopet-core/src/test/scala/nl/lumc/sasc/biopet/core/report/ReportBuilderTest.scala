@@ -46,6 +46,7 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
   @Test(dataProvider = "testGeneratePages")
   def testGeneratePages(sample: Option[String], lib: Option[String], nested: Boolean): Unit = {
     val builder = new ReportBuilder {
+      def pipelineName = "test"
       def reportName: String = "test"
       def indexPage: Future[ReportPage] = Future(ReportPage(
         (if (nested) "p1" -> Future(ReportPage(Nil, Nil, Map())) :: Nil else Nil), Nil, Map()))

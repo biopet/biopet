@@ -28,6 +28,8 @@ class GearsSingleReport(val parent: Configurable) extends ReportBuilderExtension
 
 object GearsSingleReport extends ReportBuilder {
 
+  def pipelineName = "gearssingle"
+
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
@@ -39,10 +41,7 @@ object GearsSingleReport extends ReportBuilder {
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report", sample = sampleId.map(SampleId), library = libId.map(LibraryId)), Duration.Inf) == 1
 
     ReportPage(
-      List(
-        "Versions" -> Future(ReportPage(List(),
-          List(("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"))), Map()))
-      ),
+      Nil,
       List("Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp")) ++
         (if (krakenExecuted) List("Kraken analysis" ->
           ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"))

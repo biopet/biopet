@@ -37,18 +37,14 @@ class FlexiprepReport(val parent: Configurable) extends ReportBuilderExtension {
 object FlexiprepReport extends ReportBuilder {
   val reportName = "Flexiprep"
 
+  def pipelineName = "flexiprep"
+
   override def pageArgs = Map("multisample" -> false)
 
   /** Index page for a flexiprep report */
   def indexPage: Future[ReportPage] = Future {
     val flexiprepPage = this.flexiprepPage
-    ReportPage(List("Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-    )), Map())),
-      "Files" -> Future(ReportPage(List(), List( //TODO: Fix files
-      //        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-      //        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
-      ), Map()))
-    ), List(
+    ReportPage(Nil, List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
     ) ::: Await.result(flexiprepPage, Duration.Inf).sections,
       Map()

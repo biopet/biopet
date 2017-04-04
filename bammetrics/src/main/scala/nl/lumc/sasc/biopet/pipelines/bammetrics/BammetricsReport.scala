@@ -41,13 +41,15 @@ object BammetricsReport extends ReportBuilder {
   /** Name of report */
   val reportName = "Bam Metrics"
 
+  def pipelineName = "bammetrics"
+
   /** Root page for single BamMetrcis report */
   def indexPage: Future[ReportPage] = Future {
     val bamMetricsPage = Await.result(this.bamMetricsPage(summary, sampleId, libId), Duration.Inf)
     ReportPage(bamMetricsPage.subPages ::: List(
       "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
       )), Map())),
-      "Files" -> Future(ReportPage(List(), List(), Map()))
+      "Files" -> filesPage(sampleId, libId)
     ), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
     ) ::: bamMetricsPage.sections,

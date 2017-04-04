@@ -29,9 +29,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
 
   /** Default list of samples, can be override */
   def samplesSections: List[(String, ReportSection)] = {
-    List(
-      ("Samples", ReportSection("/nl/lumc/sasc/biopet/core/report/samplesList.ssp"))
-    )
+    List("Samples" -> ReportSection("/nl/lumc/sasc/biopet/core/report/samplesList.ssp"))
   }
 
   /** Method to generate a single library page */
@@ -39,16 +37,15 @@ trait MultisampleReportBuilder extends ReportBuilder {
 
   /** Default list of libraries, can be override */
   def librariesSections: List[(String, ReportSection)] = {
-    List(
-      ("Libraries", ReportSection("/nl/lumc/sasc/biopet/core/report/librariesList.ssp"))
-    )
+    List("Libraries" -> ReportSection("/nl/lumc/sasc/biopet/core/report/librariesList.ssp"))
   }
 
   /** Generate the samples page including a single sample page for each sample in the summary */
   def generateSamplesPage(args: Map[String, Any]): Future[ReportPage] = Future {
     val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
     val samplePages = samples.map(_.id)
-      .map(sampleId => sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId))))
+      .map(sampleId => sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId)))
+        .map(x => x.copy(subPages = x.subPages ::: "Files" -> filesPage(sampleId, None) :: Nil)))
       .toList
     ReportPage(samplePages.map(x => samples.find(_.id == x._1).get.name -> x._2), samplesSections, args)
   }
@@ -63,7 +60,8 @@ trait MultisampleReportBuilder extends ReportBuilder {
     val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = Some(sampleId)), Duration.Inf)
 
     val libPages = libraries.map(_.id)
-      .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId))))
+      .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId)))
+        .map(x => x.copy(subPages = x.subPages ::: "Files" -> filesPage(sampleId, libId) :: Nil)))
       .toList
     ReportPage(libPages.map(x => libraries.find(_.id == x._1).get.name -> x._2), librariesSections, args)
   }
