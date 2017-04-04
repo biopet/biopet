@@ -90,7 +90,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
-      val summaryCallers = pipeline.summarySettings("sv_callers")
+      val summaryCallers = pipeline.summarySettings.get("sv_callers")
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
