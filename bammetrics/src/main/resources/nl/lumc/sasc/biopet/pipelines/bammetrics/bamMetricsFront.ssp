@@ -2,9 +2,8 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] = None %>
-
+<%@ var sampleId: Option[Int] %>
+<%@ var libId: Option[Int] = None %>
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>BamMetrics</td></tr>
