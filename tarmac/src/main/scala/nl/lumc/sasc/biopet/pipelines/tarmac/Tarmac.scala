@@ -52,6 +52,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       val outFile = new File(sampleDir + File.separator + s"$name.dcov")
       (inputXhmmCountFile, bamFile) match {
         case (Some(f), _) => {
+          if (bamFile.isDefined) {
+            logger.warn(s"Both BAM and Xhmm count files are given for sample $name. The BAM file will be ignored")
+          }
           val ln = new Ln(root)
           ln.input = f
           ln.output = outFile
@@ -86,6 +89,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.bed")
       (inputWisecondorCountFile, bamFile) match {
         case (Some(f), _) => {
+          if (bamFile.isDefined) {
+            logger.warn(s"Both BAM and Wisecondor count files are given for sample $name. The BAM file will be ignored")
+          }
           val ln = new Ln(root)
           ln.input = f
           ln.output = outFile
