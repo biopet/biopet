@@ -271,7 +271,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
 
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir, outputName + ".dedup.bam")
-      val md = MarkDuplicates(this, bamFiles, finalBamFile)
+      val md = MarkDuplicates(this, mergedBamFile :: Nil, finalBamFile)
       md.isIntermediate = !keepFinalBamFile
       add(md)
       addSummarizable(md, "mark_duplicates")
