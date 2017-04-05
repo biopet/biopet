@@ -97,6 +97,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
     cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
+      caller.inputBqsrFiles = inputBqsrFiles
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
