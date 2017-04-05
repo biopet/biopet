@@ -46,6 +46,8 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
 
   var inputBams: Map[String, File] = Map()
 
+  var inputBqsrFiles: Map[String, File] = Map()
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)

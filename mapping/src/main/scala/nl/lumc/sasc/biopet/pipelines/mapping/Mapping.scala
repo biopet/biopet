@@ -38,8 +38,8 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.math._
 
 /**
-  * This pipeline doing a alignment to a given reference genome
-  */
+ * This pipeline doing a alignment to a given reference genome
+ */
 class Mapping(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
@@ -99,9 +99,9 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = if (skipMarkduplicates) {
-    new File(outputDir, outputName + ".bam")
-  } else new File(outputDir, outputName + ".dedup.bam")
+  def mergedBamFile = new File(outputDir, outputName + ".bam")
+  def finalBamFile: File = if (skipMarkduplicates) mergedBamFile
+  else new File(outputDir, outputName + ".dedup.bam")
 
   override def defaults: Map[String, Any] = Map(
     "gsnap" -> Map("batch" -> 4),
@@ -260,21 +260,25 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     }
 
     var bamFile = bamFiles.head
+
+    if (!chunking) require(bamFile == mergedBamFile)
+    else {
+      val mergeSamFile = MergeSamFiles(this, bamFiles, mergedBamFile)
+      mergeSamFile.isIntermediate = !keepFinalBamFile || !skipMarkduplicates
+      add(mergeSamFile)
+      bamFile = mergeSamFile.output
+    }
+
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir, outputName + ".dedup.bam")
       val md = MarkDuplicates(this, bamFiles, finalBamFile)
       md.isIntermediate = !keepFinalBamFile
       add(md)
       addSummarizable(md, "mark_duplicates")
-    } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, finalBamFile)
-      mergeSamFile.isIntermediate = !keepFinalBamFile
-      add(mergeSamFile)
-      bamFile = mergeSamFile.output
     }
 
     if (!skipMetrics) {
-      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"), sampleId, libId)
+      val bamMetrics = BamMetrics(this, finalBamFile, new File(outputDir, "metrics"), sampleId, libId)
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
     }

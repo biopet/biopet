@@ -44,6 +44,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   def biopetScript() {
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
       val hc = gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".gvcf.vcf.gz"))
+      hc.BQSR = inputBqsrFiles.get(sample)
       add(hc)
       sample -> hc.out
     }
