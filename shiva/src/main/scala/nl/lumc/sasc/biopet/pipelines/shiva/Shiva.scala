@@ -97,8 +97,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       lazy val usePrintReads: Boolean = if (useBaseRecalibration) config("use_printreads", default = true) else false
       lazy val useAnalyzeCovariates: Boolean = if (useBaseRecalibration) config("use_analyze_covariates", default = true) else false
 
-      lazy val bqsrFile: Option[File] = if (useBaseRecalibration) Some(createFile(".baserecal")) else None
-      lazy val bqsrAfterFile: Option[File] = if (useAnalyzeCovariates) Some(createFile(".baserecal.after")) else None
+      lazy val bqsrFile: Option[File] = if (useBaseRecalibration) Some(createFile("baserecal")) else None
+      lazy val bqsrAfterFile: Option[File] = if (useAnalyzeCovariates) Some(createFile("baserecal.after")) else None
 
       override def keepFinalBamfile = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
 
@@ -149,14 +149,14 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
       /** Adds base recalibration jobs */
       def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean, usePrintreads: Boolean): File = {
-        val baseRecalibrator = BaseRecalibrator(qscript, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
+        val baseRecalibrator = BaseRecalibrator(qscript, inputBam, bqsrFile.get) // at this point bqsrFile should exist
 
         if (baseRecalibrator.knownSites.isEmpty) return inputBam
         add(baseRecalibrator)
 
-        val baseRecalibratorAfter = BaseRecalibrator(qscript, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
-        baseRecalibratorAfter.BQSR = Some(baseRecalibrator.out)
         if (useAnalyzeCovariates) {
+          val baseRecalibratorAfter = BaseRecalibrator(qscript, inputBam, bqsrAfterFile.get)
+          baseRecalibratorAfter.BQSR = bqsrFile
           add(baseRecalibratorAfter)
           add(AnalyzeCovariates(qscript, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
         }
