@@ -25,15 +25,12 @@ import scala.io.Source
  * Created by ahbbollen on 9-10-15.
  * Wrapper for manwe activate after importing and annotating
  */
-class ManweActivateAfterAnnotImport(root: Configurable,
-                                    annotate: ManweAnnotateVcf,
-                                    imported: ManweSamplesImport) extends ManweSamplesActivate(root) {
+class ManweActivateAfterImport(root: Configurable,
+                               imported: ManweSamplesImport) extends ManweSamplesActivate(root) {
 
   override def beforeGraph: Unit = {
     super.beforeGraph
-    require(annotate != null, "Annotate should be defined")
     require(imported != null, "Imported should be defined")
-    this.deps :+= annotate.jobOutputFile
     this.deps :+= imported.jobOutputFile
   }
 
