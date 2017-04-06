@@ -7,6 +7,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
+import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -22,6 +23,25 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
   private val targets: File = config("targets")
   def this() = this(null)
+
+  /* Fixed values for xhmm count file */
+  override def fixedValues: Map[String, Any] = {
+    super.fixedValues ++ Map(
+      "depth_of_coverage" -> Map(
+        "downsampling_type" -> "BY_SAMPLE",
+        "downsample_to_coverage" -> 5000,
+        "omit_depth_output_at_each_base" -> true,
+        "omit_locus_table" -> true,
+        "min_base_quality" -> 0,
+        "min_mapping_quality" -> 20,
+        "start" -> 1,
+        "stop" -> 5000,
+        "n_bins" -> 200,
+        "include_ref_n_sites" -> true,
+        "count_type" -> "COUNT_FRAGMENTS"
+      )
+    )
+  }
 
   def init() = {
 
@@ -52,11 +72,17 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
     val wisecondorRefJobs = refMap map {
       case (sample, refSamples) =>
-        val refDir = new File(outputDir, s"reference_for_${sample.sampleId}")
+        val refDir = new File(new File(outputDir, sample.sampleId), "wisecondor_reference")
         createWisecondorReferenceJobs(refSamples, refDir)
     }
 
-    wisecondorRefJobs.flatten.foreach(job => add(job))
+    val xhmmRefJobs = refMap map {
+      case (sample, refSamples) =>
+        val refDir = new File(new File(outputDir, sample.sampleId), "xhmm_reference")
+        createXhmmReferenceJobs(sample, refSamples, refDir)
+    }
+
+    (wisecondorRefJobs.toList ::: xhmmRefJobs.toList).flatten.foreach(job => add(job))
   }
 
   /**
@@ -84,7 +110,15 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   def createXhmmReferenceJobs(sample: Sample, referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
-    throw new NotImplementedError()
+    /* XHMM requires refset including self */
+    val totalSet = referenceSamples + sample
+    val merger = new XhmmMergeGatkDepths(this)
+    merger.gatkDepthsFiles = totalSet.map(_.outputXhmmCountFile).filter(_.isRight).map(_.getOrElse("")).filter {
+      case f: File => true
+      case _       => false
+    }.map { case f: File => f }.toList
+    merger.output = new File(outputDirectory, "reference.matrix")
+    List(merger)
   }
 
   def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
@@ -146,7 +180,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     lazy val outputXhmmCountFile: String \/ File = {
       outputXhmmCountJob match {
         case \/-(ln: Ln)               => \/-(ln.output)
-        case \/-(doc: DepthOfCoverage) => \/-(doc.out)
+        case \/-(doc: DepthOfCoverage) => \/-(doc.intervalSummaryFile)
         case -\/(error)                => -\/(error)
       }
     }
