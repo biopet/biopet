@@ -248,8 +248,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       if (!usePrintReads) {
         import variantcallers._
         if (vc.callers.exists(_ match {
-          case _:HaplotypeCaller | _:HaplotypeCallerAllele | _:HaplotypeCallerGvcf => false
-          case _:UnifiedGenotyper | _:UnifiedGenotyperAllele => false
+          case _: HaplotypeCaller | _: HaplotypeCallerAllele | _: HaplotypeCallerGvcf => false
+          case _: UnifiedGenotyper | _: UnifiedGenotyperAllele => false
           case _ => true
         })) logger.warn("Not all variantcallers chosen can read BQSR files, All non-GATK")
       }
