@@ -36,6 +36,31 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
   }
 
+  /**
+    * Get set of sample names constituting reference samples for a given sample name
+    *
+    * Reference samples must match the own gender, while excluding own parents (if any) and self
+    * @param sampleName: The sample name to create reference set for
+    * @return
+    */
+  def getReferenceSamplesForSample(sampleName: String): String \/ Set[String] = {
+    val allSampleNames = pedSamples.map(_.individualId)
+    if (!allSampleNames.toSet.contains(sampleName)) {
+      -\/(s"Sample $sampleName does not exist in PED samples")
+    }
+    else {
+      val theSample = pedSamples(allSampleNames.indexOf(sampleName))
+      val totalSet = pedSamples.filter(p => p.gender == theSample.gender).map(_.individualId).toSet
+      val referenceSet = (theSample.maternalId, theSample.paternalId) match {
+        case (Some(m), Some(f)) => totalSet - (m, f, sampleName)
+        case (None, Some(f)) => totalSet - (f, sampleName)
+        case (Some(m), None) => totalSet - (m, sampleName)
+        case _ => totalSet - sampleName
+      }
+      \/-(referenceSet)
+    }
+  }
+
   class Sample(name: String) extends AbstractSample(name) {
 
     val inputXhmmCountFile: Option[File] = config("xhmm_count_file")
