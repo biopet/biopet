@@ -4,9 +4,9 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.WisecondorCount
+import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -33,32 +33,79 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   def addMultiSampleJobs() = {
+    val initRefMap = samples map { x => x._2 -> getReferenceSamplesForSample(x._1) }
+    initRefMap.values.filter(_.isLeft).foreach {
+      case -\/(message) => Logging.addError(message)
+      case _            => ;
+    }
 
+    val refMap: Map[Sample, Set[Sample]] = initRefMap.filter(_._2.isRight).map { x =>
+      val refSamples = x._2.getOrElse(Nil)
+      val actualRefSamples = refSamples.map { s =>
+        samples.getOrElse(s, Logging.addError(s"Sample $s does not exist"))
+      }.filter {
+        case p: Sample => true
+        case _         => false
+      }.map { case s: Sample => s }.toSet
+      x._1 -> actualRefSamples
+    }
+
+    val wisecondorRefJobs = refMap map {
+      case (sample, refSamples) =>
+        val refDir = new File(outputDir, s"reference_for_${sample.sampleId}")
+        createWisecondorReferenceJobs(refSamples, refDir)
+    }
+
+    wisecondorRefJobs.flatten.foreach(job => add(job))
   }
 
   /**
-    * Get set of sample names constituting reference samples for a given sample name
-    *
-    * Reference samples must match the own gender, while excluding own parents (if any) and self
-    * @param sampleName: The sample name to create reference set for
-    * @return
-    */
+   * Get set of sample names constituting reference samples for a given sample name
+   *
+   * Reference samples must match the own gender, while excluding own parents (if any) and self
+   * @param sampleName: The sample name to create reference set for
+   * @return
+   */
   def getReferenceSamplesForSample(sampleName: String): String \/ Set[String] = {
     val allSampleNames = pedSamples.map(_.individualId)
     if (!allSampleNames.toSet.contains(sampleName)) {
       -\/(s"Sample $sampleName does not exist in PED samples")
-    }
-    else {
+    } else {
       val theSample = pedSamples(allSampleNames.indexOf(sampleName))
       val totalSet = pedSamples.filter(p => p.gender == theSample.gender).map(_.individualId).toSet
       val referenceSet = (theSample.maternalId, theSample.paternalId) match {
         case (Some(m), Some(f)) => totalSet - (m, f, sampleName)
-        case (None, Some(f)) => totalSet - (f, sampleName)
-        case (Some(m), None) => totalSet - (m, sampleName)
-        case _ => totalSet - sampleName
+        case (None, Some(f))    => totalSet - (f, sampleName)
+        case (Some(m), None)    => totalSet - (m, sampleName)
+        case _                  => totalSet - sampleName
       }
       \/-(referenceSet)
     }
+  }
+
+  def createXhmmReferenceJobs(sample: Sample, referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
+    throw new NotImplementedError()
+  }
+
+  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
+    val gccs = referenceSamples.map { x =>
+      val gcc = new WisecondorGcCorrect(this)
+      x.outputWisecondorCountFile match {
+        case \/-(file) => gcc.inputBed = file
+        case _         => ;
+      }
+      gcc.output = new File(outputDirectory, s"${x.sampleId}.gcc")
+      gcc
+    }
+
+    val reference = new WisecondorNewRef(this)
+    reference.inputBeds = gccs.map(_.output).toList
+    reference.output = new File(outputDirectory, "reference.bed")
+    reference.isIntermediate = true
+    val gzipRef = new Gzip(this)
+    gzipRef.input = List(reference.output)
+    gzipRef.output = new File(outputDirectory, "reference.bed.gz")
+    gccs.toList ::: reference :: gzipRef :: Nil
   }
 
   class Sample(name: String) extends AbstractSample(name) {
