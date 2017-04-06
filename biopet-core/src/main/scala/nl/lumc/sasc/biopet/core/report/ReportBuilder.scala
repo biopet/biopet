@@ -219,7 +219,6 @@ trait ReportBuilder extends ToolCommand {
     total = jobsFutures.size
     logger.info(total + " pages to be generated")
 
-
     def wait(futures: List[Future[Any]]): Unit = {
       try {
         Await.ready(Future.sequence(futures), Duration.fromNanos(30000000000L))
