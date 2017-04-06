@@ -2,164 +2,140 @@
 
 ## Introduction
 
-This pipeline is build for variant calling on NGS data (preferably Illumina data).
-It is based on the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of their approach to variant calling.
+This pipeline is built for variant calling on NGS data (preferably Illumina data). Part of this pipeline resembles the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of their approach to variant calling.
 The pipeline accepts ```.fastq & .bam``` files as input.
 
 ----
 
-## Tools for this pipeline
+## Overview of tools and sub-pipelines for this pipeline
 
+* [Flexiprep for QC](flexiprep.md)
+* [Metagenomics analysis](gears.md)
+* [Mapping](mapping.md)
+* [VEP annotation](toucan.md)
+* [CNV analysis](kopisu.md)
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
-* [Flexiprep](flexiprep.md)
-* <a href="https://www.broadinstitute.org/gatk/" target="_blank">GATK tools</a>:
-    * GATK
-    * Freebayes
-    * Bcftools
-    * Samtools
+* <a href="https://www.broadinstitute.org/gatk/" target="_blank">GATK tools</a>
+* <a href="https://github.com/ekg/freebayes" target="_blank">Freebayes</a>
+* <a href="http://dkoboldt.github.io/varscan/" target="_blank">Varscan</a>
+* <a href="https://samtools.github.io/bcftools/bcftools.html" target="_blank">Bcftools</a>
+* <a href="http://www.htslib.org/" target="_blank">Samtools</a>
 
 ----
 
-## Example
+## Basic usage
 
-Note that one should first create the appropriate [configs](../general/config.md).
+Note that one should first create the appropriate sample and pipeline setting [configs](../general/config.md).
 
-### Sample input extensions
+Shiva pipeline can start from FASTQ or BAM files. This pipeline will include pre-process steps for the BAM files. 
 
-Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
-
-Shiva is a special pipeline in the sense that it can also start directly from `bam` files. Note that one should alter the sample config field from `R1` into `bam`.
-
-### Full pipeline
-
-The full pipeline can start from fastq or from bam file. This pipeline will include pre-process steps for the bam files.
+When using BAM files as input, Note that one should alter the sample config field from `R1` into `bam`.
 
 To view the help menu, execute:
 ~~~
 biopet pipeline shiva -h
-
+ 
 Arguments for Shiva:
- -sample,--onlysample <onlysample>               Only Sample
- -config,--config_file <config_file>             JSON config file(s)
- -DSC,--disablescatterdefault                    Disable all scatters
-
-~~~
-
-To run the pipeline:
-~~~
-biopet pipeline shiva -config MySamples.json -config MySettings.json -run
-~~~
-
-A dry run can be performed by simply removing the `-run` flag from the command line call.
-
-[Gears](gears) is run automatically for the data analysed with `Shiva`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
-
-*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
-*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
-*`mapping_to_gears: none` : Disable this functionality.
-
-### Only variant calling
-
-It is possible to run Shiva while only performing its variant calling steps.
-This has been separated in its own pipeline named `shivavariantcalling`.
-As this calling pipeline starts from BAM files, it will naturally not perform any pre-processing steps.
-
-To view the help menu, execute:
-~~~
-java -jar </path/to/biopet.jar> pipeline shivavariantcalling -h
-
-Arguments for ShivaVariantcalling:
- -BAM,--inputbams <inputbams>          Bam files (should be deduped bams)
- -sample,--sampleid <sampleid>         Sample ID (only effects summary and not required)
- -library,--libid <libid>              Library ID (only effects summary and not required)
- -config,--config_file <config_file>   JSON config file(s)
+ -s,--sample <sample>                  Only Process This Sample
+ -config,--config_file <config_file>   JSON / YAML config file(s)
+ -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or 
+                                       'namespace:namespace:key=value'
  -DSC,--disablescatter                 Disable all scatters
 
 ~~~
 
 To run the pipeline:
 ~~~
-biopet pipeline shivavariantcalling -config MySettings.json -run
+biopet pipeline shiva -config MySamples.yml -config MySettings.yml -run
 ~~~
 
 A dry run can be performed by simply removing the `-run` flag from the command line call.
 
 
+An example of MySettings.yml file is provided here and more detailed config options are explained in [config options](#config-options).
+``` yaml
+samples:
+    SampleID:
+        libraries:
+            lib_id_1:
+                bam: YourBam.bam
+            lib_id_2:
+                R1: file_R1.fq.gz
+                R2: file_R2.fq.gz
+species: H.sapiens
+reference_name: GRCh38_no_alt_analysis_set
+dbsnp_vcf: <dbsnp.vcf.gz>
+vcffilter:
+    min_alternate_depth: 1
+output_dir: <output directory>
+variantcallers:
+    - haplotypecaller
+    - unifiedgenotyper
+    - haplotypecaller_gvcf
+unifiedgenotyper:
+    merge_vcf_results: false # This will do the variantcalling but will not merged into the final vcf file
+```
 ----
 
-## Variant caller
+## Supported variant callers
 At this moment the following variant callers can be used
 
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a>
-    * Running default HaplotypeCaller
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_gvcf</a>
-    * Running HaplotypeCaller in gvcf mode
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_allele</a>
-    * Only genotype a given list of alleles with HaplotypeCaller
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a>
-    * Running default UnifiedGenotyper
-* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper_allele</a>
-    * Only genotype a given list of alleles with UnifiedGenotyper
-* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a>
-* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools_singlesample</a>
-* <a href="https://github.com/ekg/freebayes">freebayes</a>
-* <a href="http://varscan.sourceforge.net/">varscan</a>
-* [raw](../tools/MpileupToVcf)
-
+| ConfigName | Tool | Description |
+| ---------- | ---- | ----------- |
+| haplotypecaller_gvcf | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running HaplotypeCaller in gvcf mode |
+| haplotypecaller_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Only genotype a given list of alleles with HaplotypeCaller |
+| unifiedgenotyper_allele | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a> | Only genotype a given list of alleles with UnifiedGenotyper |
+| unifiedgenotyper | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a> | Running default UnifiedGenotyper |
+| haplotypecaller | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running default HaplotypeCaller |
+| freebayes | <a href="https://github.com/ekg/freebayes">freebayes</a> |  |
+| raw | [Naive variant caller](../tools/MpileupToVcf) |  |
+| bcftools | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
+| bcftools_singlesample | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
+| varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
 
 ## Config options
 
-To view all possible config options please navigate to our Gitlab wiki page
-<a href="https://git.lumc.nl/biopet/biopet/wikis/GATK-Variantcalling-Pipeline" target="_blank">Config</a>
-
 ### Required settings
-| Confignamespace | Name | Type | Default | Function |
+| ConfigNamespace | Name | Type | Default | Function |
 | ----------- | ---- | ---- | ------- | -------- |
 | - | output_dir | String |  | Path to output directory |
 | Shiva | variantcallers | List[String] | | Which variant callers to use |
 
-
 ### Config options
 
-| ConfignNamespace | Name |  Type | Default | Function |
-| ----------- | ---- | ----- | ------- | -------- |
-| shiva | species | String | unknown_species | Name of species, like H.sapiens |
-| shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 |
-| shiva | reference_fasta | String |  | reference to align to |
-| shiva | dbsnp | String |  | vcf file of dbsnp records |
-| shiva | variantcallers | List[String] |  | variantcaller to use, see list |
-| shiva | use_indel_realigner | Boolean | true | Realign indels |
-| shiva | use_base_recalibration | Boolean | true | Base recalibrate |
-| shiva | use_analyze_covariates | Boolean | false | Analyze covariates during base recalibration step |
-| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files |
-| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups |
-| shiva | amplicon_bed | Path | Path to target bed file |
-| shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files |
-| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage |
-| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele |
-| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) |
-| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls |
+| ConfigNamespace | Name |  Type | Default | Function | Applicable variant caller |
+| ----------- | ---- | ----- | ------- | -------- | -------- |
+| shiva | species | String | unknown_species | Name of species, like H.sapiens | all |
+| shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 | all |
+| shiva | reference_fasta | String |  | reference to align to | all |
+| shiva | dbsnp_vcf | String |  | vcf file of dbsnp records | haplotypecaller, haplotypecaller_gvcf, haplotypecaller_allele, unifiedgenotyper, unifiedgenotyper_allele |
+| shiva | variantcallers | List[String] |  | variantcaller to use, see list | all |
+| shiva | input_alleles | String |  | vcf file contains sites of interest for genotyping (including HOM REF calls). Only used when haplotypecaller_allele or unifiedgenotyper_allele is used.  | haplotypecaller_allele, unifiedgenotyper_allele |
+| shiva | use_indel_realigner | Boolean | true | Realign indels | all |
+| shiva | use_base_recalibration | Boolean | true | Base recalibrate | all |
+| shiva | use_analyze_covariates | Boolean | true | Analyze covariates during base recalibration step | all |
+| shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files | Only used when input is a bam file |
+| shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | Only used when input is a bam file |
+| shiva | amplicon_bed | Path |  | Path to target bed file | all |
+| shiva | regions_of_interest | Array of paths |  | Array of paths to region of interest (e.g. gene panels) bed files | all |
+| vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | raw |
+| vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | raw |
+| vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | raw |
+| vcffilter | filter_ref_calls | Boolean | true | Remove reference calls | raw |
 
 Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
 
-### Exome variant calling
+----
 
-If one calls variants with Shiva on exome samples and a ```amplicon_bed``` file is available, the user is able to add this file to the config file.
- When the file is given, the coverage over the positions in the bed file will be calculated plus the number of variants on each position. If there is an interest
- in a specific region of the genome/exome one is capable to give multiple ```regionOfInterest.bed``` files with the option ```regions_of_interest``` (in list/array format).
- 
- A short recap: the option ```amplicon_bed``` can only be given one time and should be composed of the amplicon kit used to obtain the exome data.
- The option ```regions_of_interest``` can contain multiple bed files in ```list``` format and can contain any region a user wants. If multiple regions are given,
- the pipeline will make an coverage plot over each bed file separately. 
- 
+## Advanced usage
 
-### Modes
+### Reporting modes
 
 Shiva furthermore supports three modes. The default and recommended option is `multisample_variantcalling`.
 During this mode, all bam files will be simultaneously called in one big VCF file. It will work with any number of samples.
 
-On top of that, Shiva provides two separate modes that only work with a single sample.
+Additionally, Shiva provides two separate modes that only work with a single sample.
 Those are not recommended, but may be useful to those who need to validate replicates.
 
 Mode `single_sample_variantcalling` calls a single sample as a merged bam file.
@@ -175,41 +151,88 @@ The config for these therefore is:
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |
 | shiva | library_variantcalling | Boolean | false | Not-recommended, single sample, per library |
 
-## CNV calling 
+### Additional metagenomics analysis
+
+[Gears](gears.md) can be ran for the data analysed with `Shiva`. There are two stages at which this metagenomics sub-pipeline can be called 
+and this should be specified in the [config](../general/config) file. To call Gears, please use the following config values.
+
+*`mapping_to_gears: none` : Disable this functionality. (default)
+*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
+*`mapping_to_gears: unmapped` : Only send unmapped reads after alignment to Gears, e.g., a kind of "trash bin" analysis.
+
+### Only variant calling
+
+It is possible to run Shiva while only performing its variant calling steps starting from BAM files.
+This has been separated in its own pipeline named `shivavariantcalling`. Different than running shiva which converts BAM files to fastq files first, 
+shivavariantcalling will not perform any pre-processing and mapping steps. But just to call variants based on the input BAM files.
+
+To view the help menu, execute:
+~~~
+biopet pipeline shivavariantcalling -h
+
+Arguments for ShivaVariantcalling:
+ -BAM,--inputbamsarg <inputbamsarg>    Bam files (should be deduped bams)
+ -sample,--sampleid <sampleid>         Sample ID
+ -library,--libid <libid>              Library ID
+ -config,--config_file <config_file>   JSON / YAML config file(s)
+ -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or 
+                                       'namespace:namespace:key=value'
+ -DSC,--disablescatter                 Disable all scatters 
+
+~~~
+
+To run the pipeline:
+~~~
+biopet pipeline shivavariantcalling -config MySettings.yml -run
+~~~
+
+### Exome variant calling
+
+If one calls variants with Shiva on exome samples and an ```amplicon_bed``` file is available, the user is able to add this file to the config file.
+ When the file is given, the coverage over the positions in the bed file will be calculated plus the number of variants on each position. If there is an interest
+ in a specific region of the genome/exome one is capable to give multiple ```regionOfInterest.bed``` files with the option ```regions_of_interest``` (in list/array format).
+ 
+ A short recap: the option ```amplicon_bed``` can only be given one time and should be composed of the amplicon kit used to obtain the exome data.
+ The option ```regions_of_interest``` can contain multiple bed files in ```list``` format and can contain any region a user wants. If multiple regions are given,
+ the pipeline will make an coverage plot over each bed file separately. 
+
+### VEP annotation
+
+Shiva can be linked to our VEP based annotation pipeline to annotate the VCF files. 
+
+**example config**
+```yaml
+toucan:
+  vep_version: 86
+  enable_scatter: false
+```
+
+### SV calling 
+
+In addition to standard variant calling, Shiva also supports SV calling. 
+One can enable this option by setting the `sv_calling` config option to `true`.
+
+**example config**
+```yaml
+shiva:
+    sv_calling: true
+sv_callers:
+- breakdancer
+- delly
+- clever
+pysvtools:
+  flanking: 100
+```
+
+### CNV calling 
 
 In addition to standard variant calling, Shiva also supports CNV calling. 
 One can enable this option by setting the `cnv_calling` config option to `true`.
 
-For CNV calling Shiva uses the [Kopisu](kopisu.md) as a module. 
-Please see the documentation for Kopisu.  
+For CNV calling Shiva uses the [Kopisu](kopisu.md) as a sub-pipeline. 
+Please see the documentation for Kopisu.
 
-
-## Example configs 
-**Config example**
-
-``` yaml
-samples:
-    SampleID:
-        libraries:
-            lib_id_1:
-                bam: YourBam.bam
-            lib_id_2:
-                R1: file_R1.fq.gz
-                R2: file_R2.fq.gz
-dbsnp: <dbsnp.vcf.gz>
-vcffilter:
-    min_alternate_depth: 1
-output_dir: <output directory>
-variantcallers:
-    - haplotypecaller
-    - unifiedgenotyper
-    - haplotypecaller_gvcf
-unifiedgenotyper:
-    merge_vcf_results: false # This will do the variantcalling but will not merged into the final vcf file
-```
-
-**Additional XHMM CNV calling example**
-
+**example config**
 ```yaml
 shiva:
     cnv_calling: true
