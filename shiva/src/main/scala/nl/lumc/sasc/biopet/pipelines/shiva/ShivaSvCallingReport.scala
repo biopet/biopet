@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ ModuleName, PipelineName, SampleName }
@@ -9,7 +10,9 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ ModuleName, PipelineName
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object ShivaSvCallingReport {
+object ShivaSvCallingReport extends ShivaSvCallingReportTrait
+
+trait ShivaSvCallingReportTrait extends Logging {
 
   val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
   val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
@@ -43,7 +46,12 @@ object ShivaSvCallingReport {
     var traCounts: Map[String, Long] = Map()
     for (sampleName <- sampleNames) {
       val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("parse_sv_vcf"), SampleName(sampleName)), Duration.Inf).get
-      traCounts += (sampleName -> counts.get("TRA").get.asInstanceOf[Long])
+      counts.get("TRA") match {
+        case Some(c: Long) => traCounts += (sampleName -> c)
+        case Some(c)       => logger.error(s"Unable to parse translocation counts from summary db for sample $sampleName (type mismatch, type in the db: ${c.getClass})")
+        case _             => logger.error(s"Summary db doesn't have translocation counts for sample $sampleName")
+      }
+
     }
     if (traCounts.exists(elem => elem._2 > 0)) traCounts else Map.empty
   }
@@ -55,15 +63,32 @@ object ShivaSvCallingReport {
     histogramText.foreach(bin => tsvWriter.print("\t" + bin))
     tsvWriter.println()
 
+    val missingCounts: Array[String] = Array.fill(ShivaSvCallingReport.histogramText.size) { "-" }
+
     for (sv <- svTypes) {
-      val countsForSvType: Map[String, Array[Long]] = counts.get(sv.svType).get
+      val countsForSvType: Map[String, Array[Long]] = counts.getOrElse(sv.svType, Map.empty)
 
-      writeTsvFileForSvType(sv, countsForSvType, sampleNames, outDir)
+      if (countsForSvType.nonEmpty) {
 
-      for (sampleName <- sampleNames) {
-        tsvWriter.print(sv.svType + "\t" + sampleName + "\t")
-        tsvWriter.println(countsForSvType.get(sampleName).get.mkString("\t"))
+        writeTsvFileForSvType(sv, countsForSvType, sampleNames, outDir)
+
+        for (sampleName <- sampleNames) {
+          val sampleCounts: Array[String] = countsForSvType.get(sampleName) match {
+            case Some(c) => c.collect({ case x => x.toString() })
+            case None => {
+              logger.error(s"Internal error, missing sv counts, sample-$sampleName, sv type-${sv.svType}")
+              missingCounts
+            }
+          }
+
+          tsvWriter.print(sv.svType + "\t" + sampleName + "\t")
+          tsvWriter.println(sampleCounts.mkString("\t"))
+        }
+
+      } else {
+        logger.error(s"Internal error, skipping writing the tsv-file for sv type ${sv.svType}")
       }
+
     }
     tsvWriter.close()
   }
@@ -72,12 +97,13 @@ object ShivaSvCallingReport {
     val tsvWriter = new PrintWriter(new File(outDir, svType.tsvFileName))
 
     tsvWriter.print("histogramBin")
-    sampleNames.foreach(sampleName => tsvWriter.print("\t" + sampleName))
+    val samplesWithCounts: Seq[String] = sampleNames.filter(x => counts.contains(x))
+    samplesWithCounts.foreach(sampleName => tsvWriter.print("\t" + sampleName))
     tsvWriter.println()
 
     for (i <- histogramPlotTicks.indices) {
       tsvWriter.print(histogramPlotTicks(i))
-      sampleNames.foreach(sampleName => tsvWriter.print("\t" + counts.get(sampleName).get(i)))
+      samplesWithCounts.foreach(sampleName => tsvWriter.print("\t" + counts.get(sampleName).get(i)))
       tsvWriter.println()
     }
 

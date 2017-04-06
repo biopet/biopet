@@ -50,7 +50,13 @@
             </tr></thead>
             <tbody><tr>
             #for (sampleName <- sampleNames)
-                <td>${traCounts.get(sampleName).get}</td>
+                #{
+                    val sampleCount: String = traCounts.get(sampleName) match {
+                        case Some(c) => c.toString()
+                        case None => "-"
+                    }
+                }#
+                <td>${sampleCount}</td>
             #end
             </tr></tbody>
         </table>
@@ -72,7 +78,8 @@
 
 #for (sv <- svTypes)
 #{
-    val countsForSvType: Map[String, Array[Long]] = counts.get(sv.svType).get
+    val countsForSvType: Map[String, Array[Long]] = counts(sv.svType)
+    val missingCounts: Array[String] = Array.fill(ShivaSvCallingReport.histogramText.size) { "-" }
 }#
 <h3>${sv.displayText}</h3>
 <table class="table sortable-theme-bootstrap" data-sortable>
@@ -85,7 +92,14 @@
         #for (sampleName <- sampleNames)
             <tr>
             <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
-            #for (countForSize <- countsForSvType.get(sampleName).get)
+            #{
+                val sampleCounts: Array[String] = countsForSvType.get(sampleName) match {
+                    case Some(c: Array[_]) => c.collect({case x => x.toString()})
+                    case None => missingCounts
+                }
+            }#
+
+            #for (countForSize <- sampleCounts)
                 <td>${countForSize}</td>
             #end
             </tr>
