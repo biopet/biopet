@@ -207,8 +207,6 @@ trait ReportBuilder extends ToolCommand {
     val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId)) }
 
     //    total = ReportBuilder.countPages(rootPage)
-    logger.info(total + " pages to be generated")
-
     done = 0
 
     logger.info("Generate pages")
@@ -216,8 +214,30 @@ trait ReportBuilder extends ToolCommand {
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
 
-    Await.result(jobs, Duration.Inf)
-    Await.result(baseFilesFuture, Duration.Inf)
+    val jobsFutures = Await.result(jobs, Duration.Inf)
+
+    total = jobsFutures.size
+    logger.info(total + " pages to be generated")
+
+
+    def wait(futures: List[Future[Any]]): Unit = {
+      try {
+        Await.ready(Future.sequence(futures), Duration.fromNanos(30000000000L))
+      } catch {
+        case e: TimeoutException =>
+      }
+      val notDone = futures.filter(!_.isCompleted)
+      done += futures.size - notDone.size
+      if (notDone.nonEmpty) {
+        logger.info(s"$done / $total pages are generated")
+        wait(notDone)
+      }
+    }
+
+    wait(jobsFutures)
+    Await.ready(baseFilesFuture, Duration.Inf)
+
+    logger.info(s"Done, $done pages generated")
   }
 
   /** This must be implemented, this will be the root page of the report */
@@ -240,8 +260,8 @@ trait ReportBuilder extends ToolCommand {
                    pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): Future[_] = {
-    pageFuture.flatMap { page =>
+                   args: Map[String, Any] = Map()): Future[List[Future[_]]] = {
+    pageFuture.map { page =>
       val pageOutputDir = new File(outputDir, path.mkString(File.separator))
       pageOutputDir.mkdirs()
       val rootPath = "./" + Array.fill(path.size)("../").mkString
@@ -257,21 +277,25 @@ trait ReportBuilder extends ToolCommand {
         )
 
       // Generating subpages
-      val jobs = Future.sequence(page.subPages.map {
+      val jobs = page.subPages.flatMap {
         case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
-      })
+      }
 
       val renderFuture = Future {
+        val file = new File(pageOutputDir, "index.html")
+        logger.info(s"Start rendering: $file")
+
         val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
           pageArgs ++ Map("args" -> pageArgs))
 
-        val file = new File(pageOutputDir, "index.html")
         val writer = new PrintWriter(file)
         writer.println(output)
         writer.close()
+        logger.info(s"Done rendering: $file")
+
       }
 
-      Future.sequence(renderFuture :: jobs :: Nil)
+      renderFuture :: jobs
     }
 
   }
@@ -335,7 +359,7 @@ object ReportBuilder {
    * @return Rendered result of template
    */
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
-    Logging.logger.info("Rendering: " + location)
+    Logging.logger.debug("Rendering: " + location)
 
     engine.layout(location, args)
   }
