@@ -50,6 +50,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     "unifiedgenotyper" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0)
   )
 
+  lazy val usePrintReads: Boolean = config("use_printreads", default = true)
+
   /** Method to make the variantcalling namespace of shiva */
   def makeVariantcalling(multisample: Boolean,
                          sample: Option[String] = None,
@@ -94,7 +96,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
           logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
         c && br.knownSites.nonEmpty
       }
-      lazy val usePrintReads: Boolean = if (useBaseRecalibration) config("use_printreads", default = true) else false
       lazy val useAnalyzeCovariates: Boolean = if (useBaseRecalibration) config("use_analyze_covariates", default = true) else false
 
       lazy val bqsrFile: Option[File] = if (useBaseRecalibration) Some(createFile("baserecal")) else None
@@ -115,7 +116,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
         "library_variantcalling" -> variantcalling.isDefined,
         "use_indel_realigner" -> useIndelRealigner,
         "use_base_recalibration" -> useBaseRecalibration,
-        "use_print_reads" -> usePrintReads,
         "useAnalyze_covariates" -> useAnalyzeCovariates
       )
 
@@ -242,7 +242,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
-      vc.inputBqsrFiles = samples.flatMap { case (sampleId, sample) => sample.bqsrFile.map(sampleId -> _) }
+      if (!usePrintReads)
+        vc.inputBqsrFiles = samples.flatMap { case (sampleId, sample) => sample.bqsrFile.map(sampleId -> _) }
       add(vc)
 
       annotation.foreach { toucan =>
@@ -272,7 +273,8 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     "sv_calling" -> svCalling.isDefined,
     "cnv_calling" -> cnvCalling.isDefined,
     "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed")),
+    "use_print_reads" -> usePrintReads
   )
 
   /** Adds indel realignment jobs */
