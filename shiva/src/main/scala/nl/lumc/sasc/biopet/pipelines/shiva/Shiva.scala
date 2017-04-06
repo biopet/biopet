@@ -245,6 +245,14 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       if (!usePrintReads)
         vc.inputBqsrFiles = samples.flatMap { case (sampleId, sample) => sample.bqsrFile.map(sampleId -> _) }
       add(vc)
+      if (!usePrintReads) {
+        import variantcallers._
+        if (vc.callers.exists(_ match {
+          case _:HaplotypeCaller | _:HaplotypeCallerAllele | _:HaplotypeCallerGvcf => false
+          case _:UnifiedGenotyper | _:UnifiedGenotyperAllele => false
+          case _ => true
+        })) logger.warn("Not all variantcallers chosen can read BQSR files, All non-GATK")
+      }
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
