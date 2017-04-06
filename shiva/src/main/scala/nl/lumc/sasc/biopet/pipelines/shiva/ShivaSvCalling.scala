@@ -14,17 +14,14 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
-import nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCallingReport.histogramBinBoundaries
+import nl.lumc.sasc.biopet.extensions.tools.VcfStatsForSv
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
-
-import scala.collection.JavaConversions._
 
 /**
  * Common trait for ShivaVariantcalling
@@ -101,11 +98,18 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
     // sample tagging is however not available within this pipeline
 
     for ((sample, mergedResultFile) <- outputMergedVCFbySample) {
-      lazy val counts = getVariantCounts(mergedResultFile)
+      val vcfStats = new VcfStatsForSv(qscript)
+      vcfStats.inputFile = mergedResultFile
+      vcfStats.outputFile = new File(outputDir, s".$sample.merged.stats")
+      vcfStats.histogramBinBoundaries = ShivaSvCallingReport.histogramBinBoundaries
+
+      add(vcfStats)
+      addSummarizable(vcfStats, "vcfstats-sv", Some(sample))
+
       addSummarizable(new Summarizable {
         def summaryFiles = Map("output_vcf" -> mergedResultFile)
-        def summaryStats = counts
-      }, "parse_sv_vcf", Some(sample))
+        def summaryStats = Map.empty
+      }, "merge_variants", Some(sample))
     }
 
     addSummaryJobs()
@@ -115,38 +119,10 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
   protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Settings for the summary */
-  def summarySettings = Map("sv_callers" -> configCallers.toList, "hist_bin_boundaries" -> histogramBinBoundaries)
+  def summarySettings = Map("sv_callers" -> configCallers.toList, "hist_bin_boundaries" -> ShivaSvCallingReport.histogramBinBoundaries)
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Map.empty
-
-  /** Parses a vcf-file and counts sv-s by type and size. Sv-s are divided to different size classes, the boundaries between these classes are those given in ShivaSvCallingReport.histogramBinBoundaries. */
-  def getVariantCounts(vcfFile: File): Map[String, Any] = {
-    val delCounts, insCounts, dupCounts, invCounts = Array.fill(histogramBinBoundaries.size + 1) { 0 }
-    var traCount = 0
-
-    val reader = new VCFFileReader(vcfFile, false)
-    for (record <- reader) {
-      record.getAttributeAsString("SVTYPE", "") match {
-        case "TRA" | "CTX" | "ITX" => traCount += 1
-        case svType => {
-          val size = record.getEnd - record.getStart
-          var i = 0
-          while (i < histogramBinBoundaries.size && size > histogramBinBoundaries(i)) i += 1
-          svType match {
-            case "DEL" => delCounts(i) += 1
-            case "INS" => insCounts(i) += 1
-            case "DUP" => dupCounts(i) += 1
-            case "INV" => invCounts(i) += 1
-            case _     => logger.warn(s"Vcf file contains a record of unknown type: file-$vcfFile, type-$svType")
-          }
-        }
-      }
-    }
-    reader.close()
-
-    Map("DEL" -> delCounts, "INS" -> insCounts, "DUP" -> dupCounts, "INV" -> invCounts, "TRA" -> traCount)
-  }
 
 }
 

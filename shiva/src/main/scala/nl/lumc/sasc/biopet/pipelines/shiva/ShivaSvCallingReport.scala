@@ -22,7 +22,7 @@ trait ShivaSvCallingReportTrait extends Logging {
     var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Long]] = Map()
 
     for (sampleName <- sampleNames) {
-      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("parse_sv_vcf"), SampleName(sampleName)), Duration.Inf).get
+      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("vcfstats-sv"), SampleName(sampleName)), Duration.Inf).get
       for ((svType, counts) <- sampleCounts.collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
         val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
@@ -45,7 +45,7 @@ trait ShivaSvCallingReportTrait extends Logging {
   def parseSummaryForTranslocations(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Long] = {
     var traCounts: Map[String, Long] = Map()
     for (sampleName <- sampleNames) {
-      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("parse_sv_vcf"), SampleName(sampleName)), Duration.Inf).get
+      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("vcfstats-sv"), SampleName(sampleName)), Duration.Inf).get
       counts.get("TRA") match {
         case Some(c: Long) => traCounts += (sampleName -> c)
         case Some(c)       => logger.error(s"Unable to parse translocation counts from summary db for sample $sampleName (type mismatch, type in the db: ${c.getClass})")
