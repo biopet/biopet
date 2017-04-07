@@ -1,3 +1,4 @@
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -7,9 +8,9 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(org.apache.commons.io.FileUtils)
 #import(java.io.File)
-#import(nl.lumc.sasc.biopet.core.report.ReportBuilder.ec)
 <%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
+<%@ var run: Run %>
 <%@ var sampleId: Option[Int] %>
 <%@ var libId: Option[Int] %>
 <%@ var plot: String %>
@@ -17,7 +18,6 @@
 #{
     val settings = summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
-    val run = Await.result(summary.getRuns(runId = Some(runId)).map(_.head), Duration.Inf)
 
     val paired: Boolean = settings("paired") == Some(true)
     val skipClip: Boolean = settings("skip_clip") == Some(true)
