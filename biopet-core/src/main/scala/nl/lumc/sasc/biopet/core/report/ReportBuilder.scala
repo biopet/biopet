@@ -282,18 +282,18 @@ trait ReportBuilder extends ToolCommand {
     }
 
     val renderFuture = pageFuture.map { page =>
-        pageOutputDir.mkdirs()
+      pageOutputDir.mkdirs()
 
-        val file = new File(pageOutputDir, "index.html")
-        logger.info(s"Start rendering: $file")
+      val file = new File(pageOutputDir, "index.html")
+      logger.info(s"Start rendering: $file")
 
-        val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
-          pageArgs(page) ++ Map("args" -> pageArgs(page)))
+      val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
+        pageArgs(page) ++ Map("args" -> pageArgs(page)))
 
-        val writer = new PrintWriter(file)
-        writer.println(output)
-        writer.close()
-        logger.info(s"Done rendering: $file")
+      val writer = new PrintWriter(file)
+      writer.println(output)
+      writer.close()
+      logger.info(s"Done rendering: $file")
 
     }
 
