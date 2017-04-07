@@ -33,7 +33,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
    * @param script name / location of script
    */
   def setPythonScript(script: String) {
-    pythonScript = new File(script)
+    pythonScript = new File(script).getAbsoluteFile
     if (!pythonScript.exists()) {
       setPythonScript(script, "")
     } else {
@@ -48,7 +48,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
    */
   def setPythonScript(script: String, subpackage: String) {
     pythonScriptName = script
-    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName)
+    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile
     if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
     val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
     if (is != null) {
