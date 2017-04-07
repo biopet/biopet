@@ -210,11 +210,9 @@ trait ReportBuilder extends ToolCommand {
     done = 0
 
     logger.info("Generate pages")
-    val jobs = generatePage(summary, rootPage, cmdArgs.outputDir,
+    val jobsFutures = generatePage(summary, rootPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
-
-    val jobsFutures = Await.result(jobs, Duration.Inf)
 
     total = jobsFutures.size
     logger.info(total + " pages to be generated")
@@ -259,12 +257,12 @@ trait ReportBuilder extends ToolCommand {
                    pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): Future[List[Future[_]]] = {
-    pageFuture.map { page =>
-      val pageOutputDir = new File(outputDir, path.mkString(File.separator))
-      pageOutputDir.mkdirs()
+                   args: Map[String, Any] = Map()): List[Future[_]] = {
+    val pageOutputDir = new File(outputDir, path.mkString(File.separator))
+
+    def pageArgs(page: ReportPage) = {
       val rootPath = "./" + Array.fill(path.size)("../").mkString
-      val pageArgs = args ++ page.args ++
+      args ++ page.args ++
         Map("page" -> page,
           "path" -> path,
           "outputDir" -> pageOutputDir,
@@ -274,29 +272,32 @@ trait ReportBuilder extends ToolCommand {
           "allSamples" -> samples,
           "allLibraries" -> libraries
         )
+    }
 
+    val subPageJobs = pageFuture.map { page =>
       // Generating subpages
-      val jobs = page.subPages.flatMap {
-        case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
+      page.subPages.flatMap {
+        case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs(page))
       }
+    }
 
-      val renderFuture = Future {
+    val renderFuture = pageFuture.map { page =>
+        pageOutputDir.mkdirs()
+
         val file = new File(pageOutputDir, "index.html")
         logger.info(s"Start rendering: $file")
 
         val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
-          pageArgs ++ Map("args" -> pageArgs))
+          pageArgs(page) ++ Map("args" -> pageArgs(page)))
 
         val writer = new PrintWriter(file)
         writer.println(output)
         writer.close()
         logger.info(s"Done rendering: $file")
 
-      }
-
-      renderFuture :: jobs
     }
 
+    renderFuture :: Await.result(subPageJobs, Duration.Inf)
   }
 
   def pipelineName: String
