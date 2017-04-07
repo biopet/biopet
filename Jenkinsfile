@@ -6,7 +6,7 @@ node('local') {
             tool 'Apache Maven 3.3.9'
         }
 
-        timeout(30) {
+        timeout(45) {
             stage('Checkout') {
                 checkout scm
                 sh 'git submodule update --init --recursive'
