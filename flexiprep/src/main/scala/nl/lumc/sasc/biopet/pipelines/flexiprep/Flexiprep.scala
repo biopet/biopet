@@ -230,6 +230,7 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
       pipe.deps ::= fastqcR2.output
       pipe.deps ::= R1_in
       pipe.deps ::= R2_in.get
+      pipe.nCoresRequest = Some(4)
       pipe.isIntermediate = !keepQcFastqFiles
       addSummarizable(pipe, "qc_cmd")
       add(pipe)
@@ -239,6 +240,7 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
       R1 = fqSync.outputFastq1
       R2 = Some(fqSync.outputFastq2)
     } else {
+      qcCmdR1.nCoresRequest = Some(2)
       add(qcCmdR1)
       R1 = qcCmdR1.output
     }
