@@ -83,6 +83,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
    * Get set of sample names constituting reference samples for a given sample name
    *
    * Reference samples must match the own gender, while excluding own parents (if any) and self
+   *
    * @param sampleName: The sample name to create reference set for
    * @return
    */
@@ -115,10 +116,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
     val gccs = referenceSamples.map { x =>
       val gcc = new WisecondorGcCorrect(this)
-      x.outputWisecondorCountFile match {
-        case \/-(file) => gcc.inputBed = file
-        case _         =>
-      }
+      x.outputWisecondorCountFile foreach { file => gcc.inputBed = file }
       gcc.output = new File(outputDirectory, s"${x.sampleId}.gcc")
       gcc
     }
