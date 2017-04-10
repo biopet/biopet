@@ -44,27 +44,24 @@ object BammetricsReport extends ReportBuilder {
   def pipelineName = "bammetrics"
 
   /** Root page for single BamMetrcis report */
-  def indexPage: Future[ReportPage] = Future {
-    val bamMetricsPage = Await.result(this.bamMetricsPage(summary, sampleId, libId), Duration.Inf)
-    ReportPage(bamMetricsPage.subPages ::: List(
-      "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-      )), Map())),
-      "Files" -> filesPage(sampleId, libId)
-    ), List(
-      "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
-    ) ::: bamMetricsPage.sections,
-      Map()
-    )
-  }
+  def indexPage: Future[ReportPage] =
+    bamMetricsPage(summary, sampleId, libId).map { bamMetricsPage =>
+      ReportPage(bamMetricsPage.subPages ::: List(
+        "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+        )), Map())),
+        "Files" -> filesPage(sampleId, libId)
+      ), List(
+        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
+      ) ::: bamMetricsPage.sections,
+        Map()
+      )
+    }
 
   /** Generates a page with alignment stats */
   def bamMetricsPage(summary: SummaryDb,
                      sampleId: Option[Int],
                      libId: Option[Int],
                      metricsTag: String = "bammetrics"): Future[ReportPage] = Future {
-
-    //val pipelineId: Int = summary.getPipelineId(runId, metricsTag).map(_.get)
-
     val wgsExecuted = summary.getStatsSize(runId, metricsTag, "wgs", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
     val rnaExecuted = summary.getStatsSize(runId, metricsTag, "rna", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
 
@@ -86,7 +83,7 @@ object BammetricsReport extends ReportBuilder {
 
     ReportPage(
       if (targets.isEmpty) List()
-      else List("Targets" -> Future(ReportPage(
+      else List("Targets" -> Future.successful(ReportPage(
         List(),
         targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
         Map()))),

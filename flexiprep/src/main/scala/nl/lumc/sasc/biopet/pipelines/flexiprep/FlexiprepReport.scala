@@ -42,11 +42,10 @@ object FlexiprepReport extends ReportBuilder {
   override def pageArgs = Map("multisample" -> false)
 
   /** Index page for a flexiprep report */
-  def indexPage: Future[ReportPage] = Future {
-    val flexiprepPage = this.flexiprepPage
+  def indexPage: Future[ReportPage] = this.flexiprepPage.map { flexiprepPage =>
     ReportPage(Nil, List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
-    ) ::: Await.result(flexiprepPage, Duration.Inf).sections,
+    ) ::: flexiprepPage.sections,
       Map()
     )
   }

@@ -313,12 +313,14 @@ trait ReportBuilder extends ToolCommand {
           case (moduleId, files) =>
             val moduleName: Future[String] = moduleId match {
               case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
-              case _        => Future("Pipeline")
+              case _        => Future.successful("Pipeline")
             }
             moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
         }
         val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
-        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> Future(ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map())))
+        summary.getPipelineName(pipelineId = pipelineId)
+          .map(_.get -> Future.sequence(moduleSectionsSorted)
+            .map(sections => ReportPage(Nil, sections.toList, Map())))
     })
 
     val pipelineFiles = summary.getPipelineId(runId, pipelineName)
