@@ -34,6 +34,7 @@ object GearsSingleReport extends ReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage: Future[ReportPage] = Future {
+    sampleId.map
     val sampleName = sampleId.flatMap(x => Await.result(summary.getSampleName(x), Duration.Inf))
     val libraryName = libId.flatMap(x => Await.result(summary.getLibraryName(x), Duration.Inf))
 

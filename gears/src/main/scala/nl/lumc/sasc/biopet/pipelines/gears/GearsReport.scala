@@ -51,8 +51,8 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
-    val centrifugePage = (if (centrifugeExecuted) Some("Centriguge analysis" -> Future(ReportPage(List("Non-unique" ->
-      Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+    val centrifugePage = (if (centrifugeExecuted) Some("Centriguge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
+      Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
       "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -60,17 +60,17 @@ object GearsReport extends MultisampleReportBuilder {
       )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
     else None)
 
-    val krakenPage = (if (krakenExecuted) Some("Kraken analysis" -> Future(ReportPage(List(), List(
-      "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+    val krakenPage = (if (krakenExecuted) Some("Kraken analysis" -> Future.successful(ReportPage(List(), List(
+      "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       ))), Map())))
     else None)
 
-    val qiimeClosedPage = (if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future(ReportPage(List(), List(
-      "Krona plot" -> Future(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+    val qiimeClosedPage = (if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
+      "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       ))), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
     else None)
 
-    val qiimeOpenPage = (if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future(ReportPage(List(), List(
+    val qiimeOpenPage = (if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
     else None)
@@ -99,20 +99,20 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"), Duration.Inf)
 
-    ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List(
-      "Non-unique" -> Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+    ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+      "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
       "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_unique_report")
       )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-    else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> Future(ReportPage(List(), List(
+    else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       )), Map())))
-    else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> Future(ReportPage(List(), List(
+    else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
-    else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> Future(ReportPage(List(), List(
+    else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
     else Nil) ::: List(
@@ -136,20 +136,20 @@ object GearsReport extends MultisampleReportBuilder {
 
     ReportPage(
       (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
-      ) ::: (if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List(
-        "Non-unique" -> Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+      ) ::: (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+        "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_report")
         )), Map()))), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
         )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-      else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> Future(ReportPage(List(), List(
+      else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> Future.successful(ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map())))
-      else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> Future(ReportPage(List(), List(
+      else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
         )), Map("biomFile" -> new File(qiimeClosesOtuTable.get.path)))))
-      else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> Future(ReportPage(List(), List(
+      else Nil) ::: (if (qiimeOpenOtuTable.isDefined) List("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
         )), Map("biomFile" -> new File(qiimeOpenOtuTable.get.path)))))
       else Nil), List(

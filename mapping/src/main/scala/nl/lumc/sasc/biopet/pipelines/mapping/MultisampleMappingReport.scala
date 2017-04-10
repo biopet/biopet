@@ -66,18 +66,18 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
-        (if (krakenExecuted) List("Dustbin analysis - Kraken" -> Future(ReportPage(List(), List(
+        (if (krakenExecuted) List("Dustbin analysis - Kraken" -> Future.successful(ReportPage(List(), List(
           "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map())))
-        else Nil) ++ (if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List(
-          "Non-unique" -> Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+        else Nil) ++ (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+          "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_report")
           )), Map()))), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
           )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
         else Nil) ++
-        List("Reference" -> Future(ReportPage(List(), List(
+        List("Reference" -> Future.successful(ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
         ), Map()))
         ),
@@ -122,14 +122,14 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
-      (if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List(
-        "Non-unique" -> Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+      (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+        "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_report", "centrifugeTag" -> Some("centrifuge"))
         )), Map()))), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
         )), Map("summaryModuleTag" -> "gearscentrifuge"))))
-      else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future(ReportPage(List(), List(
+      else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future.successful(ReportPage(List(), List(
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map())))
       else Nil), List(
@@ -154,14 +154,14 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
-        (if (centrifugeExecuted) List("Centriguge analysis" -> Future(ReportPage(List(
-          "Non-unique" -> Future(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+        (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+          "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_report")
           )), Map()))), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
           )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-        else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future(ReportPage(List(), List(
+        else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future.successful(ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
           )), Map())))
         else Nil),
