@@ -23,7 +23,6 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 11/01/16.
@@ -49,7 +48,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   /** Root page for the carp report */
-  def indexPage = {
+  def indexPage: Future[ReportPage] = Future {
 
     val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport",
       library = NoLibrary, mustHaveSample = true), Duration.Inf) >= 1
@@ -67,22 +66,20 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
-        (if (krakenExecuted) List("Dustbin analysis - Kraken" -> ReportPage(List(), List(
+        (if (krakenExecuted) List("Dustbin analysis - Kraken" -> Future.successful(ReportPage(List(), List(
           "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-          )), Map()))
-        else Nil) ++ (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-          Map("summaryStatsTag" -> "centrifuge_report")
-        )), Map())), List(
+          )), Map())))
+        else Nil) ++ (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+          "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+            Map("summaryStatsTag" -> "centrifuge_report")
+          )), Map()))), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
-          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
+          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
         else Nil) ++
-        List("Reference" -> ReportPage(List(), List(
+        List("Reference" -> Future.successful(ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
-        ), Map()),
-          "Files" -> Await.result(filesPage(), Duration.Inf),
-          "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-          )), Map())
+        ), Map()))
         ),
       List(
         "Report" -> frontSection) ++
@@ -113,34 +110,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     )
   }
 
-  /** Files page, can be used general or at sample level */
-  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
-    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
-      library = libraryId.map(LibraryId))
-      .map(_.groupBy(_.pipelineId))
-    val modulePages = dbFiles.map(_.map {
-      case (pipelineId, files) =>
-        val moduleSections = files.groupBy(_.moduleId).map {
-          case (moduleId, files) =>
-            val moduleName: Future[String] = moduleId match {
-              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
-              case _        => Future("Pipeline")
-            }
-            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
-        }
-        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
-        summary.getPipelineName(pipelineId = pipelineId).map(_.get -> ReportPage(Nil, Await.result(Future.sequence(moduleSectionsSorted), Duration.Inf).toList, Map()))
-    })
-
-    val pipelineFiles = summary.getPipelineId(runId, pipelineName).flatMap(pipelinelineId => dbFiles.map(x => x(pipelinelineId.get).filter(_.moduleId.isEmpty)))
-
-    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
-      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
-        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
-  }
-
   /** Single sample page */
-  def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
+  def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
     val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport",
       library = NoLibrary, sample = sampleId), Duration.Inf) >= 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report",
@@ -151,18 +122,17 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
-      (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-        Map("summaryStatsTag" -> "centrifuge_report", "centrifugeTag" -> Some("centrifuge"))
-      )), Map())), List(
+      (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+        "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_report", "centrifugeTag" -> Some("centrifuge"))
+        )), Map()))), List(
         "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_unique_report")
-        )), Map("summaryModuleTag" -> "gearscentrifuge")))
-      else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+        )), Map("summaryModuleTag" -> "gearscentrifuge"))))
+      else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future.successful(ReportPage(List(), List(
         "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-        )), Map()))
-      else Nil) ++
-      List("Files" -> Await.result(filesPage(sampleId = sampleId), Duration.Inf)
-      ), List(
+        )), Map())))
+      else Nil), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
@@ -173,7 +143,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   }
 
   /** Library page */
-  def libraryPage(sampleId: Int, libId: Int, args: Map[String, Any]): ReportPage = {
+  def libraryPage(sampleId: Int, libId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
     val krakenExecuted = Await.result(summary.getStatsSize(runId, "gearskraken", "krakenreport",
       library = libId, sample = sampleId), Duration.Inf) >= 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId, "gearscentrifuge", "centrifuge_report",
@@ -184,16 +154,17 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
-        (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List("Non-unique" -> ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-          Map("summaryStatsTag" -> "centrifuge_report")
-        )), Map())), List(
+        (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+          "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+            Map("summaryStatsTag" -> "centrifuge_report")
+          )), Map()))), List(
           "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report")
-          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))))
-        else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+          )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
+        else Nil) ::: (if (krakenExecuted) List("Dustbin analysis" -> Future.successful(ReportPage(List(), List(
           "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-          )), Map()))
-        else Nil) ::: List("Files" -> Await.result(filesPage(sampleId = sampleId, libraryId = libId), Duration.Inf)),
+          )), Map())))
+        else Nil),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))
