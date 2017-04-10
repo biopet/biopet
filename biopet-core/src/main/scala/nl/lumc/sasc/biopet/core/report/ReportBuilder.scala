@@ -335,7 +335,7 @@ trait ReportBuilder extends ToolCommand {
 
   /** This generate general pages that all reports should have */
   def generalPages(sampleId: Option[Int], libId: Option[Int]): List[(String, Future[ReportPage])] = List(
-    "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")), Map())),
+    "Versions" -> Future.successful(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")), Map())),
     "Files" -> filesPage(sampleId, libId)
   )
 
