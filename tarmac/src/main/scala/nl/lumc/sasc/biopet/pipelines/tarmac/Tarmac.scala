@@ -53,21 +53,15 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   def addMultiSampleJobs() = {
-    val initRefMap = samples map { x => x._2 -> getReferenceSamplesForSample(x._1) }
-    initRefMap.values.filter(_.isLeft).foreach {
-      case -\/(message) => Logging.addError(message)
-      case _            => ;
-    }
+    val initRefMap = samples map { case (sampleName, sample) => sample -> getReferenceSamplesForSample(sampleName) }
+    initRefMap.values.collect { case -\/(error) => error }.foreach(Logging.addError(_))
 
-    val refMap: Map[Sample, Set[Sample]] = initRefMap.filter(_._2.isRight).map { x =>
-      val refSamples = x._2.getOrElse(Nil)
-      val actualRefSamples = refSamples.map { s =>
-        samples.getOrElse(s, Logging.addError(s"Sample $s does not exist"))
-      }.filter {
-        case p: Sample => true
-        case _         => false
-      }.map { case s: Sample => s }.toSet
-      x._1 -> actualRefSamples
+    val refMap: Map[Sample, Set[Sample]] = initRefMap.collect {
+      case (sample, \/-(sampleSet)) =>
+        val actualRefSamples = sampleSet map { sampleId =>
+          samples.getOrElse(sampleId, Logging.addError(s"Sample $sampleId does not exist"))
+        } collect { case s: Sample => s }
+        sample -> actualRefSamples
     }
 
     val wisecondorRefJobs = refMap map {
@@ -113,10 +107,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     /* XHMM requires refset including self */
     val totalSet = referenceSamples + sample
     val merger = new XhmmMergeGatkDepths(this)
-    merger.gatkDepthsFiles = totalSet.map(_.outputXhmmCountFile).filter(_.isRight).map(_.getOrElse("")).filter {
-      case f: File => true
-      case _       => false
-    }.map { case f: File => f }.toList
+    merger.gatkDepthsFiles = totalSet.map(_.outputXhmmCountFile).collect { case \/-(file) => file }.toList
     merger.output = new File(outputDirectory, "reference.matrix")
     List(merger)
   }
@@ -126,7 +117,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       val gcc = new WisecondorGcCorrect(this)
       x.outputWisecondorCountFile match {
         case \/-(file) => gcc.inputBed = file
-        case _         => ;
+        case _         =>
       }
       gcc.output = new File(outputDirectory, s"${x.sampleId}.gcc")
       gcc
