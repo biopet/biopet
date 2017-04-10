@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.vcfstats.VcfStatsForSv
@@ -30,7 +30,7 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
   @Input(required = true)
   var inputFile: File = _
 
-  @Input(required = true)
+  @Argument(required = true)
   var histogramBinBoundaries: Array[Int] = _
 
   @Output(required = true)
