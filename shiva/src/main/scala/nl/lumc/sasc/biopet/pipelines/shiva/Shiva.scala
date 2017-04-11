@@ -149,6 +149,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
       /** Adds base recalibration jobs */
       def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean, usePrintreads: Boolean): File = {
+        require(bqsrFile.isDefined, "bqsrFile should contain something at this point")
         val baseRecalibrator = BaseRecalibrator(qscript, inputBam, bqsrFile.get) // at this point bqsrFile should exist
 
         if (baseRecalibrator.knownSites.isEmpty) return inputBam
@@ -160,11 +161,10 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
           add(baseRecalibratorAfter)
           add(AnalyzeCovariates(qscript, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
         }
-
-        val printReads = PrintReads(qscript, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
-        printReads.BQSR = Some(baseRecalibrator.out)
-        printReads.isIntermediate = isIntermediate
         if (usePrintreads) {
+          val printReads = PrintReads(qscript, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
+          printReads.BQSR = Some(baseRecalibrator.out)
+          printReads.isIntermediate = isIntermediate
           add(printReads)
           printReads.out
         } else inputBam
