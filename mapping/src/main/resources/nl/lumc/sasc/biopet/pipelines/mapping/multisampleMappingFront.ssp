@@ -1,4 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -8,9 +10,10 @@
 <%@ var rootPath: String %>
 <%@ var pipeline: String %>
 <%@ var runId: Int %>
+<%@ var run: Run %>
+<%@ var allSamples: List[Sample] %>
 #{
-    val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
-    val samples = Await.result(summary.getSamples(runId = Some(runId)), Duration.Inf)
+    val samples = allSamples
     val settings = summary.getSettingKeys(runId, pipeline,
     keyValues = Map(
         "contigs" -> List("reference", "contigs"),

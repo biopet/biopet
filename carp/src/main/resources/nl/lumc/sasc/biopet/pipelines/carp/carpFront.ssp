@@ -1,17 +1,14 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
-#import(scala.concurrent.Await)
-#import(scala.concurrent.duration.Duration)
-<%@ var summary: SummaryDb %>
-<%@ var runId: Int %>
-#{
-    val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
-}#
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+<%@ var run: Run %>
+<%@ var allSamples: List[Sample] %>
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Carp</td></tr>
     <tr><th>Version</th><td>${run.version}</td></tr>
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
 </tbody>
 </table>
 <br/>

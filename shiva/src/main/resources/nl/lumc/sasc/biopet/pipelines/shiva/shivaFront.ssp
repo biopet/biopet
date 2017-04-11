@@ -1,4 +1,5 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -6,8 +7,8 @@
 #import(scala.concurrent.duration.Duration)
 <%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
+<%@ var run: Run %>
 #{
-    val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
     val samples = Await.result(summary.getSamples(Some(runId)), Duration.Inf)
     val settings = summary.getSettingKeys(runId, run.name,
     keyValues = Map(
