@@ -23,13 +23,13 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class BedtoolsIntersect(val parent: Configurable) extends Bedtools {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
-  var input: File = null
+  var input: File = _
 
   @Input(doc = "Intersect file (bed/gff/vcf)")
-  var intersectFile: File = null
+  var intersectFile: File = _
 
   @Output(doc = "output File")
-  var output: File = null
+  var output: File = _
 
   @Argument(doc = "Min overlap", required = false)
   var minOverlap: Option[Double] = config("minoverlap")
@@ -46,7 +46,8 @@ class BedtoolsIntersect(val parent: Configurable) extends Bedtools {
   }
 
   /** Returns command to execute */
-  def cmdLine = required(executable) + required("intersect") +
+  def cmdLine: String = required(executable) +
+    required("intersect") +
     required(inputTag, input) +
     required("-b", intersectFile) +
     optional("-f", minOverlap) +
