@@ -186,6 +186,33 @@ To run the pipeline:
 biopet pipeline shivavariantcalling -config MySettings.yml -run
 ~~~
 
+### Only Structural Variant calling
+It is possible to run Shiva while only performing the Structural Variant calling steps starting from BAM files. For this, there is a separate pipeline named `ShivaSvCalling`. 
+The difference from running Shiva, is that it will not convert the BAM files into fastq files first and it will omit any pre-processing or alignment steps. 
+It will call SVs based on the input alignment (BAM) files. 
+
+To view the help menu, type:
+~~~
+biopet pipeline ShivaSvCalling -h
+ 
+Arguments for ShivaSvCalling:
+ -BAM,--inputbamsarg <inputbamsarg>    Bam files (should be deduped bams)
+ -sample,--sampleid <sampleid>         Sample ID
+ -library,--libid <libid>              Library ID
+ -config,--config_file <config_file>   JSON / YAML config file(s)
+ -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or 
+                                       'namespace:namespace:key=value'
+ -DSC,--disablescatter                 Disable all scatters
+~~~ 
+ 
+To run `ShivaSvCalling`, the user needs to supply the input BAM files from the command line using the `-BAM` flag. It is not possible to provide them in a sample sheet as a config file. 
+No sample ID or library information is necessary.
+  
+To run the pipeline, you can type something like:
+~~~
+biopet pipeline ShivaSvCalling -BAM sampleA.bam -BAM sampleB.bam -config MySettings.yml -run
+~~~
+
 ### Exome variant calling
 
 If one calls variants with Shiva on exome samples and an ```amplicon_bed``` file is available, the user is able to add this file to the config file.

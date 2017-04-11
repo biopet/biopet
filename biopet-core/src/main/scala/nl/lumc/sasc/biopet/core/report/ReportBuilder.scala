@@ -19,12 +19,13 @@ import java.io._
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ LibraryId, SampleId }
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
 import scala.collection.mutable
-import scala.concurrent.{ Await, Future }
+import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.language.implicitConversions
@@ -73,6 +74,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
+  implicit lazy val ec = ReportBuilder.ec
   implicit def toOption[T](x: T): Option[T] = Option(x)
   implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
@@ -186,35 +188,57 @@ trait ReportBuilder extends ToolCommand {
     _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
 
-    logger.info("Copy Base files")
+    val baseFilesFuture = Future {
+      logger.info("Copy Base files")
 
-    // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
-    val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
+      // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
+      val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
 
-    // Copy each resource files out to the report destination
-    extFiles.par.foreach(
-      resource =>
-        IoUtils.copyStreamToFile(
-          getClass.getResourceAsStream(resource.resourcePath),
-          new File(extOutputDir, resource.targetPath),
-          createDirs = true)
-    )
+      // Copy each resource files out to the report destination
+      extFiles.foreach(
+        resource =>
+          IoUtils.copyStreamToFile(
+            getClass.getResourceAsStream(resource.resourcePath),
+            new File(extOutputDir, resource.targetPath),
+            createDirs = true)
+      )
+    }
 
-    total = ReportBuilder.countPages(indexPage)
-    logger.info(total + " pages to be generated")
+    val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId)) }
 
+    //    total = ReportBuilder.countPages(rootPage)
     done = 0
 
     logger.info("Generate pages")
-    val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
+    val jobsFutures = generatePage(summary, rootPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
-        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage, "runId" -> cmdArgs.runId))
+        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
 
-    logger.info(jobs + " Done")
+    total = jobsFutures.size
+    logger.info(total + " pages to be generated")
+
+    def wait(futures: List[Future[Any]]): Unit = {
+      try {
+        Await.ready(Future.sequence(futures), Duration.fromNanos(30000000000L))
+      } catch {
+        case e: TimeoutException =>
+      }
+      val notDone = futures.filter(!_.isCompleted)
+      done += futures.size - notDone.size
+      if (notDone.nonEmpty) {
+        logger.info(s"$done / $total pages are generated")
+        wait(notDone)
+      }
+    }
+
+    wait(jobsFutures)
+    Await.ready(baseFilesFuture, Duration.Inf)
+
+    logger.info(s"Done, $done pages generated")
   }
 
   /** This must be implemented, this will be the root page of the report */
-  def indexPage: ReportPage
+  def indexPage: Future[ReportPage]
 
   /** This must be implemented, this will become the title of the report */
   def reportName: String
@@ -223,62 +247,112 @@ trait ReportBuilder extends ToolCommand {
    * This method will render the page and the subpages recursivly
    *
    * @param summary The summary object
-   * @param page Page to render
+   * @param pageFuture Page to render
    * @param outputDir Root output dir of the report
    * @param path Path from root to current page
    * @param args Args to add to this sub page, are args from current page are passed automaticly
    * @return Number of pages including all subpages that are rendered
    */
   def generatePage(summary: SummaryDb,
-                   page: ReportPage,
+                   pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): Int = {
-
+                   args: Map[String, Any] = Map()): List[Future[_]] = {
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
-    pageOutputDir.mkdirs()
-    val rootPath = "./" + Array.fill(path.size)("../").mkString
-    val pageArgs = args ++ page.args ++
-      Map("page" -> page,
-        "path" -> path,
-        "outputDir" -> pageOutputDir,
-        "rootPath" -> rootPath,
-        "allPipelines" -> pipelines,
-        "allModules" -> modules,
-        "allSamples" -> samples,
-        "allLibraries" -> libraries
-      )
 
-    // Generating subpages
-    val jobs = page.subPages.par.flatMap {
-      case (name, subPage) => Some(generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs))
-      case _               => None
+    def pageArgs(page: ReportPage) = {
+      val rootPath = "./" + Array.fill(path.size)("../").mkString
+      args ++ page.args ++
+        Map("page" -> page,
+          "path" -> path,
+          "outputDir" -> pageOutputDir,
+          "rootPath" -> rootPath,
+          "allPipelines" -> pipelines,
+          "allModules" -> modules,
+          "allSamples" -> samples,
+          "allLibraries" -> libraries
+        )
     }
 
-    val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
-      pageArgs ++ Map("args" -> pageArgs))
+    val subPageJobs = pageFuture.map { page =>
+      // Generating subpages
+      page.subPages.flatMap {
+        case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs(page))
+      }
+    }
 
-    val file = new File(pageOutputDir, "index.html")
-    val writer = new PrintWriter(file)
-    writer.println(output)
-    writer.close()
+    val renderFuture = pageFuture.map { page =>
+      pageOutputDir.mkdirs()
 
-    done += 1
-    if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
-    jobs.sum + 1
+      val file = new File(pageOutputDir, "index.html")
+      logger.info(s"Start rendering: $file")
+
+      val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
+        pageArgs(page) ++ Map("args" -> pageArgs(page)))
+
+      val writer = new PrintWriter(file)
+      writer.println(output)
+      writer.close()
+      logger.info(s"Done rendering: $file")
+
+    }
+
+    renderFuture :: Await.result(subPageJobs, Duration.Inf)
   }
+
+  def pipelineName: String
+
+  /** Files page, can be used general or at sample level */
+  def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
+    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
+      library = libraryId.map(LibraryId))
+      .map(_.groupBy(_.pipelineId))
+    val modulePages = dbFiles.map(_.map {
+      case (pipelineId, files) =>
+        val moduleSections = files.groupBy(_.moduleId).map {
+          case (moduleId, files) =>
+            val moduleName: Future[String] = moduleId match {
+              case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
+              case _        => Future.successful("Pipeline")
+            }
+            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
+        }
+        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
+        summary.getPipelineName(pipelineId = pipelineId)
+          .map(_.get -> Future.sequence(moduleSectionsSorted)
+            .map(sections => ReportPage(Nil, sections.toList, Map())))
+    })
+
+    val pipelineFiles = summary.getPipelineId(runId, pipelineName)
+      .flatMap(pipelinelineId => dbFiles
+        .map(x => x.get(pipelinelineId.get).getOrElse(Seq())
+          .filter(_.moduleId.isEmpty)))
+
+    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
+      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
+        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
+  }
+
+  /** This generate general pages that all reports should have */
+  def generalPages(sampleId: Option[Int], libId: Option[Int]): List[(String, Future[ReportPage])] = List(
+    "Versions" -> Future.successful(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")), Map())),
+    "Files" -> filesPage(sampleId, libId)
+  )
+
 }
 
 object ReportBuilder {
+
+  implicit lazy val ec = ExecutionContext.global
 
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
   engine.allowReload = false
 
   /** This will give the total number of pages including all nested pages */
-  def countPages(page: ReportPage): Int = {
-    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
-  }
+  //  def countPages(page: ReportPage): Int = {
+  //    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
+  //  }
 
   /**
    * This method will render a template that is located in the classpath / jar
@@ -287,7 +361,7 @@ object ReportBuilder {
    * @return Rendered result of template
    */
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
-    Logging.logger.info("Rendering: " + location)
+    Logging.logger.debug("Rendering: " + location)
 
     engine.layout(location, args)
   }

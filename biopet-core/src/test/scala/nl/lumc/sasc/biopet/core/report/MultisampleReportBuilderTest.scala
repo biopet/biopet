@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io.File
 import java.nio.file.Paths
+import java.sql.Date
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -23,7 +24,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
 /**
@@ -37,18 +38,25 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
   @Test
   def testGeneratePages(): Unit = {
     val builder = new MultisampleReportBuilder {
+      def pipelineName = "test"
       def reportName: String = "test"
-      def indexPage: ReportPage = ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map())
+      def indexPage: Future[ReportPage] = Future(ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map()))
 
-      def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage =
-        ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map())
+      def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] =
+        Future(ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map()))
 
-      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = ReportPage(Nil, Nil, Map())
+      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = Future(ReportPage(Nil, Nil, Map()))
     }
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
     db.createTables()
+
+    Await.ready(db.createPipeline("test", 0), Duration.Inf)
+    Await.ready(db.createRun("test", "", "", "", new Date(System.currentTimeMillis())), Duration.Inf)
 
     val sample = Some("sampleName")
     val lib = Some("libName")

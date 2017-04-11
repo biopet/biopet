@@ -26,6 +26,7 @@ import nl.lumc.sasc.biopet.LastCommitHash
 import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
 /**

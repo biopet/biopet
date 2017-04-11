@@ -24,8 +24,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
 class BammetricsReport(val parent: Configurable) extends ReportBuilderExtension {
@@ -42,28 +41,27 @@ object BammetricsReport extends ReportBuilder {
   /** Name of report */
   val reportName = "Bam Metrics"
 
+  def pipelineName = "bammetrics"
+
   /** Root page for single BamMetrcis report */
-  def indexPage = {
-    val bamMetricsPage = this.bamMetricsPage(summary, sampleId, libId)
-    ReportPage(bamMetricsPage.subPages ::: List(
-      "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-      )), Map()),
-      "Files" -> ReportPage(List(), List(), Map())
-    ), List(
-      "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
-    ) ::: bamMetricsPage.sections,
-      Map()
-    )
-  }
+  def indexPage: Future[ReportPage] =
+    bamMetricsPage(summary, sampleId, libId).map { bamMetricsPage =>
+      ReportPage(bamMetricsPage.subPages ::: List(
+        "Versions" -> Future(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+        )), Map())),
+        "Files" -> filesPage(sampleId, libId)
+      ), List(
+        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
+      ) ::: bamMetricsPage.sections,
+        Map()
+      )
+    }
 
   /** Generates a page with alignment stats */
   def bamMetricsPage(summary: SummaryDb,
                      sampleId: Option[Int],
                      libId: Option[Int],
-                     metricsTag: String = "bammetrics") = {
-
-    //val pipelineId: Int = summary.getPipelineId(runId, metricsTag).map(_.get)
-
+                     metricsTag: String = "bammetrics"): Future[ReportPage] = Future {
     val wgsExecuted = summary.getStatsSize(runId, metricsTag, "wgs", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
     val rnaExecuted = summary.getStatsSize(runId, metricsTag, "rna", sample = sampleId.map(SampleId), library = libId.map(LibraryId)) >= 1
 
@@ -85,10 +83,10 @@ object BammetricsReport extends ReportBuilder {
 
     ReportPage(
       if (targets.isEmpty) List()
-      else List("Targets" -> ReportPage(
+      else List("Targets" -> Future.successful(ReportPage(
         List(),
         targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
-        Map())),
+        Map()))),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
         "Mapping Quality" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp", Map("showPlot" -> true)),
@@ -161,7 +159,7 @@ object BammetricsReport extends ReportBuilder {
     plot.output = pngFile
     plot.ylabel = Some("Reads")
     plot.width = Some(200 + (results.size * 10))
-    plot.title = Some("Aligned reads")
+    plot.title = Some("Aligned_reads")
     plot.runLocal()
   }
 
