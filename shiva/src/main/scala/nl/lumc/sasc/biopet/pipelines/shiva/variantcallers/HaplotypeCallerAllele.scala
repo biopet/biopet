@@ -20,7 +20,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import nl.lumc.sasc.biopet.extensions.gatk
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.extensions.gatk.BqsrGather
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Allele mode for Haplotypecaller */
@@ -33,6 +33,13 @@ class HaplotypeCallerAllele(val parent: Configurable) extends Variantcaller {
   def biopetScript() {
     val hc = gatk.HaplotypeCaller(this, inputBams.values.toList, outputFile)
     hc.alleles = Some(alleles)
+    hc.BQSR = if (inputBqsrFiles.isEmpty) None else {
+      val gather = new BqsrGather
+      gather.inputBqsrFiles = inputBqsrFiles.values.toList
+      gather.outputBqsrFile = new File(outputDir, "bqsr.merge")
+      add(gather)
+      Some(gather.outputBqsrFile)
+    }
     hc.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
     add(hc)
   }
