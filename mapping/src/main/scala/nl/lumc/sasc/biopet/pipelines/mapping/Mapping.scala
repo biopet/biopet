@@ -37,7 +37,9 @@ import org.broadinstitute.gatk.queue.QScript
 
 import scala.math._
 
-// TODO: documentation
+/**
+ * This pipeline doing a alignment to a given reference genome
+ */
 class Mapping(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
@@ -79,7 +81,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   protected var platform: String = config("platform", default = "illumina")
 
   /** Readgroup platform unit */
-  protected var platformUnit: String = config("platform_unit", default = "na")
+  protected var platformUnit: Option[String] = config("platform_unit")
 
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
@@ -97,9 +99,9 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = if (skipMarkduplicates) {
-    new File(outputDir, outputName + ".bam")
-  } else new File(outputDir, outputName + ".dedup.bam")
+  def mergedBamFile = new File(outputDir, outputName + ".bam")
+  def finalBamFile: File = if (skipMarkduplicates) mergedBamFile
+  else new File(outputDir, outputName + ".dedup.bam")
 
   override def defaults: Map[String, Any] = Map(
     "gsnap" -> Map("batch" -> 4),
@@ -258,21 +260,25 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     }
 
     var bamFile = bamFiles.head
-    if (!skipMarkduplicates) {
-      bamFile = new File(outputDir, outputName + ".dedup.bam")
-      val md = MarkDuplicates(this, bamFiles, finalBamFile)
-      md.isIntermediate = !keepFinalBamFile
-      add(md)
-      addSummarizable(md, "mark_duplicates")
-    } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, finalBamFile)
-      mergeSamFile.isIntermediate = !keepFinalBamFile
+
+    if (!chunking) require(bamFile == mergedBamFile)
+    else {
+      val mergeSamFile = MergeSamFiles(this, bamFiles, mergedBamFile)
+      mergeSamFile.isIntermediate = !keepFinalBamFile || !skipMarkduplicates
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
 
+    if (!skipMarkduplicates) {
+      bamFile = new File(outputDir, outputName + ".dedup.bam")
+      val md = MarkDuplicates(this, mergedBamFile :: Nil, finalBamFile)
+      md.isIntermediate = !keepFinalBamFile
+      add(md)
+      addSummarizable(md, "mark_duplicates")
+    }
+
     if (!skipMetrics) {
-      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"), sampleId, libId)
+      val bamMetrics = BamMetrics(this, finalBamFile, new File(outputDir, "metrics"), sampleId, libId)
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
     }
@@ -379,7 +385,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     hisat2.R2 = R2
     hisat2.rgId = Some(readgroupId)
     hisat2.rg +:= s"PL:$platform"
-    hisat2.rg +:= s"PU:$platformUnit"
+    platformUnit.foreach(x => hisat2.rg +:= s"PU:$x")
     libId match {
       case Some(id)  => hisat2.rg +:= s"LB:$id"
       case otherwise => ;
@@ -452,7 +458,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     RG += "SM:" + sampleId.get + ","
     RG += "LB:" + libId.get + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
-    RG += "PU:" + platformUnit + ","
+    platformUnit.foreach(x => RG += "PU:" + x + ",")
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + ","
     if (readgroupDate != null) RG += "DT:" + readgroupDate + ","
@@ -497,7 +503,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     bowtie2.rgId = Some(readgroupId)
     bowtie2.rg +:= ("LB:" + libId.get)
     bowtie2.rg +:= ("PL:" + platform)
-    bowtie2.rg +:= ("PU:" + platformUnit)
+    platformUnit.foreach(x => bowtie2.rg +:= ("PU:" + x))
     bowtie2.rg +:= ("SM:" + sampleId.get)
     bowtie2.R1 = R1
     bowtie2.R2 = R2
@@ -554,7 +560,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     addOrReplaceReadGroups.RGID = readgroupId
     addOrReplaceReadGroups.RGLB = libId.get
     addOrReplaceReadGroups.RGPL = platform
-    addOrReplaceReadGroups.RGPU = platformUnit
+    addOrReplaceReadGroups.RGPU = platformUnit.getOrElse(readgroupId)
     addOrReplaceReadGroups.RGSM = sampleId.get
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
@@ -568,7 +574,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
     RG += "LB:" + libId.get + "\\t"
     RG += "PL:" + platform + "\\t"
-    RG += "PU:" + platformUnit + "\\t"
+    platformUnit.foreach(x => RG += "PU:" + x + "\\t")
     RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
     if (readgroupDescription.isDefined) RG += "DS:" + readgroupDescription.get + "\\t"

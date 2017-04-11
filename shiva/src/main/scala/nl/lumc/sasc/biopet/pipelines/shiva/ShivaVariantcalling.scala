@@ -46,6 +46,8 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
 
   var inputBams: Map[String, File] = Map()
 
+  var inputBqsrFiles: Map[String, File] = Map()
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
@@ -95,6 +97,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
     cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
+      caller.inputBqsrFiles = inputBqsrFiles
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
