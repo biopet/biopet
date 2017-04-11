@@ -9,6 +9,8 @@ import org.testng.annotations.Test
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoModule, NoSample }
 

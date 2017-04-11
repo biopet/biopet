@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.{ Logging, sortAnyAny }
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by pjvanthof on 05/07/16.
@@ -91,7 +93,7 @@ class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric
     writer.close()
   }
 
-  def writeFilesAndPlot(outputDir: File, prefix: String, xlabel: String, ylabel: String, title: String): Unit = {
+  def writeFilesAndPlot(outputDir: File, prefix: String, xlabel: String, ylabel: String, title: String)(implicit ec: ExecutionContext): Unit = {
     writeHistogramToTsv(new File(outputDir, prefix + ".histogram.tsv"))
     writeAggregateToTsv(new File(outputDir, prefix + ".stats.tsv"))
     val plot = new LinePlot(null)
