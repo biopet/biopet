@@ -99,7 +99,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     beforeGraph()
     internalBeforeGraph()
 
-    this.commandDirectory = this.jobOutputFile.getParentFile
+    if (jobOutputFile != null) this.commandDirectory = this.jobOutputFile.getAbsoluteFile.getParentFile
 
     super.freezeFieldValues()
   }
