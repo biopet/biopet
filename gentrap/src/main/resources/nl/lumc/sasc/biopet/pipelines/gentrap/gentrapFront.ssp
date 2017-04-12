@@ -1,7 +1,7 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 <%@ var run: Run %>
-<%@ var allSamples: List[Sample] %>
+<%@ var allSamples: Seq[Sample] %>
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Gentrap</td></tr>

@@ -4,8 +4,8 @@
 <%@ var sampleId: Option[Int] %>
 <%@ var libId: Option[Int] %>
 <%@ var run: Run %>
-<%@ var allSamples: List[Sample] %>
-<%@ var allLibraries: List[Library] %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Flexiprep</td></tr>

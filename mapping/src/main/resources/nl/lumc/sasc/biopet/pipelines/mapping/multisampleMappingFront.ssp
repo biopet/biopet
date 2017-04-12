@@ -11,7 +11,7 @@
 <%@ var pipeline: String %>
 <%@ var runId: Int %>
 <%@ var run: Run %>
-<%@ var allSamples: List[Sample] %>
+<%@ var allSamples: Seq[Sample] %>
 #{
     val samples = allSamples
     val settings = summary.getSettingKeys(runId, pipeline,

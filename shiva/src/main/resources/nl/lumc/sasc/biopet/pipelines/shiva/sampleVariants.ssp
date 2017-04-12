@@ -19,7 +19,7 @@
 <%@ var target: Option[String] = None %>
 <%@ var caller: String = "final" %>
 <%@ var runId: Int %>
-<%@ var allSamples: List[Sample] %>
+<%@ var allSamples: Seq[Sample] %>
 #{
     val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
 

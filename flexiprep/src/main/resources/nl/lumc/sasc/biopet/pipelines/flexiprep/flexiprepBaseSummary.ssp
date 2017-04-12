@@ -19,8 +19,8 @@
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
 <%@ var multisample: Boolean = true %>
-<%@ var allSamples: List[Sample] %>
-<%@ var allLibraries: List[Library] %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
     val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
     val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)

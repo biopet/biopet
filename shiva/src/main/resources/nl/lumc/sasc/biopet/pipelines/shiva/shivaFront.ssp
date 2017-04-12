@@ -1,5 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -8,8 +9,8 @@
 <%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
 <%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
 #{
-    val samples = Await.result(summary.getSamples(Some(runId)), Duration.Inf)
     val settings = summary.getSettingKeys(runId, run.name,
     keyValues = Map(
         "contigs" -> List("reference", "contigs"),
@@ -33,7 +34,7 @@
         <td>${settings.get("variantcallers")}</td>
     </tr>
     <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
-    <tr><th>Number of samples</th><td>${samples.size}</td></tr>
+    <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
     <tr><th>Annotation</th><td>${settings.get("annotation")}</td></tr>
     <tr><th>Multisample variantcalling</th><td>${settings.get("multisample_variantcalling")}</td></tr>
     <tr><th>Sv calling</th><td>${settings.get("sv_calling")}</td></tr>
