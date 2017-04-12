@@ -21,7 +21,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba markdup  */
 class SambambaMarkdup(val parent: Configurable) extends Sambamba {
-  override def defaultThreads = 4
 
   @Input(doc = "Bam File")
   var input: File = _
@@ -32,10 +31,14 @@ class SambambaMarkdup(val parent: Configurable) extends Sambamba {
   var removeDuplicates: Boolean = config("remove_duplicates", default = false)
 
   // @doc: compression_level 6 is average, 0 = no compression, 9 = best
-  val compressionLevel: Option[Int] = config("compression_level", default = 6)
-  val hashTableSize: Option[Int] = config("hash-table-size", default = 262144)
-  val overflowListSize: Option[Int] = config("overflow-list-size", default = 200000)
-  val ioBufferSize: Option[Int] = config("io-buffer-size", default = 128)
+  val compressionLevel: Option[Int] = config("compression_level")
+  val hashTableSize: Option[Int] = config("hash-table-size")
+  val overflowListSize: Option[Int] = config("overflow-list-size")
+  val ioBufferSize: Option[Int] = config("io-buffer-size")
+  val showProgress: Boolean = config("show-progress", default = true)
+
+  override def defaultThreads = 4
+  override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
@@ -43,6 +46,7 @@ class SambambaMarkdup(val parent: Configurable) extends Sambamba {
     conditional(removeDuplicates, "--remove-duplicates") +
     optional("-t", nCoresRequest) +
     optional("-l", compressionLevel) +
+    conditional(showProgress, "--show-progress") +
     optional("--hash-table-size=", hashTableSize, spaceSeparated = false) +
     optional("--overflow-list-size=", overflowListSize, spaceSeparated = false) +
     optional("--io-buffer-size=", ioBufferSize, spaceSeparated = false) +
