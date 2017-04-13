@@ -1,14 +1,13 @@
 package nl.lumc.sasc.biopet.core
 
-
 import java.io.File
 import java.nio.file.Paths
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
-import org.broadinstitute.gatk.queue.{QScript, QSettings}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -18,8 +17,8 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
-  * Created by Sander Bollen on 11-4-17.
-  */
+ * Created by Sander Bollen on 11-4-17.
+ */
 class PedigreeQScriptTest extends TestNGSuite with Matchers {
   import PedigreeQScriptTest._
 
@@ -145,7 +144,6 @@ object PedigreeQScriptTest {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-
   val sample1 = Map("samples" ->
     Map("sample1" ->
       Map("tags" ->
@@ -179,7 +177,6 @@ object PedigreeQScriptTest {
   )
 
   val trioPed = Map("ped_file" -> resourcePath("/trio.ped"))
-
 
   def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
     new QScript with PedigreeQscript { qscript =>
@@ -215,10 +212,10 @@ object PedigreeQScriptTest {
         }
 
         /**
-          * Factory method for Library class
-          * @param id SampleId
-          * @return Sample class
-          */
+         * Factory method for Library class
+         * @param id SampleId
+         * @return Sample class
+         */
         def makeLibrary(id: String): Library = new Library(id)
 
         /** Function to add sample jobs */
@@ -236,17 +233,17 @@ object PedigreeQScriptTest {
       }
 
       /**
-        * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
-        */
+       * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+       */
       def addMultiSampleJobs(): Unit = {
         add(new Md5sum(qscript))
       }
 
       /**
-        * Factory method for Sample class
-        * @param id SampleId
-        * @return Sample class
-        */
+       * Factory method for Sample class
+       * @param id SampleId
+       * @return Sample class
+       */
       def makeSample(id: String): Sample = new Sample(id)
 
       /** Must return a map with used settings for this pipeline */

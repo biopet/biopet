@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.{WisecondorCount, WisecondorNewRef}
+import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorNewRef }
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
