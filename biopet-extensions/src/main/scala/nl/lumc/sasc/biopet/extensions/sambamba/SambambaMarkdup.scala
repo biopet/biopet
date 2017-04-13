@@ -41,7 +41,7 @@ class SambambaMarkdup(val parent: Configurable) extends Sambamba {
   override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
+  def cmdLine: String = required(executable) +
     required("markdup") +
     conditional(removeDuplicates, "--remove-duplicates") +
     optional("-t", nCoresRequest) +
@@ -55,10 +55,11 @@ class SambambaMarkdup(val parent: Configurable) extends Sambamba {
 }
 
 object SambambaMarkdup {
-  def apply(root: Configurable, input: File, output: File): SambambaMarkdup = {
+  def apply(root: Configurable, input: File, output: File, isIntermediate: Boolean = false): SambambaMarkdup = {
     val markdup = new SambambaMarkdup(root)
     markdup.input = input
     markdup.output = output
+    markdup.isIntermediate = isIntermediate
     markdup
   }
 

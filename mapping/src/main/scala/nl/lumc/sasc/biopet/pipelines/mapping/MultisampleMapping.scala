@@ -19,7 +19,7 @@ import java.io.File
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -28,8 +28,8 @@ import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-
 import MultisampleMapping.MergeStrategy
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMarkdup, SambambaMerge }
 
 import scala.collection.JavaConversions._
 
@@ -247,7 +247,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       mergeStrategy match {
         case MergeStrategy.None =>
-        case (MergeStrategy.MergeSam | MergeStrategy.MarkDuplicates) if libraries.flatMap(_._2.bamFile).size == 1 =>
+        case (MergeStrategy.MergeSam) if libraries.flatMap(_._2.bamFile).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get): _*)
         case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
@@ -259,6 +259,17 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.PreProcessMarkDuplicates =>
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = !keepMergedFiles))
+        case MergeStrategy.PreProcessSambambaMarkdup =>
+          val mergedBam = new File(sampleDir, "merged.bam")
+          if (libraries.flatMap(_._2.bamFile).size == 1) {
+            add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, mergedBam): _*)
+          } else {
+            val merge = new SambambaMerge(qscript)
+            merge.input = libraries.flatMap(_._2.preProcessBam).toList
+            merge.output = mergedBam
+            add(merge)
+          }
+          add(SambambaMarkdup(qscript, mergedBam, bamFile.get, isIntermediate = !keepMergedFiles))
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 
@@ -301,7 +312,7 @@ class MultisampleMapping(val parent: Configurable) extends QScript with Multisam
 object MultisampleMapping extends PipelineCommand {
 
   object MergeStrategy extends Enumeration {
-    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
+    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
   }
 
   /** When file is not absolute an error is raise att the end of the script of a pipeline */
