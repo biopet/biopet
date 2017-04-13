@@ -21,7 +21,7 @@ import scalaz.{ -\/, \/, \/- }
 class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with SummaryQScript with Reference {
   qscript =>
 
-  private val targets: File = config("targets")
+  lazy val targets: File = config("targets")
   def this() = this(null)
 
   /* Fixed values for xhmm count file */
@@ -232,6 +232,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     }
     /** Must return files to store into summary */
     def summaryFiles: Map[String, File] = Map()
+
+    /** Libs do not exist for this pipeline */
+    override def libIds: Set[String] = Set()
 
     /** Must returns stats to store into summary */
     def summaryStats: Any = Map()
