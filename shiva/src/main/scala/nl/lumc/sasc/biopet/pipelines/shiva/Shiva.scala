@@ -16,13 +16,13 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
 import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
-import nl.lumc.sasc.biopet.pipelines.mapping.{Mapping, MultisampleMappingTrait}
+import nl.lumc.sasc.biopet.pipelines.mapping.{ Mapping, MultisampleMappingTrait }
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
