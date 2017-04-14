@@ -42,7 +42,7 @@ class BwaMem(val parent: Configurable) extends Bwa with Reference {
   var k: Option[Int] = config("k")
   var r: Option[Float] = config("r")
   var S: Boolean = config("S", default = false)
-  var M: Boolean = config("M", default = true)
+  var M: Boolean = config("M", default = false)
   var w: Option[Int] = config("w")
   var d: Option[Int] = config("d")
   var c: Option[Int] = config("c")
