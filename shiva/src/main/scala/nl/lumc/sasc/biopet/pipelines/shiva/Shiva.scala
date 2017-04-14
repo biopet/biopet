@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.extensions.gatk._
 import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
-import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
+import nl.lumc.sasc.biopet.pipelines.mapping.{ Mapping, MultisampleMappingTrait }
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -50,8 +50,12 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     "unifiedgenotyper" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0)
   )
 
+  lazy val usePrintReads: Boolean = config("use_printreads", default = true)
+
   /** Method to make the variantcalling namespace of shiva */
-  def makeVariantcalling(multisample: Boolean, sample: Option[String] = None, library: Option[String] = None): ShivaVariantcalling with QScript = {
+  def makeVariantcalling(multisample: Boolean,
+                         sample: Option[String] = None,
+                         library: Option[String] = None): ShivaVariantcalling with QScript = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
@@ -73,13 +77,16 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     override def makeLibrary(id: String) = new this.Library(id)
 
     /** Sample specific settings */
-    override def summarySettings = super.summarySettings ++
+    override def summarySettings: Map[String, Any] = super.summarySettings ++
       Map("single_sample_variantcalling" -> variantcalling.isDefined, "use_indel_realigner" -> useIndelRealigner)
 
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
 
-      override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
+      override def summaryFiles: Map[String, File] = super.summaryFiles ++
+        variantcalling.map("final" -> _.finalFile) ++
+        bqsrFile.map("baserecal" -> _) ++
+        bqsrAfterFile.map("baserecal_after" -> _)
 
       lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
       lazy val useBaseRecalibration: Boolean = {
@@ -89,37 +96,45 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
           logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
         c && br.knownSites.nonEmpty
       }
+      lazy val useAnalyzeCovariates: Boolean = if (useBaseRecalibration) config("use_analyze_covariates", default = true) else false
 
-      override def keepFinalBamfile = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
+      lazy val bqsrFile: Option[File] = if (useBaseRecalibration) Some(createFile("baserecal")) else None
+      lazy val bqsrAfterFile: Option[File] = if (useAnalyzeCovariates) Some(createFile("baserecal.after")) else None
 
-      override def preProcessBam = if (useIndelRealigner && useBaseRecalibration)
+      override def keepFinalBamfile: Boolean = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
+
+      override def bamFile: Option[Mapping#File] = mapping.map(_.mergedBamFile)
+
+      override def preProcessBam: Option[Mapping#File] = if (useIndelRealigner && usePrintReads && useBaseRecalibration)
         bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
       else if (useIndelRealigner) bamFile.map(swapExt(libDir, _, ".bam", ".realign.bam"))
-      else if (useBaseRecalibration) bamFile.map(swapExt(libDir, _, ".bam", ".baserecal.bam"))
+      else if (usePrintReads && useBaseRecalibration) bamFile.map(swapExt(libDir, _, ".bam", ".baserecal.bam"))
       else bamFile
 
       /** Library specific settings */
-      override def summarySettings = Map(
+      override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
         "library_variantcalling" -> variantcalling.isDefined,
         "use_indel_realigner" -> useIndelRealigner,
-        "use_base_recalibration" -> useBaseRecalibration)
+        "use_base_recalibration" -> useBaseRecalibration,
+        "useAnalyze_covariates" -> useAnalyzeCovariates
+      )
 
-      lazy val variantcalling = if (config("library_variantcalling", default = false).asBoolean &&
+      lazy val variantcalling: Option[ShivaVariantcalling with QScript] = if (config("library_variantcalling", default = false).asBoolean &&
         (bamFile.isDefined || preProcessBam.isDefined)) {
         Some(makeVariantcalling(multisample = false, sample = Some(sampleId), library = Some(libId)))
       } else None
 
       /** This will add jobs for this library */
-      override def addJobs() = {
+      override def addJobs(): Unit = {
         super.addJobs()
 
         if (useIndelRealigner && useBaseRecalibration) {
           val file = addIndelRealign(bamFile.get, libDir, isIntermediate = true)
-          addBaseRecalibrator(file, libDir, libraries.size > 1)
+          addBaseRecalibrator(file, libDir, libraries.size > 1, usePrintReads)
         } else if (useIndelRealigner) {
           addIndelRealign(bamFile.get, libDir, libraries.size > 1)
         } else if (useBaseRecalibration) {
-          addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1)
+          addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1, usePrintReads)
         }
 
         variantcalling.foreach(vc => {
@@ -131,9 +146,44 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
           add(vc)
         })
       }
+
+      /** Adds base recalibration jobs */
+      def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean, usePrintreads: Boolean): File = {
+        require(bqsrFile.isDefined, "bqsrFile should contain something at this point")
+        val baseRecalibrator = BaseRecalibrator(qscript, inputBam, bqsrFile.get) // at this point bqsrFile should exist
+
+        if (baseRecalibrator.knownSites.isEmpty) return inputBam
+        add(baseRecalibrator)
+
+        if (useAnalyzeCovariates) {
+          val baseRecalibratorAfter = BaseRecalibrator(qscript, inputBam, bqsrAfterFile.get)
+          baseRecalibratorAfter.BQSR = bqsrFile
+          add(baseRecalibratorAfter)
+          add(AnalyzeCovariates(qscript, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
+        }
+        if (usePrintreads) {
+          val printReads = PrintReads(qscript, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
+          printReads.BQSR = Some(baseRecalibrator.out)
+          printReads.isIntermediate = isIntermediate
+          add(printReads)
+          printReads.out
+        } else inputBam
+      }
+
+    } // end of library
+
+    lazy val bqsrFile: Option[File] = {
+      val files = libraries.flatMap(_._2.bqsrFile).toList
+      if (files.isEmpty) None else {
+        val gather = new BqsrGather
+        gather.inputBqsrFiles = files
+        gather.outputBqsrFile = createFile("baserecal")
+        add(gather)
+        Some(gather.outputBqsrFile)
+      }
     }
 
-    lazy val variantcalling = if (config("single_sample_variantcalling", default = false).asBoolean) {
+    lazy val variantcalling: Option[ShivaVariantcalling with QScript] = if (config("single_sample_variantcalling", default = false).asBoolean) {
       Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
     } else None
 
@@ -141,18 +191,18 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
 
-    override def preProcessBam = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
+    override def preProcessBam: Option[File] = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
       bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
     } else bamFile
 
-    override def summaryFiles = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
+    override def summaryFiles: Map[String, File] = super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
 
     /** This will add sample jobs */
     override def addJobs(): Unit = {
       super.addJobs()
 
       if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
-        addIndelRealign(bamFile.get, sampleDir, false)
+        addIndelRealign(bamFile.get, sampleDir, isIntermediate = false)
       }
 
       preProcessBam.foreach { bam =>
@@ -164,27 +214,27 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
         })
       }
     }
-  }
+  } // End of sample
 
-  lazy val multisampleVariantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
+  lazy val multisampleVariantCalling: Option[ShivaVariantcalling with QScript] = if (config("multisample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
   } else None
 
-  lazy val svCalling = if (config("sv_calling", default = false).asBoolean) {
+  lazy val svCalling: Option[ShivaSvCalling] = if (config("sv_calling", default = false).asBoolean) {
     Some(new ShivaSvCalling(this))
   } else None
 
-  lazy val cnvCalling = if (config("cnv_calling", default = false).asBoolean) {
+  lazy val cnvCalling: Option[Kopisu] = if (config("cnv_calling", default = false).asBoolean) {
     Some(new Kopisu(this))
   } else None
 
-  lazy val annotation = if (multisampleVariantCalling.isDefined &&
+  lazy val annotation: Option[Toucan] = if (multisampleVariantCalling.isDefined &&
     config("annotation", default = false).asBoolean) {
     Some(new Toucan(this))
   } else None
 
   /** This will add the mutisample variantcalling */
-  override def addMultiSampleJobs() = {
+  override def addMultiSampleJobs(): Unit = {
     super.addMultiSampleJobs()
 
     addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
@@ -192,7 +242,17 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
+      if (!usePrintReads)
+        vc.inputBqsrFiles = samples.flatMap { case (sampleId, sample) => sample.bqsrFile.map(sampleId -> _) }
       add(vc)
+      if (!usePrintReads) {
+        import variantcallers._
+        if (vc.callers.exists {
+          case _: HaplotypeCaller | _: HaplotypeCallerAllele | _: HaplotypeCallerGvcf => false
+          case _: UnifiedGenotyper | _: UnifiedGenotyperAllele => false
+          case _ => true
+        }) logger.warn("Not all variantcallers chosen can read BQSR files, All non-GATK")
+      }
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
@@ -215,13 +275,14 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
   }
 
   /** Settings of pipeline for summary */
-  override def summarySettings = super.summarySettings ++ Map(
+  override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
     "annotation" -> annotation.isDefined,
     "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
     "sv_calling" -> svCalling.isDefined,
     "cnv_calling" -> cnvCalling.isDefined,
     "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed")),
+    "use_print_reads" -> usePrintReads
   )
 
   /** Adds indel realignment jobs */
@@ -237,28 +298,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     indelRealigner.out
   }
 
-  /** Adds base recalibration jobs */
-  def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean): File = {
-    val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
-
-    if (baseRecalibrator.knownSites.isEmpty) return inputBam
-    add(baseRecalibrator)
-
-    if (config("use_analyze_covariates", default = true).asBoolean) {
-      val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
-      baseRecalibratorAfter.BQSR = Some(baseRecalibrator.out)
-      add(baseRecalibratorAfter)
-
-      add(AnalyzeCovariates(this, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
-    }
-
-    val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
-    printReads.BQSR = Some(baseRecalibrator.out)
-    printReads.isIntermediate = isIntermediate
-    add(printReads)
-
-    printReads.out
-  }
 }
 
 /** This object give a default main method to the pipelines */

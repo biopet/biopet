@@ -14,6 +14,8 @@
  */
 package nl.lumc.sasc.biopet.core.report
 
+import scala.concurrent.Future
+
 /**
  * Created by pjvan_thof on 3/27/15.
  *
@@ -21,6 +23,6 @@ package nl.lumc.sasc.biopet.core.report
  * @param sections Sections for this page
  * @param args Arguments for this page, this arguments get passed to all section and subpages
  */
-case class ReportPage(subPages: List[(String, ReportPage)],
+case class ReportPage(subPages: List[(String, Future[ReportPage])],
                       sections: List[(String, ReportSection)],
                       args: Map[String, Any])

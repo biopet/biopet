@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoModule, NoSample, SampleId }
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
 /**
@@ -66,15 +66,15 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
   }
 
   /** Root page for the shiva report */
-  override def indexPage = {
+  override def indexPage: Future[ReportPage] = Future {
     val regions = regionsPage
-    val oldPage = super.indexPage
+    val oldPage = Await.result(super.indexPage, Duration.Inf)
 
     oldPage.copy(subPages = oldPage.subPages ++ regionsPage)
   }
 
   /** Generate a page with all target coverage stats */
-  def regionsPage: Option[(String, ReportPage)] = {
+  def regionsPage: Option[(String, Future[ReportPage])] = {
     val shivaSettings = Await.result(summary.getSetting(runId, "shiva"), Duration.Inf).get
     val roi = shivaSettings.get("regions_of_interest")
     val amplicon = shivaSettings.get("amplicon_bed")
@@ -100,25 +100,25 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case _                =>
     }
 
-    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
-      regionPages.map(p => p._1 -> ReportPage(Nil,
+    if (regionPages.nonEmpty) Some("Regions" -> Future(ReportPage(
+      regionPages.map(p => p._1 -> Future(ReportPage(Nil,
         List(
           "Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", Map("showPlot" -> true)),
           "Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")
         ),
         Map("target" -> Some(p._1.stripSuffix(" (Amplicon)")))
-      )).toList.sortBy(_._1),
+      ))).toList.sortBy(_._1),
       List(),
-      Map())
+      Map()))
     )
     else None
   }
 
   /** Single sample page */
-  override def samplePage(sampleId: Int, args: Map[String, Any]): ReportPage = {
+  override def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
     val variantcallingSection = if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
     val svSection = if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")) else Nil
-    val oldPage = super.samplePage(sampleId, args)
+    val oldPage: ReportPage = super.samplePage(sampleId, args)
     oldPage.copy(sections = variantcallingSection ++ svSection ++ oldPage.sections)
   }
 
