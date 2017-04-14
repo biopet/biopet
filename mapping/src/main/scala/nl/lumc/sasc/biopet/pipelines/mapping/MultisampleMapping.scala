@@ -314,8 +314,7 @@ class MultisampleMapping(val parent: Configurable) extends QScript with Multisam
 object MultisampleMapping extends PipelineCommand {
 
   object MergeStrategy extends Enumeration {
-    val None, MergeSam, MarkDuplicates, PreProcessMergeSam,
-      PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
+    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
   }
 
   /** When file is not absolute an error is raise att the end of the script of a pipeline */
