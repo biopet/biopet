@@ -224,10 +224,11 @@ trait ReportBuilder extends ToolCommand {
 
     def wait(futures: List[Future[Any]]): Unit = {
       try {
-        Await.ready(Future.sequence(futures), Duration.fromNanos(30000000000L))
+        Await.result(Future.sequence(futures), Duration.fromNanos(30000000000L))
       } catch {
         case e: TimeoutException =>
       }
+      val dones = futures.filter(_.isCompleted)
       val notDone = futures.filter(!_.isCompleted)
       done += futures.size - notDone.size
       if (notDone.nonEmpty) {
@@ -236,8 +237,11 @@ trait ReportBuilder extends ToolCommand {
       }
     }
 
+    //jobsFutures.foreach(f => f.onFailure{ case e => throw new RuntimeException(e) })
+
     wait(jobsFutures)
-    Await.ready(baseFilesFuture, Duration.Inf)
+    Await.result(Future.sequence(jobsFutures), Duration.Inf)
+    Await.result(baseFilesFuture, Duration.Inf)
 
     logger.info(s"Done, $done pages generated")
   }
@@ -262,7 +266,7 @@ trait ReportBuilder extends ToolCommand {
                    pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): List[Future[_]] = {
+                   args: Map[String, Any] = Map()): List[Future[ReportPage]] = {
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
 
     def pageArgs(page: ReportPage) = {
@@ -301,6 +305,7 @@ trait ReportBuilder extends ToolCommand {
       writer.close()
       logger.info(s"Done rendering: $file")
 
+      page
     }
 
     renderFuture :: Await.result(subPageJobs, Duration.Inf)
