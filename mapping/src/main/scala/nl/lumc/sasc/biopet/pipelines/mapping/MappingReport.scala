@@ -42,9 +42,6 @@ object MappingReport extends ReportBuilder {
   override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
-  def krakenExecuted: Boolean = Await.result(summary.getStatsSize(runId, "gears", "krakenreport",
-    sample = sampleId.map(SampleId), library = libId.map(LibraryId)), Duration.Inf) >= 1
-
   /** Root page for single BamMetrcis report */
   def indexPage: Future[ReportPage] = Future {
     val mappingSettings = summary.getSettingKeys(runId, "mapping", NoModule,
@@ -55,11 +52,7 @@ object MappingReport extends ReportBuilder {
       Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
     } else None
     ReportPage((if (skipFlexiprep) Nil else List("QC" -> FlexiprepReport.flexiprepPage)) :::
-      bamMetricsPage.map(_.subPages).getOrElse(Nil) :::
-      (if (krakenExecuted) List("Gears - Metagenomics" -> Future.successful(ReportPage(List(), List(
-        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
-        )), Map())))
-      else Nil), List(
+      bamMetricsPage.map(_.subPages).getOrElse(Nil), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/mappingFront.ssp")
     ) ::: bamMetricsPage.map(_.sections).getOrElse(Nil),
       Map()

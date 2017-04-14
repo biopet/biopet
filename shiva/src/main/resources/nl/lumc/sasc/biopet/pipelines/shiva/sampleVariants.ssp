@@ -1,4 +1,5 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -18,10 +19,14 @@
 <%@ var target: Option[String] = None %>
 <%@ var caller: String = "final" %>
 <%@ var runId: Int %>
-
+<%@ var allSamples: Seq[Sample] %>
 #{
     val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
-    val samples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+
+    val samples = sampleId match {
+        case Some(id) => allSamples.filter(_.id == id)
+        case _ => allSamples
+    }
     val vcfstatsKey = target match {
         case Some(t) => s"multisample-vcfstats-$caller-$t"
         case _ => s"multisample-vcfstats-$caller"
