@@ -13,7 +13,6 @@
 <%@ var centrifugeTag: Option[String] = None %>
 <%@ var summaryStatsTag: String = "krakenreport" %>
 <%@ var summaryModuleTag: String = "gearskraken" %>
-
 <%
     val summaries = if (sampleId.isEmpty) {
         summary.getSampleValues(summaryModuleTag, "stats", summaryStatsTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])

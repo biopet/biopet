@@ -5,7 +5,6 @@
 <%@ var biomFile: File %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
-
 <%
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
@@ -20,5 +19,4 @@
     writer.println(output)
     writer.close()
 %>
-
 <iframe src="kraken_krona.html" style="width:100%;height:80vh;border:none;"></iframe>
