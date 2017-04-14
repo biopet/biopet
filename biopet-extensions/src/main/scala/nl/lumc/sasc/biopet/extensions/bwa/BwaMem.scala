@@ -33,7 +33,7 @@ class BwaMem(val parent: Configurable) extends Bwa with Reference {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = null
+  var reference: File = _
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -75,7 +75,7 @@ class BwaMem(val parent: Configurable) extends Bwa with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       required("mem") +
       optional("-k", k) +
