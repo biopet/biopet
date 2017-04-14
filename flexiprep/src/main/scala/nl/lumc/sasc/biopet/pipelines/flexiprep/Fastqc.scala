@@ -206,13 +206,17 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       val foundAdapters = modules.get("Adapter Content").map { x =>
         val header = x.lines.head.split("\t").tail.zipWithIndex
         val lines = x.lines.tail.map(_.split("\t").tail)
-        val found = header.filter(h => lines.exists(x => x(h._2).toFloat > 0)).map(_._1)
+        val found = header
+          .filter(h => lines.exists(x => x(h._2).toFloat > adapterCutoff))
+          .map(_._1)
         adapterSet.filter(x => found.contains(x.name))
       }
 
       fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC ++ foundAdapters.getOrElse(Seq())
     } else Set()
   }
+
+  val adapterCutoff: Float = config("adapter_cutoff", default = 0.001)
 
   @Output
   private var outputFiles: List[File] = Nil

@@ -38,6 +38,8 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
   @Argument(doc = "Samplename")
   var sampleName: String = _
 
+  override def defaultCoreMemory = 4.0
+
   override def cmdLine = super.cmdLine +
     required("-i", input) +
     required("-o", output) +
@@ -112,6 +114,7 @@ object CleverFixVCF extends ToolCommand {
 ##INFO=<ID=DPADJ,Number=.,Type=Integer,Description="Read Depth of adjacency">
 ##INFO=<ID=CN,Number=1,Type=Integer,Description="Copy number of segment containing breakend">
 ##INFO=<ID=CNADJ,Number=.,Type=Integer,Description="Copy number of adjacency">
+##INFO=<ID=ESUPPORT,Number=1,Type=Float,Description="Support of event, see into clever python script for more: scripts/postprocess-predictions">
 ##INFO=<ID=CICN,Number=2,Type=Integer,Description="Confidence interval around copy number for the segment">
 ##INFO=<ID=CICNADJ,Number=.,Type=Integer,Description="Confidence interval around copy number for the adjacency">
 ##FORMAT=<ID=CN,Number=1,Type=Integer,Description="Copy number genotype for imprecise events">

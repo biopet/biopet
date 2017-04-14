@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample }
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample, Run }
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ LibraryId, SampleId }
 import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
@@ -40,7 +40,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
   /** Report builder object */
   def builder: ReportBuilder
 
-  def toolObject = builder
+  def toolObject: ReportBuilder = builder
 
   @Input(required = true)
   var summaryDbFile: File = _
@@ -114,20 +114,24 @@ trait ReportBuilder extends ToolCommand {
   private var setSummary: SummaryDb = _
 
   /** Retrival of summary, read only */
-  final def summary = setSummary
+  final def summary: SummaryDb = setSummary
 
   private var setRunId: Int = 0
 
-  final def runId = setRunId
+  final def runId: Int = setRunId
+
+  private var _setRun: Run = _
+
+  final def run: Run = _setRun
 
   private var _setPipelines = Seq[Pipeline]()
-  final def pipelines = _setPipelines
+  final def pipelines: Seq[Pipeline] = _setPipelines
   private var _setModules = Seq[Module]()
-  final def modules = _setModules
+  final def modules: Seq[Module] = _setModules
   private var _setSamples = Seq[Sample]()
-  final def samples = _setSamples
+  final def samples: Seq[Sample] = _setSamples
   private var _setLibraries = Seq[Library]()
-  final def libraries = _setLibraries
+  final def libraries: Seq[Library] = _setLibraries
 
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
@@ -136,13 +140,13 @@ trait ReportBuilder extends ToolCommand {
   private var total = 0
 
   private var _sampleId: Option[Int] = None
-  protected[report] def sampleId = _sampleId
+  protected[report] def sampleId: Option[Int] = _sampleId
   private var _libId: Option[Int] = None
-  protected[report] def libId = _libId
+  protected[report] def libId: Option[Int] = _libId
 
   case class ExtFile(resourcePath: String, targetPath: String)
 
-  def extFiles = List(
+  def extFiles: List[ExtFile] = List(
     "css/bootstrap_dashboard.css",
     "css/bootstrap.min.css",
     "css/bootstrap-theme.min.css",
@@ -183,6 +187,7 @@ trait ReportBuilder extends ToolCommand {
       case _ =>
     }
 
+    _setRun = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
     _setPipelines = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf)
     _setModules = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf)
     _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
@@ -219,10 +224,11 @@ trait ReportBuilder extends ToolCommand {
 
     def wait(futures: List[Future[Any]]): Unit = {
       try {
-        Await.ready(Future.sequence(futures), Duration.fromNanos(30000000000L))
+        Await.result(Future.sequence(futures), Duration.fromNanos(30000000000L))
       } catch {
         case e: TimeoutException =>
       }
+      val dones = futures.filter(_.isCompleted)
       val notDone = futures.filter(!_.isCompleted)
       done += futures.size - notDone.size
       if (notDone.nonEmpty) {
@@ -231,8 +237,11 @@ trait ReportBuilder extends ToolCommand {
       }
     }
 
+    //jobsFutures.foreach(f => f.onFailure{ case e => throw new RuntimeException(e) })
+
     wait(jobsFutures)
-    Await.ready(baseFilesFuture, Duration.Inf)
+    Await.result(Future.sequence(jobsFutures), Duration.Inf)
+    Await.result(baseFilesFuture, Duration.Inf)
 
     logger.info(s"Done, $done pages generated")
   }
@@ -257,13 +266,14 @@ trait ReportBuilder extends ToolCommand {
                    pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): List[Future[_]] = {
+                   args: Map[String, Any] = Map()): List[Future[ReportPage]] = {
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
 
     def pageArgs(page: ReportPage) = {
       val rootPath = "./" + Array.fill(path.size)("../").mkString
       args ++ page.args ++
         Map("page" -> page,
+          "run" -> run,
           "path" -> path,
           "outputDir" -> pageOutputDir,
           "rootPath" -> rootPath,
@@ -295,6 +305,7 @@ trait ReportBuilder extends ToolCommand {
       writer.close()
       logger.info(s"Done rendering: $file")
 
+      page
     }
 
     renderFuture :: Await.result(subPageJobs, Duration.Inf)

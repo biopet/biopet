@@ -1,16 +1,19 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-#import(scala.concurrent.Await)
-#import(scala.concurrent.duration.Duration)
 <%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
 <%@ var runId: Int %>
 <%@ var sampleId: Option[Int] %>
 <%@ var libId: Option[Int] %>
+<%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
-    val run = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
     val settings = summary.getSettingKeys(runId, run.name,
     keyValues = Map(
     "contigs" -> List("reference", "contigs"),
@@ -25,8 +28,8 @@
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
     <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
-    <tr><th>Sample</th><td>${Await.result(summary.getSampleName(sampleId.get), Duration.Inf)}</td></tr>
-    <tr><th>Library</th><td>${Await.result(summary.getLibraryName(libId.get), Duration.Inf)}</td></tr>
+    <tr><th>Sample</th><td>${allSamples.filter(_.id == sampleId.get).headOption.map(_.name)}</td></tr>
+    <tr><th>Library</th><td>${allLibraries.filter(_.id == libId.get).headOption.map(_.name)}</td></tr>
 </tbody>
 </table>
 <br/>
