@@ -92,7 +92,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       pipeline.script()
 
       val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq) 1 else 0) + (if (sample4 && bamToFastq) 1 else 0)
-      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
+      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0) + (if (sample4) 1 else 0)
 
       val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
