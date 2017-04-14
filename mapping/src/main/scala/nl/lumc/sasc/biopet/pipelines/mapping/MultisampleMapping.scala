@@ -267,9 +267,11 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             val merge = new SambambaMerge(qscript)
             merge.input = libraries.flatMap(_._2.preProcessBam).toList
             merge.output = mergedBam
+            merge.isIntermediate = true
             add(merge)
           }
           add(SambambaMarkdup(qscript, mergedBam, bamFile.get, isIntermediate = !keepMergedFiles))
+          Ln(qscript, bamFile.get + ".bai", bamFile.get.getAbsolutePath.stripSuffix(".bam") + ".bai")
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 

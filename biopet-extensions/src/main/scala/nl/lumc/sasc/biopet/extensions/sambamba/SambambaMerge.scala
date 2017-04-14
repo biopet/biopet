@@ -37,6 +37,13 @@ class SambambaMerge(val parent: Configurable) extends Sambamba {
   override def defaultThreads = 4
   override def defaultCoreMemory = 4.0
 
+  @Output
+  private var indexOutput: File = _
+
+  override def beforeGraph(): Unit = {
+    indexOutput = new File(output + ".bai")
+  }
+
   /** Returns command to execute */
   def cmdLine: String = required(executable) +
     required("merge") +
