@@ -271,7 +271,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             add(merge)
           }
           add(SambambaMarkdup(qscript, mergedBam, bamFile.get, isIntermediate = !keepMergedFiles))
-          Ln(qscript, bamFile.get + ".bai", bamFile.get.getAbsolutePath.stripSuffix(".bam") + ".bai")
+          add(Ln(qscript, bamFile.get + ".bai", bamFile.get.getAbsolutePath.stripSuffix(".bam") + ".bai"))
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 
