@@ -125,7 +125,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       } else None
 
       def bamFile: Option[File] = mapping match {
-        case Some(m)                 => Some(m.finalBamFile)
+        case Some(m)                 => Some(m.mergedBamFile)
         case _ if inputBam.isDefined => Some(new File(libDir, s"$sampleId-$libId.bam"))
         case _                       => None
       }
@@ -249,7 +249,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         case MergeStrategy.None =>
         case (MergeStrategy.MergeSam) if libraries.flatMap(_._2.bamFile).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get): _*)
-        case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
+        case (MergeStrategy.PreProcessMergeSam) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
         case MergeStrategy.MergeSam =>
           add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
@@ -312,7 +312,8 @@ class MultisampleMapping(val parent: Configurable) extends QScript with Multisam
 object MultisampleMapping extends PipelineCommand {
 
   object MergeStrategy extends Enumeration {
-    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
+    val None, MergeSam, MarkDuplicates, PreProcessMergeSam,
+      PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
   }
 
   /** When file is not absolute an error is raise att the end of the script of a pipeline */

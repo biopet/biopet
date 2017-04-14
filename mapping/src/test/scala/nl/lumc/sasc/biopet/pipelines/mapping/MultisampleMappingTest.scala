@@ -14,19 +14,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
+import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
  * Created by pjvanthof on 15/05/16.
@@ -96,11 +97,17 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
+      if (merge == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates) {
+        ""
+      }
+
       import MultisampleMapping.MergeStrategy
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
-        (if (sample2 && (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)) 1 else 0))
+        (if (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates) numberSamples else 0))
       pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (
         (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[SambambaMarkdup]) shouldBe
+        (if (merge == MergeStrategy.PreProcessSambambaMarkdup) numberSamples else 0)
       pipeline.samples.foreach {
         case (sampleName, sample) =>
           if (merge == MergeStrategy.None) sample.bamFile shouldBe None
@@ -211,6 +218,7 @@ object MultisampleMappingTestTrait {
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
+    "sambamba" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
@@ -232,7 +240,7 @@ object MultisampleMappingTestTrait {
     )))
 
   val sample2 = Map(
-    "samples" -> Map("sample3" -> Map("libraries" -> Map(
+    "samples" -> Map("sample2" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> inputTouch("2_1_R1.fq"),
         "R2" -> inputTouch("2_1_R2.fq")
