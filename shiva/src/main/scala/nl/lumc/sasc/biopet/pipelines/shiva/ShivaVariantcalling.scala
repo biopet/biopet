@@ -20,10 +20,10 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
+import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{ VarscanCnsSingleSample, _ }
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -56,12 +56,13 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
     if (genders == null) genders = {
       val samples: Map[String, Any] = config("genders")
-      samples.map { case (sampleName, gender) =>
-        sampleName -> (gender.toString.toLowerCase match {
-          case "male"   => Gender.Male
-          case "female" => Gender.Female
-          case _ => Gender.Unknown
-        })
+      samples.map {
+        case (sampleName, gender) =>
+          sampleName -> (gender.toString.toLowerCase match {
+            case "male"   => Gender.Male
+            case "female" => Gender.Female
+            case _        => Gender.Unknown
+          })
       }
     }
   }
