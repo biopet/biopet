@@ -1,7 +1,5 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
 #import(org.apache.commons.io.FileUtils)
 #import(java.io.File)
-<%@ var summary: Summary %>
 <%@ var outputDir: File %>
 <%@ var pipelineName: String %>
 <%@ var plotPath: Option[Any] %>

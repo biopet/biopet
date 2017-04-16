@@ -38,6 +38,8 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
   @Argument(doc = "Samplename")
   var sampleName: String = _
 
+  override def defaultCoreMemory = 4.0
+
   override def cmdLine = super.cmdLine +
     required("-i", input) +
     required("-o", output) +
