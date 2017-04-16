@@ -23,6 +23,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 /** Gvcf mode for haplotypecaller */
 class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
@@ -41,22 +42,47 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   val haploidRegionsMale: Option[File] = config("haploid_regions")
   val haploidRegionsFemale: Option[File] = config("haploid_regions")
 
+  lazy val refernceSize = referenceDict.getReferenceLength
+
+  lazy val fractionMale: Double = calculateFraction(haploidRegions, haploidRegionsMale)
+  lazy val fractionFemale: Double = calculateFraction(haploidRegions, haploidRegionsFemale)
+  lazy val fractionUnknown: Double = calculateFraction(haploidRegions, None)
+
+  def calculateFraction(file1: Option[File], file2: Option[File]): Double = {
+    (file1.map(BedRecordList.fromFile(_)), file2.map(BedRecordList.fromFile(_))) match {
+      case (Some(l), None) => l.length.toDouble / refernceSize
+      case (None, Some(l)) => l.length.toDouble / refernceSize
+      case (Some(l1), Some(l2)) =>
+        BedRecordList.fromList(l1.allRecords ++ l2.allRecords).combineOverlap.length.toDouble / refernceSize
+      case (None, None) => 0.0
+    }
+  }
+
   override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
 
   def biopetScript() {
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
       if (genderAwareCalling) {
         val finalFile = new File(outputDir, sample + ".gvcf.vcf.gz")
-        val haploidBedFiles: List[File] = genders.getOrElse(sample, Gender.Unknown) match {
+        val gender = genders.getOrElse(sample, Gender.Unknown)
+        val haploidBedFiles: List[File] = gender match {
           case Gender.Female => haploidRegions.toList ::: haploidRegionsFemale.toList ::: Nil
           case Gender.Male   => haploidRegions.toList ::: haploidRegionsMale.toList ::: Nil
           case _             => haploidRegions.toList
+        }
+
+        val fraction: Double = gender match {
+          case Gender.Female => fractionFemale
+          case Gender.Male   => fractionMale
+          case _             => fractionUnknown
         }
 
         val haploidGvcf = if (haploidBedFiles.nonEmpty) {
           val hc = gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".haploid.gvcf.vcf.gz"))
           hc.BQSR = inputBqsrFiles.get(sample)
           hc.intervals = haploidBedFiles
+          hc.scatterCount = (hc.scatterCount * fraction).toInt
+          hc.sample_ploidy = Some(1)
           add(hc)
           Some(hc.out)
         } else None
@@ -64,6 +90,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
         val hcDiploid = gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".diploid.gvcf.vcf.gz"))
         hcDiploid.BQSR = inputBqsrFiles.get(sample)
         hcDiploid.excludeIntervals = haploidBedFiles
+        hcDiploid.scatterCount = (hcDiploid.scatterCount * (1 - fraction)).toInt
         add(hcDiploid)
 
         haploidGvcf match {

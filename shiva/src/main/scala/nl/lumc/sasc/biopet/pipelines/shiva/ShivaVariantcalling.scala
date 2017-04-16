@@ -55,7 +55,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
     if (genders == null) genders = {
-      val samples: Map[String, Any] = config("genders")
+      val samples: Map[String, Any] = config("genders", default = Map())
       samples.map {
         case (sampleName, gender) =>
           sampleName -> (gender.toString.toLowerCase match {
