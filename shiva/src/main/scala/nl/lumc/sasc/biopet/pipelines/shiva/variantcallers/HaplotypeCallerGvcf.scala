@@ -60,6 +60,11 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
   override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
 
+  override def defaults = Map("haplotypecaller" -> Map(
+    "variant_index_type" -> "LINEAR",
+    "variant_index_parameter" -> 128000)
+  )
+
   def biopetScript() {
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
       if (genderAwareCalling) {
