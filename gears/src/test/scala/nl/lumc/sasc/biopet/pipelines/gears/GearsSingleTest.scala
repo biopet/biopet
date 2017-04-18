@@ -108,7 +108,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe "test"
       } else {
         // in the following cases the filename should have been determined by the filename
-        gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
+        gears.outputName shouldBe "sampleName-libName"
       }
 
       val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
