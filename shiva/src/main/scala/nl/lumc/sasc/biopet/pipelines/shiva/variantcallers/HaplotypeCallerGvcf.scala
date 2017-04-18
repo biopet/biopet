@@ -22,6 +22,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
@@ -75,7 +76,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   override def init(): Unit = {
     super.init()
     if (genderAwareCalling && haploidRegions.isEmpty && haploidRegionsMale.isEmpty && haploidRegionsFemale.isEmpty)
-      logger.warn("Gender aware variantcalling is enabled but no haploid bed files are given")
+      Logging.addError("Gender aware variantcalling is enabled but no haploid bed files are given")
   }
 
   def biopetScript() {
