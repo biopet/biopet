@@ -39,8 +39,8 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
   val genderAwareCalling: Boolean = config("gender_aware_calling", default = false)
   val haploidRegions: Option[File] = config("hap̦loid_regions")
-  val haploidRegionsMale: Option[File] = config("haploid_regions")
-  val haploidRegionsFemale: Option[File] = config("haploid_regions")
+  val haploidRegionsMale: Option[File] = config("haploid_regions_male")
+  val haploidRegionsFemale: Option[File] = config("haploid_regions_female")
 
   lazy val refernceSize = referenceDict.getReferenceLength
 
