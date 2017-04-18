@@ -56,12 +56,7 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
     if (outputName == null) {
-      if (fastqR1.nonEmpty) outputName = fastqR1.headOption.map(_.getName
-        .stripSuffix(".gz")
-        .stripSuffix(".fastq")
-        .stripSuffix(".fq"))
-        .getOrElse("noName")
-      else outputName = bamFile.map(_.getName.stripSuffix(".bam")).getOrElse("noName")
+      outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
 
     if (fastqR1.nonEmpty) {
