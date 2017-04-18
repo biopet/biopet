@@ -260,15 +260,16 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         case MergeStrategy.PreProcessMarkDuplicates =>
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.PreProcessSambambaMarkdup =>
-          val mergedBam = new File(sampleDir, "merged.bam")
-          if (libraries.flatMap(_._2.bamFile).size == 1) {
-            add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, mergedBam): _*)
+          val mergedBam = if (libraries.flatMap(_._2.bamFile).size == 1) {
+            add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, new File(sampleDir, "merged.bam")): _*)
+            libraries.flatMap(_._2.preProcessBam).head
           } else {
             val merge = new SambambaMerge(qscript)
             merge.input = libraries.flatMap(_._2.preProcessBam).toList
-            merge.output = mergedBam
+            merge.output = new File(sampleDir, "merged.bam")
             merge.isIntermediate = true
             add(merge)
+            merge.output
           }
           add(SambambaMarkdup(qscript, mergedBam, bamFile.get, isIntermediate = !keepMergedFiles))
           add(Ln(qscript, bamFile.get + ".bai", bamFile.get.getAbsolutePath.stripSuffix(".bam") + ".bai"))
