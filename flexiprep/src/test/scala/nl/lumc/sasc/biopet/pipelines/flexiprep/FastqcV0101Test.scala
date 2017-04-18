@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
+import java.nio.charset.CoderMalfunctionError
 import java.nio.file.Paths
 
 import org.scalatest.Matchers
@@ -37,6 +38,19 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.outputDir shouldBe new File(resourceDir, "v0101.fq_fastqc")
+  }
+
+  @Test
+  def testGcDistro: Unit = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+    val x = fqc.gcDistribution.get
+    x(0) shouldBe 0.0
+    x(35) shouldBe 6.0
+    x(51) shouldBe 29.5
+    x(74) shouldBe 5.5
+    x(100) shouldBe 0.0
+
   }
 
   @Test def testQcModules() = {
@@ -103,6 +117,20 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val perBaseSequenceContent: Map[String, Map[String, Double]] = fqc.perBaseSequenceContent
     perBaseSequenceContent.size shouldBe 55
     perBaseSequenceContent.keys should contain("1")
+  }
+
+  @Test def testSummaryStats() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+    val summary = fqc.summaryStats
+    val testKeys = List(
+      "per_base_sequence_quality",
+      "per_base_sequence_content",
+      "adapters",
+      "gc_distribution"
+    )
+
+    summary.keys.toList.sorted shouldBe testKeys.sorted
   }
 
 }
