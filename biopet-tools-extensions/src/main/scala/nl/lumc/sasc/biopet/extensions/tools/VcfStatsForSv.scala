@@ -36,6 +36,8 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
   @Output(required = true)
   var outputFile: File = _
 
+  override def defaultCoreMemory = 1.0
+
   override def cmdLine = super.cmdLine +
     required("-i", inputFile) +
     required("-o", outputFile) +
