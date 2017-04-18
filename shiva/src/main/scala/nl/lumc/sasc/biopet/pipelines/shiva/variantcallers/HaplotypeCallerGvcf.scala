@@ -42,18 +42,25 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   val haploidRegionsMale: Option[File] = config("haploid_regions_male")
   val haploidRegionsFemale: Option[File] = config("haploid_regions_female")
 
-  lazy val refernceSize = referenceDict.getReferenceLength
+  lazy val referenceSize = referenceDict.getReferenceLength
 
   lazy val fractionMale: Double = calculateFraction(haploidRegions, haploidRegionsMale)
   lazy val fractionFemale: Double = calculateFraction(haploidRegions, haploidRegionsFemale)
   lazy val fractionUnknown: Double = calculateFraction(haploidRegions, None)
 
+  /**
+   * This method will calculate the fraction of the given bed files of the used reference
+   *
+   * @param file1 Bed file
+   * @param file2 Bed file
+   * @return Fraction
+   */
   def calculateFraction(file1: Option[File], file2: Option[File]): Double = {
     (file1.map(BedRecordList.fromFile(_)), file2.map(BedRecordList.fromFile(_))) match {
-      case (Some(l), None) => l.length.toDouble / refernceSize
-      case (None, Some(l)) => l.length.toDouble / refernceSize
+      case (Some(l), None) => l.length.toDouble / referenceSize
+      case (None, Some(l)) => l.length.toDouble / referenceSize
       case (Some(l1), Some(l2)) =>
-        BedRecordList.fromList(l1.allRecords ++ l2.allRecords).combineOverlap.length.toDouble / refernceSize
+        BedRecordList.fromList(l1.allRecords ++ l2.allRecords).combineOverlap.length.toDouble / referenceSize
       case (None, None) => 0.0
     }
   }
@@ -64,6 +71,12 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
     "variant_index_type" -> "LINEAR",
     "variant_index_parameter" -> 128000)
   )
+
+  override def init(): Unit = {
+    super.init()
+    if (genderAwareCalling && haploidRegions.isEmpty && haploidRegionsMale.isEmpty && haploidRegionsFemale.isEmpty)
+      logger.warn("Gender aware variantcalling is enabled but no haploid bed files are given")
+  }
 
   def biopetScript() {
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
