@@ -1,7 +1,5 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
-import java.nio.file.Paths
-
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorNewRef }
@@ -17,10 +15,92 @@ import org.testng.annotations.Test
  * Created by Sander Bollen on 13-4-17.
  */
 class TarmacTest extends TestNGSuite with Matchers {
+  import TarmacTest._
 
-  private def resourcePath(p: String): String = {
-    Paths.get(getClass.getResource(p).toURI).toString
+  def initPipeline(map: Map[String, Any]): Tarmac = {
+    new Tarmac {
+      override def configNamespace = "tarmac"
+
+      override def globalConfig = new Config(map)
+
+      qSettings = new QSettings
+      qSettings.runName = "test"
+    }
   }
+
+  @Test
+  def testSingleSampleLeft(): Unit = {
+    val script = initPipeline(sample2)
+    script.init()
+
+    script.samples.size shouldBe 1
+    script.samples.head._2.outputXhmmCountFile.isLeft shouldBe true
+    script.samples.head._2.outputWisecondorCountFile.isLeft shouldBe true
+
+  }
+
+  @Test
+  def testCountGeneration(): Unit = {
+    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
+    script.init()
+    script.addSamplesJobs()
+
+    script.samples.size shouldBe 7
+    script.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 7
+    script.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 7
+
+    val script2 = initPipeline(ConfigUtils.mergeMaps(samplesWithCount, settings))
+    script2.init()
+    script2.addSamplesJobs()
+
+    script2.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 0
+    script2.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 0
+    script2.functions.count(_.isInstanceOf[Ln]) shouldBe 14
+  }
+
+  @Test
+  def testReferenceSamples(): Unit = {
+    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
+    script.init()
+    script.biopetScript()
+
+    script.
+      getReferenceSamplesForSample("sample1").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample4", "sample5").sorted
+    script.
+      getReferenceSamplesForSample("sample2").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample6", "sample7").sorted
+    script.
+      getReferenceSamplesForSample("sample3").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample4", "sample5").sorted
+    script.
+      getReferenceSamplesForSample("sample4").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample5").sorted
+    script.
+      getReferenceSamplesForSample("sample5").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample4").sorted
+    script.
+      getReferenceSamplesForSample("sample6").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample7").sorted
+    script.
+      getReferenceSamplesForSample("sample7").
+      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample6").sorted
+
+  }
+
+  @Test
+  def testReferenceJobs(): Unit = {
+    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
+    script.init()
+    script.biopetScript()
+
+    script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
+    script.functions.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
+  }
+
+}
+
+object TarmacTest {
 
   val sample2 = Map("samples" ->
     Map("sample2" ->
@@ -158,86 +238,4 @@ class TarmacTest extends TestNGSuite with Matchers {
       "targets" -> "targets.bed"
     )
   )
-
-  def initPipeline(map: Map[String, Any]): Tarmac = {
-    new Tarmac {
-      override def configNamespace = "tarmac"
-
-      override def globalConfig = new Config(map)
-
-      qSettings = new QSettings
-      qSettings.runName = "test"
-    }
-  }
-
-  @Test
-  def testSingleSampleLeft(): Unit = {
-    val script = initPipeline(sample2)
-    script.init()
-
-    script.samples.size shouldBe 1
-    script.samples.head._2.outputXhmmCountFile.isLeft shouldBe true
-    script.samples.head._2.outputWisecondorCountFile.isLeft shouldBe true
-
-  }
-
-  @Test
-  def testCountGeneration(): Unit = {
-    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
-    script.init()
-    script.addSamplesJobs()
-
-    script.samples.size shouldBe 7
-    script.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 7
-    script.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 7
-
-    val script2 = initPipeline(ConfigUtils.mergeMaps(samplesWithCount, settings))
-    script2.init()
-    script2.addSamplesJobs()
-
-    script2.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 0
-    script2.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 0
-    script2.functions.count(_.isInstanceOf[Ln]) shouldBe 14
-  }
-
-  @Test
-  def testReferenceSamples(): Unit = {
-    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
-    script.init()
-    script.biopetScript()
-
-    script.
-      getReferenceSamplesForSample("sample1").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample4", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample2").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample6", "sample7").sorted
-    script.
-      getReferenceSamplesForSample("sample3").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample4", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample4").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample5").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample4").sorted
-    script.
-      getReferenceSamplesForSample("sample6").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample7").sorted
-    script.
-      getReferenceSamplesForSample("sample7").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample6").sorted
-
-  }
-
-  @Test
-  def testReferenceJobs(): Unit = {
-    val script = initPipeline(ConfigUtils.mergeMaps(samplesWithBam, settings))
-    script.init()
-    script.biopetScript()
-
-    script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
-    script.functions.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
-  }
-
 }
