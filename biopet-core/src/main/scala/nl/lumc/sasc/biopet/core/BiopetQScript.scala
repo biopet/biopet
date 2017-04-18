@@ -136,7 +136,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         case _ => reportClass.foreach { report =>
           for (f <- functions) f match {
             case w: WriteSummary => report.deps :+= w.jobOutputFile
-            case _ =>
+            case _               =>
           }
           report.jobOutputFile = new File(report.outputDir, ".report.out")
           add(report)
