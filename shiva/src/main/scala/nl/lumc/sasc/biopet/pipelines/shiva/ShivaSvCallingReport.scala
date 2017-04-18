@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.core.report.ReportBuilder
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -10,9 +11,9 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ ModuleName, PipelineName
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object ShivaSvCallingReport extends ShivaSvCallingReportTrait
+object ShivaSvCallingReport extends Logging {
 
-trait ShivaSvCallingReportTrait extends Logging {
+  implicit lazy val ec = ReportBuilder.ec
 
   val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
   val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
