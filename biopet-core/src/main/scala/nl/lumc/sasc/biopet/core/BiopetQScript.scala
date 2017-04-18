@@ -126,17 +126,21 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
-    logger.info("Adding report")
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach { report =>
-        for (f <- functions) f match {
-          case w: WriteSummary => report.deps :+= w.jobOutputFile
-          case _               =>
+    val writeHtmlReport: Boolean = config("write_html_report", default = true)
+
+    if (writeHtmlReport) {
+      logger.info("Adding report")
+      this match {
+        case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+          logger.info("Write report is skipped because sample flag is used")
+        case _ => reportClass.foreach { report =>
+          for (f <- functions) f match {
+            case w: WriteSummary => report.deps :+= w.jobOutputFile
+            case _ =>
+          }
+          report.jobOutputFile = new File(report.outputDir, ".report.out")
+          add(report)
         }
-        report.jobOutputFile = new File(report.outputDir, ".report.out")
-        add(report)
       }
     }
 
