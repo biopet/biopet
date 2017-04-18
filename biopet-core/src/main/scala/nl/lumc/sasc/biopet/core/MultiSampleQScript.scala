@@ -111,10 +111,11 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     lazy val father = {
       val g: Option[String] = sampleTags.get("father").map(_.toString)
       g.foreach { father =>
-        if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
-        if (samples.contains(father)) if (samples(father).gender != Gender.Male)
-          Logging.addError(s"Father of $sampleId is not a male")
-        else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
+        if (sampleId == father) Logging.addError(s"Father for $sampleId can not be itself")
+        if (samples.contains(father)) {
+          if (samples(father).gender != Gender.Male)
+            Logging.addError(s"Father of $sampleId is not a male")
+        } else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
       }
       g
     }
@@ -122,10 +123,11 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     lazy val mother = {
       val g: Option[String] = sampleTags.get("mother").map(_.toString)
       g.foreach { mother =>
-        if (sampleId != mother) Logging.addError(s"mother for $sampleId can not be itself")
-        if (samples.contains(mother)) if (samples(mother).gender != Gender.Female)
-          Logging.addError(s"Mother of $sampleId is not a female")
-        else logger.warn(s"For sample '$sampleId' is mother '$mother' not found in config")
+        if (sampleId == mother) Logging.addError(s"mother for $sampleId can not be itself")
+        if (samples.contains(mother)) {
+          if (samples(mother).gender != Gender.Female)
+            Logging.addError(s"Mother of $sampleId is not a female")
+        } else logger.warn(s"For sample '$sampleId' is mother '$mother' not found in config")
       }
       g
     }

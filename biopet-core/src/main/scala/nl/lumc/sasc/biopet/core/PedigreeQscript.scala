@@ -13,14 +13,14 @@ import scala.io.Source
  *
  * A multi-sample Qscript with additional Pedigree information.
  * Pedigrees follow the PED standard.
- * See: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml for the format
+ * See: http://zzz.bwh.harvard.edu/plink/data.shtml#ped
  *
  * Pedigrees may be parsed from the sample config and/or a supplied PED file.
  */
 trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
 
   /* Optionally parse from ped file */
-  def ped: Option[File] = None
+  def ped: Option[File] = config("ped_file", default = None)
 
   /* The merge stategy to use when we have both a ped file and sample tag information */
   def mergeStrategy: PedMergeStrategy.Value = PedMergeStrategy.Concatenate
@@ -28,14 +28,14 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
   /**
    * Case class representing a PED samples
    * For the PED format, see:
-   * http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml
+   * http://zzz.bwh.harvard.edu/plink/data.shtml#ped
    * @param familyId family id
    * @param individualId individual id
    * @param paternalId Optional paternal id
    * @param maternalId Optional maternal id
    * @param gender gender
    * @param affectedPhenotype Optional boolean
-   * @param genotypeFields optional genotype fileds
+   * @param genotypeFields optional genotype fields
    */
   case class PedSample(familyId: String, individualId: String,
                        paternalId: Option[String],
@@ -57,7 +57,7 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
    * @return List[PedSample]
    */
   def getIndexSamples: List[PedSample] = {
-    pedSamples.filter(x => x.affectedPhenotype)
+    pedSamples.filter(x => x.affectedPhenotype.contains(true))
   }
 
   /**
@@ -186,8 +186,11 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
         }
         case _ => "0"
       }
-      val line: String = s"${p.familyId}\t${p.individualId}\t$paternalField\t$maternalField\t$genderField\t$affectedField\t" +
-        p.genotypeFields.mkString("\t")
+      val mainLine: String = s"${p.familyId}\t${p.individualId}\t$paternalField\t$maternalField\t$genderField\t$affectedField"
+      val line = if (p.genotypeFields.nonEmpty) {
+        mainLine + "\t" + p.genotypeFields.mkString("\t")
+      } else mainLine
+
       writer.write(line + "\n")
     }
     writer.close()
