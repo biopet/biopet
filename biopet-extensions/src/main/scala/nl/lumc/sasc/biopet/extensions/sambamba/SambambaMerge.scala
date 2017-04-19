@@ -21,7 +21,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba merge  */
 class SambambaMerge(val parent: Configurable) extends Sambamba {
-  override def defaultThreads = 4
 
   @Input(doc = "Bam File[s]")
   var input: List[File] = Nil
@@ -30,13 +29,29 @@ class SambambaMerge(val parent: Configurable) extends Sambamba {
   var output: File = _
 
   // @doc: compression_level 6 is average, 0 = no compression, 9 = best
-  val compressionLevel: Option[Int] = config("compression_level", default = 6)
+  val compressionLevel: Option[Int] = config("compression_level")
+  val header: Boolean = config("header", default = false)
+  val showProgress: Boolean = config("show-progress", default = true)
+  val filter: Option[String] = config("filter")
+
+  override def defaultThreads = 4
+  override def defaultCoreMemory = 4.0
+
+  @Output
+  private var indexOutput: File = _
+
+  override def beforeGraph(): Unit = {
+    indexOutput = new File(output + ".bai")
+  }
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
+  def cmdLine: String = required(executable) +
     required("merge") +
     optional("-t", nCoresRequest) +
     optional("-l", compressionLevel) +
+    optional("-F", filter) +
+    conditional(header, "--header") +
+    conditional(showProgress, "--show-progress") +
     required(output) +
-    repeat("", input)
+    repeat(input)
 }
