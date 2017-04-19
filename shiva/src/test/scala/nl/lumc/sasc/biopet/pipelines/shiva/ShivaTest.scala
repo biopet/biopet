@@ -62,6 +62,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def svCalling = false
   def cnvCalling = false
   def annotation = false
+  def usePrintReads = true
 
   private var dirs: List[File] = Nil
 
@@ -83,7 +84,8 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
         "use_base_recalibration" -> baseRecalibration,
         "sv_calling" -> svCalling,
         "cnv_calling" -> cnvCalling,
-        "annotation" -> annotation), m)
+        "annotation" -> annotation,
+        "use_printreads" -> usePrintReads), m)
 
     }
 
@@ -105,7 +107,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
-      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration && usePrintReads) numberLibs else 0)
 
       pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
       pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
@@ -142,6 +144,10 @@ class ShivaNoDbsnpTest extends ShivaTestTrait {
   override def sample2 = Array(false)
   override def realignProvider = Array(true)
   override def dbsnp = false
+}
+class ShivaNoPrintReadsTest extends ShivaTestTrait {
+  override def realignProvider = Array(false)
+  override def usePrintReads = false
 }
 class ShivaLibraryCallingTest extends ShivaTestTrait {
   override def sample1 = Array(true, false)
