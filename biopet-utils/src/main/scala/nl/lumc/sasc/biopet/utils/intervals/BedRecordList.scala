@@ -140,34 +140,24 @@ object BedRecordList {
   def fromList(records: TraversableOnce[BedRecord]): BedRecordList = fromListWithHeader(records, Nil)
 
   /**
-    * This creates a [[BedRecordList]] based on multiple files
-    *
-    * @param bedFiles Input bed files
-    * @return
-    */
-  def fromFiles(bedFiles: File*) = {
-    fromFiles(bedFiles, combine = false)
-  }
-
-  /**
-    * This creates a [[BedRecordList]] based on multiple files. This method combines overlapping regions
-    *
-    * @param bedFiles Input bed files
-    * @return
-    */
+   * This creates a [[BedRecordList]] based on multiple files. This method combines overlapping regions
+   *
+   * @param bedFiles Input bed files
+   * @return
+   */
   def fromFilesCombine(bedFiles: File*) = {
     fromFiles(bedFiles, combine = true)
   }
 
   /**
-    * This creates a [[BedRecordList]] based on multiple files
-    *
-    * @param bedFiles Input bed files
-    * @param combine When true overlaping regions are merged
-    * @return
-    */
+   * This creates a [[BedRecordList]] based on multiple files
+   *
+   * @param bedFiles Input bed files
+   * @param combine When true overlaping regions are merged
+   * @return
+   */
   def fromFiles(bedFiles: Seq[File], combine: Boolean = false) = {
-    val list = bedFiles.foldLeft(empty)((a,b) => fromList(fromFile(b).allRecords ++ a.allRecords))
+    val list = bedFiles.foldLeft(empty)((a, b) => fromList(fromFile(b).allRecords ++ a.allRecords))
     if (combine) list.combineOverlap
     else list
   }
