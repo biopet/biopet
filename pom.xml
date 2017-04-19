@@ -237,13 +237,14 @@
                 </executions>
             </plugin>
             -->
+            <!--
             <plugin>
                 <groupId>com.devsmobile</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>-i --config .scalafmt.conf</formatParameters>
-                    <verifyParameters>--test --config .scalafmt.conf</verifyParameters>
+                    <formatParameters>-i -f .</formatParameters>
+                    <verifyParameters>--test -f .</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
@@ -255,6 +256,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
