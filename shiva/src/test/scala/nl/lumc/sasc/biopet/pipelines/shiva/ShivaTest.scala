@@ -99,7 +99,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample2) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + numberSamples)
 
       // Gatk preprocess
       pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
