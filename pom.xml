@@ -242,8 +242,8 @@
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>--maxColumn 100 -i -f ./src</formatParameters>
-                    <verifyParameters>--test --maxColumn 100 -f ./src</verifyParameters>
+                    <formatParameters>--maxColumn 100 -i -f "./src"</formatParameters>
+                    <verifyParameters>--test --maxColumn 100 -f "./src"</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
