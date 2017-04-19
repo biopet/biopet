@@ -243,7 +243,7 @@
                 <version>0.2.11</version>
                 <configuration>
                     <formatParameters>-i --config .scalafmt.conf</formatParameters>
-                    <verifyParameters>--test --config .scalfmt.conf</verifyParameters>
+                    <verifyParameters>--test --config .scalafmt.conf</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
