@@ -242,8 +242,8 @@
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>--maxColumn 100 -i -f . --exclude gatk</formatParameters>
-                    <verifyParameters>--test --maxColumn 100 -f . --exclude gatk</verifyParameters>
+                    <formatParameters>--maxColumn 100 -i --project.git True</formatParameters>
+                    <verifyParameters>--test --maxColumn 100 --project.git True</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
