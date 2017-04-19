@@ -242,8 +242,8 @@
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>-i </formatParameters>
-                    <verifyParameters>--test</verifyParameters>
+                    <formatParameters>-i --config .scalafmt.conf</formatParameters>
+                    <verifyParameters>--test --config .scalfmt.conf</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
