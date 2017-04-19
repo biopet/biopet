@@ -43,28 +43,9 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   val haploidRegionsMale: Option[File] = config("haploid_regions_male")
   val haploidRegionsFemale: Option[File] = config("haploid_regions_female")
 
-  lazy val referenceSize = referenceDict.getReferenceLength
-
-  lazy val fractionMale: Double = calculateFraction(haploidRegions, haploidRegionsMale)
-  lazy val fractionFemale: Double = calculateFraction(haploidRegions, haploidRegionsFemale)
-  lazy val fractionUnknown: Double = calculateFraction(haploidRegions, None)
-
-  /**
-   * This method will calculate the fraction of the given bed files of the used reference
-   *
-   * @param file1 Bed file
-   * @param file2 Bed file
-   * @return Fraction
-   */
-  def calculateFraction(file1: Option[File], file2: Option[File]): Double = {
-    (file1.map(BedRecordList.fromFile(_)), file2.map(BedRecordList.fromFile(_))) match {
-      case (Some(l), None) => l.length.toDouble / referenceSize
-      case (None, Some(l)) => l.length.toDouble / referenceSize
-      case (Some(l1), Some(l2)) =>
-        BedRecordList.fromList(l1.allRecords ++ l2.allRecords).combineOverlap.length.toDouble / referenceSize
-      case (None, None) => 0.0
-    }
-  }
+  lazy val fractionMale: Double = BedRecordList.fromFiles(Seq(haploidRegions, haploidRegionsMale).flatten, true).fractionOfReference(referenceDict)
+  lazy val fractionFemale: Double = BedRecordList.fromFiles(Seq(haploidRegions, haploidRegionsFemale).flatten, true).fractionOfReference(referenceDict)
+  lazy val fractionUnknown: Double = BedRecordList.fromFiles(Seq(haploidRegions).flatten, true).fractionOfReference(referenceDict)
 
   override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
 
