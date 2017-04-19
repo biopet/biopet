@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorNewRef }
+import nl.lumc.sasc.biopet.extensions.wisecondor.{WisecondorCount, WisecondorGcCorrect, WisecondorNewRef}
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -48,6 +48,7 @@ class TarmacTest extends TestNGSuite with Matchers {
     script.samples.size shouldBe 7
     script.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 7
     script.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 7
+    script.functions.count(_.isInstanceOf[WisecondorGcCorrect]) shouldBe 7
 
     val script2 = initPipeline(ConfigUtils.mergeMaps(samplesWithCount, settings))
     script2.init()
@@ -56,6 +57,7 @@ class TarmacTest extends TestNGSuite with Matchers {
     script2.functions.count(_.isInstanceOf[WisecondorCount]) shouldBe 0
     script2.functions.count(_.isInstanceOf[DepthOfCoverage]) shouldBe 0
     script2.functions.count(_.isInstanceOf[Ln]) shouldBe 14
+    script2.functions.count(_.isInstanceOf[WisecondorGcCorrect]) shouldBe 7
   }
 
   @Test

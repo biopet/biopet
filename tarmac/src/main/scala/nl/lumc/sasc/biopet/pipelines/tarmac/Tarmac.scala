@@ -114,21 +114,15 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
-    val gccs = referenceSamples.map { x =>
-      val gcc = new WisecondorGcCorrect(this)
-      x.outputWisecondorCountFile foreach { file => gcc.inputBed = file }
-      gcc.output = new File(outputDirectory, s"${x.sampleId}.gcc")
-      gcc
-    }
-
+    val gccs = referenceSamples.map(_.outputWisecondorGccFile).collect { case \/-(file) => file }.toList
     val reference = new WisecondorNewRef(this)
-    reference.inputBeds = gccs.map(_.output).toList
+    reference.inputBeds = gccs
     reference.output = new File(outputDirectory, "reference.bed")
     reference.isIntermediate = true
     val gzipRef = new Gzip(this)
     gzipRef.input = List(reference.output)
     gzipRef.output = new File(outputDirectory, "reference.bed.gz")
-    gccs.toList ::: reference :: gzipRef :: Nil
+    reference :: gzipRef :: Nil
   }
 
   class Sample(name: String) extends AbstractSample(name) {
@@ -214,9 +208,26 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       }
     }
 
+    protected lazy val outputWisecondorGccJob: String \/ QFunction = {
+      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.gcc")
+      outputWisecondorCountFile map { bedFile =>
+        val gcc = new WisecondorGcCorrect(root)
+        gcc.inputBed = bedFile
+        gcc.output = outFile
+        gcc
+      }
+    }
+
+    lazy val outputWisecondorGccFile: String \/ File = {
+      outputWisecondorGccJob match {
+        case \/-(gcc: WisecondorGcCorrect) => \/-(gcc.output)
+        case -\/(error)                    => -\/(error)
+      }
+    }
+
     /** Function to add sample jobs */
     def addJobs(): Unit = {
-      (outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
+      (outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
         case -\/(error)    => Logging.addError(error)
         case \/-(function) => add(function)
       }
