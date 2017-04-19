@@ -14,9 +14,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
+import nl.lumc.sasc.biopet.extensions.tools.VcfStatsForSv
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
@@ -27,7 +28,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
+class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScript with Reference {
   qscript =>
 
   def this() = this(null)
@@ -96,6 +97,21 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
     // group by "tags"
     // sample tagging is however not available within this pipeline
 
+    for ((sample, mergedResultFile) <- outputMergedVCFbySample) {
+      val vcfStats = new VcfStatsForSv(qscript)
+      vcfStats.inputFile = mergedResultFile
+      vcfStats.outputFile = new File(outputDir, s".$sample.merged.stats")
+      vcfStats.histogramBinBoundaries = ShivaSvCallingReport.histogramBinBoundaries
+
+      add(vcfStats)
+      addSummarizable(vcfStats, "vcfstats-sv", Some(sample))
+
+      addSummarizable(new Summarizable {
+        def summaryFiles = Map("output_vcf" -> mergedResultFile)
+        def summaryStats = Map.empty
+      }, "merge_variants", Some(sample))
+    }
+
     addSummaryJobs()
   }
 
@@ -103,10 +119,11 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
   protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Settings for the summary */
-  def summarySettings = Map("sv_callers" -> configCallers.toList)
+  def summarySettings = Map("sv_callers" -> configCallers.toList, "hist_bin_boundaries" -> ShivaSvCallingReport.histogramBinBoundaries)
 
   /** Files for the summary */
-  def summaryFiles: Map[String, File] = Map("final_mergedvcf" -> (if (inputBams.size > 1) outputMergedVCF else outputMergedVCFbySample.values.head))
+  def summaryFiles: Map[String, File] = if (inputBams.size > 1) Map("final_mergedvcf" -> outputMergedVCF) else Map.empty
+
 }
 
 object ShivaSvCalling extends PipelineCommand
