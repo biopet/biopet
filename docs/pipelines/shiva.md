@@ -138,8 +138,8 @@ For all the options, please see the corresponding documentation for the mapping 
 ### Gender aware variantcalling
 
 In Shiva and ShivaVariantcalling while using haplotypecaller_gvcf it is possible to do gender aware variantcalling. In this mode it required to supply bed files to define haploid regions (see config values). 
-- For males is `hap̦loid_regions` and `hap̦loid_regions_male` used.
-- For females is `hap̦loid_regions` and `hap̦loid_regions_female` used.
+- For males is `hap̦loid_regions` and `hap̦loid_regions_male` is used.
+- For females is `hap̦loid_regions` and `hap̦loid_regions_female` is used.
 
 The pipeline will use a union of those files. At least 1 file is required while using this mode.
 
