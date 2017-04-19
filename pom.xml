@@ -198,6 +198,7 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.scalariform</groupId>
                 <artifactId>scalariform-maven-plugin</artifactId>
@@ -232,6 +233,25 @@
                             <spaceInsideParentheses>false</spaceInsideParentheses>
                             <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+            <plugin>
+                <groupId>com.devsmobile</groupId>
+                <artifactId>mvn-scalafmt</artifactId>
+                <version>0.2.11</version>
+                <configuration>
+                    <formatParameters>--maxColumn 100 -i -f src</formatParameters>
+                    <verifyParameters>--test --maxColumn 100 -f src</verifyParameters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>format</goal>
+                            <goal>verify</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
