@@ -121,7 +121,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
     nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
-    nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
+    nCoresRequest = nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)
