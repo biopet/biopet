@@ -67,6 +67,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
   val skipWriteDependencies: Boolean = config("skip_write_dependencies", default = false)
 
+  val writeHtmlReport: Boolean = config("write_html_report", default = true)
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -125,8 +127,6 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         case _       => f.jobOutputFile = new File("./stdout") // Line is here for test backup
       }
     })
-
-    val writeHtmlReport: Boolean = config("write_html_report", default = true)
 
     if (writeHtmlReport) {
       logger.info("Adding report")
