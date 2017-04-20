@@ -81,6 +81,13 @@
             <artifactId>scalate-core_2.11</artifactId>
             <version>1.7.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
+        <dependency>
+            <groupId>com.geirsson</groupId>
+            <artifactId>scalafmt-cli_2.11</artifactId>
+            <version>0.6.8</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -198,6 +205,7 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <!--
             <plugin>
                 <groupId>com.devsmobile</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
@@ -216,6 +224,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
