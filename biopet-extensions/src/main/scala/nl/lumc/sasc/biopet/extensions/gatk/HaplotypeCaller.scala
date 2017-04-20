@@ -56,6 +56,8 @@ class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with Sca
   @Argument(fullName = "maxGGAARExtension", shortName = "maxGGAARExtension", doc = "the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode", required = false, exclusiveOf = "", validation = "")
   var maxGGAARExtension: Option[Int] = config("maxGGAARExtension")
 
+  var useNewAFCalculator: Boolean = config("useNewAFCalculator", default = false)
+
   /** Include at least this many bases around an event for calling indels */
   @Argument(fullName = "paddingAroundIndels", shortName = "paddingAroundIndels", doc = "Include at least this many bases around an event for calling indels", required = false, exclusiveOf = "", validation = "")
   var paddingAroundIndels: Option[Int] = config("paddingAroundIndels")
@@ -441,6 +443,7 @@ class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with Sca
     optional("-paddingAroundSNPs", paddingAroundSNPs, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(useNewAFCalculator, "--useNewAFCalculator") +
     repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
     conditional(debug, "-debug", escape = true, format = "%s") +

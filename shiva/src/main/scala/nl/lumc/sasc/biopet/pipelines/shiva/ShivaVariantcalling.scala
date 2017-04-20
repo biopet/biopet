@@ -14,7 +14,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand, Reference, SampleLibraryTag }
+import MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
@@ -48,9 +49,22 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
 
   var inputBqsrFiles: Map[String, File] = Map()
 
+  var genders: Map[String, Gender.Value] = _
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    if (Option(genders).isEmpty) genders = {
+      val samples: Map[String, Any] = config("genders", default = Map())
+      samples.map {
+        case (sampleName, gender) =>
+          sampleName -> (gender.toString.toLowerCase match {
+            case "male"   => Gender.Male
+            case "female" => Gender.Female
+            case _        => Gender.Unknown
+          })
+      }
+    }
   }
 
   var referenceVcf: Option[File] = config("reference_vcf")
@@ -100,6 +114,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
       caller.inputBqsrFiles = inputBqsrFiles
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
+      caller.genders = genders
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean = config("execute_vt_normalize", default = false, namespace = caller.configNamespace)

@@ -54,7 +54,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     }
     writer.println("set -eubf")
     writer.println("set -o pipefail")
-    writer.println(this.commandLine)
+    writer.println(lines.mkString("\n"))
     jobDelayTime.foreach(x => writer.println(s"sleep $x"))
     writer.close()
   }
@@ -99,7 +99,13 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     beforeGraph()
     internalBeforeGraph()
 
-    if (jobOutputFile != null) this.commandDirectory = this.jobOutputFile.getAbsoluteFile.getParentFile
+    if (jobOutputFile != null) {
+      this.commandDirectory = this.jobOutputFile.getAbsoluteFile.getParentFile
+      this match {
+        case s: ScatterGatherableFunction => s.scatterGatherDirectory = new File(this.commandDirectory, ".scatter")
+        case _                            =>
+      }
+    }
 
     super.freezeFieldValues()
   }
