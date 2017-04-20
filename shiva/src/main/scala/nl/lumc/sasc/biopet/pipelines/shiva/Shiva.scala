@@ -105,8 +105,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
       override def keepFinalBamfile: Boolean = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
 
-      override def bamFile: Option[Mapping#File] = mapping.map(_.mergedBamFile)
-
       override def preProcessBam: Option[Mapping#File] = if (useIndelRealigner && usePrintReads && useBaseRecalibration)
         bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
       else if (useIndelRealigner) bamFile.map(swapExt(libDir, _, ".bam", ".realign.bam"))
