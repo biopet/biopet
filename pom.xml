@@ -243,8 +243,8 @@
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>-i --config ${basedir}//scalafmt.conf</formatParameters>
-                    <verifyParameters>--test --config ${basedir}//scalafmt.conf</verifyParameters>
+                    <formatParameters>-i --config ${basedir}/.scalafmt.conf</formatParameters>
+                    <verifyParameters>--test --config ${basedir}/.scalafmt.conf</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
