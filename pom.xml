@@ -55,6 +55,7 @@
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
         <scalaVersion>2.11.4</scalaVersion>
         <scoverage.aggregate>true</scoverage.aggregate>
+        <scalaFMTVersion>0.6.8</scalaFMTVersion>
     </properties>
 
     <dependencies>
@@ -219,13 +220,13 @@
                     <dependency>
                         <groupId>com.geirsson</groupId>
                         <artifactId>scalafmt-core_2.11</artifactId>
-                        <version>0.6.8</version>
+                        <version>${scalaFMTVersion}</version>
                     </dependency>
                     <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
                     <dependency>
                         <groupId>com.geirsson</groupId>
                         <artifactId>scalafmt-cli_2.11</artifactId>
-                        <version>0.6.8</version>
+                        <version>${scalaFMTVersion}</version>
                     </dependency>
                 </dependencies>
             </plugin>
