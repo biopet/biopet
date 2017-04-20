@@ -86,6 +86,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     else fqModules
   }
 
+  /**
+    * Retrieves a map to be used for plotting GC distribution
+    *
+    * @return a map with GC content [Int] as key and Count [Double] as value
+    */
   def gcDistribution: Option[Map[Int, Double]] = {
     qcModules.get("Per sequence GC content").map { module =>
       module.lines.filter(!_.startsWith("#")).map { line =>
