@@ -187,7 +187,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
     } else None
 
-    override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner)
+    override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner || (libraries.size == 1))
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
 
