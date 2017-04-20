@@ -219,13 +219,13 @@
                     <dependency>
                         <groupId>com.geirsson</groupId>
                         <artifactId>scalafmt-core_2.11</artifactId>
-                        <version>0.2.1</version>
+                        <version>0.6.8</version>
                     </dependency>
                     <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
                     <dependency>
                         <groupId>com.geirsson</groupId>
                         <artifactId>scalafmt-cli_2.11</artifactId>
-                        <version>0.2.1</version>
+                        <version>0.6.8</version>
                     </dependency>
                 </dependencies>
             </plugin>
