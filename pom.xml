@@ -204,7 +204,7 @@
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.1</version>
                 <configuration>
-                                        <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
+                    <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
                 </configuration>
                 <executions>
                     <execution>
