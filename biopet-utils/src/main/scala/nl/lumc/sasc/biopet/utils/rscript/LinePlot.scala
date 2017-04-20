@@ -39,6 +39,13 @@ class LinePlot(val parent: Configurable) extends Rscript {
   var hideLegend: Boolean = config("hide_legend", default = false)
   var removeZero: Boolean = config("removeZero", default = false)
 
+  // whether to use log scale for x and y axis
+  var xLog10: Boolean = false
+  var yLog10: Boolean = false
+
+  var xLog10AxisTicks: Seq[String] = Seq.empty
+  var xLog10AxisLabels: Seq[String] = Seq.empty
+
   override def cmd = super.cmd ++
     Seq("--input", input.getAbsolutePath) ++
     Seq("--output", output.getAbsolutePath) ++
@@ -49,7 +56,11 @@ class LinePlot(val parent: Configurable) extends Rscript {
     llabel.map(Seq("--llabel", _)).getOrElse(Seq()) ++
     title.map(Seq("--title", _)).getOrElse(Seq()) ++
     (if (hideLegend) Seq("--hideLegend", "true") else Seq()) ++
-    (if (removeZero) Seq("--removeZero", "true") else Seq())
+    (if (removeZero) Seq("--removeZero", "true") else Seq()) ++
+    (if (xLog10) Seq("--xLog10", "true") else Seq()) ++
+    (if (yLog10) Seq("--yLog10", "true") else Seq()) ++
+    (if (xLog10AxisTicks.nonEmpty) xLog10AxisTicks.+:("--xLog10Breaks") else Seq()) ++
+    (if (xLog10AxisLabels.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
 }
 
 object LinePlot {

@@ -48,13 +48,22 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case _          => false
     }
 
+  def svCallingExecuted = summary.getSettingKeys(runId, "shiva", NoModule, keyValues = Map("sv_calling" -> List("sv_calling"))).get("sv_calling")
+    .flatten match {
+      case Some(true) => true
+      case _          => false
+    }
+
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
 
   override def pipelineName = "shiva"
 
-  override def additionalSections = super.additionalSections ++ (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-    Map("showPlot" -> true, "showTable" -> false)))
-  else Nil)
+  override def additionalSections = {
+    val params = Map("showPlot" -> true, "showTable" -> false)
+    super.additionalSections ++
+      (if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)) else Nil) ++
+      (if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp", params)) else Nil)
+  }
 
   /** Root page for the shiva report */
   override def indexPage: Future[ReportPage] = Future {
@@ -107,9 +116,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Single sample page */
   override def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
-    val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val variantcallingSection = if (variantcallingExecuted) List("SNV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val svSection = if (svCallingExecuted) List("SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")) else Nil
     val oldPage: ReportPage = super.samplePage(sampleId, args)
-    oldPage.copy(sections = variantcallingSection ++ oldPage.sections)
+    oldPage.copy(sections = variantcallingSection ++ svSection ++ oldPage.sections)
   }
 
   /** Name of the report */
@@ -163,4 +173,5 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.runLocal()
   }
+
 }

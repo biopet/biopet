@@ -60,11 +60,13 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
+      genders = samples.map { case (sampleName, sample) => sampleName -> sample.gender }
     }
     else new ShivaVariantcalling(qscript) {
       override def configNamespace = "shivavariantcalling"
       sampleId = sample
       libId = library
+      genders = sample.map(x => x -> samples(x).gender).toMap
     }
   }
 

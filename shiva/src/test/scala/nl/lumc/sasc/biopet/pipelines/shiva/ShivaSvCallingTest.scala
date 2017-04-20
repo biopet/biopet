@@ -90,7 +90,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
-      val summaryCallers = pipeline.summarySettings("sv_callers")
+      val summaryCallers = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
@@ -182,7 +182,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     pipeline.init()
     pipeline.script()
 
-    val summaryCallers = pipeline.summarySettings("sv_callers")
+    val summaryCallers: List[String] = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
     assert(summaryCallers.contains("delly"))
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
