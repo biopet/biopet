@@ -49,7 +49,7 @@
         #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#rnaTable">Show table</button>
         #end
-        <a href="rna.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i>TSV file</button></a>
+        <a href="rna.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> Plot data</button></a>
     </div>
 #end
 

@@ -58,7 +58,7 @@
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">
             <i class="glyphicon glyphicon-eye-open"></i>Show table</button>
         #end
-      <a href="insertsize.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i>TSV file</button></a>
+      <a href="insertsize.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> Plot data</button></a>
 
     </div>
 #end
