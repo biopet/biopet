@@ -81,20 +81,6 @@
             <artifactId>scalate-core_2.11</artifactId>
             <version>1.7.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-core_2.11 -->
-
-        <dependency>
-            <groupId>com.geirsson</groupId>
-            <artifactId>scalafmt-core_2.11</artifactId>
-            <version>0.2.1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
-        <dependency>
-            <groupId>com.geirsson</groupId>
-            <artifactId>scalafmt-cli_2.11</artifactId>
-            <version>0.2.1</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -228,6 +214,20 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-core_2.11 -->
+                    <dependency>
+                        <groupId>com.geirsson</groupId>
+                        <artifactId>scalafmt-core_2.11</artifactId>
+                        <version>0.2.1</version>
+                    </dependency>
+                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
+                    <dependency>
+                        <groupId>com.geirsson</groupId>
+                        <artifactId>scalafmt-cli_2.11</artifactId>
+                        <version>0.2.1</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
