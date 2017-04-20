@@ -237,14 +237,14 @@
                 </executions>
             </plugin>
             -->
-            <!--
+            <!-- The following plugin is downloaded to ~/.scalafmt/scalafmt.jar -->
             <plugin>
                 <groupId>com.devsmobile</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
                 <version>0.2.11</version>
                 <configuration>
-                    <formatParameters>-i -f .</formatParameters>
-                    <verifyParameters>--test -f .</verifyParameters>
+                    <formatParameters>-i --config ${basedir}//scalafmt.conf</formatParameters>
+                    <verifyParameters>--test --config ${basedir}//scalafmt.conf</verifyParameters>
                 </configuration>
                 <executions>
                     <execution>
@@ -256,7 +256,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
