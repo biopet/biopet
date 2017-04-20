@@ -14,6 +14,7 @@ rownames(heat) <- heat[,1]
 heat<- heat[,-1]
 heat<- as.matrix(heat)
 
+textMargin <- max(sapply(rownames(heat), nchar)) + 4
 colNumber <- 50
 col <- rev(colorRampPalette(brewer.pal(11, "Spectral"))(colNumber))
 for (i in (colNumber+1):(colNumber+round((dist(range(heat)) - dist(range(heat[heat < 1]))) / dist(range(heat[heat < 1])) * colNumber))) {
@@ -22,7 +23,7 @@ for (i in (colNumber+1):(colNumber+round((dist(range(heat)) - dist(range(heat[he
 col[length(col)] <- "#00FF00"
 
 png(file = outputArg, width = 1200, height = 1200)
-heatmap.2(heat, trace = 'none', col = col, Colv=NA, Rowv=NA, dendrogram="none", margins = c(12, 12), na.color="#00FF00")
+heatmap.2(heat, trace = 'none', col = col, Colv=NA, Rowv=NA, dendrogram="none", margins = c(textMargin, textMargin), na.color="#00FF00")
 dev.off()
 
 hc <- hclust(d = dist(heat))
@@ -31,5 +32,5 @@ plot(as.dendrogram(hc), horiz=TRUE, asp=0.02)
 dev.off()
 
 png(file = outputArgClustering, width = 1200, height = 1200)
-heatmap.2(heat, trace = 'none', col = col, Colv="Rowv", dendrogram="row",margins = c(12, 12), na.color="#00FF00")
+heatmap.2(heat, trace = 'none', col = col, Colv="Rowv", dendrogram="row",margins = c(textMargin, textMargin), na.color="#00FF00")
 dev.off()
