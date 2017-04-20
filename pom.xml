@@ -198,46 +198,6 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
-            <!--
-            <plugin>
-                <groupId>org.scalariform</groupId>
-                <artifactId>scalariform-maven-plugin</artifactId>
-                <version>0.1.4</version>
-                <executions>
-                    <execution>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                        <configuration>
-                            <baseDir>${basedir}/src</baseDir>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <alignParameters>true</alignParameters>
-                            <alignSingleLineCaseStatements_maxArrowIndent>40
-                            </alignSingleLineCaseStatements_maxArrowIndent>
-                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
-                            <compactStringConcatenation>false</compactStringConcatenation>
-                            <compactControlReadability>false</compactControlReadability>
-                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
-                            <formatXml>true</formatXml>
-                            <indentLocalDefs>false</indentLocalDefs>
-                            <indentPackageBlocks>true</indentPackageBlocks>
-                            <indentSpaces>2</indentSpaces>
-                            <placeScaladocAsterisksBeneathSecondAsterisk>false
-                            </placeScaladocAsterisksBeneathSecondAsterisk>
-                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
-                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <spaceBeforeColon>false</spaceBeforeColon>
-                            <spaceInsideBrackets>false</spaceInsideBrackets>
-                            <spaceInsideParentheses>false</spaceInsideParentheses>
-                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            -->
-            <!-- The following plugin is downloaded to ~/.scalafmt/scalafmt.jar -->
             <plugin>
                 <groupId>com.devsmobile</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
