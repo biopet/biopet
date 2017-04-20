@@ -41,6 +41,8 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
   /** Make a final fastq files, by default only when flexiprep is the main pipeline */
   var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = parent == null)
 
+  override def defaults = super.defaults ++ Map("max_threads" -> 4)
+
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
     Map("input_R1" -> inputR1, "output_R1" -> fastqR1Qc) ++

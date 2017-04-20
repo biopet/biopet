@@ -22,6 +22,8 @@ import org.broadinstitute.gatk.queue.function.CommandLineFunction
  */
 trait CommandLineResources extends CommandLineFunction with Configurable {
 
+  lazy val maxThreads: Option[Int] = config("max_threads")
+
   def defaultThreads = 1
   final def threads = nCoresRequest match {
     case Some(i) => i
@@ -72,7 +74,6 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
    * @return number of threads
    */
   private def getThreads(default: Int): Int = {
-    val maxThreads: Option[Int] = config("maxthreads")
     val threads: Int = config("threads", default = default)
     maxThreads match {
       case Some(max) => if (max > threads) threads else max
@@ -120,6 +121,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
     nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
+    nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)
