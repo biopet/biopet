@@ -2,9 +2,10 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln }
+import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsSort
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
@@ -119,10 +120,16 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     reference.inputBeds = gccs
     reference.output = new File(outputDirectory, "reference.bed")
     reference.isIntermediate = true
-    val gzipRef = new Gzip(this)
-    gzipRef.input = List(reference.output)
-    gzipRef.output = new File(outputDirectory, "reference.bed.gz")
-    reference :: gzipRef :: Nil
+    val sort = new BedtoolsSort(this)
+    sort.input = reference.output
+    sort.output = new File(outputDirectory, "reference.sorted.bed")
+    sort.isIntermediate = true
+    val refFile = new File(outputDirectory, "reference.bed.gz")
+    val gzipRef = new Bgzip(this) // FIXME change to pipe with sort
+    gzipRef.input = List(sort.output)
+    gzipRef.output = refFile
+    val tabix = Tabix(this, refFile)
+    reference :: sort :: gzipRef :: tabix :: Nil
   }
 
   class Sample(name: String) extends AbstractSample(name) {
@@ -209,7 +216,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     }
 
     protected lazy val outputWisecondorGccJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.gcc")
+      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.gcc.bed")
       outputWisecondorCountFile map { bedFile =>
         val gcc = new WisecondorGcCorrect(root)
         gcc.inputBed = bedFile
@@ -225,9 +232,58 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       }
     }
 
+    protected lazy val outputWisecondorSortJob: String \/ QFunction = {
+      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.sorted.gcc.bed")
+      outputWisecondorGccFile map { gccFile =>
+        val sort = new BedtoolsSort(root)
+        sort.input = gccFile
+        sort.output = outFile
+        sort.isIntermediate = true
+        sort
+      }
+    }
+
+    lazy val outputWisecondorSortFile: String \/ File = {
+      outputWisecondorSortJob match {
+        case -\/(error)              => -\/(error)
+        case \/-(sort: BedtoolsSort) => \/-(sort.output)
+      }
+    }
+
+    // FIXME: change to pipe with sort
+    protected lazy val outputWisecondorGzJob: String \/ QFunction = {
+      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.sorted.gcc.bed.gz")
+      outputWisecondorSortFile map { bedFile =>
+        val gz = new Bgzip(root)
+        gz.input = List(bedFile)
+        gz.output = outFile
+        gz
+      }
+    }
+
+    lazy val outputWisecondorGzFile: String \/ File = {
+      outputWisecondorGzJob match {
+        case -\/(error)     => -\/(error)
+        case \/-(gz: Bgzip) => \/-(gz.output)
+      }
+    }
+
+    protected lazy val outputWisecondorTbiJob: String \/ QFunction = {
+      outputWisecondorGzFile map { gz =>
+        Tabix(root, gz)
+      }
+    }
+
+    lazy val outputWisecondorTbiFile: String \/ File = {
+      outputWisecondorTbiJob match {
+        case -\/(error)    => -\/(error)
+        case \/-(t: Tabix) => \/-(t.outputIndex)
+      }
+    }
+
     /** Function to add sample jobs */
     def addJobs(): Unit = {
-      (outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
+      (outputWisecondorTbiJob :: outputWisecondorGzJob :: outputWisecondorSortJob :: outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
         case -\/(error)    => Logging.addError(error)
         case \/-(function) => add(function)
       }

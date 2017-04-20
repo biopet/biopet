@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.{WisecondorCount, WisecondorGcCorrect, WisecondorNewRef}
+import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config

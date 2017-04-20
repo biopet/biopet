@@ -171,7 +171,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   def :<:(file: File): BiopetCommandLineFunction = {
     this._inputAsStdin = true
-    this.stdinFile = Some(file)
+    this._stdinFile = Some(file)
     this
   }
 
@@ -183,12 +183,13 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   def >(file: File): BiopetCommandLineFunction = {
     this._outputAsStdout = true
-    this.stdoutFile = Some(file)
+    this._stdoutFile = Some(file)
     this
   }
 
   /**
    * This method can handle args that have multiple args for 1 arg name
+   *
    * @param argName Name of the arg like "-h" or "--help"
    * @param values Values for this arg
    * @param groupSize Values must come in groups of x number, default is 1
@@ -209,10 +210,14 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   }
 
   @Output(required = false)
-  private[core] var stdoutFile: Option[File] = None
+  private[core] var _stdoutFile: Option[File] = None
+
+  def stdoutFile: Option[File] = _stdoutFile
 
   @Input(required = false)
-  private[core] var stdinFile: Option[File] = None
+  private[core] var _stdinFile: Option[File] = None
+
+  def stdinFile: Option[File] = _stdinFile
 
   /**
    * This function needs to be implemented to define the command that is executed
@@ -231,8 +236,8 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     preCmdInternal()
     val cmd = preCommands.mkString("\n", "\n", "\n") +
       cmdLine +
-      stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
-      stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
+      _stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
+      _stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
     cmd
   }
 
