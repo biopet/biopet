@@ -43,7 +43,7 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
     required("-o", outputFile) +
     repeat("--histBinBoundaries", histogramBinBoundaries)
 
-  def summaryStats: Map[String, Any] = ConfigUtils.fileToConfigMap(outputFile)
+  def summaryStats: Map[String, Any] = ConfigUtils.yamlToMap(outputFile)
 
   def summaryFiles: Map[String, File] = Map.empty
 
