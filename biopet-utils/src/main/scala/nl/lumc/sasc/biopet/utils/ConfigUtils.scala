@@ -168,6 +168,12 @@ object ConfigUtils extends Logging {
     writer.close()
   }
 
+  def mapToJsonFile(map: Map[String, Any], outputFile: File) = {
+    val writer = new PrintWriter(outputFile)
+    writer.println(anyToJson(map).toString())
+    writer.close()
+  }
+
   /** Convert json to native scala map/values */
   def jsonToMap(json: Json): Map[String, Any] = {
     var output: Map[String, Any] = Map()

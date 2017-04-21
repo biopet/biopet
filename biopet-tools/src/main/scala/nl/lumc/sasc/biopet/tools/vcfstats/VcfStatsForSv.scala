@@ -38,8 +38,7 @@ object VcfStatsForSv extends ToolCommand {
 
     val stats: Map[String, Any] = getVariantCounts(cmdArgs.inputFile, cmdArgs.histBinBoundaries)
 
-    ConfigUtils.mapToYamlFile(stats, cmdArgs.outputFile)
-
+    ConfigUtils.mapToJsonFile(stats, cmdArgs.outputFile)
   }
 
   /** Parses a vcf-file and counts sv-s by type and size. Sv-s are divided to different size classes, the parameter histogramBinBoundaries gives the boundaries between these classes. */
