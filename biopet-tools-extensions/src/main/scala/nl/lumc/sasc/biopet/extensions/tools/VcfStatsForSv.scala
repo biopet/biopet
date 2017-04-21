@@ -36,7 +36,6 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
   @Output(required = true)
   var outputFile: File = _
 
-  override def defaultCoreMemory = 1.0
   override def defaultResidentFactor = 2.0
   override def defaultVmemFactor = 3.0
 
