@@ -64,7 +64,7 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
 
   @Test
   def testMaxThreads(): Unit = {
-    val cmd = new CommandLineFunctionMock(Map("maxthreads" -> 5, "threads" -> 10)) with CommandLineResources
+    val cmd = new CommandLineFunctionMock(Map("max_threads" -> 5, "threads" -> 10)) with CommandLineResources
 
     cmd.threads shouldBe 5
   }

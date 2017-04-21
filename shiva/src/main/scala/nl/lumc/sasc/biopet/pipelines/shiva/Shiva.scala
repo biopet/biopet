@@ -44,12 +44,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     Some(shiva)
   }
 
-  override def defaults = Map(
-    "haplotypecaller" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0),
-    "genotypegvcfs" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0),
-    "unifiedgenotyper" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0)
-  )
-
   lazy val usePrintReads: Boolean = config("use_printreads", default = true)
 
   /** Method to make the variantcalling namespace of shiva */

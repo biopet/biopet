@@ -86,6 +86,9 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
 
+  /** Readgroup library */
+  protected var readgroupLibrary: Option[String] = config("readgroup_library")
+
   /** Readgroup description */
   protected var readgroupDescription: Option[String] = config("readgroup_description")
 
@@ -572,7 +575,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   /** Returns readgroup for bwa */
   def getReadGroupBwa: String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libId.get + "\\t"
+    readgroupLibrary.foreach(lb => RG += "LB:" + lb + "\\t")
     RG += "PL:" + platform + "\\t"
     platformUnit.foreach(x => RG += "PU:" + x + "\\t")
     RG += "SM:" + sampleId.get + "\\t"
