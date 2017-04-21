@@ -7,8 +7,9 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsSort
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
-import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
+import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
+import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
+import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.SampleFromMatrix
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -68,16 +69,29 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     val wisecondorRefJobs = refMap map {
       case (sample, refSamples) =>
         val refDir = new File(new File(outputDir, sample.sampleId), "wisecondor_reference")
-        createWisecondorReferenceJobs(refSamples, refDir)
+        sample -> createWisecondorReferenceJobs(refSamples, refDir)
     }
 
     val xhmmRefJobs = refMap map {
       case (sample, refSamples) =>
         val refDir = new File(new File(outputDir, sample.sampleId), "xhmm_reference")
-        createXhmmReferenceJobs(sample, refSamples, refDir)
+        sample -> createXhmmReferenceJobs(sample, refSamples, refDir)
     }
 
-    (wisecondorRefJobs.toList ::: xhmmRefJobs.toList).flatten.foreach(job => add(job))
+    val wisecondorZJobs = wisecondorRefJobs map {
+      case (sample, jobsAndRefFile) =>
+        val refJobs = jobsAndRefFile._1
+        val refFile = jobsAndRefFile._2
+        val tbiFile = refJobs.collect { case tbi: Tabix => tbi.outputIndex }.head
+        sample -> createWisecondorZScore(sample, refFile, tbiFile)
+    }
+
+    val xhmmZJobs = xhmmRefJobs map {
+      case (sample, jobsAndRefFile) =>
+        sample -> createXhmmZscore(sample, jobsAndRefFile._2)
+    }
+
+    addAll(wisecondorZJobs.values.toList ::: (xhmmZJobs.values.map(_._1).toList ::: wisecondorRefJobs.values.map(_._1).toList ::: xhmmRefJobs.values.map(_._1).toList).flatten)
   }
 
   /**
@@ -105,16 +119,25 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     }
   }
 
-  def createXhmmReferenceJobs(sample: Sample, referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
+  /*
+  Create jobs for Xhmm reference creation
+  Returns both jobs and the resulting reference file
+   */
+  def createXhmmReferenceJobs(sample: Sample, referenceSamples: Set[Sample], outputDirectory: File): Tuple2[List[QFunction], File] = {
     /* XHMM requires refset including self */
     val totalSet = referenceSamples + sample
     val merger = new XhmmMergeGatkDepths(this)
     merger.gatkDepthsFiles = totalSet.map(_.outputXhmmCountFile).collect { case \/-(file) => file }.toList
-    merger.output = new File(outputDirectory, "reference.matrix")
-    List(merger)
+    val refFile = new File(outputDirectory, "reference.matrix")
+    merger.output = refFile
+    (List(merger), refFile)
   }
 
-  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): List[QFunction] = {
+  /*
+  Create jobs for wisecondor reference creation
+  Returns both jobs and the resulting reference file
+   */
+  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): Tuple2[List[QFunction], File] = {
     val gccs = referenceSamples.map(_.outputWisecondorGccFile).collect { case \/-(file) => file }.toList
     val reference = new WisecondorNewRef(this)
     reference.inputBeds = gccs
@@ -129,7 +152,62 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     gzipRef.input = List(sort.output)
     gzipRef.output = refFile
     val tabix = Tabix(this, refFile)
-    reference :: sort :: gzipRef :: tabix :: Nil
+    (reference :: sort :: gzipRef :: tabix :: Nil, refFile)
+  }
+
+  def createWisecondorZScore(sample: Sample, referenceFile: File, tbiFile: File): WisecondorZscore = {
+    val zscore = new WisecondorZscore(this)
+    val zFile = new File(sample.sampleDir, s"${sample.sampleId}.z.bed")
+    zscore.inputBed = sample.outputWisecondorGzFile.getOrElse(new File(""))
+    zscore.deps ++= sample.outputWisecondorTbiFile.toList
+    zscore.deps :+= tbiFile
+    zscore.referenceDictionary = referenceFile
+    zscore.output = zFile
+    zscore
+  }
+
+  def createXhmmZscore(sample: Sample, referenceMatrix: File): Tuple2[List[QFunction], File] = {
+
+    // the filtered and centered matrix
+    val filtMatrix = new XhmmMatrix(this)
+    filtMatrix.inputMatrix = referenceMatrix
+    filtMatrix.outputMatrix = new File(sample.sampleDir, s"${sample.sampleId}.filtered-centered.matrix")
+    filtMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-samples.txt"))
+    filtMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-targets.txt"))
+    add(filtMatrix)
+
+    // pca generation
+    val pca = new XhmmPca(this)
+    pca.inputMatrix = filtMatrix.outputMatrix
+    pca.pcaFile = new File(sample.sampleDir, s"${sample.sampleId}.pca.matrix")
+    add(pca)
+
+    // normalization
+    val normalize = new XhmmNormalize(this)
+    normalize.inputMatrix = filtMatrix.outputMatrix
+    normalize.pcaFile = pca.pcaFile
+    normalize.normalizeOutput = new File(sample.sampleDir, s"${sample.sampleId}.normalized.matrix")
+    add(normalize)
+
+    // create matrix of zscores
+    val zMatrix = new XhmmMatrix(this)
+    zMatrix.inputMatrix = normalize.normalizeOutput
+    zMatrix.centerData = true
+    zMatrix.centerType = "sample"
+    zMatrix.zScoreData = true
+    zMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-targets.txt"))
+    zMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-samples.txt"))
+    zMatrix.outputMatrix = new File(sample.sampleDir, "zscores.matrix")
+    add(zMatrix)
+
+    // select sample from matrix
+    val selector = new SampleFromMatrix(this)
+    selector.sample = sample.sampleId
+    selector.inputMatrix = zMatrix.outputMatrix
+    val zscoreFile = new File(sample.sampleDir, s"${sample.sampleId}.zscore-xhmm.bed")
+    selector.output = Some(zscoreFile)
+
+    (selector :: zMatrix :: normalize :: pca :: filtMatrix :: Nil, zscoreFile)
   }
 
   class Sample(name: String) extends AbstractSample(name) {
