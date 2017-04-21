@@ -41,6 +41,8 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
   /** Make a final fastq files, by default only when flexiprep is the main pipeline */
   var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = parent == null)
 
+  override def defaults = super.defaults ++ Map("max_threads" -> 4)
+
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
     Map("input_R1" -> inputR1, "output_R1" -> fastqR1Qc) ++
@@ -226,6 +228,7 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
         override def summaryDeps: List[File] = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
       }
 
+      pipe.jobOutputFile = new File(outDir, ".qc_cmd.out")
       pipe.deps ::= fastqcR1.output
       pipe.deps ::= fastqcR2.output
       pipe.deps ::= R1_in
@@ -241,6 +244,7 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
       R2 = Some(fqSync.outputFastq2)
     } else {
       qcCmdR1.nCoresRequest = Some(2)
+      qcCmdR1.jobOutputFile = new File(outDir, ".qc_cmd.out")
       add(qcCmdR1)
       R1 = qcCmdR1.output
     }

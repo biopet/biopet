@@ -84,7 +84,6 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   var minExpectedGC: Option[Double] = config("minExpectedGC")
   var maxExpectedGC: Option[Double] = config("maxExpectedGC")
   var minimalSubclonePresence: Option[Int] = config("minimalSubclonePresence")
-  var maxThreads: Int = getThreads
 
   var noisyData: Boolean = config("noisyData", default = false)
   //var outputDir: File

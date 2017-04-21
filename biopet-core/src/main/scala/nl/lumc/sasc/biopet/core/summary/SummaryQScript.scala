@@ -135,6 +135,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
           }
           md5sum.input = file
           md5sum.output = new File(file.getParentFile, file.getName + ".md5")
+          md5sum.jobOutputFile = new File(file.getParentFile, s".${file.getName}.md5.md5sum.out")
 
           // Need to not write a md5 file outside the outputDir
           if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
