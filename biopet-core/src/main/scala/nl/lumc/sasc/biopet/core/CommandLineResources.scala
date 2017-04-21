@@ -22,9 +22,16 @@ import org.broadinstitute.gatk.queue.function.CommandLineFunction
  */
 trait CommandLineResources extends CommandLineFunction with Configurable {
 
+  /**
+   * This value is overruling threads method when this is set.
+   * This can be used to limit the number of threads on a global level.
+   */
   lazy val maxThreads: Option[Int] = config("max_threads")
 
+  /** To set an other default threads this method need to be override */
   def defaultThreads = 1
+
+  /** This method will get and set the cores requested */
   final def threads = nCoresRequest match {
     case Some(i) => i
     case _ =>
