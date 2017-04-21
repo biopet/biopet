@@ -14,7 +14,7 @@ class WisecondorZscore(val parent: Configurable) extends Wisecondor {
   var inputBed: File = _
 
   @Input
-  var referenceDictionary: File = config("reference_dictionary", namespace = "wisecondor")
+  var referenceDictionary: File = _
 
   def cmdLine = executable +
     required("zscore") +
