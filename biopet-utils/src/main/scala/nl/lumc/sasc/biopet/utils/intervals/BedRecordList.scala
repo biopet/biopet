@@ -113,7 +113,7 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val heade
   }
 
   /** This return the fraction of the regions comparing to a length */
-  def fractionOf(length: Long): Double = length.toDouble / this.length
+  def fractionOf(length: Long): Double = this.length.toDouble / length.toDouble
 
   /** This return the fraction of the regions comparing to a reference */
   def fractionOfReference(dict: SAMSequenceDictionary): Double = fractionOf(dict.getReferenceLength)
