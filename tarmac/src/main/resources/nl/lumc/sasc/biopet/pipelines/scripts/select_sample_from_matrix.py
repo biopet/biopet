@@ -51,5 +51,5 @@ if __name__ == "__main__":
         for reg, val in zip(regions, values):
             print(reg+'\t'+val)
     else:
-        raise ValueError('sample {0} does exist'.format(args.sample))
+        raise ValueError('sample {0} does not exist'.format(args.sample))
 
