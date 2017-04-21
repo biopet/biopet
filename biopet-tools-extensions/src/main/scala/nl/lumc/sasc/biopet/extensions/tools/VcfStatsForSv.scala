@@ -37,13 +37,15 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
   var outputFile: File = _
 
   override def defaultCoreMemory = 1.0
+  override def defaultResidentFactor = 2.0
+  override def defaultVmemFactor = 3.0
 
   override def cmdLine = super.cmdLine +
     required("-i", inputFile) +
     required("-o", outputFile) +
     repeat("--histBinBoundaries", histogramBinBoundaries)
 
-  def summaryStats: Map[String, Any] = ConfigUtils.yamlToMap(outputFile)
+  def summaryStats: Map[String, Any] = ConfigUtils.fileToConfigMap(outputFile)
 
   def summaryFiles: Map[String, File] = Map.empty
 
