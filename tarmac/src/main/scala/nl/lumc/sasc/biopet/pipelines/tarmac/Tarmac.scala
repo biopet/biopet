@@ -174,20 +174,17 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     filtMatrix.outputMatrix = new File(sample.sampleDir, s"${sample.sampleId}.filtered-centered.matrix")
     filtMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-samples.txt"))
     filtMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-targets.txt"))
-    add(filtMatrix)
 
     // pca generation
     val pca = new XhmmPca(this)
     pca.inputMatrix = filtMatrix.outputMatrix
     pca.pcaFile = new File(sample.sampleDir, s"${sample.sampleId}.pca.matrix")
-    add(pca)
 
     // normalization
     val normalize = new XhmmNormalize(this)
     normalize.inputMatrix = filtMatrix.outputMatrix
     normalize.pcaFile = pca.pcaFile
     normalize.normalizeOutput = new File(sample.sampleDir, s"${sample.sampleId}.normalized.matrix")
-    add(normalize)
 
     // create matrix of zscores
     val zMatrix = new XhmmMatrix(this)
@@ -198,7 +195,6 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     zMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-targets.txt"))
     zMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-samples.txt"))
     zMatrix.outputMatrix = new File(sample.sampleDir, "zscores.matrix")
-    add(zMatrix)
 
     // select sample from matrix
     val selector = new SampleFromMatrix(this)
