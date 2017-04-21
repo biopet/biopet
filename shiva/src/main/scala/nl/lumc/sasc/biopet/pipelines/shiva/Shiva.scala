@@ -60,11 +60,13 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
+      genders = samples.map { case (sampleName, sample) => sampleName -> sample.gender }
     }
     else new ShivaVariantcalling(qscript) {
       override def configNamespace = "shivavariantcalling"
       sampleId = sample
       libId = library
+      genders = sample.map(x => x -> samples(x).gender).toMap
     }
   }
 
@@ -102,8 +104,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       lazy val bqsrAfterFile: Option[File] = if (useAnalyzeCovariates) Some(createFile("baserecal.after")) else None
 
       override def keepFinalBamfile: Boolean = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
-
-      override def bamFile: Option[Mapping#File] = mapping.map(_.mergedBamFile)
 
       override def preProcessBam: Option[Mapping#File] = if (useIndelRealigner && usePrintReads && useBaseRecalibration)
         bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
@@ -187,7 +187,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
     } else None
 
-    override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner)
+    override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner || (libraries.size == 1))
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
 

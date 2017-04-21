@@ -118,6 +118,11 @@ At this moment the following variant callers can be used
 | shiva | correct_readgroups | Boolean | false | Attempt to correct read groups | Only used when input is a bam file |
 | shiva | amplicon_bed | Path |  | Path to target bed file | all |
 | shiva | regions_of_interest | Array of paths |  | Array of paths to region of interest (e.g. gene panels) bed files | all |
+| shivavariantcalling | gender_aware_calling | Boolean | false | Enables gander aware variantcalling | haplotypecaller_gvcf |
+| shivavariantcalling | hap̦loid_regions | Bed file |  | Haploid regions for all genders | haplotypecaller_gvcf |
+| shivavariantcalling | hap̦loid_regions_male | Bed file |  | Haploid regions for males | haplotypecaller_gvcf |
+| shivavariantcalling | hap̦loid_regions_female | Bed file |  | Haploid regions for females | haplotypecaller_gvcf |
+| shiva | amplicon_bed | Path |  | Path to target bed file | all |
 | vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage | raw |
 | vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele | raw |
 | vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) | raw |
@@ -129,6 +134,14 @@ For all the options, please see the corresponding documentation for the mapping 
 ----
 
 ## Advanced usage
+
+### Gender aware variantcalling
+
+In Shiva and ShivaVariantcalling while using haplotypecaller_gvcf it is possible to do gender aware variantcalling. In this mode it required to supply bed files to define haploid regions (see config values). 
+- For males, `hap̦loid_regions` and `hap̦loid_regions_male` is used.
+- For females, `hap̦loid_regions` and `hap̦loid_regions_female` is used.
+
+The pipeline will use a union of those files. At least 1 file is required while using this mode.
 
 ### Reporting modes
 
