@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsSort
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
@@ -91,7 +91,30 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         sample -> createXhmmZscore(sample, jobsAndRefFile._2)
     }
 
-    addAll(wisecondorZJobs.values.toList ::: (xhmmZJobs.values.map(_._1).toList ::: wisecondorRefJobs.values.map(_._1).toList ::: xhmmRefJobs.values.map(_._1).toList).flatten)
+    val wisecondorSyncJobs = wisecondorZJobs map {
+      case (sample, job) =>
+        val intersect = new BedtoolsIntersect(this)
+        intersect.input = job.output
+        intersect.intersectFile = xhmmZJobs(sample)._2
+        intersect.output = new File(sample.sampleDir, s"${sample.sampleId}.wisecondor.sync.z.bed")
+        sample -> intersect
+    }
+
+    val xhmmSyncJobs = xhmmZJobs map {
+      case (sample, jobsAndFile) =>
+        val intersect = new BedtoolsIntersect(this)
+        intersect.input = jobsAndFile._2
+        intersect.intersectFile = wisecondorZJobs(sample).output
+        intersect.output = new File(sample.sampleDir, s"${sample.sampleId}.xhmm.sync.z.bed")
+        sample -> intersect
+    }
+
+    addAll(xhmmRefJobs.values.flatMap(_._1))
+    addAll(wisecondorRefJobs.values.flatMap(_._1))
+    addAll(xhmmZJobs.values.flatMap(_._1))
+    addAll(wisecondorZJobs.values)
+    addAll(wisecondorSyncJobs.values)
+    addAll(xhmmSyncJobs.values)
   }
 
   /**
