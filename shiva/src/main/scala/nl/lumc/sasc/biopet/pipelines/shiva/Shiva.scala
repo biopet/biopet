@@ -74,7 +74,10 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
     /** Sample specific settings */
     override def summarySettings: Map[String, Any] = super.summarySettings ++
-      Map("single_sample_variantcalling" -> variantcalling.isDefined, "use_indel_realigner" -> useIndelRealigner)
+      Map(
+        "single_sample_variantcalling" -> variantcalling.isDefined,
+        "use_indel_realigner" -> useIndelRealigner
+      )
 
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
@@ -84,7 +87,6 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
         bqsrFile.map("baserecal" -> _) ++
         bqsrAfterFile.map("baserecal_after" -> _)
 
-      lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
       lazy val useBaseRecalibration: Boolean = {
         val c: Boolean = config("use_base_recalibration", default = true)
         val br = new BaseRecalibrator(qscript)
@@ -97,18 +99,15 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       lazy val bqsrFile: Option[File] = if (useBaseRecalibration) Some(createFile("baserecal")) else None
       lazy val bqsrAfterFile: Option[File] = if (useAnalyzeCovariates) Some(createFile("baserecal.after")) else None
 
-      override def keepFinalBamfile: Boolean = super.keepFinalBamfile && !useIndelRealigner && !useBaseRecalibration
+      override def keepFinalBamfile: Boolean = super.keepFinalBamfile && !useBaseRecalibration && !usePrintReads
 
-      override def preProcessBam: Option[Mapping#File] = if (useIndelRealigner && usePrintReads && useBaseRecalibration)
-        bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
-      else if (useIndelRealigner) bamFile.map(swapExt(libDir, _, ".bam", ".realign.bam"))
-      else if (usePrintReads && useBaseRecalibration) bamFile.map(swapExt(libDir, _, ".bam", ".baserecal.bam"))
+      override def preProcessBam: Option[Mapping#File] = if (usePrintReads && useBaseRecalibration)
+        bamFile.map(swapExt(libDir, _, ".bam", ".baserecal.bam"))
       else bamFile
 
       /** Library specific settings */
       override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
         "library_variantcalling" -> variantcalling.isDefined,
-        "use_indel_realigner" -> useIndelRealigner,
         "use_base_recalibration" -> useBaseRecalibration,
         "useAnalyze_covariates" -> useAnalyzeCovariates
       )
@@ -122,12 +121,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
       override def addJobs(): Unit = {
         super.addJobs()
 
-        if (useIndelRealigner && useBaseRecalibration) {
-          val file = addIndelRealign(bamFile.get, libDir, isIntermediate = true)
-          addBaseRecalibrator(file, libDir, libraries.size > 1, usePrintReads)
-        } else if (useIndelRealigner) {
-          addIndelRealign(bamFile.get, libDir, libraries.size > 1)
-        } else if (useBaseRecalibration) {
+        if (useBaseRecalibration) {
           addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1, usePrintReads)
         }
 
@@ -195,7 +189,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
     override def addJobs(): Unit = {
       super.addJobs()
 
-      if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
+      if (useIndelRealigner) {
         addIndelRealign(bamFile.get, sampleDir, isIntermediate = false)
       }
 
