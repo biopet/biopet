@@ -98,7 +98,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   /** Readgroup predicted insert size */
   protected var predictedInsertsize: Option[Int] = config("predicted_insertsize")
 
-  val keepFinalBamFile: Boolean = config("keep_final_bam_file", default = true)
+  val keepFinalBamFile: Boolean = config("keep_mapping_bam_file", default = true)
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
