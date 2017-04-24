@@ -104,7 +104,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + numberSamples)
 
       // Gatk preprocess
-      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (if (realign) numberSamples else 0)
       pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration && usePrintReads) numberLibs else 0)
@@ -120,7 +120,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
           sample.libraries.foreach {
             case (libId, lib) =>
               lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
-              lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+              lib.summarySettings.get("use_indel_realigner") shouldBe None // Should not exist anymore
               lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
           }
       }
