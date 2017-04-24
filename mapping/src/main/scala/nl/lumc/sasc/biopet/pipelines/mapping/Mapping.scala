@@ -78,10 +78,10 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
 
   /** Readgroup Platform */
-  protected var platform: String = config("platform", default = "illumina")
+  protected var readgroupPlatform: String = config("readgroup_platform", default = "illumina")
 
   /** Readgroup platform unit */
-  protected var platformUnit: Option[String] = config("platform_unit")
+  protected var readgroupPlatformUnit: Option[String] = config("readgroup_platform_unit")
 
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
@@ -387,8 +387,8 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     hisat2.R1 = R1
     hisat2.R2 = R2
     hisat2.rgId = Some(readgroupId)
-    hisat2.rg +:= s"PL:$platform"
-    platformUnit.foreach(x => hisat2.rg +:= s"PU:$x")
+    hisat2.rg +:= s"PL:$readgroupPlatform"
+    readgroupPlatformUnit.foreach(x => hisat2.rg +:= s"PU:$x")
     libId match {
       case Some(id)  => hisat2.rg +:= s"LB:$id"
       case otherwise => ;
@@ -461,11 +461,11 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     RG += "SM:" + sampleId.get + ","
     RG += "LB:" + libId.get + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
-    platformUnit.foreach(x => RG += "PU:" + x + ",")
+    readgroupPlatformUnit.foreach(x => RG += "PU:" + x + ",")
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + ","
     if (readgroupDate != null) RG += "DT:" + readgroupDate + ","
-    RG += "PL:" + platform
+    RG += "PL:" + readgroupPlatform
 
     val stampyCmd = new Stampy(this)
     stampyCmd.R1 = R1
@@ -505,8 +505,8 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     val bowtie2 = new Bowtie2(this)
     bowtie2.rgId = Some(readgroupId)
     bowtie2.rg +:= ("LB:" + libId.get)
-    bowtie2.rg +:= ("PL:" + platform)
-    platformUnit.foreach(x => bowtie2.rg +:= ("PU:" + x))
+    bowtie2.rg +:= ("PL:" + readgroupPlatform)
+    readgroupPlatformUnit.foreach(x => bowtie2.rg +:= ("PU:" + x))
     bowtie2.rg +:= ("SM:" + sampleId.get)
     bowtie2.R1 = R1
     bowtie2.R2 = R2
@@ -562,8 +562,8 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
 
     addOrReplaceReadGroups.RGID = readgroupId
     addOrReplaceReadGroups.RGLB = libId.get
-    addOrReplaceReadGroups.RGPL = platform
-    addOrReplaceReadGroups.RGPU = platformUnit.getOrElse(readgroupId)
+    addOrReplaceReadGroups.RGPL = readgroupPlatform
+    addOrReplaceReadGroups.RGPU = readgroupPlatformUnit.getOrElse(readgroupId)
     addOrReplaceReadGroups.RGSM = sampleId.get
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
@@ -576,8 +576,8 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   def getReadGroupBwa: String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
     readgroupLibrary.foreach(lb => RG += "LB:" + lb + "\\t")
-    RG += "PL:" + platform + "\\t"
-    platformUnit.foreach(x => RG += "PU:" + x + "\\t")
+    RG += "PL:" + readgroupPlatform + "\\t"
+    readgroupPlatformUnit.foreach(x => RG += "PU:" + x + "\\t")
     RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
     if (readgroupDescription.isDefined) RG += "DS:" + readgroupDescription.get + "\\t"
