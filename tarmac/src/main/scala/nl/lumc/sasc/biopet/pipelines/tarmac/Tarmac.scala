@@ -7,6 +7,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
+import nl.lumc.sasc.biopet.extensions.stouffbed.StouffbedHorizontal
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
 import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
 import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.SampleFromMatrix
@@ -109,12 +110,25 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         sample -> intersect
     }
 
+    val zScoreMergeJobs = samples map {
+      case (_, sample) =>
+        val horizontal = new StouffbedHorizontal(this)
+        val inputs = List(
+          wisecondorSyncJobs(sample).output,
+          xhmmSyncJobs(sample).output
+        )
+        horizontal.inputFiles = inputs
+        horizontal.output = new File(sample.sampleDir, s"${sample.sampleId}.horizontal.bed")
+        sample -> horizontal
+    }
+
     addAll(xhmmRefJobs.values.flatMap(_._1))
     addAll(wisecondorRefJobs.values.flatMap(_._1))
     addAll(xhmmZJobs.values.flatMap(_._1))
     addAll(wisecondorZJobs.values)
     addAll(wisecondorSyncJobs.values)
     addAll(xhmmSyncJobs.values)
+    addAll(zScoreMergeJobs.values)
   }
 
   /**
