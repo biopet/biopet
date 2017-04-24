@@ -4,13 +4,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
 import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
-import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.SampleFromMatrix
+import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{ BedThreshold, SampleFromMatrix }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -26,8 +26,12 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
   lazy val targets: File = config("targets")
   lazy val stouffWindowSizes: List[Int] = config("stouff_window_size")
+  lazy val threshold: Int = config("threshold")
 
   def this() = this(null)
+
+  private var _finalFiles: Map[Sample, List[File]] = Map()
+  def finalFiles: Map[Sample, List[File]] = _finalFiles
 
   /* Fixed values for xhmm count file */
   override def fixedValues: Map[String, Any] = {
@@ -137,6 +141,31 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         sample -> subMap.toMap
     }
 
+    val thresholdJobs = windowStouffJobs map {
+      case (sample, subMap) =>
+        val threshSubMap = subMap map {
+          case (size, job) =>
+            val windowDir = new File(sample.sampleDir, s"window_$size")
+            val thresholder = new BedThreshold(this)
+            thresholder.input = job.output
+            thresholder.isIntermediate = true
+            thresholder.output = Some(new File(windowDir, s"${sample.sampleId}.threshold-raw.bed"))
+            thresholder.threshold = threshold
+            val merger = new BedtoolsMerge(this)
+            merger.input = thresholder.output.get
+            merger.output = new File(windowDir, s"${sample.sampleId}.threshold.bed")
+            merger.additionalColumns = Some(List(4))
+            merger.operation = Some("median")
+            size -> List(thresholder, merger)
+        }
+        sample -> threshSubMap
+    }
+
+    _finalFiles = thresholdJobs map {
+      case (sample, subMap) =>
+        sample -> subMap.values.flatten.collect { case j: BedtoolsMerge => j.output }.toList
+    }
+
     addAll(xhmmRefJobs.values.flatMap(_._1))
     addAll(wisecondorRefJobs.values.flatMap(_._1))
     addAll(xhmmZJobs.values.flatMap(_._1))
@@ -145,6 +174,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     addAll(xhmmSyncJobs.values)
     addAll(zScoreMergeJobs.values)
     addAll(windowStouffJobs.values.flatMap(_.values))
+    addAll(thresholdJobs.values.flatMap(_.values).flatten)
   }
 
   /**

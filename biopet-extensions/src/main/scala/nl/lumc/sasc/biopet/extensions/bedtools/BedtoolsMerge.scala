@@ -27,15 +27,23 @@ class BedtoolsMerge(val parent: Configurable) extends Bedtools {
   @Input(doc = "Input bed file")
   var input: File = _
 
-  @Argument(doc = "Distance")
-  var dist: Option[Int] = config("dist") //default of tool is 1
+  @Argument(doc = "Distance", required = false)
+  var dist: Option[Int] = config("dist", default = 1) //default of tool is 1
 
   @Output(doc = "Output bed file")
   var output: File = _
 
+  @Argument(doc = "operation to additional columns", required = false)
+  var operation: Option[String] = None
+
+  @Argument(doc = "Additional columns to operate upon", required = false)
+  var additionalColumns: Option[List[Int]] = None
+
   def cmdLine = {
     required(executable) + required("merge") +
       required("-i", input) + optional("-d", dist) +
+      (if (additionalColumns.isDefined) required("-c", additionalColumns.get.mkString(",")) else "") +
+      optional("-o", operation) +
       " > " + required(output)
   }
 
