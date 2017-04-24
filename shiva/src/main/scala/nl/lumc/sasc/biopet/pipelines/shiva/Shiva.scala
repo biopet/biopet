@@ -122,7 +122,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
         super.addJobs()
 
         if (useBaseRecalibration) {
-          addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1, usePrintReads)
+          addBaseRecalibrator(bamFile.get, libDir, useIndelRealigner || libraries.size > 1, usePrintReads)
         }
 
         variantcalling.foreach(vc => {
