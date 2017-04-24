@@ -389,13 +389,13 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     hisat2.rgId = Some(readgroupId)
     hisat2.rg +:= s"PL:$readgroupPlatform"
     readgroupPlatformUnit.foreach(x => hisat2.rg +:= s"PU:$x")
-    libId match {
-      case Some(id)  => hisat2.rg +:= s"LB:$id"
-      case otherwise => ;
+    readgroupLibrary match {
+      case Some(id) => hisat2.rg +:= s"LB:$id"
+      case _        =>
     }
     sampleId match {
-      case Some(id)  => hisat2.rg +:= s"SM:$id"
-      case otherwise => ;
+      case Some(id) => hisat2.rg +:= s"SM:$id"
+      case _        =>
     }
 
     val sortSam = new SortSam(this)
@@ -459,7 +459,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId.get + ","
-    RG += "LB:" + libId.get + ","
+    readgroupLibrary.foreach(RG += "LB:" + _ + ",")
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     readgroupPlatformUnit.foreach(x => RG += "PU:" + x + ",")
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -504,7 +504,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
   def addBowtie2(R1: File, R2: Option[File], output: File): File = {
     val bowtie2 = new Bowtie2(this)
     bowtie2.rgId = Some(readgroupId)
-    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("LB:" + readgroupLibrary.getOrElse(libId.get))
     bowtie2.rg +:= ("PL:" + readgroupPlatform)
     readgroupPlatformUnit.foreach(x => bowtie2.rg +:= ("PU:" + x))
     bowtie2.rg +:= ("SM:" + sampleId.get)
@@ -561,7 +561,7 @@ class Mapping(val parent: Configurable) extends QScript with SummaryQScript with
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libId.get
+    addOrReplaceReadGroups.RGLB = readgroupLibrary.getOrElse(libId.get)
     addOrReplaceReadGroups.RGPL = readgroupPlatform
     addOrReplaceReadGroups.RGPU = readgroupPlatformUnit.getOrElse(readgroupId)
     addOrReplaceReadGroups.RGSM = sampleId.get
