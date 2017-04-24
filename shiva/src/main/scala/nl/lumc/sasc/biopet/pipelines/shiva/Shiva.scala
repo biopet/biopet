@@ -179,7 +179,7 @@ class Shiva(val parent: Configurable) extends QScript with MultisampleMappingTra
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
 
-    override def preProcessBam: Option[File] = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
+    override def preProcessBam: Option[File] = if (useIndelRealigner) {
       bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
     } else bamFile
 
