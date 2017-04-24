@@ -105,7 +105,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
       // Gatk preprocess
       pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (if (realign) numberSamples else 0)
-      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (if (realign) numberSamples else 0)
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration && usePrintReads) numberLibs else 0)
 
