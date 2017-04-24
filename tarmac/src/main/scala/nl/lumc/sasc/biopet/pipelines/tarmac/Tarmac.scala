@@ -7,7 +7,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.stouffbed.StouffbedHorizontal
+import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
 import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
 import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.SampleFromMatrix
@@ -25,6 +25,8 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   qscript =>
 
   lazy val targets: File = config("targets")
+  lazy val stouffWindowSizes: List[Int] = config("stouff_window_size")
+
   def this() = this(null)
 
   /* Fixed values for xhmm count file */
@@ -122,6 +124,19 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         sample -> horizontal
     }
 
+    val windowStouffJobs = zScoreMergeJobs map {
+      case (sample, horizontal) =>
+        val subMap = stouffWindowSizes map { size =>
+          val windowDir = new File(sample.sampleDir, s"window_$size")
+          val vertical = new StouffbedVertical(this)
+          vertical.inputFiles = List(horizontal.output)
+          vertical.output = new File(windowDir, s"${sample.sampleId}.window_$size.z.bed")
+          vertical.windowSize = size
+          size -> vertical
+        }
+        sample -> subMap.toMap
+    }
+
     addAll(xhmmRefJobs.values.flatMap(_._1))
     addAll(wisecondorRefJobs.values.flatMap(_._1))
     addAll(xhmmZJobs.values.flatMap(_._1))
@@ -129,6 +144,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     addAll(wisecondorSyncJobs.values)
     addAll(xhmmSyncJobs.values)
     addAll(zScoreMergeJobs.values)
+    addAll(windowStouffJobs.values.flatMap(_.values))
   }
 
   /**
