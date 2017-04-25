@@ -306,12 +306,12 @@ object BammetricsReport extends ReportBuilder {
                        sampleId: Option[Int] = None,
                        libraryId: Option[Int] = None): Unit = {
     val statsPaths = Map(
-      "position" -> List("rna", "histogram", "normalized_position"),
-      "count" -> List("rna", "histogram", "All_Reads.normalized_coverage")
+      "position" -> List("histogram", "normalized_position"),
+      "count" -> List("histogram", "All_Reads.normalized_coverage")
     )
 
     writePlotFromSummary(outputDir, prefix, summary, libraryLevel, sampleId, libraryId, statsPaths,
-      "coverage", "count", "bammetrics", "rna",
+      "position", "count", "bammetrics", "rna",
       "Relative position", "Coverage", "Rna coverage")
   }
 

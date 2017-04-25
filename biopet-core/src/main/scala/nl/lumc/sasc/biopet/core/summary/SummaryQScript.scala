@@ -134,12 +134,13 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
               required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)
           }
           md5sum.input = file
-          md5sum.output = new File(file.getParentFile, file.getName + ".md5")
-          md5sum.jobOutputFile = new File(file.getParentFile, s".${file.getName}.md5.md5sum.out")
-
-          // Need to not write a md5 file outside the outputDir
-          if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
-            md5sum.output = new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+          md5sum.output = if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
+            new File(file.getParentFile, file.getName + ".md5")
+          else {
+            // Need to not write a md5 file outside the outputDir
+            new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+          }
+          md5sum.jobOutputFile = new File(md5sum.output.getParentFile, s".${file.getName}.md5.md5sum.out")
 
           writeSummary.deps :+= md5sum.output
           SummaryQScript.md5sumCache += file -> md5sum.output

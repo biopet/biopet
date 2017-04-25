@@ -21,7 +21,12 @@ import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
+
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by wyleung
@@ -55,6 +60,18 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
     if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size) Logging.addError("R1 and R2 has not the same number of files")
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
+    if (!skipFlexiprep) {
+      val db = SummaryDb.openSqliteSummary(summaryDbFile)
+      val future = for {
+        sample <- db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption)
+        sId <- sample.map(s => Future.successful(s.id))
+          .getOrElse(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId))
+        library <- db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption)
+        lId <- library.map(l => Future.successful(l.id))
+          .getOrElse(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId))
+      } yield lId
+      Await.result(future, Duration.Inf)
+    }
     if (outputName == null) {
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
