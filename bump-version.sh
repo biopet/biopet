@@ -21,7 +21,5 @@ if [ ! $1 ] ; then
     exit 1
 fi
 
-do
-	mvn -f $DIR/pom.xml versions:set -DnewVersion=$1 -DgenerateBackupPoms=false
-done
+mvn -f $DIR/pom.xml versions:set -DnewVersion=$1 -DgenerateBackupPoms=false
 
