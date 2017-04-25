@@ -62,14 +62,15 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
 
     if (!skipFlexiprep) {
       val db = SummaryDb.openSqliteSummary(summaryDbFile)
-      Await.result(for {
+      val future = for {
         sample <- db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption)
         sId <- sample.map(s => Future.successful(s.id))
           .getOrElse(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId))
         library <- db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption)
         lId <- library.map(l => Future.successful(l.id))
           .getOrElse(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId))
-      } yield lId, Duration.Inf)
+      } yield lId
+      Await.result(future, Duration.Inf)
     }
     if (outputName == null) {
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
