@@ -22,7 +22,16 @@ import org.broadinstitute.gatk.queue.function.CommandLineFunction
  */
 trait CommandLineResources extends CommandLineFunction with Configurable {
 
+  /**
+   * This value is overruling threads method when this is set.
+   * This can be used to limit the number of threads on a global level.
+   */
+  lazy val maxThreads: Option[Int] = config("max_threads")
+
+  /** To set an other default threads this method need to be override */
   def defaultThreads = 1
+
+  /** This method will get and set the cores requested */
   final def threads = nCoresRequest match {
     case Some(i) => i
     case _ =>
@@ -72,7 +81,6 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
    * @return number of threads
    */
   private def getThreads(default: Int): Int = {
-    val maxThreads: Option[Int] = config("maxthreads")
     val threads: Int = config("threads", default = default)
     maxThreads match {
       case Some(max) => if (max > threads) threads else max
@@ -120,11 +128,12 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
     nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
+    nCoresRequest = nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
-    memoryLimit = Some(_coreMemory * threads)
-    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads) threads else 1))
-    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads) threads else 1)) + "G")
+    memoryLimit = Some(_coreMemory * nCoresRequest.getOrElse(threads))
+    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads) nCoresRequest.getOrElse(threads) else 1))
+    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads) nCoresRequest.getOrElse(threads) else 1)) + "G")
   }
 
 }

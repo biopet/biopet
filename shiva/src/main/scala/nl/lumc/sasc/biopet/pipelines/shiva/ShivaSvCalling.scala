@@ -20,8 +20,13 @@ import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.extensions.tools.VcfStatsForSv
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Common trait for ShivaVariantcalling
@@ -43,7 +48,16 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
 
   /** Executed before script */
   def init(): Unit = {
-    if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    if (inputBamsArg.nonEmpty) {
+      inputBams = BamUtils.sampleBamMap(inputBamsArg)
+
+      val db = SummaryDb.openSqliteSummary(summaryDbFile)
+      for (sampleName <- inputBams.keys) {
+        if (Await.result(db.getSampleId(summaryRunId, sampleName), Duration.Inf).isEmpty) {
+          db.createSample(sampleName, summaryRunId)
+        }
+      }
+    }
     outputMergedVCF = new File(outputDir, "allsamples.merged.vcf")
   }
 
