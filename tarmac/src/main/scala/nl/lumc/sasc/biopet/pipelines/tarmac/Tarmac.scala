@@ -384,60 +384,43 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       }
     }
 
-    protected lazy val outputWisecondorSortJob: String \/ QFunction = {
-      val outFile = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed")
+    protected lazy val outputWisecondorSortJobs: String \/ List[QFunction] = {
       outputWisecondorGccFile map { gccFile =>
         val sort = new BedtoolsSort(root)
         sort.input = gccFile
-        sort.output = outFile
+        sort.output = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed")
         sort.isIntermediate = true
-        sort
-      }
-    }
-
-    lazy val outputWisecondorSortFile: String \/ File = {
-      outputWisecondorSortJob match {
-        case -\/(error)              => -\/(error)
-        case \/-(sort: BedtoolsSort) => \/-(sort.output)
-      }
-    }
-
-    // FIXME: change to pipe with sort
-    protected lazy val outputWisecondorGzJob: String \/ QFunction = {
-      val outFile = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed.gz")
-      outputWisecondorSortFile map { bedFile =>
         val gz = new Bgzip(root)
-        gz.input = List(bedFile)
-        gz.output = outFile
-        gz
+        gz.input = List(sort.output)
+        gz.output = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed.gz")
+        val tabix = Tabix(root, gz.output)
+        List(sort, gz, tabix)
       }
     }
 
     lazy val outputWisecondorGzFile: String \/ File = {
-      outputWisecondorGzJob match {
+      outputWisecondorSortJobs match {
         case -\/(error)     => -\/(error)
-        case \/-(gz: Bgzip) => \/-(gz.output)
-      }
-    }
-
-    protected lazy val outputWisecondorTbiJob: String \/ QFunction = {
-      outputWisecondorGzFile map { gz =>
-        Tabix(root, gz)
+        case \/-(functions: List[QFunction]) =>  \/-(functions.collect { case gz: Bgzip => gz.output}.head)
       }
     }
 
     lazy val outputWisecondorTbiFile: String \/ File = {
-      outputWisecondorTbiJob match {
+      outputWisecondorSortJobs match {
         case -\/(error)    => -\/(error)
-        case \/-(t: Tabix) => \/-(t.outputIndex)
+        case \/-(functions: List[QFunction]) => \/-(functions.collect { case tbi: Tabix => tbi.outputIndex}.head)
       }
     }
 
     /** Function to add sample jobs */
     def addJobs(): Unit = {
-      (outputWisecondorTbiJob :: outputWisecondorGzJob :: outputWisecondorSortJob :: outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
+      (outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
         case -\/(error)    => Logging.addError(error)
         case \/-(function) => add(function)
+      }
+      outputWisecondorSortJobs match {
+        case -\/(error) => Logging.addError(error)
+        case \/-(functions: List[QFunction]) => addAll(functions)
       }
     }
 
