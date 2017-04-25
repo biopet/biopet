@@ -1,31 +1,55 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(nl.lumc.sasc.biopet.core.report.ReportBuilder)
 #import(nl.lumc.sasc.biopet.pipelines.gears.GearsKraken)
 #import(java.io.File)
 #import(java.io.PrintWriter)
-<%@ var summary: Summary %>
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
 <%@ var centrifugeTag: Option[String] = None %>
 <%@ var summaryStatsTag: String = "krakenreport" %>
 <%@ var summaryModuleTag: String = "gearskraken" %>
+<%@ var runId: Int %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
+#{
+    val samples = sampleId match {
+    case Some(id) => allSamples.filter(_.id == id).toList
+    case _ => allSamples.toList
+    }
+}#
 <%
-    val summaries = if (sampleId.isEmpty) {
-        summary.getSampleValues(summaryModuleTag, "stats", summaryStatsTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
-    } else summary.getValue(sampleId, libId, summaryModuleTag, "stats", summaryStatsTag).map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
+    val summaries = if (libId.isDefined) summary.getStatsForLibraries(runId, summaryModuleTag, summaryStatsTag, sampleId,
+      Map("all" -> Nil)
+    ).filter(_._1._2 == libId.get).map(x => x._1._1 -> x._2)
+    else summary.getStatsForSamples(runId, summaryModuleTag, summaryStatsTag, sampleId.map(SummaryDb.SampleId),
+      Map("all" -> Nil)
+    )
 
-    val totalReads = if (sampleId.isEmpty) {
-        centrifugeTag.map {tag => summary.getSampleValues(summaryModuleTag, "stats", tag, "metrics", "Read").map(x => x._1 -> x._2.getOrElse(0L).toString.toLong) }
-    } else centrifugeTag.flatMap(tag => summary.getValue(sampleId, libId, summaryModuleTag, "stats", tag, "metrics", "Read"))
-      .map(value => Map(sampleId.get -> value.toString.toLong))
+    val totalReads = centrifugeTag.map { tag =>
+    if (libId.isDefined) {
+        val stats = summary.getStatsForLibraries(runId, summaryModuleTag, ModuleName(tag), sampleId,
+            Map("total" -> List("metrics", "Read"))
+        ).filter(_._1._2 == libId.get).head
+        val lib = allLibraries.filter(_.id == stats._1._2).head
+        val sample = allSamples.filter(_.id == stats._1._1).head
+        Map(s"${sample.name}" -> stats._2("total").map(_.toString.toLong).getOrElse(0L))
+    } else summary.getStatsForSamples(runId, summaryModuleTag, ModuleName(tag), sampleId.map(SummaryDb.SampleId),
+        Map("total" -> List("metrics", "Read"))
+        ).map(x => allSamples.find(_.id == x._1).head.name -> x._2("total").map(_.toString.toLong).getOrElse(0L))
+    }
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
-    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile, totalReads)
+    GearsKraken.convertKrakenSummariesToKronaXml(summaries.map(x => allSamples.find(_.id == x._1).head.name -> x._2("all").map(_.asInstanceOf[Map[String, Any]]).getOrElse(Map())), tempFile, totalReads)
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/krona.ssp",
     args ++ Map("kronaXml" -> tempFile))

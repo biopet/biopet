@@ -1,4 +1,5 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -72,14 +73,14 @@
                 case _ => allLibraries.filter(_.sampleId == sample.id).map(x => Some(x.id)).toList
                 }
             }#
-            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
             #for (libId <- libs)
                 #{ val libName = libId.map(l => allLibraries.find(_.id == l).get.name) }#
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
                         val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics", "wgs", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                        val results = summary.getStatKeys(runId, "bammetrics", "rna", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
