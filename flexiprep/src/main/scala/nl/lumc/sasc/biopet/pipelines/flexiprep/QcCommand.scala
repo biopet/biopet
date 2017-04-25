@@ -16,19 +16,19 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 9/22/15.
  */
-class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) extends BiopetCommandLineFunction with Summarizable {
+class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String) extends BiopetCommandLineFunction with Summarizable {
 
-  val flexiprep = root match {
+  val flexiprep = parent match {
     case f: Flexiprep => f
     case _            => throw new IllegalArgumentException("This class may only be used inside Flexiprep")
   }
@@ -44,20 +44,18 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 3
 
-  val seqtk = new SeqtkSeq(root)
-  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(root, fastqc)) else None
+  val seqtk = new SeqtkSeq(parent)
+  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(parent, fastqc)) else None
   var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
-    val sickle = new Sickle(root)
-    sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-    Some(sickle)
+    Some(new Sickle(root))
   } else None
 
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
-    val gzip = Gzip(root)
+    val gzip = Gzip(parent)
     gzip.output = output
     gzip
   } else {
-    val cat = Cat(root)
+    val cat = Cat(parent)
     cat.output = output
     cat
   }
@@ -70,7 +68,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
 
   override def summaryDeps = trim.map(_.summaryDeps).toList.flatten ::: super.summaryDeps
 
-  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+  override def addToQscriptSummary(qscript: SummaryQScript): Unit = {
     clip match {
       case Some(job) => qscript.addSummarizable(job, s"clipping_$read")
       case _         =>
@@ -89,7 +87,10 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
     require(read != null)
     deps ::= input
     outputFiles :+= output
-    trim.foreach(outputFiles :+= _.outputStats)
+    trim.foreach { t =>
+      t.outputStats = new File(output.getParentFile, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+      outputFiles :+= t.outputStats
+    }
   }
 
   override def beforeCmd(): Unit = {
@@ -106,24 +107,29 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
     if (seqtk.Q.isDefined) seqtk.V = true
     addPipeJob(seqtk)
 
-    clip = if (!flexiprep.skipClip) {
-      val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
+    clip = (clip, BiopetQScript.safeIsDone(fastqc)) match {
+      case (Some(cutadapt), Some(true)) =>
+        val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
+          fastqc.foundAdapters.map(_.seq)
+        } else Set()
 
-      val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
-        fastqc.foundAdapters.map(_.seq)
-      } else Set()
-
-      if (foundAdapters.nonEmpty || cutadapt.adapter.nonEmpty || cutadapt.front.nonEmpty || cutadapt.anywhere.nonEmpty) {
-        cutadapt.fastqInput = seqtk.output
-        cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
-        cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
-        if (cutadapt.defaultClipMode == "3") cutadapt.adapter ++= foundAdapters
-        else if (cutadapt.defaultClipMode == "5") cutadapt.front ++= foundAdapters
-        else if (cutadapt.defaultClipMode == "both") cutadapt.anywhere ++= foundAdapters
-        addPipeJob(cutadapt)
-        Some(cutadapt)
-      } else None
-    } else None
+        if (foundAdapters.nonEmpty || cutadapt.adapter.nonEmpty || cutadapt.front.nonEmpty || cutadapt.anywhere.nonEmpty) {
+          cutadapt.fastqInput = seqtk.output
+          cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
+          cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
+          if (cutadapt.defaultClipMode == "3") cutadapt.adapter ++= foundAdapters
+          else if (cutadapt.defaultClipMode == "5") cutadapt.front ++= foundAdapters
+          else if (cutadapt.defaultClipMode == "both") cutadapt.anywhere ++= foundAdapters
+          addPipeJob(cutadapt)
+          Some(cutadapt)
+        } else None
+      case (None, _) => None
+      case (Some(c), _) =>
+        c.fastqInput = seqtk.output
+        c.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
+        c.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
+        Some(c)
+    }
 
     trim.foreach { t =>
       t.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
@@ -159,13 +165,12 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc, val read: String) ex
   def cmdLine = {
 
     val cmd = (clip, trim) match {
-      case (Some(c), Some(t)) => new BiopetFifoPipe(root, seqtk :: c :: t :: outputCommand :: Nil)
-      case (Some(c), _)       => new BiopetFifoPipe(root, seqtk :: c :: outputCommand :: Nil)
-      case (_, Some(t))       => new BiopetFifoPipe(root, seqtk :: t :: outputCommand :: Nil)
-      case _                  => new BiopetFifoPipe(root, seqtk :: outputCommand :: Nil)
+      case (Some(c), Some(t)) => new BiopetFifoPipe(parent, seqtk :: c :: t :: outputCommand :: Nil)
+      case (Some(c), _)       => new BiopetFifoPipe(parent, seqtk :: c :: outputCommand :: Nil)
+      case (_, Some(t))       => new BiopetFifoPipe(parent, seqtk :: t :: outputCommand :: Nil)
+      case _                  => new BiopetFifoPipe(parent, seqtk :: outputCommand :: Nil)
     }
 
-    //val cmds = (Some(seqtk) :: clip :: trim :: Some(new Gzip(root)) :: Nil).flatten
     cmd.beforeGraph()
     cmd.commandLine
   }

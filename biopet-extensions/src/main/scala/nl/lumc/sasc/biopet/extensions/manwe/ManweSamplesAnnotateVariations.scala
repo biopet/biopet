@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 /**
  * Created by ahbbollen on 24-9-15.
  */
-class ManweSamplesAnnotateVariations(val root: Configurable) extends Manwe {
+class ManweSamplesAnnotateVariations(val parent: Configurable) extends Manwe {
 
   @Argument(doc = "uri to sample to annotate")
   var uri: Option[String] = _

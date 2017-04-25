@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class ConiferAnalyze(val root: Configurable) extends Conifer {
+class ConiferAnalyze(val parent: Configurable) extends Conifer {
 
   @Input(doc = "Probes / capture kit definition as bed file: chr,start,stop,gene-annot", required = true)
   var probes: File = _

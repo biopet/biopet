@@ -36,7 +36,7 @@ import scalaz._, Scalaz._
  *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
+class Toucan(val parent: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
@@ -58,7 +58,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   lazy val enableScatter: Boolean = config("enable_scatter", default = referenceDict.getReferenceLength > minScatterGenomeSize)
 
-  def sampleInfo: Map[String, Map[String, Any]] = root match {
+  def sampleInfo: Map[String, Map[String, Any]] = parent match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
     case null                  => VcfUtils.getSampleIds(inputVcf).map(x => x -> Map[String, Any]()).toMap
     case s: SampleLibraryTag   => s.sampleId.map(x => x -> Map[String, Any]()).toMap
@@ -170,11 +170,11 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    * @param sampleID the sampleID to be used
    * @param inputVcf the input VCF
    * @param gVCF the gVCF for coverage
-   * @param annotation: ManweDownloadAnnotateVcf object of annotated vcf
+   * @param annotation: Optional ManweDownloadAnnotateVcf object of annotated vcf
    * @return
    */
   def importAndActivateSample(sampleID: String, sampleGroups: List[String], inputVcf: File,
-                              gVCF: File, annotation: ManweAnnotateVcf): ManweActivateAfterAnnotImport = {
+                              gVCF: File, annotation: Option[ManweAnnotateVcf]): ManweActivateAfterImport = {
 
     val minGQ: Int = config("minimum_genome_quality", default = 20, namespace = "manwe")
     val isPublic: Boolean = config("varda_is_public", default = true, namespace = "manwe")
@@ -228,7 +228,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     imported.output = swapExt(outputDir, intersected.output, ".vcf.gz", ".manwe.import")
     add(imported)
 
-    val active = new ManweActivateAfterAnnotImport(this, annotation, imported)
+    val active = new ManweActivateAfterImport(this, imported)
+    annotation.foreach(a => active.deps :+= a.jobOutputFile)
     active.output = swapExt(outputDir, imported.output, ".import", ".activated")
     add(active)
     active
@@ -236,7 +237,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   }
 
   /**
-   * Perform varda analysis
+   * Import to and optionally annotate with varda
    *
    * @param vcf input vcf
    * @param gVcf The gVCF to be used for coverage calculations
@@ -245,22 +246,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   def varda(vcf: File, gVcf: File): File = {
 
     val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), namespace = "manwe")
+    val doAnnotate: Boolean = config("annotate", namespace = "varda", default = true)
 
-    val annotate = new ManweAnnotateVcf(this)
-    annotate.vcf = vcf
-    if (annotationQueries.nonEmpty) {
-      annotate.queries = annotationQueries
-    }
-    annotate.waitToComplete = true
-    annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".manwe.annot")
-    annotate.isIntermediate = true
-    add(annotate)
-
-    val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
-    annotatedVcf.output = swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
-    add(annotatedVcf)
-
-    val activates = sampleInfo map { x =>
+    val sampleGroups = sampleInfo map { x =>
       val maybeSampleGroup = x._2.get("varda_group") match {
         case None => Some(Nil)
         case Some(vals) => vals match {
@@ -271,20 +259,43 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       }
       val sampleGroup = maybeSampleGroup
         .getOrElse(throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings"))
-      importAndActivateSample(x._1, sampleGroup, vcf, gVcf, annotate)
+      x._1 -> sampleGroup
     }
 
-    val finalLn = new Ln(this)
-    activates.foreach(x => finalLn.deps :+= x.output)
-    finalLn.input = annotatedVcf.output
-    finalLn.output = swapExt(outputDir, annotatedVcf.output, "manwe.annot.vcf.gz", ".varda_annotated.vcf.gz")
-    finalLn.relative = true
-    add(finalLn)
+    if (doAnnotate) {
+      val annotate = new ManweAnnotateVcf(this)
+      annotate.vcf = vcf
+      if (annotationQueries.nonEmpty) {
+        annotate.queries = annotationQueries
+      }
+      annotate.waitToComplete = true
+      annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".manwe.annot")
+      annotate.isIntermediate = true
+      add(annotate)
 
-    finalLn.output
+      val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
+      annotatedVcf.output = swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
+      add(annotatedVcf)
+
+      val activates = sampleGroups map { x =>
+        importAndActivateSample(x._1, x._2, vcf, gVcf, Some(annotate))
+      }
+
+      val finalLn = new Ln(this)
+      activates.foreach(x => finalLn.deps :+= x.output)
+      finalLn.input = annotatedVcf.output
+      finalLn.output = swapExt(outputDir, annotatedVcf.output, "manwe.annot.vcf.gz", ".varda_annotated.vcf.gz")
+      finalLn.relative = true
+      add(finalLn)
+
+      finalLn.output
+    } else {
+      sampleGroups.foreach { x =>
+        importAndActivateSample(x._1, x._2, vcf, gVcf, None)
+      }
+      vcf
+    }
   }
-
-  def summaryFile = new File(outputDir, "Toucan.summary.json")
 
   def summaryFiles = Map("input_vcf" -> inputVcf, "outputVcf" -> outputVcf)
 

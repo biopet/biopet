@@ -1,9 +1,16 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(nl.lumc.sasc.biopet.pipelines.shiva.ShivaReport)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+#import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var multisample: Boolean = true %>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
 <%@ var showPlot: Boolean = false %>
@@ -11,12 +18,14 @@
 <%@ var showIntro: Boolean = true %>
 <%@ var target: Option[String] = None %>
 <%@ var caller: String = "final" %>
-
+<%@ var runId: Int %>
+<%@ var allSamples: Seq[Sample] %>
 #{
     val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
+
     val samples = sampleId match {
-        case Some(sample) => List(sample.toString)
-        case _ => summary.samples.toList
+        case Some(id) => allSamples.filter(_.id == id)
+        case _ => allSamples
     }
     val vcfstatsKey = target match {
         case Some(t) => s"multisample-vcfstats-$caller-$t"
@@ -74,11 +83,18 @@
         #for (field <- fields) <th>${field}</th> #end
     </tr></thead>
     <tbody>
-    #for (sample <- samples.toList.sorted)
-    <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
-        #for (field <- fields)
-        <td>${summary.getValue("shivavariantcalling", "stats", vcfstatsKey, "total", "genotype", "general", sample, field)}</td>
-        #end
+    #for (sample <- samples.sortBy(_.name))
+    <tr><td><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
+    #{
+    fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
+        val statsPaths = fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
+        val sampleQuery: SampleQuery = if (multisample) NoSample else SampleId(sampleId.get)
+        val results = summary.getStatKeys(runId, "shivavariantcalling", vcfstatsKey, sampleQuery, keyValues = statsPaths)
+    }#
+
+    #for (field <- fields)
+    <td>${results(field)}</td>
+    #end
     </tr>
     #end
     </tbody>

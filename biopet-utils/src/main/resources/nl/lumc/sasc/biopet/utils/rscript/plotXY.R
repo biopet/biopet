@@ -11,7 +11,13 @@ parser$add_argument('--xlabel', dest='xlabel', type='character')
 parser$add_argument('--ylabel', dest='ylabel', type='character', required=TRUE)
 parser$add_argument('--llabel', dest='llabel', type='character')
 parser$add_argument('--title', dest='title', type='character')
+parser$add_argument('--hideLegend', dest='hideLegend', type='character', default="false")
 parser$add_argument('--removeZero', dest='removeZero', type='character', default="false")
+parser$add_argument('--xLog10', dest='xLog10', type='character', default="false")
+parser$add_argument('--yLog10', dest='yLog10', type='character', default="false")
+
+parser$add_argument('--xLog10Breaks', dest='xLog10Breaks', nargs='+', type='integer')
+parser$add_argument('--xLog10Labels', dest='xLog10Labels', nargs='+', type='character')
 
 arguments <- parser$parse_args()
 
@@ -21,6 +27,8 @@ DF <- read.table(arguments$input, header=TRUE)
 
 if (is.null(arguments$xlabel)) xlab <- colnames(DF)[1] else xlab <- arguments$xlabel
 
+if (is.null(arguments$hideLegend) || arguments$hideLegend == "false") legendPosition <- "right" else legendPosition <- "none"
+
 colnames(DF)[1] <- "Rank"
 
 DF1 <- melt(DF, id.var="Rank")
@@ -28,13 +36,29 @@ DF1 <- melt(DF, id.var="Rank")
 if (arguments$removeZero == "true") DF1 <- DF1[DF1$value > 0, ]
 if (arguments$removeZero == "true") print("Removed 0 values")
 
-ggplot(DF1, aes(x = Rank, y = value, group = variable, color = variable)) +
+plot = ggplot(DF1, aes(x = Rank, y = value, group = variable, color = variable)) +
   xlab(xlab) +
   ylab(arguments$ylabel) +
-  guides(fill=guide_legend(title=arguments$llabel)) +
+  guides(color=guide_legend(title=arguments$llabel)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) +
   ggtitle(arguments$title) +
   theme_bw() +
+  theme(legend.position = legendPosition) +
   geom_line()
+
+
+if (arguments$xLog10 == "true") {
+  if (!is.null(arguments$xLog10Labels)) {
+    scale_x <- scale_x_log10(breaks = arguments$xLog10Breaks, labels=arguments$xLog10Labels)
+  } else {
+    scale_x <- scale_x_log10()
+  }
+  plot <- plot + scale_x
+}
+if (arguments$yLog10 == "true") {
+  plot <- plot + scale_y_log10()
+}
+
+plot
 
 dev.off()

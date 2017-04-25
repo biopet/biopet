@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.core.extensions
 import java.io.{ File, FileOutputStream }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.utils.commandline.Input
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
@@ -32,7 +33,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
    * @param script name / location of script
    */
   def setPythonScript(script: String) {
-    pythonScript = new File(script)
+    pythonScript = new File(script).getAbsoluteFile
     if (!pythonScript.exists()) {
       setPythonScript(script, "")
     } else {
@@ -47,12 +48,14 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
    */
   def setPythonScript(script: String, subpackage: String) {
     pythonScriptName = script
-    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName)
+    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile
     if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
     val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
-    val os = new FileOutputStream(pythonScript)
-    org.apache.commons.io.IOUtils.copy(is, os)
-    os.close()
+    if (is != null) {
+      val os = new FileOutputStream(pythonScript)
+      org.apache.commons.io.IOUtils.copy(is, os)
+      os.close()
+    } else Logging.addError(s"Python script not found: $pythonScriptName")
   }
 
   /** return basic command to prefix the complete command with */

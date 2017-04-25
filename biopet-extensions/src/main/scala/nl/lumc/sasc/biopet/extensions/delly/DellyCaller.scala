@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class DellyCaller(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "delly")
 
   private lazy val versionexecutable: File = new File(executable)
@@ -41,14 +41,20 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with
   @Argument(doc = "What kind of analysis to run: DEL,DUP,INV,TRA")
   var analysistype: String = _
 
-  override def beforeGraph(): Unit = {
-    super.beforeGraph()
-    deps ::= new File(input.getParentFile, input.getName + ".bai")
-  }
-
   def cmdLine = required(executable) +
-    "-t" + required(analysistype) +
-    "-o" + required(outputvcf) +
-    required(input)
+    required("-t", analysistype) +
+    required("-o", outputvcf) +
+    required(input) +
+    createEmptyOutputIfNeeded
+
+  // when no variants are found then the tool doesn't generate the output file either, in Biopet it's needed that the empty file would be there
+  private def createEmptyOutputIfNeeded =
+    s"""
+       |c=$$?
+       |if [ $$c -eq 0 ] && [ ! -f $outputvcf ]; then
+       |  echo '##fileformat=VCFv4.2' > $outputvcf
+       |  echo '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO' >> $outputvcf
+       |fi
+       |exit $$c""".stripMargin
 
 }

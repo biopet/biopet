@@ -19,7 +19,7 @@ import java.io.File
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -28,8 +28,8 @@ import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-
 import MultisampleMapping.MergeStrategy
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMarkdup, SambambaMerge }
 
 import scala.collection.JavaConversions._
 
@@ -63,11 +63,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new MultisampleMappingReport(this)
     report.outputDir = new File(outputDir, "report")
-    report.summaryFile = summaryFile
+    report.summaryDbFile = summaryDbFile
     Some(report)
   }
 
-  override def defaults: Map[String, Any] = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+  override def defaults: Map[String, Any] = super.defaults ++ Map(
+    "reordersam" -> Map("allow_incomplete_dict_concordance" -> true),
+    "gears" -> Map("skip_flexiprep" -> true)
+  )
 
   override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
@@ -87,6 +90,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
+    def metricsPreprogressBam = true
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) { lib =>
 
@@ -99,6 +104,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
       lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
+      lazy val qcFastqR1 = mapping.map(_.flexiprep.fastqR1Qc)
+      lazy val qcFastqR2 = mapping.flatMap(_.flexiprep.fastqR2Qc)
       lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
@@ -118,7 +125,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       } else None
 
       def bamFile: Option[File] = mapping match {
-        case Some(m)                 => Some(m.finalBamFile)
+        case Some(m)                 => Some(m.mergedBamFile)
         case _ if inputBam.isDefined => Some(new File(libDir, s"$sampleId-$libId.bam"))
         case _                       => None
       }
@@ -240,9 +247,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       mergeStrategy match {
         case MergeStrategy.None =>
-        case (MergeStrategy.MergeSam | MergeStrategy.MarkDuplicates) if libraries.flatMap(_._2.bamFile).size == 1 =>
+        case (MergeStrategy.MergeSam) if libraries.flatMap(_._2.bamFile).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get): _*)
-        case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
+        case (MergeStrategy.PreProcessMergeSam) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
         case MergeStrategy.MergeSam =>
           add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
@@ -252,13 +259,27 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.PreProcessMarkDuplicates =>
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = !keepMergedFiles))
+        case MergeStrategy.PreProcessSambambaMarkdup =>
+          val mergedBam = if (libraries.flatMap(_._2.bamFile).size == 1) {
+            add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, new File(sampleDir, "merged.bam")): _*)
+            libraries.flatMap(_._2.preProcessBam).head
+          } else {
+            val merge = new SambambaMerge(qscript)
+            merge.input = libraries.flatMap(_._2.preProcessBam).toList
+            merge.output = new File(sampleDir, "merged.bam")
+            merge.isIntermediate = true
+            add(merge)
+            merge.output
+          }
+          add(SambambaMarkdup(qscript, mergedBam, bamFile.get, isIntermediate = !keepMergedFiles))
+          add(Ln(qscript, bamFile.get + ".bai", bamFile.get.getAbsolutePath.stripSuffix(".bam") + ".bai"))
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 
       if (mergeStrategy != MergeStrategy.None && libraries.flatMap(_._2.bamFile).nonEmpty) {
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
-        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.inputBam = if (metricsPreprogressBam) preProcessBam.get else bamFile.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         add(bamMetrics)
 
@@ -274,8 +295,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
           add(gears)
         case "all" =>
           val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.inputR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.inputR2).toList
+          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
           gears.sampleId = Some(sampleId)
           gears.outputDir = new File(sampleDir, "gears")
           add(gears)
@@ -287,16 +308,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 }
 
 /** This class is the default implementation that can be used on the command line */
-class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
+class MultisampleMapping(val parent: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
-
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 }
 
 object MultisampleMapping extends PipelineCommand {
 
   object MergeStrategy extends Enumeration {
-    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
+    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates, PreProcessSambambaMarkdup = Value
   }
 
   /** When file is not absolute an error is raise att the end of the script of a pipeline */

@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by pjvan_thof on 12/10/15.
  */
-class MergeOtuTables(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class MergeOtuTables(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "merge_otu_tables.py")
 
   def versionCommand = executable + " --version"

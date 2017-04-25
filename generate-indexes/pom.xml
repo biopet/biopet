@@ -26,7 +26,7 @@
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>Biopet</artifactId>
-        <version>0.8.0</version>
+        <version>0.9.0</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -43,18 +43,6 @@
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetToolsExtensions</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>6.8</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
-            <version>2.2.1</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

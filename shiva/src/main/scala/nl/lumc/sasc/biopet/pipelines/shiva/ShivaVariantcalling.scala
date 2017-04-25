@@ -14,7 +14,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand, Reference, SampleLibraryTag }
+import MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
@@ -32,7 +33,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaVariantcalling(val root: Configurable) extends QScript
+class ShivaVariantcalling(val parent: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
   with Reference
@@ -46,9 +47,24 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
   var inputBams: Map[String, File] = Map()
 
+  var inputBqsrFiles: Map[String, File] = Map()
+
+  var genders: Map[String, Gender.Value] = _
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    if (Option(genders).isEmpty) genders = {
+      val samples: Map[String, Any] = config("genders", default = Map())
+      samples.map {
+        case (sampleName, gender) =>
+          sampleName -> (gender.toString.toLowerCase match {
+            case "male"   => Gender.Male
+            case "female" => Gender.Female
+            case _        => Gender.Unknown
+          })
+      }
+    }
   }
 
   var referenceVcf: Option[File] = config("reference_vcf")
@@ -84,6 +100,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
   def biopetScript(): Unit = {
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+    if (!callers.exists(_.mergeVcfResults)) Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
     addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
 
@@ -91,11 +108,13 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     cv.out = finalFile
     cv.setKey = Some("VariantCaller")
     cv.genotypemergeoption = Some("PRIORITIZE")
-    cv.rod_priority_list = Some(callers.map(_.name).mkString(","))
+    cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
+      caller.inputBqsrFiles = inputBqsrFiles
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
+      caller.genders = genders
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean = config("execute_vt_normalize", default = false, namespace = caller.configNamespace)
@@ -112,21 +131,22 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
-        cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
         vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
-      } else cv.variant :+= TaggedFile(caller.outputFile, caller.name)
+        if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
+      } else if (caller.mergeVcfResults) cv.variant :+= TaggedFile(caller.outputFile, caller.name)
     }
-    add(cv)
-
-    addStats(finalFile, "final")
+    if (cv.variant.nonEmpty) {
+      add(cv)
+      addStats(finalFile, "final")
+    }
 
     addSummaryJobs()
   }
@@ -160,9 +180,6 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
       addSummarizable(vcfStats, s"$namePrefix-vcfstats-$name-$regionName")
     }
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
 
   /** Settings for the summary */
   def summarySettings = Map(

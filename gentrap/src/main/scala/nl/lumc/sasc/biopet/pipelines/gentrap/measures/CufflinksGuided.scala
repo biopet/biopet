@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 1/12/16.
  */
-class CufflinksGuided(val root: Configurable) extends QScript with CufflinksMeasurement with AnnotationGtf {
+class CufflinksGuided(val parent: Configurable) extends QScript with CufflinksMeasurement with AnnotationGtf {
   override def makeCufflinksJob(id: String, bamFile: File) = {
     val cufflinks = super.makeCufflinksJob(id, bamFile)
     cufflinks.gtfGuide = Some(annotationGtf)

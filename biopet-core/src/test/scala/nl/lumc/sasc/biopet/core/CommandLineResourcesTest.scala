@@ -28,7 +28,7 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
   class CommandLineFunctionMock(c: Map[String, Any] = Map()) extends CommandLineFunction with Configurable {
     override def freezeFieldValues() {}
     def commandLine = "command"
-    val root = null
+    val parent = null
     override def globalConfig = new Config(c)
   }
 
@@ -64,7 +64,7 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
 
   @Test
   def testMaxThreads(): Unit = {
-    val cmd = new CommandLineFunctionMock(Map("maxthreads" -> 5, "threads" -> 10)) with CommandLineResources
+    val cmd = new CommandLineFunctionMock(Map("max_threads" -> 5, "threads" -> 10)) with CommandLineResources
 
     cmd.threads shouldBe 5
   }

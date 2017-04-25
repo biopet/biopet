@@ -60,7 +60,7 @@ samples:
         bam: MySecond.bam
 ```
 
-Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToConfig.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
+Note that there is a tool called [SamplesTsvToConfig](../tools/SamplesTsvToConfig.md) that enables the user to get the sample config without any chance of creating a wrongly formatted file.
 
 #### Tags
 
@@ -70,9 +70,9 @@ In the `tags` key inside a sample or library users can supply tags that belong t
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
 This config file should be written in either JSON or YAML format. It can contain setup settings like:
 
- * references,
- * cut offs,
- * program modes and memory limits (program specific),
+ * references
+ * cut offs
+ * program modes and memory limits (program specific)
  * Whether chunking should be used
  * set program executables (if for some reason the user does not want to use the systems default tools)
  * One could set global variables containing settings for all tools used in the pipeline or set tool specific options one layer 
@@ -128,9 +128,13 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
 # More advanced use of config files.
 ### 4 levels of configuring settings
 In biopet, a value of a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
+
  * Level-4: As a fixed value hardcoded in biopet source code
+ 
  * Level-3: As a user specified value in the user config file
+ 
  * Level-2: As a system specified value in the global config files. On the LUMC's SHARK cluster, these global config files are located at /usr/local/sasc/config.
+ 
  * Level-1: As a default value provided in biopet source code.
 
 During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-4 to level-1. Hence, a value defined in the a higher level will overwrite a value define in a lower level for the same ConfigNamespace.
@@ -139,3 +143,37 @@ During execution, biopet framework will resolve the value for each ConfigNamespa
 
 To check if the created JSON file is correct their are several possibilities: the simplest way is using [this](http://jsonformatter.curiousconcept.com/)
 website. It is also possible to use Python, Scala or any other programming languages for validating JSON files but this requires some more knowledge.
+
+#Creating config files with Biopet
+
+With the pipelines Gentrap, MultiSampleMapping and Shiva it is possible to use Biopet itself for creating the config files. Biopet should be called with the keyword *template* and the user will be then prompted to enter the values for the parameters needed by the pipelines. Biopet will generate a config file that can be used as input when running the pipelines. The purpose is to ease the step of creating the config files. It is useful especially when Biopet has been pre-configured to use a list of reference genomes. Then the user needs only to specify which refence genome he/she wants to use and the location of the reference genome files can be derived from Biopet's global configuration.
+
+<br/>
+<b> Example </b>
+
+For viewing the pipelines for which this functionality is supported:
+
+``` bash
+biopet template
+```
+
+For getting help about using it for a specific pipeline:
+
+``` bash
+biopet template Gentrap -h
+```
+
+For running the tool:
+
+``` bash
+biopet template Gentrap -o gentrap_config.yml -s gentrap_run.sh
+```
+<br/>
+<b> Description of the parameters </b>
+
+| Flag  (short)| Flag (long) | Type | Function |
+| ------------ | ----------- | ---- | -------- |
+| -o | --outputConfig | Path (**required**) | Name of the config file that gets generated.|
+| -s | --outputScript | Path (optional) | Biopet can also output a script that can be directly used for running the pipeline, the call of the pipeline is generated with the config file as input. This parameter sets the name for the script file.|
+| -t | --template | Path (optional) | A template file with 2 placeholders *%s* is required for generating the script. The first placeholder will be replaced with the name of the pipeline, the second with the paths to the sample and settings config files. When Biopet has been pre-configured to use the default template file, then setting this parameter is optional. |
+|    | --expert |  | This flag enables the user to configure a more extensive list of parameters for the pipeline. |

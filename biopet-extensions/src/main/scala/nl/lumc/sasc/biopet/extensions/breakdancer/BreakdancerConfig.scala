@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BreakdancerConfig(val root: Configurable) extends BiopetCommandLineFunction {
+class BreakdancerConfig(val parent: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "bam2cfg.pl", freeVar = false)
 
   @Input(doc = "Bam File")

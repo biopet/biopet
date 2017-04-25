@@ -31,7 +31,7 @@ import scala.xml.{ PrettyPrinter, Node }
 /**
  * Created by pjvanthof on 04/12/15.
  */
-class GearsKraken(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsKraken(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -100,9 +100,6 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
     addSummaryJobs()
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
-
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()
 
@@ -127,7 +124,7 @@ object GearsKraken {
     val taxs: mutable.Map[String, Any] = mutable.Map()
 
     def addTax(map: Map[String, Any], path: List[String] = Nil): Unit = {
-      val name = map("name").toString
+      val name = map.get("name").getOrElse("noName").toString
       val x = path.foldLeft(taxs)((a, b) => if (a.contains(b)) a(b).asInstanceOf[mutable.Map[String, Any]] else {
         a += b -> mutable.Map[String, Any]()
         a(b).asInstanceOf[mutable.Map[String, Any]]
@@ -135,13 +132,13 @@ object GearsKraken {
 
       if (!x.contains(name)) x += name -> mutable.Map[String, Any]()
 
-      map("children").asInstanceOf[List[Any]].foreach(x => addTax(x.asInstanceOf[Map[String, Any]], path ::: name :: Nil))
+      map.get("children").getOrElse(List()).asInstanceOf[List[Any]].foreach(x => addTax(x.asInstanceOf[Map[String, Any]], path ::: name :: Nil))
     }
 
-    summaries.foreach { x => addTax(x._2("classified").asInstanceOf[Map[String, Any]]) }
+    summaries.foreach { x => addTax(x._2.get("classified").getOrElse(Map()).asInstanceOf[Map[String, Any]]) }
 
     def getValue(sample: String, path: List[String], key: String) = {
-      path.foldLeft(summaries(sample)("classified").asInstanceOf[Map[String, Any]]) { (b, a) =>
+      path.foldLeft(summaries(sample).get("classified").getOrElse(Map()).asInstanceOf[Map[String, Any]]) { (b, a) =>
         b.getOrElse("children", List[Map[String, Any]]())
           .asInstanceOf[List[Map[String, Any]]]
           .find(_.getOrElse("name", "") == a).getOrElse(Map[String, Any]())

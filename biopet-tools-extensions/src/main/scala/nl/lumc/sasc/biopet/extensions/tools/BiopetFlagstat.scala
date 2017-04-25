@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BiopetFlagstat(val root: Configurable) extends ToolCommandFunction with Summarizable {
+class BiopetFlagstat(val parent: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = flagstat.BiopetFlagstat
 
   @Input(doc = "Input bam", shortName = "input", required = true)

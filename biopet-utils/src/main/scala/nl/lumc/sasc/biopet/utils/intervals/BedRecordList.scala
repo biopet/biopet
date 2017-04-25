@@ -17,7 +17,6 @@ package nl.lumc.sasc.biopet.utils.intervals
 import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.SAMSequenceDictionary
-import htsjdk.samtools.reference.FastaSequenceFile
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -112,6 +111,15 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val heade
     allRecords.foreach(writer.println)
     writer.close()
   }
+
+  /** This return the fraction of the regions comparing to a length */
+  def fractionOf(length: Long): Double = this.length.toDouble / length.toDouble
+
+  /** This return the fraction of the regions comparing to a reference */
+  def fractionOfReference(dict: SAMSequenceDictionary): Double = fractionOf(dict.getReferenceLength)
+
+  /** This return the fraction of the regions comparing to a reference */
+  def fractionOfReference(file: File): Double = fractionOfReference(FastaUtils.getCachedDict(file))
 }
 
 object BedRecordList {
@@ -130,6 +138,32 @@ object BedRecordList {
   def fromList(records: Traversable[BedRecord]): BedRecordList = fromListWithHeader(records.toIterator, Nil)
 
   def fromList(records: TraversableOnce[BedRecord]): BedRecordList = fromListWithHeader(records, Nil)
+
+  /**
+   * This creates a [[BedRecordList]] based on multiple files. This method combines overlapping regions
+   *
+   * @param bedFiles Input bed files
+   * @return
+   */
+  def fromFilesCombine(bedFiles: File*) = {
+    fromFiles(bedFiles, combine = true)
+  }
+
+  /**
+   * This creates a [[BedRecordList]] based on multiple files
+   *
+   * @param bedFiles Input bed files
+   * @param combine When true overlaping regions are merged
+   * @return
+   */
+  def fromFiles(bedFiles: Seq[File], combine: Boolean = false) = {
+    val list = bedFiles.foldLeft(empty)((a, b) => fromList(fromFile(b).allRecords ++ a.allRecords))
+    if (combine) list.combineOverlap
+    else list
+  }
+
+  /** This created a empty [[BedRecordList]] */
+  def empty = fromList(Nil)
 
   def fromFile(bedFile: File) = {
     val reader = Source.fromFile(bedFile)

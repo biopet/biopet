@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   override def defaults = Map("max_walltime_limit" -> 7200)
 
@@ -84,7 +84,6 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var minExpectedGC: Option[Double] = config("minExpectedGC")
   var maxExpectedGC: Option[Double] = config("maxExpectedGC")
   var minimalSubclonePresence: Option[Int] = config("minimalSubclonePresence")
-  var maxThreads: Int = getThreads
 
   var noisyData: Boolean = config("noisyData", default = false)
   //var outputDir: File

@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
-class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "HaplotypeCaller"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
@@ -55,6 +55,8 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   /** the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode */
   @Argument(fullName = "maxGGAARExtension", shortName = "maxGGAARExtension", doc = "the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode", required = false, exclusiveOf = "", validation = "")
   var maxGGAARExtension: Option[Int] = config("maxGGAARExtension")
+
+  var useNewAFCalculator: Boolean = config("useNewAFCalculator", default = false)
 
   /** Include at least this many bases around an event for calling indels */
   @Argument(fullName = "paddingAroundIndels", shortName = "paddingAroundIndels", doc = "Include at least this many bases around an event for calling indels", required = false, exclusiveOf = "", validation = "")
@@ -441,6 +443,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     optional("-paddingAroundSNPs", paddingAroundSNPs, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(useNewAFCalculator, "--useNewAFCalculator") +
     repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
     conditional(debug, "-debug", escape = true, format = "%s") +
@@ -453,7 +456,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
     optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
     optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
-    optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat) +
     optional("-maxAltAlleles", max_alternate_alleles, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
@@ -512,7 +514,12 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     optional("-mmq", min_mapping_quality_score, spaceSeparated = true, escape = true, format = "%s") +
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
+    (this.getVersion match {
+      case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+      case _ => ""
+    })
 }
 
 object HaplotypeCaller {

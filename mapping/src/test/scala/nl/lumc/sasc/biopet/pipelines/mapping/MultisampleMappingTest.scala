@@ -20,21 +20,27 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
+import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
  * Created by pjvanthof on 15/05/16.
  */
 trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
+
+  val outputDir = MultisampleMappingTestTrait.outputDir
+  val configMap = MultisampleMappingTestTrait.config(outputDir)
+
   def initPipeline(map: Map[String, Any]): MultisampleMapping = {
     new MultisampleMapping() {
       override def configNamespace = "multisamplemapping"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, MultisampleMappingTestTrait.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, configMap))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -59,7 +65,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   @Test(dataProvider = "mappingOptions")
   def testMultisampleMapping(merge: MultisampleMapping.MergeStrategy.Value, sample1: Boolean, sample2: Boolean): Unit = {
     val map: Map[String, Any] = {
-      var m: Map[String, Any] = MultisampleMappingTestTrait.config
+      var m: Map[String, Any] = configMap
       if (sample1) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample2, m)
       if (sample3) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample3, m)
@@ -86,16 +92,22 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       pipeline.script()
 
       val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq) 1 else 0) + (if (sample4 && bamToFastq) 1 else 0)
-      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
+      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0) + (if (sample4) 1 else 0)
 
       val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
+      if (merge == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates) {
+        ""
+      }
+
       import MultisampleMapping.MergeStrategy
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
-        (if (sample2 && (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)) 1 else 0))
+        (if (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates) numberSamples else 0))
       pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (
         (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[SambambaMarkdup]) shouldBe
+        (if (merge == MergeStrategy.PreProcessSambambaMarkdup) numberSamples else 0)
       pipeline.samples.foreach {
         case (sampleName, sample) =>
           if (merge == MergeStrategy.None) sample.bamFile shouldBe None
@@ -110,6 +122,11 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
+  }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(outputDir)
   }
 }
 
@@ -162,18 +179,21 @@ class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
 }
 
 object MultisampleMappingTestTrait {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+
+  val inputDir = Files.createTempDir()
+
   def inputTouch(name: String): File = {
-    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    val file = new File(inputDir, name).getAbsoluteFile
     Files.touch(file)
     file
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val out = new File(inputDir, name)
+    out.deleteOnExit()
+    val os = new FileOutputStream(out)
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -183,14 +203,14 @@ object MultisampleMappingTestTrait {
   copyFile("ref.fa.fai")
   copyFile("empty.sam")
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
     "output_dir" -> outputDir,
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "input_alleles" -> "test",
     "fastqc" -> Map("exe" -> "test"),
@@ -198,6 +218,7 @@ object MultisampleMappingTestTrait {
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
+    "sambamba" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
@@ -219,7 +240,7 @@ object MultisampleMappingTestTrait {
     )))
 
   val sample2 = Map(
-    "samples" -> Map("sample3" -> Map("libraries" -> Map(
+    "samples" -> Map("sample2" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> inputTouch("2_1_R1.fq"),
         "R2" -> inputTouch("2_1_R2.fq")
@@ -234,7 +255,7 @@ object MultisampleMappingTestTrait {
   val sample3 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "bam" -> (outputDir + File.separator + "empty.sam")
+        "bam" -> (inputDir + File.separator + "empty.sam")
       )
     )
     )))
@@ -242,7 +263,7 @@ object MultisampleMappingTestTrait {
   val sample4 = Map(
     "samples" -> Map("sample4" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "bam" -> (outputDir + File.separator + "empty.sam")
+        "bam" -> (inputDir + File.separator + "empty.sam")
       )
     )
     )))

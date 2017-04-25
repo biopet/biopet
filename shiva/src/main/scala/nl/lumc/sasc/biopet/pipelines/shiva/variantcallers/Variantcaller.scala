@@ -14,6 +14,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
+import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, Reference }
 import org.broadinstitute.gatk.queue.QScript
 
@@ -27,10 +28,15 @@ trait Variantcaller extends QScript with BiopetQScript with Reference {
 
   var namePrefix: String = _
 
+  var genders: Map[String, Gender.Value] = _
+
+  val mergeVcfResults: Boolean = config("merge_vcf_results", default = true)
+
   /**
    * Map of samplename -> (preprocessed) bam file
    */
   var inputBams: Map[String, File] = _
+  var inputBqsrFiles: Map[String, File] = Map()
 
   def init() = {}
 

@@ -24,10 +24,11 @@ import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelConfig, PindelVCF }
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -37,14 +38,16 @@ import scala.collection.mutable.ListBuffer
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaSvCallingTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): ShivaSvCalling = {
+  def initPipeline(map: Map[String, Any], dir: File): ShivaSvCalling = {
     new ShivaSvCalling {
       override def configNamespace = "shivasvcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaSvCallingTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaSvCallingTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
   }
+
+  private var dirs: List[File] = Nil
 
   @DataProvider(name = "shivaSvCallingOptions")
   def shivaSvCallingOptions = {
@@ -64,13 +67,15 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
                          clever: Boolean,
                          breakdancer: Boolean,
                          pindel: Boolean) = {
+    val outputDir = ShivaSvCallingTest.outputDir
+    dirs :+= outputDir
     val callers: ListBuffer[String] = ListBuffer()
     if (delly) callers.append("delly")
     if (clever) callers.append("clever")
     if (breakdancer) callers.append("breakdancer")
     if (pindel) callers.append("pindel")
     val map = Map("sv_callers" -> callers.toList)
-    val pipeline = initPipeline(map)
+    val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaSvCallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
@@ -85,7 +90,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
-      val summaryCallers = pipeline.summarySettings("sv_callers")
+      val summaryCallers = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
@@ -122,11 +127,13 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
 
   @Test(dataProvider = "dellyOptions")
   def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, tra: Boolean): Unit = {
+    val outputDir = ShivaSvCallingTest.outputDir
+    dirs :+= outputDir
 
     val map = Map("sv_callers" -> List("delly"), "delly" ->
       Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra)
     )
-    val pipeline = initPipeline(map)
+    val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
@@ -145,8 +152,11 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
 
   @Test
   def testWrongCaller(): Unit = {
+    val outputDir = ShivaSvCallingTest.outputDir
+    dirs :+= outputDir
+
     val map = Map("sv_callers" -> List("this is not a caller"))
-    val pipeline = initPipeline(map)
+    val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
@@ -162,33 +172,41 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
 
   @Test
   def testInputBamsArg(): Unit = {
-    val pipeline = initPipeline(Map())
+    val outputDir = ShivaSvCallingTest.outputDir
+    dirs :+= outputDir
+
+    val pipeline = initPipeline(Map(), outputDir)
 
     pipeline.inputBamsArg :+= new File(resourcePath("/paired01.bam"))
 
     pipeline.init()
     pipeline.script()
 
-    val summaryCallers = pipeline.summarySettings("sv_callers")
+    val summaryCallers: List[String] = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
     assert(summaryCallers.contains("delly"))
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object ShivaSvCallingTest {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
+
   private def inputTouch(name: String): File = {
-    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    val file = new File(outputDir, name).getAbsoluteFile
     Files.touch(file)
     file
   }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
-    val os = new FileOutputStream(new File(outputDir, name))
+    val os = new FileOutputStream(new File(inputDir, name))
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
@@ -197,14 +215,14 @@ object ShivaSvCallingTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
-    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),

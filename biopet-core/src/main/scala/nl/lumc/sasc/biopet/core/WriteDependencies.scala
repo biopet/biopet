@@ -30,7 +30,7 @@ import scala.collection.mutable.ListBuffer
  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  */
 object WriteDependencies extends Logging with Configurable {
-  val root: Configurable = null
+  val parent: Configurable = null
   private def createFunctionNames(functions: Seq[QFunction]): Map[QFunction, String] = {
     val cache: mutable.Map[String, Int] = mutable.Map()
     (for (function <- functions) yield {
@@ -112,15 +112,15 @@ object WriteDependencies extends Logging with Configurable {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
         }), "main_job" -> (f match {
-          case cmd: BiopetCommandLineFunction            => cmd.mainFunction
-          case s: WriteSummary if s.qscript.root == null => true
-          case _                                         => false
+          case cmd: BiopetCommandLineFunction => cmd.mainFunction
+          case s: WriteSummary if s.qscript.parent == null => true
+          case _ => false
         }), "intermediate" -> f.isIntermediate,
-          "depends_on_intermediate" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
-          "depends_on_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
+          "depends_on_intermediate" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).exists(files(_).isIntermediate),
+          "depends_on_jobs" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).toList.flatMap(files(_).outputJobNames).distinct,
           "output_used_by_jobs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList.flatMap(files(_).inputJobNames).distinct,
           "outputs" -> (f.jobOutputFile :: BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList),
-          "inputs" -> BiopetQScript.safeOutputs(f).getOrElse(Seq()).toList,
+          "inputs" -> BiopetQScript.safeInputs(f).getOrElse(Seq()).toList,
           "done_files" -> BiopetQScript.safeDoneFiles(f).getOrElse(Seq()).toList,
           "fail_files" -> BiopetQScript.safeFailFiles(f).getOrElse(Seq()).toList,
           "stdout_file" -> f.jobOutputFile,

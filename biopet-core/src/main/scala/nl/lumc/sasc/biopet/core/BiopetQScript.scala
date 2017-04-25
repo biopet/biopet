@@ -24,6 +24,8 @@ import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
+import scala.collection.mutable.ListBuffer
+
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
@@ -65,6 +67,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
   val skipWriteDependencies: Boolean = config("skip_write_dependencies", default = false)
 
+  val writeHtmlReport: Boolean = config("write_html_report", default = true)
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -84,30 +88,29 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     }
 
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach { report =>
-        add(report)
-      }
-    }
-
     logger.info("Running pre commands")
-    for (function <- functions) function match {
-      case f: BiopetCommandLineFunction =>
-        f.preProcessExecutable()
-        f.beforeGraph()
-        f.internalBeforeGraph()
-        f.commandLine
-      case f: WriteSummary => f.init()
-      case _               =>
+    var count = 0
+    val totalCount = functions.size
+    for (function <- functions) {
+      function match {
+        case f: BiopetCommandLineFunction =>
+          f.preProcessExecutable()
+          f.beforeGraph()
+          f.internalBeforeGraph()
+          f.commandLine
+        case f: WriteSummary => f.init()
+        case _               =>
+      }
+      count += 1
+      if (count % 500 == 0) logger.info(s"Preprocessing done for $count jobs out of $totalCount total")
     }
+    logger.info(s"Preprocessing done for $totalCount functions")
 
     val logDir = new File(outputDir, ".log" + File.separator + qSettings.runName.toLowerCase)
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(new File(logDir, "config"))
-    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, output directory cannot be created")
+    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writable, output directory cannot be created")
 
     logger.info("Checking input files")
     inputFiles.par.foreach { i =>
@@ -116,6 +119,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
     }
 
+    logger.info("Set stdout file when not set")
     functions.filter(_.jobOutputFile == null).foreach(f => {
       val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
       BiopetQScript.safeOutputs(f) match {
@@ -124,9 +128,26 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       }
     })
 
+    if (writeHtmlReport) {
+      logger.info("Adding report")
+      this match {
+        case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+          logger.info("Write report is skipped because sample flag is used")
+        case _ => reportClass.foreach { report =>
+          for (f <- functions) f match {
+            case w: WriteSummary => report.deps :+= w.jobOutputFile
+            case _               =>
+          }
+          report.jobOutputFile = new File(report.outputDir, ".report.out")
+          add(report)
+        }
+      }
+    }
+
     if (!skipWriteDependencies) WriteDependencies.writeDependencies(
       functions,
       new File(logDir, "graph"))
+    else logger.debug("Write dependencies is skipped")
 
     Logging.checkErrors()
     logger.info("Script complete without errors")

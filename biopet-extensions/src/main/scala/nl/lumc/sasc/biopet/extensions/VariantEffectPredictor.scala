@@ -28,7 +28,7 @@ import scala.io.Source
  * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
+class VariantEffectPredictor(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
 
   lazy val vepVersion = new LazyCheck({
     val s: Option[String] = config("vep_version")

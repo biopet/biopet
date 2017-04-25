@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class GatherBamFiles(val root: Configurable) extends Picard {
+class GatherBamFiles(val parent: Configurable) extends Picard {
 
   javaMainClass = new picard.sam.GatherBamFiles().getClass.getName
 

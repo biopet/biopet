@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 0.7.12-r1039
  */
-class BwaMem(val root: Configurable) extends Bwa with Reference {
+class BwaMem(val parent: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
 
@@ -33,7 +33,7 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = null
+  var reference: File = _
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -42,7 +42,7 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
   var k: Option[Int] = config("k")
   var r: Option[Float] = config("r")
   var S: Boolean = config("S", default = false)
-  var M: Boolean = config("M", default = true)
+  var M: Boolean = config("M", default = false)
   var w: Option[Int] = config("w")
   var d: Option[Int] = config("d")
   var c: Option[Int] = config("c")
@@ -75,7 +75,7 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       required("mem") +
       optional("-k", k) +

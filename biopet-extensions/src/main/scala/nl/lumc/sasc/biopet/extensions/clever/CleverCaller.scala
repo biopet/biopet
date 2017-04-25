@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class CleverCaller(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "clever")
 
   private lazy val versionExecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
@@ -38,17 +38,16 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Input(doc = "Reference")
   var reference: File = _
 
-  protected def cleverOutputDir: File = new File(cleverWorkDir, "work")
   var cleverWorkDir: File = _
 
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
-    new File(cleverOutputDir, "predictions.vcf")
+    new File(cleverWorkDir, "predictions.vcf")
   }
 
   @Output(doc = "Clever raw output")
   lazy val outputraw: File = {
-    new File(cleverOutputDir, "predictions.raw.txt")
+    new File(cleverWorkDir, "predictions.raw.txt")
   }
 
   //  var T: Option[Int] = config("T", default = defaultThreads)
@@ -60,13 +59,13 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (cleverOutputDir == null) throw new Exception("Clever :: Workdirectory is not defined")
+    if (cleverWorkDir == null) throw new Exception("Clever :: Workdirectory is not defined")
     if (reference == null) reference = referenceFasta()
   }
 
   def cmdLine = required(executable) +
-    " --sorted " +
-    " --use_xa " +
+    required("--sorted") +
+    required("--use_xa") +
     optional("-T", threads) +
     conditional(f, "-f") +
     conditional(a, "-a") +
@@ -74,7 +73,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     conditional(r, "-r") +
     required(input) +
     required(reference) +
-    required(cleverOutputDir)
+    required(cleverWorkDir)
 }
 
 object CleverCaller {

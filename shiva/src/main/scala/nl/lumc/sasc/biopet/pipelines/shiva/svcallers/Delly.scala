@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caller delly */
-class Delly(val root: Configurable) extends SvCaller {
+class Delly(val parent: Configurable) extends SvCaller {
   def name = "delly"
 
   val del: Boolean = config("DEL", default = true)
@@ -36,6 +36,7 @@ class Delly(val root: Configurable) extends SvCaller {
       val catVariants = new CatVariants(this)
       catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf")
       catVariants.isIntermediate = true
+      catVariants.writeHeaderToEmptyOutput = true
 
       if (del) {
         val delly = new DellyCaller(this)

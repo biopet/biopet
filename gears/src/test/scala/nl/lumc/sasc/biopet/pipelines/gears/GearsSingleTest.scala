@@ -25,6 +25,7 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -60,15 +61,19 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
   def inputMode: Option[String] = Some("fastq")
 
+  private var dirs: List[File] = Nil
+
   @Test
   def testGears(): Unit = {
+    val outputDir = TestGearsSingle.outputDir
+    dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map(
       "gears_use_qiime_rtax" -> qiimeRtax,
       "gears_use_centrifuge" -> centrifuge,
       "gears_use_qiime_closed" -> qiimeClosed,
       "gears_use_qiime_open" -> qiimeOpen,
       "gears_use_seq_count" -> seqCount,
-      "output_dir" -> TestGearsSingle.outputDir
+      "output_dir" -> outputDir
     ) ++
       kraken.map("gears_use_kraken" -> _) ++
       downsample.map("downsample" -> _),
@@ -103,7 +108,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe "test"
       } else {
         // in the following cases the filename should have been determined by the filename
-        gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
+        gears.outputName shouldBe "sampleName-libName"
       }
 
       val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
@@ -133,6 +138,11 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
       pipesJobs.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
+  }
+
+  @AfterClass
+  def removeDirs: Unit = {
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
@@ -219,17 +229,17 @@ class GearsSingleQiimeOpenDownsampleTest extends TestGearsSingle {
 }
 
 object TestGearsSingle {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  val inputDir = Files.createTempDir()
+
+  val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
   r1.deleteOnExit()
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  val r2 = new File(inputDir, "R2.fq")
   Files.touch(r2)
   r2.deleteOnExit()
-  val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
   bam.deleteOnExit()
 

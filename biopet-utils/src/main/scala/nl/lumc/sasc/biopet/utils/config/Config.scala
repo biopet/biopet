@@ -15,8 +15,12 @@
 package nl.lumc.sasc.biopet.utils.config
 
 import java.io.{ File, PrintWriter }
-import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * This class can store nested config values
@@ -189,7 +193,7 @@ class Config(protected var _map: Map[String, Any],
     } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
-  def writeReport(directory: File): Unit = {
+  def writeReport(directory: File): Future[Unit] = Future {
     directory.mkdirs()
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {

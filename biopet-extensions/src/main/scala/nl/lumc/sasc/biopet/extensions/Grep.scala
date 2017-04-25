@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by pjvanthof on 30/03/16.
  */
-class Grep(val root: Configurable) extends BiopetCommandLineFunction {
+class Grep(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
   var input: File = _
 

@@ -25,9 +25,9 @@ import scala.collection.mutable.{ Set => MutSet }
 /**
  * Biopet wrapper for the [[MergeTables]] command line tool.
  *
- * @param root [[Configurable]] object
+ * @param parent [[Configurable]] object
  */
-class MergeTables(val root: Configurable) extends ToolCommandFunction {
+class MergeTables(val parent: Configurable) extends ToolCommandFunction {
 
   def toolObject = nl.lumc.sasc.biopet.tools.MergeTables
 

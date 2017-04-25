@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
-class ValidateVcf(val root: Configurable) extends ToolCommandFunction with Reference {
+class ValidateVcf(val parent: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.ValidateVcf
 
   @Input(required = true)

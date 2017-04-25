@@ -33,7 +33,7 @@ import org.broadinstitute.gatk.queue.QScript
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait with Reference {
+class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrait with Reference {
   qscript =>
   def this() = this(null)
 
@@ -54,12 +54,12 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     "macs2callpeak" -> Map("fileformat" -> "")
   )
 
-  def summaryFile = new File(outputDir, "Carp.summary.json")
-
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
 
     override def preProcessBam = Some(createFile("filter.bam"))
+
+    override def metricsPreprogressBam = false
 
     val controls: List[String] = config("control", default = Nil)
 
@@ -82,8 +82,6 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
       bamMetricsFilter.summaryName = "bammetrics-filter"
       addSummaryQScript(bamMetricsFilter)
 
-      add(Bam2Wig(qscript, preProcessBam.get))
-
       val buildBamIndex = new BuildBamIndex(qscript)
       buildBamIndex.input = preProcessBam.get
       buildBamIndex.output = swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
@@ -101,7 +99,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
   override def reportClass: Option[ReportBuilderExtension] = {
     val carp = new CarpReport(this)
     carp.outputDir = new File(outputDir, "report")
-    carp.summaryFile = summaryFile
+    carp.summaryDbFile = summaryDbFile
     Some(carp)
   }
 

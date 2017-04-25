@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  *
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
   import CollectMultipleMetrics._
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
@@ -86,37 +86,38 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
     optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
     repeat("PROGRAM=", program, spaceSeparated = false)
 
-  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+  override def addToQscriptSummary(qscript: SummaryQScript): Unit = {
+
+    def summarizable(stats: () => Any): Summarizable = new Summarizable {
+      def summaryStats = stats()
+      def summaryFiles: Map[String, File] = Map()
+    }
+
     program
-      .filterNot(_ == Programs.CollectInsertSizeMetrics.toString && !new File(outputName + ".insert_size_metrics").exists())
       .foreach { p =>
-        val stats: Any = p match {
+        p match {
           case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
-            Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))
+            qscript.addSummarizable(summarizable(() => Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))), p, forceSingle = true)
           case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-            Map(
+            qscript.addSummarizable(summarizable(() => if (new File(outputName + ".insert_size_metrics").exists()) Map(
               "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
               "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
             )
+            else Map()), p, forceSingle = true)
           case _ if p == Programs.QualityScoreDistribution.toString =>
-            Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))
+            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))), p, forceSingle = true)
           case _ if p == Programs.MeanQualityByCycle.toString =>
-            Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))
+            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))), p, forceSingle = true)
           case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-            Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")
+            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")), p, forceSingle = true)
           case _ => None
         }
-        val sum = new Summarizable {
-          override def summaryStats = stats
-          override def summaryFiles: Map[String, File] = Map()
-        }
-        qscript.addSummarizable(sum, p)
       }
   }
 
   def summaryStats = Map()
 
-  def summaryFiles = {
+  def summaryFiles: Map[String, File] = {
     program.map {
       case p if p == Programs.CollectInsertSizeMetrics.toString =>
         Map(

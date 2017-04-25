@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
-class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
+class CatVariants(val parent: Configurable) extends BiopetJavaCommandLineFunction with Reference {
   analysisName = "CatVariants"
   javaMainClass = "org.broadinstitute.gatk.tools.CatVariants"
 
@@ -36,6 +36,9 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Output(fullName = "outputFile", shortName = "out", doc = "output file", required = true, exclusiveOf = "", validation = "")
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var outputFile: File = _
+
+  /** When Gatk's CatVariants has been called with empty VCF-files, then it also outputs an empty file. When this parameter is set to true, then the empty file gets added a valid VCF-file header.*/
+  var writeHeaderToEmptyOutput: Boolean = false
 
   /** assumeSorted should be true if the input files are already sorted (based on the position of the variants) */
   @Argument(fullName = "assumeSorted", shortName = "assumeSorted", doc = "assumeSorted should be true if the input files are already sorted (based on the position of the variants)", required = false, exclusiveOf = "", validation = "")
@@ -73,5 +76,14 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
     optional("--variant_index_type", variant_index_type, spaceSeparated = true, escape = true, format = "%s") +
     optional("--variant_index_parameter", variant_index_parameter, spaceSeparated = true, escape = true, format = "%s") +
     optional("-l", logging_level, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-log", log_to_file, spaceSeparated = true, escape = true, format = "%s")
+    optional("-log", log_to_file, spaceSeparated = true, escape = true, format = "%s") +
+    (if (writeHeaderToEmptyOutput) s"""
+       |c=$$?
+       |if [ $$c -eq 0 ] && [ ! -s $outputFile ]; then
+       |  echo '##fileformat=VCFv4.2' > $outputFile
+       |  echo '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO' >> $outputFile
+       |fi
+       |exit $$c""".stripMargin
+    else "")
+
 }

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by sajvanderzeeuw on 6-10-15.
  */
-class BuildBamIndex(val root: Configurable) extends Picard {
+class BuildBamIndex(val parent: Configurable) extends Picard {
 
   javaMainClass = new picard.sam.BuildBamIndex().getClass.getName
 

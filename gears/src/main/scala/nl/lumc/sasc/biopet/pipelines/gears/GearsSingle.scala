@@ -21,12 +21,17 @@ import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
+
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by wyleung
  */
-class GearsSingle(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
@@ -55,13 +60,20 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size) Logging.addError("R1 and R2 has not the same number of files")
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
+    if (!skipFlexiprep) {
+      val db = SummaryDb.openSqliteSummary(summaryDbFile)
+      val future = for {
+        sample <- db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption)
+        sId <- sample.map(s => Future.successful(s.id))
+          .getOrElse(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId))
+        library <- db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption)
+        lId <- library.map(l => Future.successful(l.id))
+          .getOrElse(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId))
+      } yield lId
+      Await.result(future, Duration.Inf)
+    }
     if (outputName == null) {
-      if (fastqR1.nonEmpty) outputName = fastqR1.headOption.map(_.getName
-        .stripSuffix(".gz")
-        .stripSuffix(".fastq")
-        .stripSuffix(".fq"))
-        .getOrElse("noName")
-      else outputName = bamFile.map(_.getName.stripSuffix(".bam")).getOrElse("noName")
+      outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
 
     if (fastqR1.nonEmpty) {
@@ -73,7 +85,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   override def reportClass = {
     val gears = new GearsSingleReport(this)
     gears.outputDir = new File(outputDir, "report")
-    gears.summaryFile = summaryFile
+    gears.summaryDbFile = summaryDbFile
     sampleId.foreach(gears.args += "sampleId" -> _)
     libId.foreach(gears.args += "libId" -> _)
     Some(gears)
@@ -84,13 +96,13 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
     val read1: File = if (r1.size == 1) r1.head else {
       val outputFile = new File(outputDir, "merged.R1.fq.gz")
-      Zcat(this, r1) | new Gzip(this) > outputFile
+      add(Zcat(this, r1) | new Gzip(this) > outputFile)
       outputFile
     }
 
     val read2: Option[File] = if (r2.size <= 1) r2.headOption else {
       val outputFile = new File(outputDir, "merged.R2.fq.gz")
-      Zcat(this, r2) | new Gzip(this) > outputFile
+      add(Zcat(this, r2) | new Gzip(this) > outputFile)
       Some(outputFile)
     }
 
@@ -150,6 +162,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       centrifuge.fastqR2 = r2
       centrifuge.outputName = outputName
       add(centrifuge)
+      outputFiles += "centrifuge_output" -> centrifuge.centrifugeOutput
     }
 
     qiimeRatx foreach { qiimeRatx =>
@@ -163,25 +176,25 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqInput = combinedFastq
       add(qiimeClosed)
+      outputFiles += "qiime_closed_otu_table" -> qiimeClosed.otuTable
     }
 
     qiimeOpen foreach { qiimeOpen =>
       qiimeOpen.outputDir = new File(outputDir, "qiime_open")
       qiimeOpen.fastqInput = combinedFastq
       add(qiimeOpen)
+      outputFiles += "qiime_open_otu_table" -> qiimeOpen.otuTable
     }
 
     seqCount.foreach { seqCount =>
       seqCount.fastqInput = combinedFastq
       seqCount.outputDir = new File(outputDir, "seq_count")
       add(seqCount)
+      outputFiles += "seq_count_count_file" -> seqCount.countFile
     }
 
     addSummaryJobs()
   }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".gears.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map(

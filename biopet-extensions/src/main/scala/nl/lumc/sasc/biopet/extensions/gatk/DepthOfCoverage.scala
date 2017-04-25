@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 /**
  * Created by Sander Bollen on 23-11-16.
  */
-class DepthOfCoverage(val root: Configurable) extends CommandLineGATK {
+class DepthOfCoverage(val parent: Configurable) extends CommandLineGATK {
 
   def analysis_type = "DepthOfCoverage"
 

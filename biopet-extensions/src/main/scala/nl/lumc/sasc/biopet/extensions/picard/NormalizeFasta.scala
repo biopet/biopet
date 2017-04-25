@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /**
  * Created by sajvanderzeeuw on 6-10-15.
  */
-class NormalizeFasta(val root: Configurable) extends Picard {
+class NormalizeFasta(val parent: Configurable) extends Picard {
 
   javaMainClass = new picard.reference.NormalizeFasta().getClass.getName
 

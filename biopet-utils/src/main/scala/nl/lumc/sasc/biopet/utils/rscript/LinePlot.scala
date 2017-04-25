@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  *
  * Created by pjvan_thof on 4/29/15.
  */
-class LinePlot(val root: Configurable) extends Rscript {
+class LinePlot(val parent: Configurable) extends Rscript {
   protected var script: File = config("script", default = "plotXY.R")
 
   var input: File = _
@@ -36,7 +36,15 @@ class LinePlot(val root: Configurable) extends Rscript {
   var ylabel: Option[String] = config("ylabel")
   var llabel: Option[String] = config("llabel")
   var title: Option[String] = config("title")
+  var hideLegend: Boolean = config("hide_legend", default = false)
   var removeZero: Boolean = config("removeZero", default = false)
+
+  // whether to use log scale for x and y axis
+  var xLog10: Boolean = false
+  var yLog10: Boolean = false
+
+  var xLog10AxisTicks: Seq[String] = Seq.empty
+  var xLog10AxisLabels: Seq[String] = Seq.empty
 
   override def cmd = super.cmd ++
     Seq("--input", input.getAbsolutePath) ++
@@ -47,7 +55,12 @@ class LinePlot(val root: Configurable) extends Rscript {
     ylabel.map(Seq("--ylabel", _)).getOrElse(Seq()) ++
     llabel.map(Seq("--llabel", _)).getOrElse(Seq()) ++
     title.map(Seq("--title", _)).getOrElse(Seq()) ++
-    (if (removeZero) Seq("--removeZero", "true") else Seq())
+    (if (hideLegend) Seq("--hideLegend", "true") else Seq()) ++
+    (if (removeZero) Seq("--removeZero", "true") else Seq()) ++
+    (if (xLog10) Seq("--xLog10", "true") else Seq()) ++
+    (if (yLog10) Seq("--yLog10", "true") else Seq()) ++
+    (if (xLog10AxisTicks.nonEmpty) xLog10AxisTicks.+:("--xLog10Breaks") else Seq()) ++
+    (if (xLog10AxisLabels.nonEmpty) xLog10AxisLabels.+:("--xLog10Labels") else Seq())
 }
 
 object LinePlot {
@@ -57,6 +70,7 @@ object LinePlot {
             xlabel: Option[String] = None,
             ylabel: Option[String] = None,
             width: Int = 1200,
+            hideLegend: Boolean = false,
             removeZero: Boolean = false,
             title: Option[String] = None): LinePlot = {
     val plot = new LinePlot(root)
@@ -65,6 +79,7 @@ object LinePlot {
     plot.xlabel = xlabel
     plot.ylabel = ylabel
     plot.width = Some(width)
+    plot.hideLegend = hideLegend
     plot.removeZero = removeZero
     plot.title = title
     plot

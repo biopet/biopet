@@ -25,7 +25,7 @@ import scala.util.matching.Regex
 /**
  * Created by pjvan_thof on 17-5-16.
  */
-class Awk(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Awk(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "awk", freeVar = false)
 
   def versionCommand: String = executable + " --version"

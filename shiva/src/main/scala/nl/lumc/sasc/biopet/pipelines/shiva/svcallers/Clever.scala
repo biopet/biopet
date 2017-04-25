@@ -19,14 +19,14 @@ import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Clever */
-class Clever(val root: Configurable) extends SvCaller {
+class Clever(val parent: Configurable) extends SvCaller {
   def name = "clever"
 
   def biopetScript() {
-    //TODO: check double directories
     for ((sample, bamFile) <- inputBams) {
       val cleverDir = new File(outputDir, sample)
-      val clever = CleverCaller(this, bamFile, cleverDir)
+      val clever = CleverCaller(this, bamFile, new File(cleverDir, "clever_output"))
+      clever.jobOutputFile = new File(cleverDir, ".CleverCaller.out")
       add(clever)
 
       val cleverVCF = new CleverFixVCF(this)

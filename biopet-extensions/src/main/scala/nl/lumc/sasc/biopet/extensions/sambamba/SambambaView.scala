@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambamba flagstat  */
-class SambambaView(val root: Configurable) extends Sambamba {
+class SambambaView(val parent: Configurable) extends Sambamba {
   override def defaultThreads = 2
 
   @Input(doc = "Bam File")

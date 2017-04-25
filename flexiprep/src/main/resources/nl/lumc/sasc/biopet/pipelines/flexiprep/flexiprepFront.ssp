@@ -1,18 +1,19 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
-#import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
-<%@ var rootPath: String %>
-<%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] %>
-
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
+<%@ var sampleId: Option[Int] %>
+<%@ var libId: Option[Int] %>
+<%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Flexiprep</td></tr>
-    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
-    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
-    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
-    <tr><th>Sample ID</th><td>${sampleId}</td></tr>
-    <tr><th>Library ID</th><td>${libId}</td></tr>
+    <tr><th>Version</th><td>${run.version}</td></tr>
+    <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
+    <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Sample ID</th><td>${allSamples.filter(_.id == sampleId.get).headOption.map(_.name)}</td></tr>
+    <tr><th>Library ID</th><td>${allLibraries.filter(_.id == libId.get).headOption.map(_.name)}</td></tr>
 </tbody>
 </table>
 <br/>
