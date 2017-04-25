@@ -1,15 +1,13 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
-import java.io.File
-
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge, BedtoolsSort }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
 import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Tabix }
 import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{ BedThreshold, SampleFromMatrix }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -75,13 +73,13 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
     val wisecondorRefJobs = refMap map {
       case (sample, refSamples) =>
-        val refDir = new File(new File(outputDir, sample.sampleId), "wisecondor_reference")
+        val refDir = new File(sample.wisecondorDir, "wisecondor_reference")
         sample -> createWisecondorReferenceJobs(refSamples, refDir)
     }
 
     val xhmmRefJobs = refMap map {
       case (sample, refSamples) =>
-        val refDir = new File(new File(outputDir, sample.sampleId), "xhmm_reference")
+        val refDir = new File(sample.xhmmDir, "xhmm_reference")
         sample -> createXhmmReferenceJobs(sample, refSamples, refDir)
     }
 
@@ -103,7 +101,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         val intersect = new BedtoolsIntersect(this)
         intersect.input = job.output
         intersect.intersectFile = xhmmZJobs(sample)._2
-        intersect.output = new File(sample.sampleDir, s"${sample.sampleId}.wisecondor.sync.z.bed")
+        intersect.output = new File(sample.wisecondorDir, s"${sample.sampleId}.wisecondor.sync.z.bed")
         sample -> intersect
     }
 
@@ -112,7 +110,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         val intersect = new BedtoolsIntersect(this)
         intersect.input = jobsAndFile._2
         intersect.intersectFile = wisecondorZJobs(sample).output
-        intersect.output = new File(sample.sampleDir, s"${sample.sampleId}.xhmm.sync.z.bed")
+        intersect.output = new File(sample.xhmmDir, s"${sample.sampleId}.xhmm.sync.z.bed")
         sample -> intersect
     }
 
@@ -240,7 +238,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
   def createWisecondorZScore(sample: Sample, referenceFile: File, tbiFile: File): WisecondorZscore = {
     val zscore = new WisecondorZscore(this)
-    val zFile = new File(sample.sampleDir, s"${sample.sampleId}.z.bed")
+    val zFile = new File(sample.wisecondorDir, s"${sample.sampleId}.z.bed")
     zscore.inputBed = sample.outputWisecondorGzFile.getOrElse(new File(""))
     zscore.deps ++= sample.outputWisecondorTbiFile.toList
     zscore.deps :+= tbiFile
@@ -254,20 +252,20 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     // the filtered and centered matrix
     val filtMatrix = new XhmmMatrix(this)
     filtMatrix.inputMatrix = referenceMatrix
-    filtMatrix.outputMatrix = new File(sample.sampleDir, s"${sample.sampleId}.filtered-centered.matrix")
-    filtMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-samples.txt"))
-    filtMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.filtered-targets.txt"))
+    filtMatrix.outputMatrix = new File(sample.xhmmDir, s"${sample.sampleId}.filtered-centered.matrix")
+    filtMatrix.outputExcludedSamples = Some(new File(sample.xhmmDir, s"${sample.sampleId}.filtered-samples.txt"))
+    filtMatrix.outputExcludedTargets = Some(new File(sample.xhmmDir, s"${sample.sampleId}.filtered-targets.txt"))
 
     // pca generation
     val pca = new XhmmPca(this)
     pca.inputMatrix = filtMatrix.outputMatrix
-    pca.pcaFile = new File(sample.sampleDir, s"${sample.sampleId}.pca.matrix")
+    pca.pcaFile = new File(sample.xhmmDir, s"${sample.sampleId}.pca.matrix")
 
     // normalization
     val normalize = new XhmmNormalize(this)
     normalize.inputMatrix = filtMatrix.outputMatrix
     normalize.pcaFile = pca.pcaFile
-    normalize.normalizeOutput = new File(sample.sampleDir, s"${sample.sampleId}.normalized.matrix")
+    normalize.normalizeOutput = new File(sample.xhmmDir, s"${sample.sampleId}.normalized.matrix")
 
     // create matrix of zscores
     val zMatrix = new XhmmMatrix(this)
@@ -275,15 +273,15 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     zMatrix.centerData = true
     zMatrix.centerType = "sample"
     zMatrix.zScoreData = true
-    zMatrix.outputExcludedTargets = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-targets.txt"))
-    zMatrix.outputExcludedSamples = Some(new File(sample.sampleDir, s"${sample.sampleId}.z-filtered-samples.txt"))
-    zMatrix.outputMatrix = new File(sample.sampleDir, "zscores.matrix")
+    zMatrix.outputExcludedTargets = Some(new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-targets.txt"))
+    zMatrix.outputExcludedSamples = Some(new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-samples.txt"))
+    zMatrix.outputMatrix = new File(sample.xhmmDir, "zscores.matrix")
 
     // select sample from matrix
     val selector = new SampleFromMatrix(this)
     selector.sample = sample.sampleId
     selector.inputMatrix = zMatrix.outputMatrix
-    val zscoreFile = new File(sample.sampleDir, s"${sample.sampleId}.zscore-xhmm.bed")
+    val zscoreFile = new File(sample.xhmmDir, s"${sample.sampleId}.zscore-xhmm.bed")
     selector.output = Some(zscoreFile)
 
     (selector :: zMatrix :: normalize :: pca :: filtMatrix :: Nil, zscoreFile)
@@ -295,6 +293,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     val inputWisecondorCountFile: Option[File] = config("wisecondor_count_file")
     val bamFile: Option[File] = config("bam")
 
+    val wisecondorDir: File = new File(sampleDir, "wisecondor")
+    val xhmmDir: File = new File(sampleDir, "xhmm")
+
     /**
      * Create XHMM count file or create link to input count file
      * Precedence is given to existing count files.
@@ -302,7 +303,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
      * a potential error message
      */
     protected lazy val outputXhmmCountJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.dcov")
+      val outFile = new File(xhmmDir, s"$name.dcov")
       (inputXhmmCountFile, bamFile) match {
         case (Some(f), _) => {
           if (bamFile.isDefined) {
@@ -339,7 +340,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
      * a potential error message
      */
     protected lazy val outputWisecondorCountJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.bed")
+      val outFile = new File(wisecondorDir, s"$name.wisecondor.bed")
       (inputWisecondorCountFile, bamFile) match {
         case (Some(f), _) => {
           if (bamFile.isDefined) {
@@ -373,7 +374,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     }
 
     protected lazy val outputWisecondorGccJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.gcc.bed")
+      val outFile = new File(wisecondorDir, s"$name.wisecondor.gcc.bed")
       outputWisecondorCountFile map { bedFile =>
         val gcc = new WisecondorGcCorrect(root)
         gcc.inputBed = bedFile
@@ -390,7 +391,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     }
 
     protected lazy val outputWisecondorSortJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.sorted.gcc.bed")
+      val outFile = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed")
       outputWisecondorGccFile map { gccFile =>
         val sort = new BedtoolsSort(root)
         sort.input = gccFile
@@ -409,7 +410,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
     // FIXME: change to pipe with sort
     protected lazy val outputWisecondorGzJob: String \/ QFunction = {
-      val outFile = new File(sampleDir + File.separator + s"$name.wisecondor.sorted.gcc.bed.gz")
+      val outFile = new File(wisecondorDir, s"$name.wisecondor.sorted.gcc.bed.gz")
       outputWisecondorSortFile map { bedFile =>
         val gz = new Bgzip(root)
         gz.input = List(bedFile)
