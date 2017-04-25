@@ -16,6 +16,55 @@
 # license, please contact us to obtain a separate license.
 #
 import argparse
+import numpy as np
+
+
+class Thresholder(object):
+    def __init__(self, filename, threshold):
+        self.__handle = open(filename)
+        self.threshold = threshold
+        self.chrom = None
+        self.start = None
+        self.end = None
+        self.vals = []
+
+    def flush(self):
+        if all([x is not None for x in [self.chrom, self.start, self.end]]):
+            v = np.median(self.vals)
+            print("{0}\t{1}\t{2}\t{3}".format(
+                self.chrom, self.start, self.end, v
+            ))
+        self.chrom = None
+        self.start = None
+        self.end = None
+        self.vals = []
+
+    def next(self):
+        self.__next__()
+
+    def __next__(self):
+        line = next(self.__handle)
+        chrom, start, end, value = line.strip().split("\t")
+        if abs(float(value)) >= self.threshold:
+            if chrom != self.chrom:
+                self.flush()
+                self.chrom = chrom
+                self.start = start
+                self.end = end
+                self.vals = [float(value)]
+            else:
+                self.end = end
+                self.vals.append(float(value))
+        else:
+            self.flush()
+        pass
+
+    def __iter__(self):
+        return self
+
+    def close(self):
+        self.__handle.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -23,8 +72,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--threshold", type=int, default=5)
 
     args = parser.parse_args()
-    with open(args.input) as handle:
-        for line in handle:
-            value = float(line.strip().split("\t")[-1])
-            if abs(value) >= args.threshold:
-                print(line)
+    t = Thresholder(args.input, args.threshold)
+    for _ in t:
+        pass
+    t.flush()

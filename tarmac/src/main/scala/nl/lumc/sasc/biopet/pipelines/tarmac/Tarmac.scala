@@ -146,22 +146,16 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
             val windowDir = new File(sample.sampleDir, s"window_$size")
             val thresholder = new BedThreshold(this)
             thresholder.input = job.output
-            thresholder.isIntermediate = true
-            thresholder.output = Some(new File(windowDir, s"${sample.sampleId}.threshold-raw.bed"))
+            thresholder.output = Some(new File(windowDir, s"${sample.sampleId}.threshold.bed"))
             thresholder.threshold = threshold
-            val merger = new BedtoolsMerge(this)
-            merger.input = thresholder.output.get
-            merger.output = new File(windowDir, s"${sample.sampleId}.threshold.bed")
-            merger.additionalColumns = Some(List(4))
-            merger.operation = Some("median")
-            size -> List(thresholder, merger)
+            size -> thresholder
         }
         sample -> threshSubMap
     }
 
     _finalFiles = thresholdJobs map {
       case (sample, subMap) =>
-        sample -> subMap.values.flatten.collect { case j: BedtoolsMerge => j.output }.toList
+        sample -> subMap.values.flatMap(_.output).toList
     }
 
     addAll(xhmmRefJobs.values.flatMap(_._1))
@@ -171,8 +165,8 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     addAll(wisecondorSyncJobs.values)
     addAll(xhmmSyncJobs.values)
     addAll(zScoreMergeJobs.values)
-    addAll(windowStouffJobs.values.flatMap(_.values))
-    addAll(thresholdJobs.values.flatMap(_.values).flatten)
+    addAll(windowStouffJobs.flatMap(_._2).values)
+    addAll(thresholdJobs.flatMap(_._2).values)
   }
 
   /**
