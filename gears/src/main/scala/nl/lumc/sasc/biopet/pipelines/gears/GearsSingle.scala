@@ -16,12 +16,18 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{SampleId, SampleName}
 import org.broadinstitute.gatk.queue.QScript
+import sun.security.provider.JavaKeyStore.DualFormatJKS
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * Created by wyleung
@@ -55,6 +61,13 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
     if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size) Logging.addError("R1 and R2 has not the same number of files")
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
+    if (!skipFlexiprep) {
+      val db = SummaryDb.openSqliteSummary(summaryDbFile)
+      val sample = Await.result(db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption), Duration.Inf)
+      val sId = sample.map(_.id).getOrElse(Await.result(db.createSample(sampleId.getOrElse("noSample"), summaryRunId), Duration.Inf))
+      val library = Await.result(db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption), Duration.Inf)
+      val lId = library.map(_.id).getOrElse(Await.result(db.createLibrary(libId.getOrElse("noLib"), summaryRunId, sId), Duration.Inf))
+    }
     if (outputName == null) {
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
