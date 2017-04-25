@@ -16,18 +16,17 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
-import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{SampleId, SampleName}
 import org.broadinstitute.gatk.queue.QScript
-import sun.security.provider.JavaKeyStore.DualFormatJKS
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by wyleung
