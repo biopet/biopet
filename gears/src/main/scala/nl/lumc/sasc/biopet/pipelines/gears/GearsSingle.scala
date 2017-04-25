@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -62,10 +62,14 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
 
     if (!skipFlexiprep) {
       val db = SummaryDb.openSqliteSummary(summaryDbFile)
-      val sample = Await.result(db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption), Duration.Inf)
-      val sId = sample.map(_.id).getOrElse(Await.result(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId), Duration.Inf))
-      val library = Await.result(db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption), Duration.Inf)
-      val lId = library.map(_.id).getOrElse(Await.result(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId), Duration.Inf))
+      Await.result(for {
+        sample <- db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption)
+        sId <- sample.map(s => Future.successful(s.id))
+          .getOrElse(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId))
+        library <- db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption)
+        lId <- library.map(l => Future.successful(l.id))
+          .getOrElse(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId))
+      } yield lId, Duration.Inf)
     }
     if (outputName == null) {
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
