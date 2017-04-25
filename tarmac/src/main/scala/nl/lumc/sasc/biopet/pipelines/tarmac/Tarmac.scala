@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge, BedtoolsSort }
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
@@ -400,15 +400,15 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
     lazy val outputWisecondorGzFile: String \/ File = {
       outputWisecondorSortJobs match {
-        case -\/(error)     => -\/(error)
-        case \/-(functions: List[QFunction]) =>  \/-(functions.collect { case gz: Bgzip => gz.output}.head)
+        case -\/(error)                      => -\/(error)
+        case \/-(functions: List[QFunction]) => \/-(functions.collect { case gz: Bgzip => gz.output }.head)
       }
     }
 
     lazy val outputWisecondorTbiFile: String \/ File = {
       outputWisecondorSortJobs match {
-        case -\/(error)    => -\/(error)
-        case \/-(functions: List[QFunction]) => \/-(functions.collect { case tbi: Tabix => tbi.outputIndex}.head)
+        case -\/(error)                      => -\/(error)
+        case \/-(functions: List[QFunction]) => \/-(functions.collect { case tbi: Tabix => tbi.outputIndex }.head)
       }
     }
 
@@ -419,7 +419,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         case \/-(function) => add(function)
       }
       outputWisecondorSortJobs match {
-        case -\/(error) => Logging.addError(error)
+        case -\/(error)                      => Logging.addError(error)
         case \/-(functions: List[QFunction]) => addAll(functions)
       }
     }
