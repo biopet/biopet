@@ -38,7 +38,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
-            <version>0.9.0</version>
+            <version>3.6</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.broadinstitute.gatk</groupId>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-public</artifactId>
-            <version>0.9.0</version>
+            <version>3.6</version>
         </dependency>
     </dependencies>
 
