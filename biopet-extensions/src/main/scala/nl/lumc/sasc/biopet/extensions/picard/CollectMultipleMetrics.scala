@@ -1,33 +1,36 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript }
+import nl.lumc.sasc.biopet.core.{Reference, BiopetQScript}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * Extension for piacrd's CollectMultipleMetrics tool
- *
- * Created by pjvan_thof on 4/16/15.
- */
-class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
+  * Extension for piacrd's CollectMultipleMetrics tool
+  *
+  * Created by pjvan_thof on 4/16/15.
+  */
+class CollectMultipleMetrics(val parent: Configurable)
+    extends Picard
+    with Summarizable
+    with Reference {
   import CollectMultipleMetrics._
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
@@ -44,8 +47,8 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
   var outputName: File = null
 
   @Argument(doc = "Base name of output files", required = true)
-  var program: List[String] = config("metrics_programs",
-    default = Programs.values.iterator.toList.map(_.toString))
+  var program: List[String] =
+    config("metrics_programs", default = Programs.values.iterator.toList.map(_.toString))
 
   @Argument(doc = "Assume alignment file is sorted by position", required = false)
   var assumeSorted: Boolean = config("assume_sorted", default = false)
@@ -78,13 +81,14 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
     }
   }
 
-  override def cmdLine = super.cmdLine +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", outputName, spaceSeparated = false) +
-    conditional(assumeSorted, "ASSUME_SORTED=true") +
-    optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
-    optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    repeat("PROGRAM=", program, spaceSeparated = false)
+  override def cmdLine =
+    super.cmdLine +
+      required("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", outputName, spaceSeparated = false) +
+      conditional(assumeSorted, "ASSUME_SORTED=true") +
+      optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
+      optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
+      repeat("PROGRAM=", program, spaceSeparated = false)
 
   override def addToQscriptSummary(qscript: SummaryQScript): Unit = {
 
@@ -97,19 +101,48 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
       .foreach { p =>
         p match {
           case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
-            qscript.addSummarizable(summarizable(() => Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))), p, forceSingle = true)
+            qscript.addSummarizable(
+              summarizable(
+                () =>
+                  Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"),
+                                    groupBy = Some("CATEGORY"))),
+              p,
+              forceSingle = true)
           case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-            qscript.addSummarizable(summarizable(() => if (new File(outputName + ".insert_size_metrics").exists()) Map(
-              "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
-              "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
+            qscript.addSummarizable(
+              summarizable(
+                () =>
+                  if (new File(outputName + ".insert_size_metrics").exists())
+                    Map(
+                      "metrics" -> Picard.getMetrics(
+                        new File(outputName + ".insert_size_metrics")),
+                      "histogram" -> Picard.getHistogram(
+                        new File(outputName + ".insert_size_metrics"))
+                    )
+                  else Map()),
+              p,
+              forceSingle = true
             )
-            else Map()), p, forceSingle = true)
           case _ if p == Programs.QualityScoreDistribution.toString =>
-            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))), p, forceSingle = true)
+            qscript.addSummarizable(
+              summarizable(
+                () => Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))),
+              p,
+              forceSingle = true)
           case _ if p == Programs.MeanQualityByCycle.toString =>
-            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))), p, forceSingle = true)
+            qscript.addSummarizable(
+              summarizable(
+                () => Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))),
+              p,
+              forceSingle = true)
           case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-            qscript.addSummarizable(summarizable(() => Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")), p, forceSingle = true)
+            qscript.addSummarizable(
+              summarizable(
+                () =>
+                  Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"),
+                                      tag = "METRICS CLASS")),
+              p,
+              forceSingle = true)
           case _ => None
         }
       }
@@ -118,18 +151,20 @@ class CollectMultipleMetrics(val parent: Configurable) extends Picard with Summa
   def summaryStats = Map()
 
   def summaryFiles: Map[String, File] = {
-    program.map {
-      case p if p == Programs.CollectInsertSizeMetrics.toString =>
-        Map(
-          "insert_size_histogram" -> new File(outputName + ".insert_size_histogram.pdf"),
-          "insert_size_metrics" -> new File(outputName + ".insert_size_metrics"))
-      case otherwise => Map()
-    }.foldLeft(Map.empty[String, File]) { case (acc, m) => acc ++ m }
+    program
+      .map {
+        case p if p == Programs.CollectInsertSizeMetrics.toString =>
+          Map("insert_size_histogram" -> new File(outputName + ".insert_size_histogram.pdf"),
+              "insert_size_metrics" -> new File(outputName + ".insert_size_metrics"))
+        case otherwise => Map()
+      }
+      .foldLeft(Map.empty[String, File]) { case (acc, m) => acc ++ m }
   }
 }
 
 object CollectMultipleMetrics {
   object Programs extends Enumeration {
-    val CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution, MeanQualityByCycle, CollectBaseDistributionByCycle = Value
+    val CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,
+    MeanQualityByCycle, CollectBaseDistributionByCycle = Value
   }
 }

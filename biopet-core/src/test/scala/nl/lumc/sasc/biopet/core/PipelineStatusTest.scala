@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import com.google.common.io.Files
 import org.scalatest.Matchers
@@ -25,8 +25,8 @@ import nl.lumc.sasc.biopet.utils.IoUtils._
 import org.apache.commons.io.FileUtils
 
 /**
- * Created by pjvan_thof on 10-1-17.
- */
+  * Created by pjvan_thof on 10-1-17.
+  */
 class PipelineStatusTest extends TestNGSuite with Matchers {
   @Test
   def testDefault(): Unit = {
@@ -44,7 +44,8 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
     val outputDir = Files.createTempDir()
     val depsfile = PipelineStatusTest.writeDepsToDir(outputDir)
 
-    PipelineStatus.main(Array("-o", outputDir.toString, "-d", outputDir.toString, "--depsFile", depsfile.toString))
+    PipelineStatus.main(
+      Array("-o", outputDir.toString, "-d", outputDir.toString, "--depsFile", depsfile.toString))
     checkOutput(outputDir)
 
     FileUtils.deleteDirectory(outputDir)
@@ -108,7 +109,8 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
     deps.files.length shouldBe 5
 
     deps.jobs("gzip_1").stdoutFile shouldBe new File("/tmp/.file.out.gz.Gzip.out")
-    deps.jobs("gzip_1").outputsFiles shouldBe List(new File("/tmp/file.out.gz"), new File("/tmp/.file.out.gz.Gzip.out"))
+    deps.jobs("gzip_1").outputsFiles shouldBe List(new File("/tmp/file.out.gz"),
+                                                   new File("/tmp/.file.out.gz.Gzip.out"))
     deps.jobs("gzip_1").inputFiles shouldBe List(new File("/tmp/file.out"))
     deps.jobs("gzip_1").doneAtStart shouldBe false
   }

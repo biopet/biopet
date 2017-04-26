@@ -1,34 +1,34 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.queue.{ QScript, QSettings }
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import WriteSummaryTest._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoSample }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoLibrary, NoSample}
 import org.apache.commons.io.FileUtils
-import org.testng.annotations.{ AfterClass, Test }
+import org.testng.annotations.{AfterClass, Test}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -36,8 +36,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.matching.Regex
 
 /**
- * Created by pjvanthof on 15/01/16.
- */
+  * Created by pjvanthof on 15/01/16.
+  */
 class WriteSummaryTest extends TestNGSuite with Matchers {
 
   @Test
@@ -48,11 +48,29 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
     db.createTables()
 
     val outputDir = new File("/tmp")
-    Await.ready(WriteSummary.createFile(db, 0, 0, Some(0), Some(0), Some(0), "test", new File(outputDir, "test.tsv"), outputDir), Duration.Inf)
+    Await.ready(WriteSummary.createFile(db,
+                                        0,
+                                        0,
+                                        Some(0),
+                                        Some(0),
+                                        Some(0),
+                                        "test",
+                                        new File(outputDir, "test.tsv"),
+                                        outputDir),
+                Duration.Inf)
     val file = Await.result(db.getFile(0, 0, 0, 0, 0, "test"), Duration.Inf)
     file.map(_.path) shouldBe Some("./test.tsv")
 
-    Await.ready(WriteSummary.createFile(db, 0, 0, Some(0), Some(0), Some(0), "test", new File("/tmp2/test.tsv"), outputDir), Duration.Inf)
+    Await.ready(WriteSummary.createFile(db,
+                                        0,
+                                        0,
+                                        Some(0),
+                                        Some(0),
+                                        Some(0),
+                                        "test",
+                                        new File("/tmp2/test.tsv"),
+                                        outputDir),
+                Duration.Inf)
     val file2 = Await.result(db.getFile(0, 0, 0, 0, 0, "test"), Duration.Inf)
     file2.map(_.path) shouldBe Some("/tmp2/test.tsv")
 
@@ -110,7 +128,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val qscript = makeQscript("test", dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable =
+      makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
     createFakeCheckSum(SummaryQScript.md5sumCache(new File("bla")))
@@ -119,8 +138,14 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, "test", "tool_1", keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId,
+                        "test",
+                        "tool_1",
+                        keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await
+      .result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"),
+              Duration.Inf)
+      .map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -130,7 +155,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val qscript = makeQscript("test", dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeJavaCommand(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable =
+      makeJavaCommand(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
     qscript.add(summarizable)
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
@@ -140,8 +166,19 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, "test", "tool_1", keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, "test", "tool_1", NoSample, NoLibrary, key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId,
+                        "test",
+                        "tool_1",
+                        keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await
+      .result(summary.getFile(qscript.summaryRunId,
+                              "test",
+                              "tool_1",
+                              NoSample,
+                              NoLibrary,
+                              key = "file_1"),
+              Duration.Inf)
+      .map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -151,7 +188,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val qscript = makeQscript("test", dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeVersionSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable = makeVersionSummarizable(files = Map("file_1" -> new File("bla")),
+                                               stats = Map("key" -> "value"))
     qscript.add(summarizable)
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
@@ -161,8 +199,14 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, "test", "tool_1", keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId,
+                        "test",
+                        "tool_1",
+                        keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await
+      .result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"),
+              Duration.Inf)
+      .map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -170,9 +214,11 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
     val dir = Files.createTempDir()
     dirs :+= dir
 
-    val qscript = makeSampleLibraryQscript("test", s = Some("sampleName"), l = Some("libName"), dir = dir)
+    val qscript =
+      makeSampleLibraryQscript("test", s = Some("sampleName"), l = Some("libName"), dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable =
+      makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
     createFakeCheckSum(SummaryQScript.md5sumCache(new File("bla")))
@@ -182,8 +228,21 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, "test", "tool_1", "sampleName", "libName", keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, "test", "tool_1", "sampleName", "libName", key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId,
+                        "test",
+                        "tool_1",
+                        "sampleName",
+                        "libName",
+                        keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await
+      .result(summary.getFile(qscript.summaryRunId,
+                              "test",
+                              "tool_1",
+                              "sampleName",
+                              "libName",
+                              key = "file_1"),
+              Duration.Inf)
+      .map(_.md5) shouldBe Some("checksum")
   }
 
   @Test
@@ -193,7 +252,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val qscript = makeSampleLibraryQscript("test", s = Some("sampleName"), dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable =
+      makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
     createFakeCheckSum(SummaryQScript.md5sumCache(new File("bla")))
@@ -213,7 +273,8 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val qscript = makeMultisampleQscript("test", multisampleConfig, dir = dir)
     val writer = makeWriter(qscript)
-    val summarizable = makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
+    val summarizable =
+      makeSummarizable(files = Map("file_1" -> new File("bla")), stats = Map("key" -> "value"))
     qscript.addSummarizable(summarizable, "tool_1")
     qscript.addSummaryJobs()
     createFakeCheckSum(SummaryQScript.md5sumCache(new File("bla")))
@@ -223,8 +284,14 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
     val summary = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     basicSummaryTest(summary, qscript.summaryRunId, dir)
-    summary.getStatKeys(qscript.summaryRunId, "test", "tool_1", keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
-    Await.result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"), Duration.Inf).map(_.md5) shouldBe Some("checksum")
+    summary.getStatKeys(qscript.summaryRunId,
+                        "test",
+                        "tool_1",
+                        keyValues = Map("key" -> List("key"))) shouldBe Map("key" -> Some("value"))
+    Await
+      .result(summary.getFile(qscript.summaryRunId, "test", "tool_1", key = "file_1"),
+              Duration.Inf)
+      .map(_.md5) shouldBe Some("checksum")
   }
 
   @AfterClass
@@ -325,36 +392,39 @@ object WriteSummaryTest {
       def addMultiSampleJobs(): Unit = {}
     }
 
-  val multisampleConfig = Map("samples" -> Map("sampleName" -> Map("libraries" -> Map("libName" -> Map()))))
+  val multisampleConfig = Map(
+    "samples" -> Map("sampleName" -> Map("libraries" -> Map("libName" -> Map()))))
 
-  def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) = new Summarizable {
-    def summaryFiles: Map[String, File] = files
-    def summaryStats: Any = stats
-  }
+  def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) =
+    new Summarizable {
+      def summaryFiles: Map[String, File] = files
+      def summaryStats: Any = stats
+    }
 
   def makeJavaCommand(files: Map[String, File] = Map(),
                       stats: Map[String, Any] = Map(),
-                      c: Map[String, Any] = Map()) = new BiopetJavaCommandLineFunction with Summarizable with Version {
-    override def globalConfig = new Config(c)
-    override def configNamespace = "java_command"
-    def parent: Configurable = null
-    def summaryStats: Map[String, Any] = stats
-    def summaryFiles: Map[String, File] = files
+                      c: Map[String, Any] = Map()) =
+    new BiopetJavaCommandLineFunction with Summarizable with Version {
+      override def globalConfig = new Config(c)
+      override def configNamespace = "java_command"
+      def parent: Configurable = null
+      def summaryStats: Map[String, Any] = stats
+      def summaryFiles: Map[String, File] = files
 
-    def versionCommand: String = "echo test version"
-    def versionRegex: Regex = """(.*)""".r
-    override def getVersion = Some("test version")
+      def versionCommand: String = "echo test version"
+      def versionRegex: Regex = """(.*)""".r
+      override def getVersion = Some("test version")
 
-    override def outputs = Seq()
-    override def inputs = Seq()
-    qSettings = new QSettings {
-      jobName = "test"
-      jobTempDir = Files.createTempDir()
-      jobTempDir.deleteOnExit()
-      jobPriority = Some(1)
+      override def outputs = Seq()
+      override def inputs = Seq()
+      qSettings = new QSettings {
+        jobName = "test"
+        jobTempDir = Files.createTempDir()
+        jobTempDir.deleteOnExit()
+        jobPriority = Some(1)
+      }
+      override def absoluteCommandDirectory() {}
     }
-    override def absoluteCommandDirectory() {}
-  }
 
   def makeVersionSummarizable(files: Map[String, File] = Map(),
                               stats: Map[String, Any] = Map(),

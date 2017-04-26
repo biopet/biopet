@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -29,8 +29,8 @@ import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
- * Created by ahbbollen on 7-9-15.
- */
+  * Created by ahbbollen on 7-9-15.
+  */
 class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import SageCreateLibrary._
@@ -51,17 +51,37 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     val allGenesOutput = File.createTempFile("sageCreateLibrary", ".tsv")
     allGenesOutput.deleteOnExit()
 
-    val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
-      "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",
-      antiTagsOutput.getAbsolutePath, "--allGenesOutput", allGenesOutput.getAbsolutePath)
+    val args = Array(
+      "-I",
+      input,
+      "-o",
+      output.getAbsolutePath,
+      "--tag",
+      "CATG",
+      "--length",
+      "17",
+      "--noTagsOutput",
+      noTagsOutput.getAbsolutePath,
+      "--noAntiTagsOutput",
+      antiTagsOutput.getAbsolutePath,
+      "--allGenesOutput",
+      allGenesOutput.getAbsolutePath
+    )
 
     noException should be thrownBy main(args)
 
-    val args2 = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
-      "--length", "17")
+    val args2 = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG", "--length", "17")
     noException should be thrownBy main(args2)
-    val args3 = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
-      "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath)
+    val args3 = Array("-I",
+                      input,
+                      "-o",
+                      output.getAbsolutePath,
+                      "--tag",
+                      "CATG",
+                      "--length",
+                      "17",
+                      "--noTagsOutput",
+                      noTagsOutput.getAbsolutePath)
     noException should be thrownBy main(args3)
 
   }
@@ -78,9 +98,22 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     val allGenesOutput = File.createTempFile("sageCreateLibrary", ".tsv")
     allGenesOutput.deleteOnExit()
 
-    val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
-      "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",
-      antiTagsOutput.getAbsolutePath, "--allGenesOutput", allGenesOutput.getAbsolutePath)
+    val args = Array(
+      "-I",
+      input,
+      "-o",
+      output.getAbsolutePath,
+      "--tag",
+      "CATG",
+      "--length",
+      "17",
+      "--noTagsOutput",
+      noTagsOutput.getAbsolutePath,
+      "--noAntiTagsOutput",
+      antiTagsOutput.getAbsolutePath,
+      "--allGenesOutput",
+      allGenesOutput.getAbsolutePath
+    )
     main(args)
 
     Source.fromFile(output).mkString should equal(
