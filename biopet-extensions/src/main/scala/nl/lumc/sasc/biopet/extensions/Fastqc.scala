@@ -63,8 +63,8 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
       // otherwise, use default contaminants file (depending on FastQC version)
       case None =>
         val defaultContams = getVersion match {
-          case Some("v0.11.2") => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-          case _               => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+          case Some(v) if v.contains("v0.11") => new File(fastqcDir + "/Configuration/contaminant_list.txt")
+          case _                              => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
         }
         config("contaminants", default = defaultContams)
     }
