@@ -270,8 +270,8 @@ class Toucan(val parent: Configurable)
           vals match {
             case xs: List[_] =>
               xs.traverse[Option, String] { x =>
-                  Option(x.toString).filter(_ == x)
-                }
+                Option(x.toString).filter(_ == x)
+              }
             case otherwise => None
           }
       }

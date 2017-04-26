@@ -220,10 +220,10 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
     bastyGenerateFasta.outputConsensus = new File(
       outputDir,
       bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
-    bastyGenerateFasta.outputConsensusVariants =
-      new File(outputDir,
-               bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only"
-                                                                        else "") + ".fasta")
+    bastyGenerateFasta.outputConsensusVariants = new File(
+      outputDir,
+      bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only"
+                                                               else "") + ".fasta")
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
     qscript.add(bastyGenerateFasta)
