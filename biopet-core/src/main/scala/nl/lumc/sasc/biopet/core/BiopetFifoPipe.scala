@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
@@ -20,10 +20,11 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
 
 /**
- * Created by pjvan_thof on 9/29/15.
- */
+  * Created by pjvan_thof on 9/29/15.
+  */
 class BiopetFifoPipe(val parent: Configurable,
-                     protected var commands: List[BiopetCommandLineFunction]) extends BiopetCommandLineFunction {
+                     protected var commands: List[BiopetCommandLineFunction])
+    extends BiopetCommandLineFunction {
 
   def fifos: List[File] = {
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
@@ -38,12 +39,10 @@ class BiopetFifoPipe(val parent: Configurable,
       case e: NullPointerException => Map()
     }
 
-    for (
-      cmdOutput <- commands;
-      cmdInput <- commands if cmdOutput != cmdInput && outputs.contains(cmdOutput);
-      outputFile <- outputs(cmdOutput) if inputs.contains(cmdInput);
-      inputFile <- inputs(cmdInput) if outputFile == inputFile
-    ) yield outputFile
+    for (cmdOutput <- commands;
+         cmdInput <- commands if cmdOutput != cmdInput && outputs.contains(cmdOutput);
+         outputFile <- outputs(cmdOutput) if inputs.contains(cmdInput);
+         inputFile <- inputs(cmdInput) if outputFile == inputFile) yield outputFile
   }
 
   @Output

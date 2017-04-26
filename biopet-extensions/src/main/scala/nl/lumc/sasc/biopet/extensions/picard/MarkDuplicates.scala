@@ -1,31 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /** Extension for picard MarkDuplicates */
 class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable {
 
   javaMainClass = new picard.sam.markduplicates.MarkDuplicates().getClass.getName
 
-  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
+  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
+         required = true)
   var input: List[File] = Nil
 
   @Output(doc = "The output file to bam file to", required = true)
@@ -79,22 +80,31 @@ class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable 
   }
 
   /** Returns command to execute */
-  override def cmdLine = super.cmdLine +
-    repeat("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false) +
-    required("METRICS_FILE=", outputMetrics, spaceSeparated = false) +
-    optional("PROGRAM_RECORD_ID=", programRecordId, spaceSeparated = false) +
-    optional("PROGRAM_GROUP_VERSION=", programGroupVersion, spaceSeparated = false) +
-    optional("PROGRAM_GROUP_COMMAND_LINE=", programGroupCommandLine, spaceSeparated = false) +
-    optional("PROGRAM_GROUP_NAME=", programGroupName, spaceSeparated = false) +
-    optional("COMMENT=", comment, spaceSeparated = false) +
-    conditional(removeDuplicates, "REMOVE_DUPLICATES=TRUE") +
-    conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
-    optional("MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP=", maxSequencesForDiskReadEndsMap, spaceSeparated = false) +
-    optional("MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=", maxFileHandlesForReadEndsMap, spaceSeparated = false) +
-    optional("SORTING_COLLECTION_SIZE_RATIO=", sortingCollectionSizeRatio, spaceSeparated = false) +
-    optional("READ_NAME_REGEX=", readNameRegex, spaceSeparated = false) +
-    optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=", opticalDuplicatePixelDistance, spaceSeparated = false)
+  override def cmdLine =
+    super.cmdLine +
+      repeat("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", output, spaceSeparated = false) +
+      required("METRICS_FILE=", outputMetrics, spaceSeparated = false) +
+      optional("PROGRAM_RECORD_ID=", programRecordId, spaceSeparated = false) +
+      optional("PROGRAM_GROUP_VERSION=", programGroupVersion, spaceSeparated = false) +
+      optional("PROGRAM_GROUP_COMMAND_LINE=", programGroupCommandLine, spaceSeparated = false) +
+      optional("PROGRAM_GROUP_NAME=", programGroupName, spaceSeparated = false) +
+      optional("COMMENT=", comment, spaceSeparated = false) +
+      conditional(removeDuplicates, "REMOVE_DUPLICATES=TRUE") +
+      conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
+      optional("MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP=",
+               maxSequencesForDiskReadEndsMap,
+               spaceSeparated = false) +
+      optional("MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=",
+               maxFileHandlesForReadEndsMap,
+               spaceSeparated = false) +
+      optional("SORTING_COLLECTION_SIZE_RATIO=",
+               sortingCollectionSizeRatio,
+               spaceSeparated = false) +
+      optional("READ_NAME_REGEX=", readNameRegex, spaceSeparated = false) +
+      optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=",
+               opticalDuplicatePixelDistance,
+               spaceSeparated = false)
 
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map()
@@ -103,12 +113,17 @@ class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable 
   def summaryStats = Picard.getMetrics(outputMetrics).getOrElse(Map())
 }
 object MarkDuplicates {
+
   /** Returns default MarkDuplicates */
-  def apply(root: Configurable, input: List[File], output: File, isIntermediate: Boolean = false): MarkDuplicates = {
+  def apply(root: Configurable,
+            input: List[File],
+            output: File,
+            isIntermediate: Boolean = false): MarkDuplicates = {
     val markDuplicates = new MarkDuplicates(root)
     markDuplicates.input = input
     markDuplicates.output = output
-    markDuplicates.outputMetrics = new File(output.getParent, output.getName.stripSuffix(".bam") + ".metrics")
+    markDuplicates.outputMetrics =
+      new File(output.getParent, output.getName.stripSuffix(".bam") + ".metrics")
     markDuplicates.isIntermediate = isIntermediate
     markDuplicates
   }

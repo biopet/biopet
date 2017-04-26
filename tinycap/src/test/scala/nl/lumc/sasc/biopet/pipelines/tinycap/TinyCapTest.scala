@@ -1,36 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 /**
- * Created by wyleung on 11-2-16.
- */
-
+  * Created by wyleung on 11-2-16.
+  */
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project that are
+  * not part of GATK Queue is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
 import java.io.File
@@ -43,7 +42,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 class TinyCapTest extends TestNGSuite with Matchers {
 
@@ -64,9 +63,7 @@ class TinyCapTest extends TestNGSuite with Matchers {
   def tinyCapOptions = {
     val bool = Array(true)
 
-    for (
-      s1 <- bool
-    ) yield Array("", s1)
+    for (s1 <- bool) yield Array("", s1)
   }
 
   @Test(dataProvider = "tinyCapOptions")
@@ -126,11 +123,9 @@ object TinyCapTest {
     "output_dir" -> outputDir,
     "reference_fasta" -> (referenceFasta.getAbsolutePath),
     "bowtie_index" -> (bowtieIndex.getAbsolutePath),
-
     "annotation_gff" -> annotationGFF,
     "annotation_gtf" -> annotationGTF,
     "annotation_refflat" -> annotationRefflat,
-
     "md5sum" -> Map("exe" -> "test"),
     "rscript" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
@@ -144,11 +139,12 @@ object TinyCapTest {
   )
 
   val sample1 = Map(
-    "samples" -> Map("sample1" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> r1.getAbsolutePath
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample1" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> r1.getAbsolutePath
+          )
+        ))))
 
 }

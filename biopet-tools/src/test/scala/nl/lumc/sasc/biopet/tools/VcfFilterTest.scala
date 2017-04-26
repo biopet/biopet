@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -26,11 +26,12 @@ import org.testng.annotations.Test
 
 import scala.util.Random
 import scala.collection.JavaConversions._
+
 /**
- * Test class for [[VcfFilter]]
- *
- * Created by ahbbollen on 9-4-15.
- */
+  * Test class for [[VcfFilter]]
+  *
+  * Created by ahbbollen on 9-4-15.
+  */
 class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import VcfFilter._
@@ -69,13 +70,14 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testMustHaveGenotypes() = {
+
     /**
-     * This should simply not raise an exception
-     */
+      * This should simply not raise an exception
+      */
     val tmp = File.createTempFile("VCfFilter", ".vcf")
     tmp.deleteOnExit()
-    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmp.getAbsolutePath,
-      "--mustHaveGenotype", "Sample_101:HET")
+    val arguments: Array[String] =
+      Array("-I", veppedPath, "-o", tmp.getAbsolutePath, "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
 
     val size = new VCFFileReader(tmp, false).size
@@ -83,8 +85,12 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp2.deleteOnExit()
-    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmp2.getAbsolutePath,
-      "--mustHaveGenotype", "Sample_101:HOM_VAR")
+    val arguments2: Array[String] = Array("-I",
+                                          veppedPath,
+                                          "-o",
+                                          tmp2.getAbsolutePath,
+                                          "--mustHaveGenotype",
+                                          "Sample_101:HOM_VAR")
     main(arguments2)
 
     val size2 = new VCFFileReader(tmp2, false).size
@@ -108,8 +114,12 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     hasGenotype(record, List(("Sample_103", GenotypeType.NO_CALL))) shouldBe false
     hasGenotype(record, List(("Sample_103", GenotypeType.MIXED))) shouldBe false
 
-    hasGenotype(record, List(("Sample_103", GenotypeType.HOM_REF), ("Sample_101", GenotypeType.HET))) shouldBe true
-    hasGenotype(record, List(("Sample_103", GenotypeType.HET), ("Sample_101", GenotypeType.HOM_REF))) shouldBe false
+    hasGenotype(
+      record,
+      List(("Sample_103", GenotypeType.HOM_REF), ("Sample_101", GenotypeType.HET))) shouldBe true
+    hasGenotype(
+      record,
+      List(("Sample_103", GenotypeType.HET), ("Sample_101", GenotypeType.HOM_REF))) shouldBe false
   }
 
   @Test def testMinQualScore() = {

@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
@@ -25,7 +25,8 @@ import org.testng.annotations.Test
 class FastqcV0101Test extends TestNGSuite with Matchers {
 
   /** Returns the absolute path to test resource directory as a File object */
-  private[flexiprep] val resourceDir: File = new File(Paths.get(getClass.getResource("/").toURI).toString)
+  private[flexiprep] val resourceDir: File = new File(
+    Paths.get(getClass.getResource("/").toURI).toString)
 
   /** Given a resource file name, returns the the absolute path to it as a File object */
   private[flexiprep] def resourceFile(p: String): File = new File(resourceDir, p)

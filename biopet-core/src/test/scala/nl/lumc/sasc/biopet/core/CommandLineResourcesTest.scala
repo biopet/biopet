@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -22,10 +22,12 @@ import org.testng.annotations.Test
 import scala.language.reflectiveCalls
 
 /**
- * Created by pjvanthof on 17/11/15.
- */
+  * Created by pjvanthof on 17/11/15.
+  */
 class CommandLineResourcesTest extends TestNGSuite with Matchers {
-  class CommandLineFunctionMock(c: Map[String, Any] = Map()) extends CommandLineFunction with Configurable {
+  class CommandLineFunctionMock(c: Map[String, Any] = Map())
+      extends CommandLineFunction
+      with Configurable {
     override def freezeFieldValues() {}
     def commandLine = "command"
     val parent = null
@@ -64,7 +66,8 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
 
   @Test
   def testMaxThreads(): Unit = {
-    val cmd = new CommandLineFunctionMock(Map("max_threads" -> 5, "threads" -> 10)) with CommandLineResources
+    val cmd = new CommandLineFunctionMock(Map("max_threads" -> 5, "threads" -> 10))
+    with CommandLineResources
 
     cmd.threads shouldBe 5
   }

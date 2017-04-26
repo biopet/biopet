@@ -1,47 +1,52 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerCaller, BreakdancerConfig, BreakdancerVCF }
+import nl.lumc.sasc.biopet.extensions.breakdancer.{
+  BreakdancerCaller,
+  BreakdancerConfig,
+  BreakdancerVCF
+}
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelConfig, PindelVCF }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.pindel.{PindelCaller, PindelConfig, PindelVCF}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 import scala.collection.mutable.ListBuffer
 
 /**
- * Test class for [[ShivaVariantcalling]]
- *
- * Created by pjvan_thof on 3/2/15.
- */
+  * Test class for [[ShivaVariantcalling]]
+  *
+  * Created by pjvan_thof on 3/2/15.
+  */
 class ShivaSvCallingTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any], dir: File): ShivaSvCalling = {
     new ShivaSvCalling {
       override def configNamespace = "shivasvcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaSvCallingTest.config(dir)))
+      override def globalConfig =
+        new Config(ConfigUtils.mergeMaps(map, ShivaSvCallingTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -52,13 +57,11 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   @DataProvider(name = "shivaSvCallingOptions")
   def shivaSvCallingOptions = {
     val bool = Array(true, false)
-    (for (
-      bams <- 0 to 3;
-      delly <- bool;
-      clever <- bool;
-      breakdancer <- bool;
-      pindel <- bool
-    ) yield Array(bams, delly, clever, breakdancer, pindel)).toArray
+    (for (bams <- 0 to 3;
+          delly <- bool;
+          clever <- bool;
+          breakdancer <- bool;
+          pindel <- bool) yield Array(bams, delly, clever, breakdancer, pindel)).toArray
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
@@ -77,7 +80,8 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     val map = Map("sv_callers" -> callers.toList)
     val pipeline = initPipeline(map, outputDir)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaSvCallingTest.inputTouch("bam_" + n + ".bam")).toMap
+    pipeline.inputBams = (for (n <- 1 to bams)
+      yield n.toString -> ShivaSvCallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || (!delly && !clever && !breakdancer && !pindel)
 
@@ -90,7 +94,8 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
-      val summaryCallers = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+      val summaryCallers =
+        pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
@@ -100,9 +105,12 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       if (pindel) assert(summaryCallers.contains("pindel"))
       else assert(!summaryCallers.contains("pindel"))
 
-      pipeline.functions.count(_.isInstanceOf[BreakdancerConfig]) shouldBe (if (breakdancer) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[BreakdancerCaller]) shouldBe (if (breakdancer) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[BreakdancerVCF]) shouldBe (if (breakdancer) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[BreakdancerConfig]) shouldBe (if (breakdancer) bams
+                                                                            else 0)
+      pipeline.functions.count(_.isInstanceOf[BreakdancerCaller]) shouldBe (if (breakdancer) bams
+                                                                            else 0)
+      pipeline.functions.count(_.isInstanceOf[BreakdancerVCF]) shouldBe (if (breakdancer) bams
+                                                                         else 0)
 
       pipeline.functions.count(_.isInstanceOf[PindelConfig]) shouldBe (if (pindel) bams else 0)
       pipeline.functions.count(_.isInstanceOf[PindelCaller]) shouldBe (if (pindel) bams else 0)
@@ -117,12 +125,10 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   @DataProvider(name = "dellyOptions")
   def dellyOptions = {
     val bool = Array(true, false)
-    for (
-      del <- bool;
-      dup <- bool;
-      inv <- bool;
-      tra <- bool
-    ) yield Array(1, del, dup, inv, tra)
+    for (del <- bool;
+         dup <- bool;
+         inv <- bool;
+         tra <- bool) yield Array(1, del, dup, inv, tra)
   }
 
   @Test(dataProvider = "dellyOptions")
@@ -130,9 +136,9 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     val outputDir = ShivaSvCallingTest.outputDir
     dirs :+= outputDir
 
-    val map = Map("sv_callers" -> List("delly"), "delly" ->
-      Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra)
-    )
+    val map = Map("sv_callers" -> List("delly"),
+                  "delly" ->
+                    Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra))
     val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
@@ -140,8 +146,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     if (!del && !dup && !inv && !tra) intercept[IllegalStateException] {
       pipeline.init()
       pipeline.script()
-    }
-    else {
+    } else {
       pipeline.init()
       pipeline.script()
 
@@ -182,7 +187,8 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     pipeline.init()
     pipeline.script()
 
-    val summaryCallers: List[String] = pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+    val summaryCallers: List[String] =
+      pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
     assert(summaryCallers.contains("delly"))
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
@@ -236,9 +242,8 @@ object ShivaSvCallingTest {
     "clever" -> Map("exe" -> "test"),
     "delly" -> Map("exe" -> "test"),
     "varscan_jar" -> "test",
-    "pysvtools" -> Map(
-      "exe" -> "test",
-      "exclusion_regions" -> "test",
-      "translocations_only" -> false)
+    "pysvtools" -> Map("exe" -> "test",
+                       "exclusion_regions" -> "test",
+                       "translocations_only" -> false)
   )
 }

@@ -1,25 +1,25 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedWriter, File, FileWriter, OutputStreamWriter }
+import java.io.{BufferedWriter, File, FileWriter, OutputStreamWriter}
 
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
-import scala.collection.mutable.{ Set => MutSet }
-import scala.io.{ BufferedSource, Source }
+import scala.collection.mutable.{Set => MutSet}
+import scala.io.{BufferedSource, Source}
 
 object MergeTables extends ToolCommand {
 
@@ -36,7 +36,10 @@ object MergeTables extends ToolCommand {
   case class InputTable(name: String, source: BufferedSource)
 
   /** Processes the current line into a pair of feature identifier and its value */
-  def processLine(line: String, idIdces: Seq[Int], valIdx: Int, delimiter: Char = '\t',
+  def processLine(line: String,
+                  idIdces: Seq[Int],
+                  valIdx: Int,
+                  delimiter: Char = '\t',
                   idSeparator: String = ","): (Feature, Value) = {
 
     // split on delimiter and remove empty strings
@@ -44,7 +47,8 @@ object MergeTables extends ToolCommand {
       .split(delimiter)
       .filter(_.nonEmpty)
     val colSize = split.length
-    require(idIdces.forall(_ < colSize), "All feature ID indices must be smaller than number of columns")
+    require(idIdces.forall(_ < colSize),
+            "All feature ID indices must be smaller than number of columns")
     require(valIdx < colSize, "Value index must be smaller than number of columns")
 
     val featureId = idIdces.map { split }.mkString(idSeparator)
@@ -52,43 +56,49 @@ object MergeTables extends ToolCommand {
   }
 
   /** Merges multiple tables into a single map */
-  def mergeTables(inputs: Seq[InputTable], idIdces: Seq[Int], valIdx: Int,
-                  numHeaderLines: Int, delimiter: Char = '\t'): Map[Sample, Map[Feature, Value]] = {
+  def mergeTables(inputs: Seq[InputTable],
+                  idIdces: Seq[Int],
+                  valIdx: Int,
+                  numHeaderLines: Int,
+                  delimiter: Char = '\t'): Map[Sample, Map[Feature, Value]] = {
 
     require(numHeaderLines >= 0, "Number of input header lines less than zero")
 
     inputs
-      // make a map of the base name and the file object
-      .map {
-        case InputTable(name, source) =>
-          val featureValues: Seq[(Feature, Value)] = source
-            .getLines()
-            // drop header lines according to input
-            .drop(numHeaderLines)
-            // process the line into a feature, value pair
-            .map(processLine(_, idIdces, valIdx))
-            // turn into seq
-            .toSeq
-          // raise error if there are duplicate values (otherwise they will be silently ignored and we may lose values)
-          require(featureValues.map(_._1).distinct.size == featureValues.size,
-            s"Duplicate features exist in $name")
-          name -> featureValues.toMap
-      }.toMap
+    // make a map of the base name and the file object
+    .map {
+      case InputTable(name, source) =>
+        val featureValues: Seq[(Feature, Value)] = source
+          .getLines()
+          // drop header lines according to input
+          .drop(numHeaderLines)
+          // process the line into a feature, value pair
+          .map(processLine(_, idIdces, valIdx))
+          // turn into seq
+          .toSeq
+        // raise error if there are duplicate values (otherwise they will be silently ignored and we may lose values)
+        require(featureValues.map(_._1).distinct.size == featureValues.size,
+                s"Duplicate features exist in $name")
+        name -> featureValues.toMap
+    }.toMap
   }
 
   /** Writes results to stdout */
-  def writeOutput(results: Map[Sample, Map[Feature, Value]], output: BufferedWriter,
-                  fallback: String, featureName: String): Unit = {
+  def writeOutput(results: Map[Sample, Map[Feature, Value]],
+                  output: BufferedWriter,
+                  fallback: String,
+                  featureName: String): Unit = {
     // sort samples alphabetically
     val samples: Seq[Sample] = results.keys.toSeq.sorted
     // create union of all feature IDs
     val features: Seq[Feature] = results
-      // retrieve feature names from each sample
+    // retrieve feature names from each sample
       .map { case (_, featureMap) => featureMap.keySet }
       // fold all of them into a single container
       .foldLeft(MutSet.empty[Feature]) { case (acc, x) => acc ++= x }
       // and create a sorted sequence
-      .toSeq.sorted
+      .toSeq
+      .sorted
 
     output.write((featureName +: samples).mkString("\t") + "\n")
     features.foreach {
@@ -111,7 +121,8 @@ object MergeTables extends ToolCommand {
                   numHeaderLines: Int = 0,
                   fallbackString: String = "-",
                   delimiter: Char = '\t',
-                  out: File = new File("-")) extends AbstractArgs
+                  out: File = new File("-"))
+      extends AbstractArgs
 
   /** Command line argument parser */
   class OptParser extends AbstractOptParser {
@@ -121,21 +132,21 @@ object MergeTables extends ToolCommand {
     // implicit conversion for argument parsing
     implicit val charRead: Read[Char] = Read.reads { _.toCharArray.head }
 
-    head(
-      s"""
+    head(s"""
          |$commandName - Tabular file merging based on feature ID equality.
       """.stripMargin)
 
-    opt[Seq[Int]]('i', "id_column_index") required () valueName "<idx1>,<idx2>, ..." action { (x, c) =>
-      c.copy(idColumnIndices = x.map(_ - 1)) // -1 to convert to Scala-style 0-based indexing
-    } validate {
-      x => if (x.forall(_ > 0)) success else failure("Index must be at least 1")
+    opt[Seq[Int]]('i', "id_column_index") required () valueName "<idx1>,<idx2>, ..." action {
+      (x, c) =>
+        c.copy(idColumnIndices = x.map(_ - 1)) // -1 to convert to Scala-style 0-based indexing
+    } validate { x =>
+      if (x.forall(_ > 0)) success else failure("Index must be at least 1")
     } text "Index of feature ID column from each input file (1-based)"
 
     opt[Int]('a', "value_column_index") required () valueName "<idx>" action { (x, c) =>
       c.copy(valueColumnIndex = x - 1) // -1 to convert to Scala-style 0-based indexing
-    } validate {
-      x => if (x > 0) success else failure("Index must be at least 1")
+    } validate { x =>
+      if (x > 0) success else failure("Index must be at least 1")
     } text "Index of column from each input file containing the value to merge (1-based)"
 
     opt[File]('o', "output") optional () valueName "<path>" action { (x, c) =>
@@ -168,12 +179,11 @@ object MergeTables extends ToolCommand {
 
     arg[File]("<input_tables> ...") unbounded () optional () action { (x, c) =>
       c.copy(inputTables = c.inputTables :+ x)
-    } validate {
-      x => if (x.exists) success else failure(s"File '$x' does not exist")
+    } validate { x =>
+      if (x.exists) success else failure(s"File '$x' does not exist")
     } text "Input tables to merge"
 
-    note(
-      """
+    note("""
         |This tool merges multiple tab-delimited files and outputs a single
         |tab delimited file whose columns are the feature IDs and a single
         |column from each input files.
@@ -185,28 +195,34 @@ object MergeTables extends ToolCommand {
   }
 
   /** Parses the command line argument */
-  def parseArgs(args: Array[String]): Args = new OptParser()
-    .parse(args, Args())
-    .getOrElse(throw new IllegalArgumentException)
+  def parseArgs(args: Array[String]): Args =
+    new OptParser()
+      .parse(args, Args())
+      .getOrElse(throw new IllegalArgumentException)
 
   /** Transforms the input file seq into a seq of [[InputTable]] objects */
-  def prepInput(inFiles: Seq[File], ext: String, columnNames: Option[Seq[String]]): Seq[InputTable] = {
+  def prepInput(inFiles: Seq[File],
+                ext: String,
+                columnNames: Option[Seq[String]]): Seq[InputTable] = {
     (ext, columnNames) match {
       case (_, Some(names)) =>
         require(names.size == inFiles.size, "columnNames are not the same number as input Files")
-        names.zip(inFiles).map { case (name, tableFile) => InputTable(name, Source.fromFile(tableFile)) }
+        names.zip(inFiles).map {
+          case (name, tableFile) => InputTable(name, Source.fromFile(tableFile))
+        }
       case _ =>
         require(inFiles.map(_.getName.stripSuffix(ext)).distinct.size == inFiles.size,
-          "Duplicate samples exist in inputs")
+                "Duplicate samples exist in inputs")
         inFiles
-          .map(tableFile => InputTable(tableFile.getName.stripSuffix(ext), Source.fromFile(tableFile)))
+          .map(tableFile =>
+            InputTable(tableFile.getName.stripSuffix(ext), Source.fromFile(tableFile)))
     }
   }
 
   /** Creates the output writer object */
   def prepOutput(outFile: File): BufferedWriter = outFile match {
     case f if f.toString == "-" => new BufferedWriter(new OutputStreamWriter(System.out))
-    case otherwise              => new BufferedWriter(new FileWriter(otherwise))
+    case otherwise => new BufferedWriter(new FileWriter(otherwise))
   }
 
   /** Main entry point */
@@ -217,7 +233,10 @@ object MergeTables extends ToolCommand {
 
     val outStream = prepOutput(out)
     val merged = mergeTables(prepInput(inputTables, fileExtension, columnNames),
-      idColumnIndices, valueColumnIndex, numHeaderLines, delimiter)
+                             idColumnIndices,
+                             valueColumnIndex,
+                             numHeaderLines,
+                             delimiter)
     writeOutput(merged, outStream, fallbackString, idColumnName)
     outStream.close()
   }

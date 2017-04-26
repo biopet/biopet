@@ -15,14 +15,14 @@ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PA
 PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 
 import nl.lumc.sasc.biopet.utils.Logging
 
 import scala.collection.parallel.mutable.ParMap
 import scala.concurrent.duration.Duration
 import scala.concurrent._
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.Try
 
 object Sys extends Sys {
@@ -33,36 +33,37 @@ object Sys extends Sys {
   type ExecResult = (ExitValue, Stdout, Stderr)
 
   trait AsyncExecResult {
+
     /**
-     * @see [[scala.concurrent.Future#map]]
-     */
+      * @see [[scala.concurrent.Future#map]]
+      */
     def map[T](f: ExecResult => T): Future[T]
 
     /**
-     * @see [[scala.concurrent.Future#foreach]]
-     */
+      * @see [[scala.concurrent.Future#foreach]]
+      */
     def foreach(f: ExecResult => Unit): Unit
 
     /**
-     * @see [[scala.concurrent.Future#onComplete]]
-     */
+      * @see [[scala.concurrent.Future#onComplete]]
+      */
     def onComplete[T](pf: Try[ExecResult] => T): Unit
 
     /**
-     * cancels the running process
-     */
+      * cancels the running process
+      */
     def cancel(): Unit
 
     /**
-     * check if the process is still running
-     * @return `true` if the process is already completed, `false` otherwise
-     */
+      * check if the process is still running
+      * @return `true` if the process is already completed, `false` otherwise
+      */
     def isRunning: Boolean
 
     /**
-     * the underlying future
-     * @return the future, in which the process runs
-     */
+      * the underlying future
+      * @return the future, in which the process runs
+      */
     def get: Future[ExecResult]
   }
 
@@ -81,11 +82,11 @@ trait Sys {
   def exec(cmd: String): ExecResult = exec(cmd.split(" "))
 
   /**
-   * executes the cmd and blocks until the command exits.
-   *
-   * @return {{{(ExitValue, Stdout, Stderr)}}}
-   *         <pre>if the executable is unable to start, (-1, "", stderr) are returned</pre>
-   */
+    * executes the cmd and blocks until the command exits.
+    *
+    * @return {{{(ExitValue, Stdout, Stderr)}}}
+    *         <pre>if the executable is unable to start, (-1, "", stderr) are returned</pre>
+    */
   def exec(cmd: Seq[String]): ExecResult = {
     val stdout = new OutputSlurper
     val stderr = new OutputSlurper
@@ -96,17 +97,19 @@ trait Sys {
     }.map((_, stdout.get, stderr.get))
       .recover {
         case t => (-1, "", t.getMessage)
-      }.get
+      }
+      .get
   }
 
-  def execAsync(cmd: String)(implicit ec: ExecutionContext): AsyncExecResult = execAsync(cmd.split(" "))(ec)
+  def execAsync(cmd: String)(implicit ec: ExecutionContext): AsyncExecResult =
+    execAsync(cmd.split(" "))(ec)
 
   /**
-   * executes the cmd asynchronous
-   * @see scala.concurrent.Future.map
-   *
-   * @return [[AsyncExecResult]]
-   */
+    * executes the cmd asynchronous
+    * @see scala.concurrent.Future.map
+    *
+    * @return [[AsyncExecResult]]
+    */
   def execAsync(cmd: Seq[String])(implicit ec: ExecutionContext): AsyncExecResult = {
     while (cache.size >= maxRunningProcesses) {
       for ((cmd, c) <- cache.toList) {
@@ -115,12 +118,12 @@ trait Sys {
           cache -= cmd
         } catch {
           case e: NullPointerException =>
-        }
-        else try {
-          results.foreach(x => Await.ready(x.get, Duration.fromNanos(100000)))
-        } catch {
-          case e: TimeoutException =>
-        }
+        } else
+          try {
+            results.foreach(x => Await.ready(x.get, Duration.fromNanos(100000)))
+          } catch {
+            case e: TimeoutException =>
+          }
       }
     }
     val results = new AsyncExecResult {
@@ -144,7 +147,8 @@ trait Sys {
 
   // helper for 'execAsync' - runs the given cmd asynchronous.
   // returns a tuple with: (the running process in a future, function to cancel the running process)
-  private def runAsync(cmd: Seq[String])(implicit ec: ExecutionContext): (Future[ExecResult], Cancelable) = {
+  private def runAsync(cmd: Seq[String])(
+      implicit ec: ExecutionContext): (Future[ExecResult], Cancelable) = {
     val p = Promise[ExecResult]
 
     val stdout = new OutputSlurper

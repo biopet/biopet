@@ -1,29 +1,29 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Wrapper for the seqtk seq subcommand.
- * Written based on seqtk version 1.0-r63-dirty.
- */
+  * Wrapper for the seqtk seq subcommand.
+  * Written based on seqtk version 1.0-r63-dirty.
+  */
 class SeqtkSeq(val parent: Configurable) extends Seqtk {
 
   /** input file */
@@ -110,14 +110,14 @@ class SeqtkSeq(val parent: Configurable) extends Seqtk {
   }
 
   /**
-   * Calculates the offset required for the -Q flag for format conversion (-V flag set).
-   * This is required since seqtk computes the encoding offset indirectly from the input
-   * and output offsets.
-   *
-   * @param  inQualOffset  ASCII offset of the input file encoding
-   * @param  outQualOffset ASCII offset of the output file encoding
-   * @return               the value to be used with the -Q flag with -V set
-   */
+    * Calculates the offset required for the -Q flag for format conversion (-V flag set).
+    * This is required since seqtk computes the encoding offset indirectly from the input
+    * and output offsets.
+    *
+    * @param  inQualOffset  ASCII offset of the input file encoding
+    * @param  outQualOffset ASCII offset of the output file encoding
+    * @return               the value to be used with the -Q flag with -V set
+    */
   def calcQForV(inQualOffset: Int, outQualOffset: Int): Int = {
     // For the input for the -Q flag for seqtk, together with -V
     inQualOffset - (outQualOffset - 33)
