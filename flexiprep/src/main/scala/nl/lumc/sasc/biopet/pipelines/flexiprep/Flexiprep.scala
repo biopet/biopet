@@ -1,35 +1,44 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq }
+import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, SeqStat, ValidateFastq}
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
-class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Flexiprep(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag {
   def this() = this(null)
 
-  @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", fullName = "inputR1", required = true)
+  @Input(doc = "R1 fastq file (gzipped allowed)",
+         shortName = "R1",
+         fullName = "inputR1",
+         required = true)
   var inputR1: File = _
 
-  @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", fullName = "inputR2", required = false)
+  @Input(doc = "R2 fastq file (gzipped allowed)",
+         shortName = "R2",
+         fullName = "inputR2",
+         required = false)
   var inputR2: Option[File] = None
 
   /** Skip Trim fastq files */
@@ -65,9 +74,8 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
     val flexiprepReport = new FlexiprepReport(this)
     flexiprepReport.outputDir = new File(outputDir, "report")
     flexiprepReport.summaryDbFile = summaryDbFile
-    flexiprepReport.args = Map(
-      "sampleId" -> sampleId.getOrElse("."),
-      "libId" -> libId.getOrElse("."))
+    flexiprepReport.args =
+      Map("sampleId" -> sampleId.getOrElse("."), "libId" -> libId.getOrElse("."))
     Some(flexiprepReport)
   }
 
@@ -75,7 +83,8 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
   def init() {
     paired = inputR2.isDefined
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
-    if (sampleId == null || sampleId.isEmpty) Logging.addError("Missing sample ID on flexiprep module")
+    if (sampleId == null || sampleId.isEmpty)
+      Logging.addError("Missing sample ID on flexiprep module")
     if (libId == null || libId.isEmpty) Logging.addError("Missing library ID on flexiprep module")
 
     if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
@@ -147,12 +156,16 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
     }
   }
 
-  def fastqR1Qc: File = if (paired)
-    new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.sync.fq.gz")
-  else new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
-  def fastqR2Qc: Option[File] = if (paired)
-    Some(new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R2.qc.sync.fq.gz"))
-  else None
+  def fastqR1Qc: File =
+    if (paired)
+      new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.sync.fq.gz")
+    else new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
+  def fastqR2Qc: Option[File] =
+    if (paired)
+      Some(
+        new File(outputDir,
+                 s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R2.qc.sync.fq.gz"))
+    else None
 
   /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File]) =
@@ -178,8 +191,9 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
 
     val qcCmdR1 = new QcCommand(this, fastqcR1, "R1")
     qcCmdR1.input = R1_in
-    qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
-    else fastqR1Qc
+    qcCmdR1.output =
+      if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
+      else fastqR1Qc
     qcCmdR1.deps :+= fastqcR1.output
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
     addSummarizable(qcCmdR1, "qc_command_R1")
@@ -199,9 +213,11 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
       fqSync.inputFastq2 = qcCmdR2.output
       fqSync.outputFastq1 = new File(outDir, fastqR1Qc.getName)
       fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
-      fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
+      fqSync.outputStats =
+        new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
-      val pipe = new BiopetFifoPipe(this, fqSync :: qcCmdR1.jobs ::: qcCmdR2.jobs) with Summarizable {
+      val pipe = new BiopetFifoPipe(this, fqSync :: qcCmdR1.jobs ::: qcCmdR2.jobs)
+      with Summarizable {
         override def configNamespace = "qc_cmd"
 
         override def beforeGraph(): Unit = {
@@ -225,7 +241,8 @@ class Flexiprep(val parent: Configurable) extends QScript with SummaryQScript wi
         /** Must returns stats to store into summary */
         def summaryStats: Any = Map()
 
-        override def summaryDeps: List[File] = qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
+        override def summaryDeps: List[File] =
+          qcCmdR1.summaryDeps ::: qcCmdR2.summaryDeps ::: super.summaryDeps
       }
 
       pipe.jobOutputFile = new File(outDir, ".qc_cmd.out")

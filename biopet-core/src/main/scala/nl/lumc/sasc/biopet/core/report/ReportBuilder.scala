@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{ Library, Module, Pipeline, Sample, Run }
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample, Run}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ LibraryId, SampleId }
-import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
+import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
@@ -31,10 +31,10 @@ import scala.language.postfixOps
 import scala.language.implicitConversions
 
 /**
- * This trait is meant to make an extension for a report object
- *
- * @author pjvan_thof
- */
+  * This trait is meant to make an extension for a report object
+  *
+  * @author pjvan_thof
+  */
 trait ReportBuilderExtension extends ToolCommandFunction {
 
   /** Report builder object */
@@ -81,7 +81,8 @@ trait ReportBuilder extends ToolCommand {
   case class Args(summaryDbFile: File = null,
                   outputDir: File = null,
                   runId: Int = 0,
-                  pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
+                  pageArgs: mutable.Map[String, Any] = mutable.Map())
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -91,14 +92,16 @@ trait ReportBuilder extends ToolCommand {
        """.stripMargin
     )
 
-    opt[File]('s', "summaryDb") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(summaryDbFile = x)
-    } validate {
-      x => if (x.exists) success else failure("Summary JSON file not found!")
+    opt[File]('s', "summaryDb") unbounded () required () maxOccurs 1 valueName "<file>" action {
+      (x, c) =>
+        c.copy(summaryDbFile = x)
+    } validate { x =>
+      if (x.exists) success else failure("Summary JSON file not found!")
     } text "Biopet summary JSON file"
 
-    opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(outputDir = x)
+    opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action {
+      (x, c) =>
+        c.copy(outputDir = x)
     } text "Output HTML report files to this directory"
 
     opt[Int]("runId") unbounded () maxOccurs 1 valueName "<int>" action { (x, c) =>
@@ -146,26 +149,28 @@ trait ReportBuilder extends ToolCommand {
 
   case class ExtFile(resourcePath: String, targetPath: String)
 
-  def extFiles: List[ExtFile] = List(
-    "css/bootstrap_dashboard.css",
-    "css/bootstrap.min.css",
-    "css/bootstrap-theme.min.css",
-    "css/sortable-theme-bootstrap.css",
-    "js/jquery.min.js",
-    "js/sortable.min.js",
-    "js/bootstrap.min.js",
-    "js/d3.v3.5.5.min.js",
-    "fonts/glyphicons-halflings-regular.woff",
-    "fonts/glyphicons-halflings-regular.ttf",
-    "fonts/glyphicons-halflings-regular.woff2"
-  ).map(x => ExtFile("/nl/lumc/sasc/biopet/core/report/ext/" + x, x))
+  def extFiles: List[ExtFile] =
+    List(
+      "css/bootstrap_dashboard.css",
+      "css/bootstrap.min.css",
+      "css/bootstrap-theme.min.css",
+      "css/sortable-theme-bootstrap.css",
+      "js/jquery.min.js",
+      "js/sortable.min.js",
+      "js/bootstrap.min.js",
+      "js/d3.v3.5.5.min.js",
+      "fonts/glyphicons-halflings-regular.woff",
+      "fonts/glyphicons-halflings-regular.ttf",
+      "fonts/glyphicons-halflings-regular.woff2"
+    ).map(x => ExtFile("/nl/lumc/sasc/biopet/core/report/ext/" + x, x))
 
   /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
@@ -190,8 +195,11 @@ trait ReportBuilder extends ToolCommand {
     _setRun = Await.result(summary.getRuns(runId = Some(runId)), Duration.Inf).head
     _setPipelines = Await.result(summary.getPipelines(runId = Some(runId)), Duration.Inf)
     _setModules = Await.result(summary.getModules(runId = Some(runId)), Duration.Inf)
-    _setSamples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
-    _setLibraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId), Duration.Inf)
+    _setSamples =
+      Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    _setLibraries = Await.result(
+      summary.getLibraries(runId = Some(runId), sampleId = sampleId, libId = libId),
+      Duration.Inf)
 
     val baseFilesFuture = Future {
       logger.info("Copy Base files")
@@ -202,22 +210,30 @@ trait ReportBuilder extends ToolCommand {
       // Copy each resource files out to the report destination
       extFiles.foreach(
         resource =>
-          IoUtils.copyStreamToFile(
-            getClass.getResourceAsStream(resource.resourcePath),
-            new File(extOutputDir, resource.targetPath),
-            createDirs = true)
+          IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource.resourcePath),
+                                   new File(extOutputDir, resource.targetPath),
+                                   createDirs = true)
       )
     }
 
-    val rootPage = indexPage.map { x => x.copy(subPages = x.subPages ::: generalPages(sampleId, libId)) }
+    val rootPage = indexPage.map { x =>
+      x.copy(subPages = x.subPages ::: generalPages(sampleId, libId))
+    }
 
     //    total = ReportBuilder.countPages(rootPage)
     done = 0
 
     logger.info("Generate pages")
-    val jobsFutures = generatePage(summary, rootPage, cmdArgs.outputDir,
+    val jobsFutures = generatePage(
+      summary,
+      rootPage,
+      cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs.toMap ++
-        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> rootPage, "runId" -> cmdArgs.runId))
+        Map("summary" -> summary,
+            "reportName" -> reportName,
+            "indexPage" -> rootPage,
+            "runId" -> cmdArgs.runId)
+    )
 
     total = jobsFutures.size
     logger.info(total + " pages to be generated")
@@ -253,15 +269,15 @@ trait ReportBuilder extends ToolCommand {
   def reportName: String
 
   /**
-   * This method will render the page and the subpages recursivly
-   *
-   * @param summary The summary object
-   * @param pageFuture Page to render
-   * @param outputDir Root output dir of the report
-   * @param path Path from root to current page
-   * @param args Args to add to this sub page, are args from current page are passed automaticly
-   * @return Number of pages including all subpages that are rendered
-   */
+    * This method will render the page and the subpages recursivly
+    *
+    * @param summary The summary object
+    * @param pageFuture Page to render
+    * @param outputDir Root output dir of the report
+    * @param path Path from root to current page
+    * @param args Args to add to this sub page, are args from current page are passed automaticly
+    * @return Number of pages including all subpages that are rendered
+    */
   def generatePage(summary: SummaryDb,
                    pageFuture: Future[ReportPage],
                    outputDir: File,
@@ -272,7 +288,8 @@ trait ReportBuilder extends ToolCommand {
     def pageArgs(page: ReportPage) = {
       val rootPath = "./" + Array.fill(path.size)("../").mkString
       args ++ page.args ++
-        Map("page" -> page,
+        Map(
+          "page" -> page,
           "run" -> run,
           "path" -> path,
           "outputDir" -> pageOutputDir,
@@ -287,7 +304,8 @@ trait ReportBuilder extends ToolCommand {
     val subPageJobs = pageFuture.map { page =>
       // Generating subpages
       page.subPages.flatMap {
-        case (name, subPage) => generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs(page))
+        case (name, subPage) =>
+          generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs(page))
       }
     }
 
@@ -298,7 +316,7 @@ trait ReportBuilder extends ToolCommand {
       logger.info(s"Start rendering: $file")
 
       val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
-        pageArgs(page) ++ Map("args" -> pageArgs(page)))
+                                                pageArgs(page) ++ Map("args" -> pageArgs(page)))
 
       val writer = new PrintWriter(file)
       writer.println(output)
@@ -315,8 +333,8 @@ trait ReportBuilder extends ToolCommand {
 
   /** Files page, can be used general or at sample level */
   def filesPage(sampleId: Option[Int] = None, libraryId: Option[Int] = None): Future[ReportPage] = {
-    val dbFiles = summary.getFiles(runId, sample = sampleId.map(SampleId),
-      library = libraryId.map(LibraryId))
+    val dbFiles = summary
+      .getFiles(runId, sample = sampleId.map(SampleId), library = libraryId.map(LibraryId))
       .map(_.groupBy(_.pipelineId))
     val modulePages = dbFiles.map(_.map {
       case (pipelineId, files) =>
@@ -324,31 +342,57 @@ trait ReportBuilder extends ToolCommand {
           case (moduleId, files) =>
             val moduleName: Future[String] = moduleId match {
               case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
-              case _        => Future.successful("Pipeline")
+              case _ => Future.successful("Pipeline")
             }
-            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> files)))
+            moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp",
+                                              Map("files" -> files)))
         }
-        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections.filter(_._1 != "Pipeline")
-        summary.getPipelineName(pipelineId = pipelineId)
-          .map(_.get -> Future.sequence(moduleSectionsSorted)
-            .map(sections => ReportPage(Nil, sections.toList, Map())))
+        val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections
+          .filter(_._1 != "Pipeline")
+        summary
+          .getPipelineName(pipelineId = pipelineId)
+          .map(
+            _.get -> Future
+              .sequence(moduleSectionsSorted)
+              .map(sections => ReportPage(Nil, sections.toList, Map())))
     })
 
-    val pipelineFiles = summary.getPipelineId(runId, pipelineName)
-      .flatMap(pipelinelineId => dbFiles
-        .map(x => x.get(pipelinelineId.get).getOrElse(Seq())
-          .filter(_.moduleId.isEmpty)))
+    val pipelineFiles = summary
+      .getPipelineId(runId, pipelineName)
+      .flatMap(
+        pipelinelineId =>
+          dbFiles
+            .map(
+              x =>
+                x.get(pipelinelineId.get)
+                  .getOrElse(Seq())
+                  .filter(_.moduleId.isEmpty)))
 
-    modulePages.flatMap(Future.sequence(_)).map(x => ReportPage(x.toList,
-      s"$pipelineName files" -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp", Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
-        "Sub pipelines/modules" -> ReportSection("/nl/lumc/sasc/biopet/core/report/fileModules.ssp", Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil, Map()))
+    modulePages
+      .flatMap(Future.sequence(_))
+      .map(x =>
+        ReportPage(
+          x.toList,
+          s"$pipelineName files" -> ReportSection(
+            "/nl/lumc/sasc/biopet/core/report/files.ssp",
+            Map("files" -> Await.result(pipelineFiles, Duration.Inf))) ::
+            "Sub pipelines/modules" -> ReportSection(
+            "/nl/lumc/sasc/biopet/core/report/fileModules.ssp",
+            Map("pipelineIds" -> Await.result(dbFiles.map(_.keys.toList), Duration.Inf))) :: Nil,
+          Map()
+      ))
   }
 
   /** This generate general pages that all reports should have */
-  def generalPages(sampleId: Option[Int], libId: Option[Int]): List[(String, Future[ReportPage])] = List(
-    "Versions" -> Future.successful(ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")), Map())),
-    "Files" -> filesPage(sampleId, libId)
-  )
+  def generalPages(sampleId: Option[Int], libId: Option[Int]): List[(String, Future[ReportPage])] =
+    List(
+      "Versions" -> Future.successful(
+        ReportPage(
+          List(),
+          List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")),
+          Map())),
+      "Files" -> filesPage(sampleId, libId)
+    )
 
 }
 
@@ -366,11 +410,11 @@ object ReportBuilder {
   //  }
 
   /**
-   * This method will render a template that is located in the classpath / jar
-   * @param location location in the classpath / jar
-   * @param args Additional arguments, not required
-   * @return Rendered result of template
-   */
+    * This method will render a template that is located in the classpath / jar
+    * @param location location in the classpath / jar
+    * @param args Additional arguments, not required
+    * @return Rendered result of template
+    */
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
     Logging.logger.debug("Rendering: " + location)
 

@@ -1,32 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.bwa
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Extension for bwa aln
- *
- * Based on version 0.7.12-r1039
- *
- * Created by pjvan_thof on 1/16/15.
- */
+  * Extension for bwa aln
+  *
+  * Based on version 0.7.12-r1039
+  *
+  * Created by pjvan_thof on 1/16/15.
+  */
 class BwaAln(val parent: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file", required = true)
   var fastq: File = _
@@ -69,32 +69,33 @@ class BwaAln(val parent: Configurable) extends Bwa with Reference {
   }
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
-    required("aln") +
-    optional("-t", threads) +
-    optional("-n", n) +
-    optional("-o", o) +
-    optional("-e", e) +
-    optional("-i", i) +
-    optional("-d", d) +
-    optional("-l", l) +
-    optional("-k", k) +
-    optional("-m", m) +
-    optional("-M", M) +
-    optional("-O", O) +
-    optional("-E", E) +
-    optional("-R", R) +
-    optional("-q", q) +
-    optional("-B", B) +
-    conditional(L, "-L") +
-    conditional(N, "-N") +
-    conditional(I, "-I") +
-    conditional(b, "-b") +
-    conditional(n0, "-0") +
-    conditional(n1, "-1") +
-    conditional(n2, "-2") +
-    conditional(Y, "-Y") +
-    optional("-f", output) +
-    required(reference) +
-    required(fastq)
+  def cmdLine =
+    required(executable) +
+      required("aln") +
+      optional("-t", threads) +
+      optional("-n", n) +
+      optional("-o", o) +
+      optional("-e", e) +
+      optional("-i", i) +
+      optional("-d", d) +
+      optional("-l", l) +
+      optional("-k", k) +
+      optional("-m", m) +
+      optional("-M", M) +
+      optional("-O", O) +
+      optional("-E", E) +
+      optional("-R", R) +
+      optional("-q", q) +
+      optional("-B", B) +
+      conditional(L, "-L") +
+      conditional(N, "-N") +
+      conditional(I, "-I") +
+      conditional(b, "-b") +
+      conditional(n0, "-0") +
+      conditional(n1, "-1") +
+      conditional(n2, "-2") +
+      conditional(Y, "-Y") +
+      optional("-f", output) +
+      required(reference) +
+      required(fastq)
 }

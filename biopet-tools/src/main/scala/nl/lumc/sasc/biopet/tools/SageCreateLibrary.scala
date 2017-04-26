@@ -1,32 +1,38 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaReaderHelper
 
-import scala.collection.{ SortedMap, mutable }
+import scala.collection.{SortedMap, mutable}
 import scala.util.matching.Regex
 import scala.collection.JavaConversions._
 
 object SageCreateLibrary extends ToolCommand {
-  case class Args(input: File = null, tag: String = "CATG", length: Int = 17, output: File = null, noTagsOutput: File = null,
-                  noAntiTagsOutput: File = null, allGenesOutput: File = null) extends AbstractArgs
+  case class Args(input: File = null,
+                  tag: String = "CATG",
+                  length: Int = 17,
+                  output: File = null,
+                  noTagsOutput: File = null,
+                  noAntiTagsOutput: File = null,
+                  allGenesOutput: File = null)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
@@ -66,16 +72,21 @@ object SageCreateLibrary extends ToolCommand {
     val firstAntiTag: mutable.Set[String] = mutable.Set()
     val allAntiTags: mutable.Set[String] = mutable.Set()
   }
-  class TagResult(val firstTag: String, val allTags: List[String], val firstAntiTag: String, val allAntiTags: List[String])
+  class TagResult(val firstTag: String,
+                  val allTags: List[String],
+                  val firstAntiTag: String,
+                  val allAntiTags: List[String])
 
   /**
-   * @param args the command line arguments
-   */
+    * @param args the command line arguments
+    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val commandArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
+    if (!commandArgs.input.exists)
+      throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
     val tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
 
@@ -137,7 +148,8 @@ object SageCreateLibrary extends ToolCommand {
     allGenes.add(geneID)
 
     if (tagResult.firstTag != null) {
-      if (!tagGenesMap.contains(tagResult.firstTag)) tagGenesMap += (tagResult.firstTag -> new TagGenes)
+      if (!tagGenesMap.contains(tagResult.firstTag))
+        tagGenesMap += (tagResult.firstTag -> new TagGenes)
       tagGenesMap(tagResult.firstTag).firstTag.add(geneID)
       tagGenes.add(geneID)
     }
@@ -148,7 +160,8 @@ object SageCreateLibrary extends ToolCommand {
     }
 
     if (tagResult.firstAntiTag != null) {
-      if (!tagGenesMap.contains(tagResult.firstAntiTag)) tagGenesMap += (tagResult.firstAntiTag -> new TagGenes)
+      if (!tagGenesMap.contains(tagResult.firstAntiTag))
+        tagGenesMap += (tagResult.firstAntiTag -> new TagGenes)
       tagGenesMap(tagResult.firstAntiTag).firstAntiTag.add(geneID)
       antiTagGenes.add(geneID)
     }
@@ -160,9 +173,12 @@ object SageCreateLibrary extends ToolCommand {
   }
 
   def getTags(name: String, seq: DNASequence, tagRegex: Regex): TagResult = {
-    val allTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString()
+    val allTags: List[String] =
+      for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString()
     val firstTag = if (allTags.isEmpty) null else allTags.last
-    val allAntiTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList) yield tag.toString()
+    val allAntiTags: List[String] =
+      for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList)
+        yield tag.toString()
     val firstAntiTag = if (allAntiTags.isEmpty) null else allAntiTags.head
     val result = new TagResult(firstTag, allTags, firstAntiTag, allAntiTags)
 

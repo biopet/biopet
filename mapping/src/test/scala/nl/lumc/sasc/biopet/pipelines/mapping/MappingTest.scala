@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
@@ -26,13 +26,13 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, BeforeClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, BeforeClass, DataProvider, Test}
 
 /**
- * Test class for [[Mapping]]
- *
- * Created by pjvan_thof on 2/12/15.
- */
+  * Test class for [[Mapping]]
+  *
+  * Created by pjvan_thof on 2/12/15.
+  */
 abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Mapping = {
     new Mapping {
@@ -52,27 +52,32 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    for (
-      pair <- paired;
-      chunk <- chunks;
-      skipMarkDuplicate <- skipMarkDuplicates;
-      skipFlexiprep <- skipFlexipreps;
-      zipped <- zipped
-    ) yield Array(aligner, pair, chunk, skipMarkDuplicate, skipFlexiprep, zipped)
+    for (pair <- paired;
+         chunk <- chunks;
+         skipMarkDuplicate <- skipMarkDuplicates;
+         skipFlexiprep <- skipFlexipreps;
+         zipped <- zipped)
+      yield Array(aligner, pair, chunk, skipMarkDuplicate, skipFlexiprep, zipped)
   }
 
   @Test(dataProvider = "mappingOptions")
-  def testMapping(aligner: String, paired: Boolean, chunks: Int,
+  def testMapping(aligner: String,
+                  paired: Boolean,
+                  chunks: Int,
                   skipMarkDuplicate: Boolean,
                   skipFlexiprep: Boolean,
                   zipped: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
-      "aligner" -> aligner,
-      "number_chunks" -> chunks,
-      "skip_markduplicates" -> skipMarkDuplicate,
-      "skip_flexiprep" -> skipFlexiprep,
-      "unmapped_to_gears" -> unmappedToGears
-    ), Map(executables.toSeq: _*))
+    val map = ConfigUtils.mergeMaps(
+      Map(
+        "output_dir" -> outputDir,
+        "aligner" -> aligner,
+        "number_chunks" -> chunks,
+        "skip_markduplicates" -> skipMarkDuplicate,
+        "skip_flexiprep" -> skipFlexiprep,
+        "unmapped_to_gears" -> unmappedToGears
+      ),
+      Map(executables.toSeq: _*)
+    )
     val mapping: Mapping = initPipeline(map)
 
     if (zipped) {
@@ -86,11 +91,14 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     mapping.libId = Some("1")
     mapping.script()
 
-    val pipesJobs = mapping.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+    val pipesJobs = mapping.functions
+      .filter(_.isInstanceOf[BiopetCommandLineFunction])
       .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
     //Flexiprep
-    mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
+    mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0
+                                                              else if (paired) 4
+                                                              else 2)
 
     pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) 1 else 0)
   }

@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintStream }
+import java.io.{File, PrintStream}
 import java.text.DecimalFormat
 
 import htsjdk.variant.vcf.VCFFileReader
@@ -22,14 +22,22 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.collection.mutable.{ ListBuffer, Map }
+import scala.collection.mutable.{ListBuffer, Map}
 
 // TODO: Queue wrapper
 object VcfToTsv extends ToolCommand {
-  case class Args(inputFile: File = null, outputFile: File = null, fields: List[String] = Nil, infoFields: List[String] = Nil,
-                  sampleFields: List[String] = Nil, disableDefaults: Boolean = false,
-                  allInfo: Boolean = false, allFormat: Boolean = false,
-                  separator: String = "\t", listSeparator: String = ",", maxDecimals: Int = 2) extends AbstractArgs
+  case class Args(inputFile: File = null,
+                  outputFile: File = null,
+                  fields: List[String] = Nil,
+                  infoFields: List[String] = Nil,
+                  sampleFields: List[String] = Nil,
+                  disableDefaults: Boolean = false,
+                  allInfo: Boolean = false,
+                  allFormat: Boolean = false,
+                  separator: String = "\t",
+                  listSeparator: String = ",",
+                  maxDecimals: Int = 2)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -71,12 +79,14 @@ object VcfToTsv extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val commandArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     // Throw exception if separator and listSeparator are identical
-    if (commandArgs.separator == commandArgs.listSeparator) throw new IllegalArgumentException(
-      "Separator and list_separator should not be identical"
-    )
+    if (commandArgs.separator == commandArgs.listSeparator)
+      throw new IllegalArgumentException(
+        "Separator and list_separator should not be identical"
+      )
 
     val formatter = createFormatter(commandArgs.maxDecimals)
 
@@ -87,20 +97,23 @@ object VcfToTsv extends ToolCommand {
     val allInfoFields = header.getInfoHeaderLines.map(_.getID).toList
     val allFormatFields = header.getFormatHeaderLines.map(_.getID).toList
 
-    val fields: Set[String] = (if (commandArgs.disableDefaults) Nil else defaultFields).toSet[String] ++
+    val fields: Set[String] = (if (commandArgs.disableDefaults) Nil else defaultFields)
+      .toSet[String] ++
       commandArgs.fields.toSet[String] ++
       (if (commandArgs.allInfo) allInfoFields else commandArgs.infoFields).map("INFO-" + _) ++ {
-        val buffer: ListBuffer[String] = ListBuffer()
-        for (f <- if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFields; sample <- samples) {
-          buffer += sample + "-" + f
-        }
-        buffer.toSet[String]
+      val buffer: ListBuffer[String] = ListBuffer()
+      for (f <- if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFields;
+           sample <- samples) {
+        buffer += sample + "-" + f
       }
+      buffer.toSet[String]
+    }
 
     val sortedFields = sortFields(fields, samples.toList)
 
-    val writer = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
-    else sys.process.stdout
+    val writer =
+      if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
+      else sys.process.stdout
 
     writer.println(sortedFields.mkString("#", commandArgs.separator, ""))
     for (vcfRecord <- reader) {
@@ -113,15 +126,16 @@ object VcfToTsv extends ToolCommand {
         val t = for (a <- vcfRecord.getAlternateAlleles) yield a.getBaseString
         t.mkString(commandArgs.listSeparator)
       }
-      values += "QUAL" -> (if (vcfRecord.getPhredScaledQual == -10) "." else formatter.format(vcfRecord.getPhredScaledQual))
+      values += "QUAL" -> (if (vcfRecord.getPhredScaledQual == -10) "."
+                           else formatter.format(vcfRecord.getPhredScaledQual))
       values += "INFO" -> vcfRecord.getFilters
       for ((field, content) <- vcfRecord.getAttributes) {
         values += "INFO-" + field -> {
           content match {
-            case a: List[_]                => a.mkString(commandArgs.listSeparator)
-            case a: Array[_]               => a.mkString(commandArgs.listSeparator)
+            case a: List[_] => a.mkString(commandArgs.listSeparator)
+            case a: Array[_] => a.mkString(commandArgs.listSeparator)
             case a: java.util.ArrayList[_] => a.mkString(commandArgs.listSeparator)
-            case _                         => content
+            case _ => content
           }
         }
       }
@@ -132,10 +146,12 @@ object VcfToTsv extends ToolCommand {
           val l = for (g <- genotype.getAlleles) yield vcfRecord.getAlleleIndex(g)
           l.map(x => if (x < 0) "." else x).mkString("/")
         }
-        if (genotype.hasAD) values += sample + "-AD" -> List(genotype.getAD: _*).mkString(commandArgs.listSeparator)
+        if (genotype.hasAD)
+          values += sample + "-AD" -> List(genotype.getAD: _*).mkString(commandArgs.listSeparator)
         if (genotype.hasDP) values += sample + "-DP" -> genotype.getDP
         if (genotype.hasGQ) values += sample + "-GQ" -> genotype.getGQ
-        if (genotype.hasPL) values += sample + "-PL" -> List(genotype.getPL: _*).mkString(commandArgs.listSeparator)
+        if (genotype.hasPL)
+          values += sample + "-PL" -> List(genotype.getPL: _*).mkString(commandArgs.listSeparator)
         for ((field, content) <- genotype.getExtendedAttributes) {
           values += sample + "-" + field -> content
         }
@@ -150,23 +166,23 @@ object VcfToTsv extends ToolCommand {
   }
 
   /**
-   *  This function creates a correct DecimalFormat for a specific length of decimals
-   * @param len number of decimal places
-   * @return DecimalFormat formatter
-   */
+    *  This function creates a correct DecimalFormat for a specific length of decimals
+    * @param len number of decimal places
+    * @return DecimalFormat formatter
+    */
   def createFormatter(len: Int): DecimalFormat = {
     val patternString = "###." + (for (x <- 1 to len) yield "#").mkString("")
     new DecimalFormat(patternString)
   }
 
   /**
-   * This fields sorts fields, such that non-info and non-sample specific fields (e.g. general ones) are on front
-   * followed by info fields
-   * followed by sample-specific fields
-   * @param fields fields
-   * @param samples samples
-   * @return sorted samples
-   */
+    * This fields sorts fields, such that non-info and non-sample specific fields (e.g. general ones) are on front
+    * followed by info fields
+    * followed by sample-specific fields
+    * @param fields fields
+    * @param samples samples
+    * @return sorted samples
+    */
   def sortFields(fields: Set[String], samples: List[String]): List[String] = {
     def fieldType(x: String) = x match {
       case _ if x.startsWith("INFO-") => 'i'
@@ -184,15 +200,15 @@ object VcfToTsv extends ToolCommand {
           val sampleA = a.split("-").head
           val sampleB = b.split("-").head
           sampleA.compareTo(sampleB) match {
-            case 0          => !(a.compareTo(b) > 0)
+            case 0 => !(a.compareTo(b) > 0)
             case i if i > 0 => false
-            case _          => true
+            case _ => true
           }
-        case ('g', _)             => true
-        case (_, 'g')             => false
+        case ('g', _) => true
+        case (_, 'g') => false
         case (a2, b2) if a2 == b2 => !(a2.compareTo(b2) > 0)
-        case ('i', _)             => true
-        case _                    => false
+        case ('i', _) => true
+        case _ => false
       }
     })
   }
