@@ -93,7 +93,7 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   var sambamba: File = config("exe", namespace = "sambamba", default = "sambamba", freeVar = false)
   var sambambaThreads: Option[Int] = config("SambambaThreads")
 
-  var samtools: File = config("exe", namespace = "samtools",default = "samtools", freeVar = false)
+  var samtools: File = config("exe", namespace = "samtools", default = "samtools", freeVar = false)
 
   var sex: Option[String] = config("sex")
   var step: Option[Int] = config("step")
