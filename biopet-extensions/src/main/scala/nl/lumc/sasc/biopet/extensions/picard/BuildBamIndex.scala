@@ -24,8 +24,6 @@ import org.broadinstitute.gatk.utils.commandline.{Output, Input}
   */
 class BuildBamIndex(val parent: Configurable) extends Picard {
 
-  javaMainClass = new picard.sam.BuildBamIndex().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _
 
