@@ -1,37 +1,40 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
- * Created by wyleung
- */
-class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+  * Created by wyleung
+  */
+class GearsSingle(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
@@ -40,34 +43,51 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
   @Input(doc = "R2 reads in FastQ format", shortName = "R2", required = false)
   var fastqR2: List[File] = Nil
 
-  @Input(doc = "All unmapped reads will be extracted from this bam for analysis", shortName = "bam", required = false)
+  @Input(doc = "All unmapped reads will be extracted from this bam for analysis",
+         shortName = "bam",
+         required = false)
   var bamFile: Option[File] = None
 
   @Argument(required = false)
   var outputName: String = _
 
-  lazy val krakenScript = if (config("gears_use_kraken", default = false)) Some(new GearsKraken(this)) else None
-  lazy val centrifugeScript = if (config("gears_use_centrifuge", default = true)) Some(new GearsCentrifuge(this)) else None
-  lazy val qiimeRatx = if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
-  lazy val qiimeClosed = if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
-  lazy val qiimeOpen = if (config("gears_use_qiime_open", default = false)) Some(new GearsQiimeOpen(this)) else None
-  lazy val seqCount = if (config("gears_use_seq_count", default = false)) Some(new GearsSeqCount(this)) else None
+  lazy val krakenScript =
+    if (config("gears_use_kraken", default = false)) Some(new GearsKraken(this)) else None
+  lazy val centrifugeScript =
+    if (config("gears_use_centrifuge", default = true)) Some(new GearsCentrifuge(this)) else None
+  lazy val qiimeRatx =
+    if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
+  lazy val qiimeClosed =
+    if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this))
+    else None
+  lazy val qiimeOpen =
+    if (config("gears_use_qiime_open", default = false)) Some(new GearsQiimeOpen(this)) else None
+  lazy val seqCount =
+    if (config("gears_use_seq_count", default = false)) Some(new GearsSeqCount(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
-    if (fastqR1.isEmpty && !bamFile.isDefined) Logging.addError("Please specify fastq-file(s) or bam file")
-    if (fastqR1.nonEmpty == bamFile.isDefined) Logging.addError("Provide either a bam file or a R1/R2 file")
-    if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size) Logging.addError("R1 and R2 has not the same number of files")
-    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
+    if (fastqR1.isEmpty && !bamFile.isDefined)
+      Logging.addError("Please specify fastq-file(s) or bam file")
+    if (fastqR1.nonEmpty == bamFile.isDefined)
+      Logging.addError("Provide either a bam file or a R1/R2 file")
+    if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size)
+      Logging.addError("R1 and R2 has not the same number of files")
+    if (sampleId == null || sampleId == None)
+      Logging.addError("Missing sample ID on GearsSingle module")
 
     if (!skipFlexiprep) {
       val db = SummaryDb.openSqliteSummary(summaryDbFile)
       val future = for {
         sample <- db.getSamples(runId = summaryRunId, name = sampleId).map(_.headOption)
-        sId <- sample.map(s => Future.successful(s.id))
+        sId <- sample
+          .map(s => Future.successful(s.id))
           .getOrElse(db.createSample(sampleId.getOrElse("noSampleName"), summaryRunId))
-        library <- db.getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId)).map(_.headOption)
-        lId <- library.map(l => Future.successful(l.id))
+        library <- db
+          .getLibraries(runId = summaryRunId, name = libId, sampleId = Some(sId))
+          .map(_.headOption)
+        lId <- library
+          .map(l => Future.successful(l.id))
           .getOrElse(db.createLibrary(libId.getOrElse("noLibName"), summaryRunId, sId))
       } yield lId
       Await.result(future, Duration.Inf)
@@ -94,27 +114,33 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
   protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
   protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
-    val read1: File = if (r1.size == 1) r1.head else {
-      val outputFile = new File(outputDir, "merged.R1.fq.gz")
-      add(Zcat(this, r1) | new Gzip(this) > outputFile)
-      outputFile
-    }
+    val read1: File =
+      if (r1.size == 1) r1.head
+      else {
+        val outputFile = new File(outputDir, "merged.R1.fq.gz")
+        add(Zcat(this, r1) | new Gzip(this) > outputFile)
+        outputFile
+      }
 
-    val read2: Option[File] = if (r2.size <= 1) r2.headOption else {
-      val outputFile = new File(outputDir, "merged.R2.fq.gz")
-      add(Zcat(this, r2) | new Gzip(this) > outputFile)
-      Some(outputFile)
-    }
+    val read2: Option[File] =
+      if (r2.size <= 1) r2.headOption
+      else {
+        val outputFile = new File(outputDir, "merged.R2.fq.gz")
+        add(Zcat(this, r2) | new Gzip(this) > outputFile)
+        Some(outputFile)
+      }
 
-    flexiprep.map { f =>
-      f.inputR1 = read1
-      f.inputR2 = read2
-      f.sampleId = Some(sampleId.getOrElse("noSampleName"))
-      f.libId = Some(libId.getOrElse("noLibName"))
-      f.outputDir = new File(outputDir, "flexiprep")
-      add(f)
-      (f.fastqR1Qc, f.fastqR2Qc)
-    }.getOrElse((read1, read2))
+    flexiprep
+      .map { f =>
+        f.inputR1 = read1
+        f.inputR2 = read2
+        f.sampleId = Some(sampleId.getOrElse("noSampleName"))
+        f.libId = Some(libId.getOrElse("noLibName"))
+        f.outputDir = new File(outputDir, "flexiprep")
+        add(f)
+        (f.fastqR1Qc, f.fastqR2Qc)
+      }
+      .getOrElse((read1, read2))
   }
 
   lazy protected val flexiprep: Option[Flexiprep] = if (!skipFlexiprep) {
@@ -206,11 +232,12 @@ class GearsSingle(val parent: Configurable) extends QScript with SummaryQScript 
   )
 
   /** Statistics shown in the summary file */
-  def summaryFiles: Map[String, File] = Map.empty ++
-    (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    fastqR1.zipWithIndex.map(x => s"input_R1_${x._2}" -> x._1) ++
-    fastqR2.zipWithIndex.map(x => s"input_R2_${x._2}" -> x._1) ++
-    outputFiles
+  def summaryFiles: Map[String, File] =
+    Map.empty ++
+      (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
+      fastqR1.zipWithIndex.map(x => s"input_R1_${x._2}" -> x._1) ++
+      fastqR2.zipWithIndex.map(x => s"input_R2_${x._2}" -> x._1) ++
+      outputFiles
 }
 
 /** This object give a default main method to the pipelines */

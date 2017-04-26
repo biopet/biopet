@@ -1,31 +1,34 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Extension for freebayes
- *
- * Created by pjvan_thof on 3/3/15.
- */
-class Freebayes(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for freebayes
+  *
+  * Created by pjvan_thof on 3/3/15.
+  */
+class Freebayes(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
 
   @Input(required = true)
   var bamfiles: List[File] = Nil
@@ -115,7 +118,8 @@ class Freebayes(val parent: Configurable) extends BiopetCommandLineFunction with
   var binomialObsPriorsOff: Boolean = config("binomial_obs_priors_off", default = false)
   var alleleBalancePriorsOff: Boolean = config("allele_balance_priors_off", default = false)
   var legacyGls: Boolean = config("legacy_gls", default = false)
-  var reportGenotypeLikelihoodMax: Boolean = config("report_genotype_likelihood_max", default = false)
+  var reportGenotypeLikelihoodMax: Boolean =
+    config("report_genotype_likelihood_max", default = false)
   var excludeUnobservedGenotypes: Boolean = config("exclude_unobserved_genotypes", default = false)
   var useMappingQuality: Boolean = config("use_mapping_quality", default = false)
   var harmonicIndelQuality: Boolean = config("harmonic_indel_quality", default = false)
@@ -133,73 +137,74 @@ class Freebayes(val parent: Configurable) extends BiopetCommandLineFunction with
     reference = referenceFasta()
   }
 
-  def cmdLine = executable +
-    required("--fasta-reference", reference) +
-    repeat("--bam", bamfiles) +
-    optional("--bam-list", bamList) +
-    optional("--targets", targets) +
-    optional("--samples", samples) +
-    optional("--populations", populations) +
-    optional("--cnv-map", cnvMap) +
-    optional("--trace", trace) +
-    optional("--failed-alleles", failedAlleles) +
-    optional("--observation-bias", observationBias) +
-    optional("--contamination-estimates", contaminationEstimates) +
-    optional("--variant-input", variantInput) +
-    optional("--haplotype-basis-alleles", haplotypeBasisAlleles) +
-    optional("--pvar", pvar) +
-    optional("--theta", theta) +
-    optional("--ploidy", ploidy) +
-    optional("--use-best-n-alleles", useBestNAlleles) +
-    optional("--max-complex-gap", maxComplexGap) +
-    optional("--min-repeat-size", minRepeatSize) +
-    optional("--min-repeat-entropy", minRepeatEntropy) +
-    optional("--read-mismatch-limit", readMismatchLimit) +
-    optional("--read-max-mismatch-fraction", readMaxMismatchFraction) +
-    optional("--read-snp-limit", readSnpLimit) +
-    optional("--read-indel-limit", readIndelLimit) +
-    optional("--min-alternate-fraction", minAlternateFraction) +
-    optional("--min-alternate-count", minAlternateCount) +
-    optional("--min-alternate-qsum", minAlternateQsum) +
-    optional("--min-alternate-total", minAlternateTotal) +
-    optional("--min-coverage", minCoverage) +
-    optional("--genotyping-max-iterations", genotypingMaxIterations) +
-    optional("--genotyping-max-banddepth", genotypingMaxBanddepth) +
-    optional("--genotype-variant-threshold", genotypeVariantThreshold) +
-    optional("--read-dependence-factor", readDependenceFactor) +
-    optional("--min-mapping-quality", minMappingQuality) +
-    optional("--min-base-quality", minBaseQuality) +
-    optional("--min-supporting-allele-qsum", minSupportingAlleleQsum) +
-    optional("--min-supporting-mapping-qsum", minSupportingMappingQsum) +
-    optional("--mismatch-base-quality-threshold", mismatchBaseQualityThreshold) +
-    optional("--base-quality-cap", baseQualityCap) +
-    optional("--prob-contamination", probContamination) +
-    conditional(onlyUseInputAlleles, "--only-use-input-alleles") +
-    conditional(reportAllHaplotypeAlleles, "--report-all-haplotype-alleles") +
-    conditional(reportMonomorphic, "--report-monomorphic") +
-    conditional(pooledDiscrete, "--pooled-discrete") +
-    conditional(pooledContinuous, "--pooled-continuous") +
-    conditional(useReferenceAllele, "--use-reference-allele") +
-    conditional(noSnps, "--no-snps") +
-    conditional(noIndels, "--no-indels") +
-    conditional(noMnps, "--no-mnps") +
-    conditional(noComplex, "--no-complex") +
-    conditional(noPartialObservations, "--no-partial-observations") +
-    conditional(dontLeftAlignIndels, "--dont-left-align-indels") +
-    conditional(useDuplicateReads, "--use-duplicate-reads") +
-    conditional(standardFilters, "--standard-filters") +
-    conditional(noPopulationPriors, "--no-population-priors") +
-    conditional(hwePriorsOff, "--hwe-priors-off") +
-    conditional(binomialObsPriorsOff, "--binomial-obs-priors-off") +
-    conditional(alleleBalancePriorsOff, "--allele-balance-priors-off") +
-    conditional(legacyGls, "--legacy-gls") +
-    conditional(reportGenotypeLikelihoodMax, "--report-genotype-likelihood-max") +
-    conditional(excludeUnobservedGenotypes, "--exclude-unobserved-genotypes") +
-    conditional(useMappingQuality, "--use-mapping-quality") +
-    conditional(harmonicIndelQuality, "--harmonic-indel-quality") +
-    conditional(genotypeQualities, "--genotype-qualities") +
-    conditional(debug, "--debug") +
-    optional("--haplotype-length", haplotypeLength) +
-    (if (inputAsStdin) required("--stdin") else "") +
-    (if (outputAsStsout) "" else optional("--vcf", outputVcf))
+  def cmdLine =
+    executable +
+      required("--fasta-reference", reference) +
+      repeat("--bam", bamfiles) +
+      optional("--bam-list", bamList) +
+      optional("--targets", targets) +
+      optional("--samples", samples) +
+      optional("--populations", populations) +
+      optional("--cnv-map", cnvMap) +
+      optional("--trace", trace) +
+      optional("--failed-alleles", failedAlleles) +
+      optional("--observation-bias", observationBias) +
+      optional("--contamination-estimates", contaminationEstimates) +
+      optional("--variant-input", variantInput) +
+      optional("--haplotype-basis-alleles", haplotypeBasisAlleles) +
+      optional("--pvar", pvar) +
+      optional("--theta", theta) +
+      optional("--ploidy", ploidy) +
+      optional("--use-best-n-alleles", useBestNAlleles) +
+      optional("--max-complex-gap", maxComplexGap) +
+      optional("--min-repeat-size", minRepeatSize) +
+      optional("--min-repeat-entropy", minRepeatEntropy) +
+      optional("--read-mismatch-limit", readMismatchLimit) +
+      optional("--read-max-mismatch-fraction", readMaxMismatchFraction) +
+      optional("--read-snp-limit", readSnpLimit) +
+      optional("--read-indel-limit", readIndelLimit) +
+      optional("--min-alternate-fraction", minAlternateFraction) +
+      optional("--min-alternate-count", minAlternateCount) +
+      optional("--min-alternate-qsum", minAlternateQsum) +
+      optional("--min-alternate-total", minAlternateTotal) +
+      optional("--min-coverage", minCoverage) +
+      optional("--genotyping-max-iterations", genotypingMaxIterations) +
+      optional("--genotyping-max-banddepth", genotypingMaxBanddepth) +
+      optional("--genotype-variant-threshold", genotypeVariantThreshold) +
+      optional("--read-dependence-factor", readDependenceFactor) +
+      optional("--min-mapping-quality", minMappingQuality) +
+      optional("--min-base-quality", minBaseQuality) +
+      optional("--min-supporting-allele-qsum", minSupportingAlleleQsum) +
+      optional("--min-supporting-mapping-qsum", minSupportingMappingQsum) +
+      optional("--mismatch-base-quality-threshold", mismatchBaseQualityThreshold) +
+      optional("--base-quality-cap", baseQualityCap) +
+      optional("--prob-contamination", probContamination) +
+      conditional(onlyUseInputAlleles, "--only-use-input-alleles") +
+      conditional(reportAllHaplotypeAlleles, "--report-all-haplotype-alleles") +
+      conditional(reportMonomorphic, "--report-monomorphic") +
+      conditional(pooledDiscrete, "--pooled-discrete") +
+      conditional(pooledContinuous, "--pooled-continuous") +
+      conditional(useReferenceAllele, "--use-reference-allele") +
+      conditional(noSnps, "--no-snps") +
+      conditional(noIndels, "--no-indels") +
+      conditional(noMnps, "--no-mnps") +
+      conditional(noComplex, "--no-complex") +
+      conditional(noPartialObservations, "--no-partial-observations") +
+      conditional(dontLeftAlignIndels, "--dont-left-align-indels") +
+      conditional(useDuplicateReads, "--use-duplicate-reads") +
+      conditional(standardFilters, "--standard-filters") +
+      conditional(noPopulationPriors, "--no-population-priors") +
+      conditional(hwePriorsOff, "--hwe-priors-off") +
+      conditional(binomialObsPriorsOff, "--binomial-obs-priors-off") +
+      conditional(alleleBalancePriorsOff, "--allele-balance-priors-off") +
+      conditional(legacyGls, "--legacy-gls") +
+      conditional(reportGenotypeLikelihoodMax, "--report-genotype-likelihood-max") +
+      conditional(excludeUnobservedGenotypes, "--exclude-unobserved-genotypes") +
+      conditional(useMappingQuality, "--use-mapping-quality") +
+      conditional(harmonicIndelQuality, "--harmonic-indel-quality") +
+      conditional(genotypeQualities, "--genotype-qualities") +
+      conditional(debug, "--debug") +
+      optional("--haplotype-length", haplotypeLength) +
+      (if (inputAsStdin) required("--stdin") else "") +
+      (if (outputAsStsout) "" else optional("--vcf", outputVcf))
 }

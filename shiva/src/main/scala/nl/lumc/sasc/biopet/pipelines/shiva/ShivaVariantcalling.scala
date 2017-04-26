@@ -1,44 +1,44 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand, Reference, SampleLibraryTag}
 import MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
+import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance}
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
+import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{ VarscanCnsSingleSample, _ }
-import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
+import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 /**
- * Implementation of ShivaVariantcalling
- *
- * Created by pjvan_thof on 2/26/15.
- */
-class ShivaVariantcalling(val parent: Configurable) extends QScript
-  with SummaryQScript
-  with SampleLibraryTag
-  with Reference
-  with TargetRegions {
-  qscript =>
+  * Implementation of ShivaVariantcalling
+  *
+  * Created by pjvan_thof on 2/26/15.
+  */
+class ShivaVariantcalling(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag
+    with Reference
+    with TargetRegions { qscript =>
 
   def this() = this(null)
 
@@ -59,9 +59,9 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
       samples.map {
         case (sampleName, gender) =>
           sampleName -> (gender.toString.toLowerCase match {
-            case "male"   => Gender.Male
+            case "male" => Gender.Male
             case "female" => Gender.Female
-            case _        => Gender.Unknown
+            case _ => Gender.Unknown
           })
       }
     }
@@ -75,8 +75,8 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
   def namePrefix: String = {
     (sampleId, libId) match {
       case (Some(s), Some(l)) => s + "-" + l
-      case (Some(s), _)       => s
-      case _                  => config("name_prefix")
+      case (Some(s), _) => s
+      case _ => config("name_prefix")
     }
   }
 
@@ -91,7 +91,11 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
   val callers: List[Variantcaller] = {
     (for (name <- configCallers) yield {
       if (!ShivaVariantcalling.callersList(this).exists(_.name == name))
-        Logging.addError(s"variantcaller '$name' does not exist, possible to use: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
+        Logging.addError(
+          s"variantcaller '$name' does not exist, possible to use: " + ShivaVariantcalling
+            .callersList(this)
+            .map(_.name)
+            .mkString(", "))
       ShivaVariantcalling.callersList(this).find(_.name == name)
     }).flatten.toList.sortBy(_.prio)
   }
@@ -99,10 +103,19 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
     require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling.callersList(this).map(_.name).mkString(", "))
-    if (!callers.exists(_.mergeVcfResults)) Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
+    require(callers.nonEmpty,
+            "must select at least 1 variantcaller, choices are: " + ShivaVariantcalling
+              .callersList(this)
+              .map(_.name)
+              .mkString(", "))
+    if (!callers.exists(_.mergeVcfResults))
+      Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
-    addAll(dbsnpVcfFile.map(Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate"))).getOrElse(Nil))
+    addAll(
+      dbsnpVcfFile
+        .map(
+          Shiva.makeValidateVcfJobs(this, _, referenceFasta(), new File(outputDir, ".validate")))
+        .getOrElse(Nil))
 
     val cv = new CombineVariants(qscript)
     cv.out = finalFile
@@ -117,28 +130,34 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
       caller.genders = genders
       add(caller)
       addStats(caller.outputFile, caller.name)
-      val normalize: Boolean = config("execute_vt_normalize", default = false, namespace = caller.configNamespace)
-      val decompose: Boolean = config("execute_vt_decompose", default = false, namespace = caller.configNamespace)
+      val normalize: Boolean =
+        config("execute_vt_normalize", default = false, namespace = caller.configNamespace)
+      val decompose: Boolean =
+        config("execute_vt_decompose", default = false, namespace = caller.configNamespace)
 
       val vtNormalize = new VtNormalize(this)
       vtNormalize.inputVcf = caller.outputFile
       val vtDecompose = new VtDecompose(this)
 
       if (normalize && decompose) {
-        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
+        vtNormalize.outputVcf =
+          swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         vtNormalize.isIntermediate = true
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         vtDecompose.inputVcf = vtNormalize.outputVcf
-        vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
+        vtDecompose.outputVcf =
+          swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
-        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
+        vtNormalize.outputVcf =
+          swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
-        vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
+        vtDecompose.outputVcf =
+          swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         if (caller.mergeVcfResults) cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (caller.mergeVcfResults) cv.variant :+= TaggedFile(caller.outputFile, caller.name)
@@ -195,6 +214,7 @@ class ShivaVariantcalling(val parent: Configurable) extends QScript
 }
 
 object ShivaVariantcalling extends PipelineCommand {
+
   /** Will generate all available variantcallers */
   protected[pipelines] def callersList(root: Configurable): List[Variantcaller] =
     new HaplotypeCallerGvcf(root) ::

@@ -1,32 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ VcfUtils, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{VcfUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.JavaConversions._
 
 /**
- * Created by ahbbollen on 13-10-15.
- * Create bed track from genome quality values in (g)VCF
- */
+  * Created by ahbbollen on 13-10-15.
+  * Create bed track from genome quality values in (g)VCF
+  */
 object GvcfToBed extends ToolCommand {
 
   case class Args(inputVcf: File = null,
@@ -34,7 +34,8 @@ object GvcfToBed extends ToolCommand {
                   invertedOutputBed: Option[File] = None,
                   sample: Option[String] = None,
                   minGenomeQuality: Int = 0,
-                  inverse: Boolean = false) extends AbstractArgs
+                  inverse: Boolean = false)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
