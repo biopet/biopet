@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PedigreeQscript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PedigreeQscript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
@@ -165,8 +165,8 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     addAll(wisecondorSyncJobs.values)
     addAll(xhmmSyncJobs.values)
     addAll(zScoreMergeJobs.values)
-    addAll(windowStouffJobs.flatMap(_._2).values)
-    addAll(thresholdJobs.flatMap(_._2).values)
+    addAll(windowStouffJobs.values.flatMap(_.values))
+    addAll(thresholdJobs.values.flatMap(_.values))
   }
 
   /**
@@ -227,7 +227,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     gzipRef.input = List(sort.output)
     gzipRef.output = refFile
     val tabix = Tabix(this, refFile)
-    (reference :: sort :: gzipRef :: tabix :: Nil, refFile)
+    (List(new BiopetFifoPipe(this, reference :: sort :: gzipRef :: Nil), tabix), refFile)
   }
 
   def createWisecondorZScore(sample: Sample, referenceFile: File, tbiFile: File): WisecondorZscore = {
