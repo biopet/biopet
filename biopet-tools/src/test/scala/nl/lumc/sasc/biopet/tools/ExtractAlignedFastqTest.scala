@@ -1,30 +1,30 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
 
-import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import htsjdk.samtools.fastq.{BasicFastqWriter, FastqReader, FastqRecord}
 import htsjdk.samtools.util.Interval
 import org.mockito.Matchers._
-import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
+import org.mockito.Mockito.{inOrder => inOrd, times, verify}
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matchers {
 
@@ -109,25 +109,35 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     val sBam01 = resourceFile("/single01.bam")
 
     Array(
-      Array("adjacent left",
-        makeInterval("chrQ", 30, 49), sBam01, sFastq1, sFastq1Default),
-      Array("adjacent right",
-        makeInterval("chrQ", 200, 210), sBam01, sFastq1, sFastq1Default),
-      Array("no overlap",
-        makeInterval("chrQ", 220, 230), sBam01, sFastq1, sFastq1Default),
+      Array("adjacent left", makeInterval("chrQ", 30, 49), sBam01, sFastq1, sFastq1Default),
+      Array("adjacent right", makeInterval("chrQ", 200, 210), sBam01, sFastq1, sFastq1Default),
+      Array("no overlap", makeInterval("chrQ", 220, 230), sBam01, sFastq1, sFastq1Default),
       Array("partial overlap",
-        makeInterval("chrQ", 430, 460), sBam01, sFastq1, sFastq1Default.updated("r04", true)),
+            makeInterval("chrQ", 430, 460),
+            sBam01,
+            sFastq1,
+            sFastq1Default.updated("r04", true)),
       Array("enveloped",
-        makeInterval("chrQ", 693, 698), sBam01, sFastq1, sFastq1Default.updated("r03", true)),
-      Array("partial overlap and enveloped",
-        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))), sBam01,
-        sFastq1, sFastq1Default.updated("r03", true).updated("r04", true))
+            makeInterval("chrQ", 693, 698),
+            sBam01,
+            sFastq1,
+            sFastq1Default.updated("r03", true)),
+      Array(
+        "partial overlap and enveloped",
+        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))),
+        sBam01,
+        sFastq1,
+        sFastq1Default.updated("r03", true).updated("r04", true)
+      )
     )
   }
 
   @Test(dataProvider = "singleAlnProvider1")
-  def testSingleBamDefault(name: String, feats: Iterator[Interval], inAln: File,
-                           fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
+  def testSingleBamDefault(name: String,
+                           feats: Iterator[Interval],
+                           inAln: File,
+                           fastqMap: Map[String, FastqInput],
+                           resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -145,17 +155,33 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
 
     Array(
       Array("less than minimum MAPQ",
-        makeInterval("chrQ", 830, 890), sBam02, 60, sFastq2, sFastq2Default),
+            makeInterval("chrQ", 830, 890),
+            sBam02,
+            60,
+            sFastq2,
+            sFastq2Default),
       Array("greater than minimum MAPQ",
-        makeInterval("chrQ", 830, 890), sBam02, 20, sFastq2, sFastq2Default.updated("r07", true)),
+            makeInterval("chrQ", 830, 890),
+            sBam02,
+            20,
+            sFastq2,
+            sFastq2Default.updated("r07", true)),
       Array("equal to minimum MAPQ",
-        makeInterval("chrQ", 260, 320), sBam02, 30, sFastq2, sFastq2Default.updated("r01", true))
+            makeInterval("chrQ", 260, 320),
+            sBam02,
+            30,
+            sFastq2,
+            sFastq2Default.updated("r01", true))
     )
   }
 
   @Test(dataProvider = "singleAlnProvider2")
-  def testSingleBamMinMapQ(name: String, feats: Iterator[Interval], inAln: File, minMapQ: Int,
-                           fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
+  def testSingleBamMinMapQ(name: String,
+                           feats: Iterator[Interval],
+                           inAln: File,
+                           minMapQ: Int,
+                           fastqMap: Map[String, FastqInput],
+                           resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln, minMapQ)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -166,37 +192,49 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   }
   @DataProvider(name = "pairAlnProvider1", parallel = true)
   def pairAlnProvider1() = {
-    val pFastq1 = makePairRecords(
-      ("r01", ("r01/1", "r01/2")),
-      ("r02", ("r02/1", "r02/2")),
-      ("r03", ("r03/1", "r03/2")),
-      ("r04", ("r04/1", "r04/2")),
-      ("r05", ("r05/1", "r05/2")))
+    val pFastq1 = makePairRecords(("r01", ("r01/1", "r01/2")),
+                                  ("r02", ("r02/1", "r02/2")),
+                                  ("r03", ("r03/1", "r03/2")),
+                                  ("r04", ("r04/1", "r04/2")),
+                                  ("r05", ("r05/1", "r05/2")))
     val pFastq1Default = pFastq1.keys.map(x => (x, false)).toMap
     val pBam01 = resourceFile("/paired01.bam")
 
     Array(
-      Array("adjacent left",
-        makeInterval("chrQ", 30, 49), pBam01, pFastq1, pFastq1Default),
-      Array("adjacent right",
-        makeInterval("chrQ", 200, 210), pBam01, pFastq1, pFastq1Default),
-      Array("no overlap",
-        makeInterval("chrQ", 220, 230), pBam01, pFastq1, pFastq1Default),
+      Array("adjacent left", makeInterval("chrQ", 30, 49), pBam01, pFastq1, pFastq1Default),
+      Array("adjacent right", makeInterval("chrQ", 200, 210), pBam01, pFastq1, pFastq1Default),
+      Array("no overlap", makeInterval("chrQ", 220, 230), pBam01, pFastq1, pFastq1Default),
       Array("partial overlap",
-        makeInterval("chrQ", 430, 460), pBam01, pFastq1, pFastq1Default.updated("r04", true)),
+            makeInterval("chrQ", 430, 460),
+            pBam01,
+            pFastq1,
+            pFastq1Default.updated("r04", true)),
       Array("enveloped",
-        makeInterval("chrQ", 693, 698), pBam01, pFastq1, pFastq1Default.updated("r03", true)),
+            makeInterval("chrQ", 693, 698),
+            pBam01,
+            pFastq1,
+            pFastq1Default.updated("r03", true)),
       Array("in intron",
-        makeInterval("chrQ", 900, 999), pBam01, pFastq1, pFastq1Default.updated("r05", true)),
-      Array("partial overlap and enveloped",
-        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))), pBam01,
-        pFastq1, pFastq1Default.updated("r03", true).updated("r04", true))
+            makeInterval("chrQ", 900, 999),
+            pBam01,
+            pFastq1,
+            pFastq1Default.updated("r05", true)),
+      Array(
+        "partial overlap and enveloped",
+        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))),
+        pBam01,
+        pFastq1,
+        pFastq1Default.updated("r03", true).updated("r04", true)
+      )
     )
   }
 
   @Test(dataProvider = "pairAlnProvider1")
-  def testPairBamDefault(name: String, feats: Iterator[Interval], inAln: File,
-                         fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
+  def testPairBamDefault(name: String,
+                         feats: Iterator[Interval],
+                         inAln: File,
+                         fastqMap: Map[String, FastqInput],
+                         resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln, commonSuffixLength = 2)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -219,7 +257,8 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
 
   @Test def testWritePairFastqDefault() = {
     val mockSet = Set("r01/1", "r01/2", "r03/1", "r03/2")
-    val memFunc = (recs: FastqInput) => mockSet.contains(fastqId(recs._1)) || mockSet.contains(fastqId(recs._2.get))
+    val memFunc = (recs: FastqInput) =>
+      mockSet.contains(fastqId(recs._1)) || mockSet.contains(fastqId(recs._2.get))
     val in1 = new FastqReader(resourceFile("/paired01a.fq"))
     val in2 = new FastqReader(resourceFile("/paired01b.fq"))
     val mo1 = mock[BasicFastqWriter]
@@ -236,10 +275,14 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
 
   @Test def testArgsMinimum() = {
     val args = Array(
-      "-I", resourcePath("/single01.bam"),
-      "--interval", "chrQ:1-400",
-      "-i", resourcePath("/single01.fq"),
-      "-o", "/tmp/tm1.fq"
+      "-I",
+      resourcePath("/single01.bam"),
+      "--interval",
+      "chrQ:1-400",
+      "-i",
+      resourcePath("/single01.fq"),
+      "-o",
+      "/tmp/tm1.fq"
     )
     val parsed = parseArgs(args)
     parsed.inputBam shouldBe resourceFile("/single01.bam")
@@ -250,15 +293,24 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
 
   @Test def testArgsMaximum() = {
     val args = Array(
-      "-I", resourcePath("/paired01.bam"),
-      "--interval", "chrQ:1-400",
-      "--interval", "chrP:1000-4000",
-      "-i", resourcePath("/paired01a.fq"),
-      "-j", resourcePath("/paired01b.fq"),
-      "-o", "/tmp/tm1.fq",
-      "-p", "/tmp/tm2.fq",
-      "-s", "2",
-      "-Q", "30"
+      "-I",
+      resourcePath("/paired01.bam"),
+      "--interval",
+      "chrQ:1-400",
+      "--interval",
+      "chrP:1000-4000",
+      "-i",
+      resourcePath("/paired01a.fq"),
+      "-j",
+      resourcePath("/paired01b.fq"),
+      "-o",
+      "/tmp/tm1.fq",
+      "-p",
+      "/tmp/tm2.fq",
+      "-s",
+      "2",
+      "-Q",
+      "30"
     )
     val parsed = parseArgs(args)
     parsed.inputBam shouldBe resourceFile("/paired01.bam")

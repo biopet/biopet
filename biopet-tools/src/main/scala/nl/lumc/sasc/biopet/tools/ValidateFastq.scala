@@ -1,38 +1,38 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.fastq.{ FastqRecord, FastqReader }
+import htsjdk.samtools.fastq.{FastqRecord, FastqReader}
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 
 /**
- * Created by sajvanderzeeuw on 2-2-16.
- * Modified by pjvan_thof
- */
+  * Created by sajvanderzeeuw on 2-2-16.
+  * Modified by pjvan_thof
+  */
 object ValidateFastq extends ToolCommand {
-  /**
-   * Args for commandline program
-   * @param input input first fastq file (R1) (can be zipped)
-   * @param input2 input second fastq file (R2) (can be zipped)
-   */
 
+  /**
+    * Args for commandline program
+    * @param input input first fastq file (R1) (can be zipped)
+    * @param input2 input second fastq file (R2) (can be zipped)
+    */
   case class Args(input: File = null, input2: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -50,7 +50,8 @@ object ValidateFastq extends ToolCommand {
 
     //parse all possible options into OptParser
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     //read in fastq file 1 and if present fastq file 2
     val readFq1 = new FastqReader(cmdArgs.input)
@@ -84,7 +85,8 @@ object ValidateFastq extends ToolCommand {
             checkMate(recordR1, r2)
           case _ => // Single end
         }
-        if (counter % 1e5 == 0) logger.info(counter + (if (recordR2.isDefined) " pairs" else " reads") + " processed")
+        if (counter % 1e5 == 0)
+          logger.info(counter + (if (recordR2.isDefined) " pairs" else " reads") + " processed")
         lastRecordR1 = Some(recordR1)
         lastRecordR2 = recordR2
       }
@@ -94,8 +96,9 @@ object ValidateFastq extends ToolCommand {
         throw new IllegalStateException("R2 contains more reads then R1")
 
       getPossibleEncodings match {
-        case l if l.nonEmpty => logger.info(s"Possible quality encodings found: ${l.mkString(", ")}")
-        case _               => logger.warn(s"No possible quality encodings found")
+        case l if l.nonEmpty =>
+          logger.info(s"Possible quality encodings found: ${l.mkString(", ")}")
+        case _ => logger.warn(s"No possible quality encodings found")
       }
 
       logger.info(s"Done processing $counter fastq records, no errors found")
@@ -114,10 +117,10 @@ object ValidateFastq extends ToolCommand {
   private[tools] var maxQual: Option[Char] = None
 
   /**
-   * This method checks if the encoding in a fastq record is correct
-   * @param record The fastq record to check
-   * @throws IllegalStateException Throws this when an error is ofund during checking
-   */
+    * This method checks if the encoding in a fastq record is correct
+    * @param record The fastq record to check
+    * @throws IllegalStateException Throws this when an error is ofund during checking
+    */
   private[tools] def checkQualEncoding(record: FastqRecord): Unit = {
     val min = record.getBaseQualityString.min
     val max = record.getBaseQualityString.max
@@ -132,16 +135,17 @@ object ValidateFastq extends ToolCommand {
   }
 
   /**
-   * This method returns the possible encodings till now
-   * @return List of possible encodings
-   * @throws IllegalStateException Throws this when an error is ofund during checking
-   */
+    * This method returns the possible encodings till now
+    * @return List of possible encodings
+    * @throws IllegalStateException Throws this when an error is ofund during checking
+    */
   private[tools] def getPossibleEncodings: List[String] = {
     val buffer: ListBuffer[String] = ListBuffer()
     (minQual, maxQual) match {
       case (Some(min), Some(max)) =>
         if (min < '!' || max > '~')
-          throw new IllegalStateException(s"Quality is out of ascii range 33-126.  minQual: '$min', maxQual: '$max'")
+          throw new IllegalStateException(
+            s"Quality is out of ascii range 33-126.  minQual: '$min', maxQual: '$max'")
         if (min >= '!' && max <= 'I') buffer += "Sanger"
         if (min >= ';' && max <= 'h') buffer += "Solexa"
         if (min >= '@' && max <= 'h') buffer += "Illumina 1.3+"
@@ -155,43 +159,44 @@ object ValidateFastq extends ToolCommand {
   val allowedBases = """([actgnACTGN+]+)""".r
 
   /**
-   * This function checks for duplicates.
-   * @param current currect fastq record
-   * @param before fastq record before the current record
-   * @throws IllegalStateException Throws this when an error is ofund during checking
-   */
+    * This function checks for duplicates.
+    * @param current currect fastq record
+    * @param before fastq record before the current record
+    * @throws IllegalStateException Throws this when an error is ofund during checking
+    */
   def duplicateCheck(current: FastqRecord, before: Option[FastqRecord]): Unit = {
     if (before.exists(_.getReadHeader == current.getReadHeader))
       throw new IllegalStateException("Duplicate read ID found")
   }
 
   /**
-   * This method will check if fastq record is correct
-   * @param record Fastq record to check
-   * @throws IllegalStateException Throws this when an error is ofund during checking
-   */
+    * This method will check if fastq record is correct
+    * @param record Fastq record to check
+    * @throws IllegalStateException Throws this when an error is ofund during checking
+    */
   def validFastqRecord(record: FastqRecord): Unit = {
     checkQualEncoding(record)
     record.getReadString match {
       case allowedBases(m) =>
-      case _               => throw new IllegalStateException(s"Non IUPAC symbols identified")
+      case _ => throw new IllegalStateException(s"Non IUPAC symbols identified")
     }
     if (record.getReadString.length != record.getBaseQualityString.length)
       throw new IllegalStateException(s"Sequence length does not match quality length")
   }
 
   /**
-   * This method checks if the pair is the same ID
-   * @param r1 R1 fastq record
-   * @param r2 R2 fastq record
-   * @throws IllegalStateException Throws this when an error is ofund during checking
-   */
+    * This method checks if the pair is the same ID
+    * @param r1 R1 fastq record
+    * @param r2 R2 fastq record
+    * @throws IllegalStateException Throws this when an error is ofund during checking
+    */
   def checkMate(r1: FastqRecord, r2: FastqRecord): Unit = {
     val id1 = r1.getReadHeader.takeWhile(_ != ' ')
     val id2 = r2.getReadHeader.takeWhile(_ != ' ')
     if (!(id1 == id2 ||
-      id1.stripSuffix("/1") == id2.stripSuffix("/2") ||
-      id1.stripSuffix(".1") == id2.stripSuffix(".2")))
-      throw new IllegalStateException(s"Sequence headers do not match. R1: '${r1.getReadHeader}', R2: '${r2.getReadHeader}'")
+          id1.stripSuffix("/1") == id2.stripSuffix("/2") ||
+          id1.stripSuffix(".1") == id2.stripSuffix(".2")))
+      throw new IllegalStateException(
+        s"Sequence headers do not match. R1: '${r1.getReadHeader}', R2: '${r2.getReadHeader}'")
   }
 }

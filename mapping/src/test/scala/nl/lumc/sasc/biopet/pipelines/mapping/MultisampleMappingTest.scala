@@ -1,37 +1,37 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
- * Created by pjvanthof on 15/05/16.
- */
+  * Created by pjvanthof on 15/05/16.
+  */
 trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
   val outputDir = MultisampleMappingTestTrait.outputDir
@@ -57,13 +57,13 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    for (
-      merge <- mergeStrategies.toArray; s1 <- sample1; s2 <- sample2
-    ) yield Array(merge, s1, s2)
+    for (merge <- mergeStrategies.toArray; s1 <- sample1; s2 <- sample2) yield Array(merge, s1, s2)
   }
 
   @Test(dataProvider = "mappingOptions")
-  def testMultisampleMapping(merge: MultisampleMapping.MergeStrategy.Value, sample1: Boolean, sample2: Boolean): Unit = {
+  def testMultisampleMapping(merge: MultisampleMapping.MergeStrategy.Value,
+                             sample1: Boolean,
+                             sample2: Boolean): Unit = {
     val map: Map[String, Any] = {
       var m: Map[String, Any] = configMap
       if (sample1) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample1, m)
@@ -91,10 +91,20 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       val pipeline = initPipeline(map)
       pipeline.script()
 
-      val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq) 1 else 0) + (if (sample4 && bamToFastq) 1 else 0)
-      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0) + (if (sample4) 1 else 0)
+      val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq)
+                                                                                   1
+                                                                                 else
+                                                                                   0) + (if (sample4 && bamToFastq)
+                                                                                           1
+                                                                                         else 0)
+      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1
+                                                                               else
+                                                                                 0) + (if (sample4)
+                                                                                         1
+                                                                                       else 0)
 
-      val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+      val pipesJobs = pipeline.functions
+        .filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
       if (merge == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates) {
@@ -103,9 +113,12 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
       import MultisampleMapping.MergeStrategy
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
-        (if (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates) numberSamples else 0))
-      pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (
-        (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
+        (if (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)
+           numberSamples
+         else 0))
+      pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe ((if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam))
+                                                                           1
+                                                                         else 0) )
       pipeline.functions.count(_.isInstanceOf[SambambaMarkdup]) shouldBe
         (if (merge == MergeStrategy.PreProcessSambambaMarkdup) numberSamples else 0)
       pipeline.samples.foreach {
@@ -118,7 +131,9 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
           }
       }
 
-      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
+      pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears)
+                                                              (numberFastqLibs + numberSamples)
+                                                            else 0)
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
@@ -137,28 +152,36 @@ class MultisampleMappingTest extends MultisampleMappingTestTrait {
 class MultisampleMappingNoSamplesTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(false)
   override def sample2 = Array(false)
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingGearsTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(true)
   override def sample2 = Array(false)
   override def unmappedToGears = true
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingBamTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(false)
   override def sample2 = Array(false)
   override def sample3 = true
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingWrongBamTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(false)
   override def sample2 = Array(false)
   override def sample4 = true
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingCorrectBamTest extends MultisampleMappingTestTrait {
@@ -166,7 +189,9 @@ class MultisampleMappingCorrectBamTest extends MultisampleMappingTestTrait {
   override def sample2 = Array(false)
   override def correctReadgroups = true
   override def sample4 = true
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
@@ -175,7 +200,9 @@ class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
   override def bamToFastq = true
   override def sample3 = true
   override def sample4 = true
-  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+  override def mergeStrategies =
+    MultisampleMapping.MergeStrategy.values
+      .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 object MultisampleMappingTestTrait {
@@ -231,40 +258,44 @@ object MultisampleMappingTestTrait {
   )
 
   val sample1 = Map(
-    "samples" -> Map("sample1" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("1_1_R1.fq"),
-        "R2" -> inputTouch("1_1_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample1" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("1_1_R1.fq"),
+            "R2" -> inputTouch("1_1_R2.fq")
+          )
+        ))))
 
   val sample2 = Map(
-    "samples" -> Map("sample2" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("2_1_R1.fq"),
-        "R2" -> inputTouch("2_1_R2.fq")
-      ),
-      "lib2" -> Map(
-        "R1" -> inputTouch("2_2_R1.fq"),
-        "R2" -> inputTouch("2_2_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample2" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("2_1_R1.fq"),
+            "R2" -> inputTouch("2_1_R2.fq")
+          ),
+          "lib2" -> Map(
+            "R1" -> inputTouch("2_2_R1.fq"),
+            "R2" -> inputTouch("2_2_R2.fq")
+          )
+        ))))
 
   val sample3 = Map(
-    "samples" -> Map("sample3" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "bam" -> (inputDir + File.separator + "empty.sam")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample3" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "bam" -> (inputDir + File.separator + "empty.sam")
+          )
+        ))))
 
   val sample4 = Map(
-    "samples" -> Map("sample4" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "bam" -> (inputDir + File.separator + "empty.sam")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample4" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "bam" -> (inputDir + File.separator + "empty.sam")
+          )
+        ))))
 }

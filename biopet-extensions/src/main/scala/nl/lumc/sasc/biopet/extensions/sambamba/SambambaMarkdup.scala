@@ -1,23 +1,23 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.sambamba
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** Extension for sambemba markdup  */
 class SambambaMarkdup(val parent: Configurable) extends Sambamba {
@@ -48,21 +48,25 @@ class SambambaMarkdup(val parent: Configurable) extends Sambamba {
   }
 
   /** Returns command to execute */
-  def cmdLine: String = required(executable) +
-    required("markdup") +
-    conditional(removeDuplicates, "--remove-duplicates") +
-    optional("-t", nCoresRequest) +
-    optional("-l", compressionLevel) +
-    conditional(showProgress, "--show-progress") +
-    optional("--hash-table-size=", hashTableSize, spaceSeparated = false) +
-    optional("--overflow-list-size=", overflowListSize, spaceSeparated = false) +
-    optional("--io-buffer-size=", ioBufferSize, spaceSeparated = false) +
-    required(input) +
-    required(output)
+  def cmdLine: String =
+    required(executable) +
+      required("markdup") +
+      conditional(removeDuplicates, "--remove-duplicates") +
+      optional("-t", nCoresRequest) +
+      optional("-l", compressionLevel) +
+      conditional(showProgress, "--show-progress") +
+      optional("--hash-table-size=", hashTableSize, spaceSeparated = false) +
+      optional("--overflow-list-size=", overflowListSize, spaceSeparated = false) +
+      optional("--io-buffer-size=", ioBufferSize, spaceSeparated = false) +
+      required(input) +
+      required(output)
 }
 
 object SambambaMarkdup {
-  def apply(root: Configurable, input: File, output: File, isIntermediate: Boolean = false): SambambaMarkdup = {
+  def apply(root: Configurable,
+            input: File,
+            output: File,
+            isIntermediate: Boolean = false): SambambaMarkdup = {
     val markdup = new SambambaMarkdup(root)
     markdup.input = input
     markdup.output = output

@@ -1,31 +1,39 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import com.google.common.hash.{ PrimitiveSink, Funnel, BloomFilter }
-import htsjdk.samtools.{ QueryInterval, SAMFileWriter, SAMFileWriterFactory, SAMRecord, SamReader, SamReaderFactory, ValidationStringency }
-import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
+import com.google.common.hash.{PrimitiveSink, Funnel, BloomFilter}
+import htsjdk.samtools.{
+  QueryInterval,
+  SAMFileWriter,
+  SAMFileWriterFactory,
+  SAMRecord,
+  SamReader,
+  SamReaderFactory,
+  ValidationStringency
+}
+import htsjdk.samtools.util.{Interval, IntervalTreeMap}
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.apache.commons.io.FilenameUtils.getExtension
 
 import scala.collection.JavaConverters._
 import scala.io.Source
-import scala.math.{ max, min }
+import scala.math.{max, min}
 
 object WipeReads extends ToolCommand {
 
@@ -40,35 +48,39 @@ object WipeReads extends ToolCommand {
   }
 
   /** Creates a [[SAMFileWriter]] object for writing, indexed */
-  private def prepOutBam(outBam: File, templateBam: File,
-                         writeIndex: Boolean = true, async: Boolean = true): SAMFileWriter =
+  private def prepOutBam(outBam: File,
+                         templateBam: File,
+                         writeIndex: Boolean = true,
+                         async: Boolean = true): SAMFileWriter =
     new SAMFileWriterFactory()
       .setCreateIndex(writeIndex)
       .setUseAsyncIo(async)
       .makeBAMWriter(prepInBam(templateBam).getFileHeader, true, outBam)
 
   /**
-   * Creates a list of intervals given an input File
-   *
-   * @param inFile input interval file
-   */
+    * Creates a list of intervals given an input File
+    *
+    * @param inFile input interval file
+    */
   def makeIntervalFromFile(inFile: File, gtfFeatureType: String = "exon"): List[Interval] = {
 
     logger.info("Parsing interval file ...")
 
     /** Function to create iterator from BED file */
-    def makeIntervalFromBed(inFile: File) = BedRecordList.fromFile(inFile).sorted.toSamIntervals.toIterator
+    def makeIntervalFromBed(inFile: File) =
+      BedRecordList.fromFile(inFile).sorted.toSamIntervals.toIterator
 
     /**
-     * Parses a refFlat file to yield Interval objects
-     *
-     * Format description:
-     * http://genome.csdb.cn/cgi-bin/hgTables?hgsid=6&hgta_doSchemaDb=hg18&hgta_doSchemaTable=refFlat
-     *
-     * @param inFile input refFlat file
-     */
+      * Parses a refFlat file to yield Interval objects
+      *
+      * Format description:
+      * http://genome.csdb.cn/cgi-bin/hgTables?hgsid=6&hgta_doSchemaDb=hg18&hgta_doSchemaTable=refFlat
+      *
+      * @param inFile input refFlat file
+      */
     def makeIntervalFromRefFlat(inFile: File): Iterator[Interval] =
-      Source.fromFile(inFile)
+      Source
+        .fromFile(inFile)
         // read each line
         .getLines()
         // skip all empty lines
@@ -87,13 +99,14 @@ object WipeReads extends ToolCommand {
         .flatten
 
     /**
-     * Parses a GTF file to yield Interval objects
-     *
-     * @param inFile input GTF file
-     * @return
-     */
+      * Parses a GTF file to yield Interval objects
+      *
+      * @param inFile input GTF file
+      * @return
+      */
     def makeIntervalFromGtf(inFile: File): Iterator[Interval] =
-      Source.fromFile(inFile)
+      Source
+        .fromFile(inFile)
         // read each line
         .getLines()
         // skip all empty lines
@@ -133,34 +146,36 @@ object WipeReads extends ToolCommand {
 
   // TODO: set minimum fraction for overlap
   /**
-   * Function to create function to check SAMRecord for exclusion in filtered BAM file.
-   *
-   * The returned function evaluates all filtered-in SAMRecord to false.
-   *
-   * @param ivl iterator yielding Feature objects
-   * @param inBam input BAM file
-   * @param filterOutMulti whether to filter out reads with same name outside target region (default: true)
-   * @param minMapQ minimum MapQ of reads in target region to filter out (default: 0)
-   * @param readGroupIds read group IDs of reads in target region to filter out (default: all IDs)
-   * @param bloomSize expected size of elements to contain in the Bloom filter
-   * @param bloomFp expected Bloom filter false positive rate
-   * @return function that checks whether a SAMRecord or String is to be excluded
-   */
+    * Function to create function to check SAMRecord for exclusion in filtered BAM file.
+    *
+    * The returned function evaluates all filtered-in SAMRecord to false.
+    *
+    * @param ivl iterator yielding Feature objects
+    * @param inBam input BAM file
+    * @param filterOutMulti whether to filter out reads with same name outside target region (default: true)
+    * @param minMapQ minimum MapQ of reads in target region to filter out (default: 0)
+    * @param readGroupIds read group IDs of reads in target region to filter out (default: all IDs)
+    * @param bloomSize expected size of elements to contain in the Bloom filter
+    * @param bloomFp expected Bloom filter false positive rate
+    * @return function that checks whether a SAMRecord or String is to be excluded
+    */
   def makeFilterNotFunction(ivl: List[Interval],
                             inBam: File,
                             filterOutMulti: Boolean = true,
-                            minMapQ: Int = 0, readGroupIds: Set[String] = Set(),
-                            bloomSize: Long, bloomFp: Double): (SAMRecord => Boolean) = {
+                            minMapQ: Int = 0,
+                            readGroupIds: Set[String] = Set(),
+                            bloomSize: Long,
+                            bloomFp: Double): (SAMRecord => Boolean) = {
 
     logger.info("Building set of reads to exclude ...")
 
     /**
-     * Creates an Option[QueryInterval] object from the given Interval
-     *
-     * @param in input BAM file
-     * @param iv input interval
-     * @return
-     */
+      * Creates an Option[QueryInterval] object from the given Interval
+      *
+      * @param in input BAM file
+      * @param iv input interval
+      * @return
+      */
     def makeQueryInterval(in: SamReader, iv: Interval): Option[QueryInterval] = {
       val getIndex = in.getFileHeader.getSequenceIndex _
       if (getIndex(iv.getContig) > -1)
@@ -178,25 +193,27 @@ object WipeReads extends ToolCommand {
     }
 
     /**
-     * Function to ensure that a SAMRecord overlaps our target regions
-     *
-     * This is required because htsjdk's queryOverlap method does not take into
-     * account the SAMRecord splicing structure
-     *
-     * @param rec SAMRecord to check
-     * @param ivtm mutable mapping of a chromosome and its interval tree
-     * @return
-     */
+      * Function to ensure that a SAMRecord overlaps our target regions
+      *
+      * This is required because htsjdk's queryOverlap method does not take into
+      * account the SAMRecord splicing structure
+      *
+      * @param rec SAMRecord to check
+      * @param ivtm mutable mapping of a chromosome and its interval tree
+      * @return
+      */
     def alignmentBlockOverlaps(rec: SAMRecord, ivtm: IntervalTreeMap[_]): Boolean =
       // if SAMRecord is not spliced, assume queryOverlap has done its job
       // otherwise check for alignment block overlaps in our interval list
       // using raw SAMString to bypass cigar string decoding
       if (rec.getSAMString.split("\t")(5).contains("N"))
         rec.getAlignmentBlocks.asScala
-          .exists(x =>
-            ivtm.containsOverlapping(
-              new Interval(rec.getReferenceName,
-                x.getReferenceStart, x.getReferenceStart + x.getLength - 1)))
+          .exists(
+            x =>
+              ivtm.containsOverlapping(
+                new Interval(rec.getReferenceName,
+                             x.getReferenceStart,
+                             x.getReferenceStart + x.getLength - 1)))
       else
         true
 
@@ -250,7 +267,7 @@ object WipeReads extends ToolCommand {
       )
 
     lazy val filteredOutSet: BloomFilter[SAMRecord] = readyBam
-      // query BAM file with intervals
+    // query BAM file with intervals
       .queryOverlapping(queryIntervals)
       // for compatibility
       .asScala
@@ -261,8 +278,7 @@ object WipeReads extends ToolCommand {
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
       // fold starting from empty set
-      .foldLeft(BloomFilter.create(SAMFunnel, bloomSize.toInt, bloomFp)
-      )((acc, rec) => {
+      .foldLeft(BloomFilter.create(SAMFunnel, bloomSize.toInt, bloomFp))((acc, rec) => {
         acc.put(rec)
         if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
         acc
@@ -280,14 +296,16 @@ object WipeReads extends ToolCommand {
   }
 
   /**
-   * Function to filter input BAM and write its output to the filesystem
-   *
-   * @param filterFunc filter function that evaluates true for excluded SAMRecord
-   * @param inBam input BAM file
-   * @param outBam output BAM file
-   * @param filteredOutBam whether to write excluded SAMRecords to their own BAM file
-   */
-  def writeFilteredBam(filterFunc: (SAMRecord => Boolean), inBam: SamReader, outBam: SAMFileWriter,
+    * Function to filter input BAM and write its output to the filesystem
+    *
+    * @param filterFunc filter function that evaluates true for excluded SAMRecord
+    * @param inBam input BAM file
+    * @param outBam output BAM file
+    * @param filteredOutBam whether to write excluded SAMRecords to their own BAM file
+    */
+  def writeFilteredBam(filterFunc: (SAMRecord => Boolean),
+                       inBam: SamReader,
+                       outBam: SAMFileWriter,
                        filteredOutBam: Option[SAMFileWriter] = None) = {
 
     logger.info("Writing output file(s) ...")
@@ -322,26 +340,26 @@ object WipeReads extends ToolCommand {
                   noMakeIndex: Boolean = false,
                   featureType: String = "exon",
                   bloomSize: Long = 70000000,
-                  bloomFp: Double = 4e-7) extends AbstractArgs
+                  bloomFp: Double = 4e-7)
+      extends AbstractArgs
 
   /** Command line argument parser */
   class OptParser extends AbstractOptParser {
 
-    head(
-      s"""
+    head(s"""
         |$commandName - Region-based reads removal from an indexed BAM file
       """.stripMargin)
 
     opt[File]('I', "input_file") required () valueName "<bam>" action { (x, c) =>
       c.copy(inputBam = x)
-    } validate {
-      x => if (x.exists) success else failure("Input BAM file not found")
+    } validate { x =>
+      if (x.exists) success else failure("Input BAM file not found")
     } text "Input BAM file"
 
     opt[File]('r', "interval_file") required () valueName "<bed/gtf/refflat>" action { (x, c) =>
       c.copy(targetRegions = x)
-    } validate {
-      x => if (x.exists) success else failure("Target regions file not found")
+    } validate { x =>
+      if (x.exists) success else failure("Target regions file not found")
     } text "Interval BED file"
 
     opt[File]('o', "output_file") required () valueName "<bam>" action { (x, c) =>
@@ -386,8 +404,7 @@ object WipeReads extends ToolCommand {
       c.copy(bloomFp = x)
     } text "False positive rate (default: 4e-7)"
 
-    note(
-      """
+    note("""
         |This tool will remove BAM records that overlaps a set of given regions.
         |By default, if the removed reads are also mapped to other regions outside
         |the given ones, they will also be removed.
@@ -396,9 +413,10 @@ object WipeReads extends ToolCommand {
   }
 
   /** Parses the command line argument */
-  def parseArgs(args: Array[String]): Args = new OptParser()
-    .parse(args, Args())
-    .getOrElse(throw new IllegalArgumentException)
+  def parseArgs(args: Array[String]): Args =
+    new OptParser()
+      .parse(args, Args())
+      .getOrElse(throw new IllegalArgumentException)
 
   def main(args: Array[String]): Unit = {
 
@@ -406,7 +424,8 @@ object WipeReads extends ToolCommand {
 
     // cannot use SamReader as inBam directly since it only allows one active iterator at any given time
     val filterFunc = makeFilterNotFunction(
-      ivl = makeIntervalFromFile(commandArgs.targetRegions, gtfFeatureType = commandArgs.featureType),
+      ivl =
+        makeIntervalFromFile(commandArgs.targetRegions, gtfFeatureType = commandArgs.featureType),
       inBam = commandArgs.inputBam,
       filterOutMulti = !commandArgs.limitToRegion,
       minMapQ = commandArgs.minMapQ,
@@ -418,8 +437,11 @@ object WipeReads extends ToolCommand {
     writeFilteredBam(
       filterFunc,
       prepInBam(commandArgs.inputBam),
-      prepOutBam(commandArgs.outputBam, commandArgs.inputBam, writeIndex = !commandArgs.noMakeIndex),
-      commandArgs.filteredOutBam.map(x => prepOutBam(x, commandArgs.inputBam, writeIndex = !commandArgs.noMakeIndex))
+      prepOutBam(commandArgs.outputBam,
+                 commandArgs.inputBam,
+                 writeIndex = !commandArgs.noMakeIndex),
+      commandArgs.filteredOutBam.map(x =>
+        prepOutBam(x, commandArgs.inputBam, writeIndex = !commandArgs.noMakeIndex))
     )
   }
 }

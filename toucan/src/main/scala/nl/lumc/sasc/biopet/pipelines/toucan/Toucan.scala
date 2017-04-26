@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
@@ -20,11 +20,11 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge }
-import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
-import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesImport }
-import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfWithVcf, VepNormalizer }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, VariantEffectPredictor }
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsIntersect, BedtoolsMerge}
+import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, SelectVariants}
+import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesImport}
+import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VcfWithVcf, VepNormalizer}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, VariantEffectPredictor}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
@@ -32,11 +32,15 @@ import org.broadinstitute.gatk.queue.QScript
 import scalaz._, Scalaz._
 
 /**
- * Pipeline to annotate a vcf file with VEP
- *
- * Created by ahbbollen on 15-1-15.
- */
-class Toucan(val parent: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
+  * Pipeline to annotate a vcf file with VEP
+  *
+  * Created by ahbbollen on 15-1-15.
+  */
+class Toucan(val parent: Configurable)
+    extends QScript
+    with BiopetQScript
+    with SummaryQScript
+    with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
@@ -49,20 +53,22 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
 
   def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
     case (Some(_), Some(_)) => new File(outputDir, s"$outputName.vep.normalized.gonl.exac.vcf.gz")
-    case (Some(_), _)       => new File(outputDir, s"$outputName.vep.normalized.gonl.vcf.gz")
-    case (_, Some(_))       => new File(outputDir, s"$outputName.vep.normalized.exac.vcf.gz")
-    case _                  => new File(outputDir, s"$outputName.vep.normalized.vcf.gz")
+    case (Some(_), _) => new File(outputDir, s"$outputName.vep.normalized.gonl.vcf.gz")
+    case (_, Some(_)) => new File(outputDir, s"$outputName.vep.normalized.exac.vcf.gz")
+    case _ => new File(outputDir, s"$outputName.vep.normalized.vcf.gz")
   }
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
 
-  lazy val enableScatter: Boolean = config("enable_scatter", default = referenceDict.getReferenceLength > minScatterGenomeSize)
+  lazy val enableScatter: Boolean =
+    config("enable_scatter", default = referenceDict.getReferenceLength > minScatterGenomeSize)
 
   def sampleInfo: Map[String, Map[String, Any]] = parent match {
-    case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
-    case null                  => VcfUtils.getSampleIds(inputVcf).map(x => x -> Map[String, Any]()).toMap
-    case s: SampleLibraryTag   => s.sampleId.map(x => x -> Map[String, Any]()).toMap
-    case _                     => throw new IllegalArgumentException("")
+    case m: MultiSampleQScript =>
+      m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
+    case null => VcfUtils.getSampleIds(inputVcf).map(x => x -> Map[String, Any]()).toMap
+    case s: SampleLibraryTag => s.sampleId.map(x => x -> Map[String, Any]()).toMap
+    case _ => throw new IllegalArgumentException("")
   }
 
   lazy val gonlVcfFile: Option[File] = config("gonl_vcf")
@@ -75,22 +81,25 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
   }
 
   override def defaults = Map(
-    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> 1, "allow_non_variant" -> true)
+    "varianteffectpredictor" -> Map("everything" -> true,
+                                    "failed" -> 1,
+                                    "allow_non_variant" -> true)
   )
 
   def biopetScript(): Unit = {
     val useVcf: File = if (doVarda) {
       inputGvcf match {
         case Some(s) => varda(inputVcf, s)
-        case _       => throw new IllegalArgumentException("You have not specified a GVCF file")
+        case _ => throw new IllegalArgumentException("You have not specified a GVCF file")
       }
     } else inputVcf
 
     if (enableScatter) {
-      val outputVcfFiles = BedRecordList.fromReference(referenceFasta())
+      val outputVcfFiles = BedRecordList
+        .fromReference(referenceFasta())
         .scatter(config("bin_size", default = 50000000))
-        .allRecords.map { region =>
-
+        .allRecords
+        .map { region =>
           val chunkName = s"${region.chr}-${region.start}-${region.end}"
           val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
           chunkDir.mkdirs()
@@ -107,7 +116,9 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
           runChunk(sv.out, chunkDir, chunkName)
         }
 
-      if (this.functions.filter(_.isInstanceOf[VepNormalizer]).exists(_.asInstanceOf[VepNormalizer].doNotRemove))
+      if (this.functions
+            .filter(_.isInstanceOf[VepNormalizer])
+            .exists(_.asInstanceOf[VepNormalizer].doNotRemove))
         logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
 
       val cv = new CatVariants(this)
@@ -165,16 +176,19 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
   }
 
   /**
-   * Performs the varda import and activate for one sample
-   *
-   * @param sampleID the sampleID to be used
-   * @param inputVcf the input VCF
-   * @param gVCF the gVCF for coverage
-   * @param annotation: Optional ManweDownloadAnnotateVcf object of annotated vcf
-   * @return
-   */
-  def importAndActivateSample(sampleID: String, sampleGroups: List[String], inputVcf: File,
-                              gVCF: File, annotation: Option[ManweAnnotateVcf]): ManweActivateAfterImport = {
+    * Performs the varda import and activate for one sample
+    *
+    * @param sampleID the sampleID to be used
+    * @param inputVcf the input VCF
+    * @param gVCF the gVCF for coverage
+    * @param annotation: Optional ManweDownloadAnnotateVcf object of annotated vcf
+    * @return
+    */
+  def importAndActivateSample(sampleID: String,
+                              sampleGroups: List[String],
+                              inputVcf: File,
+                              gVCF: File,
+                              annotation: Option[ManweAnnotateVcf]): ManweActivateAfterImport = {
 
     val minGQ: Int = config("minimum_genome_quality", default = 20, namespace = "manwe")
     val isPublic: Boolean = config("varda_is_public", default = true, namespace = "manwe")
@@ -237,28 +251,33 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
   }
 
   /**
-   * Import to and optionally annotate with varda
-   *
-   * @param vcf input vcf
-   * @param gVcf The gVCF to be used for coverage calculations
-   * @return return vcf
-   */
+    * Import to and optionally annotate with varda
+    *
+    * @param vcf input vcf
+    * @param gVcf The gVCF to be used for coverage calculations
+    * @return return vcf
+    */
   def varda(vcf: File, gVcf: File): File = {
 
-    val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), namespace = "manwe")
+    val annotationQueries: List[String] =
+      config("annotation_queries", default = List("GLOBAL *"), namespace = "manwe")
     val doAnnotate: Boolean = config("annotate", namespace = "varda", default = true)
 
     val sampleGroups = sampleInfo map { x =>
       val maybeSampleGroup = x._2.get("varda_group") match {
         case None => Some(Nil)
-        case Some(vals) => vals match {
-          case xs: List[_] => xs
-            .traverse[Option, String] { x => Option(x.toString).filter(_ == x) }
-          case otherwise => None
-        }
+        case Some(vals) =>
+          vals match {
+            case xs: List[_] =>
+              xs.traverse[Option, String] { x =>
+                  Option(x.toString).filter(_ == x)
+                }
+            case otherwise => None
+          }
       }
       val sampleGroup = maybeSampleGroup
-        .getOrElse(throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings"))
+        .getOrElse(
+          throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings"))
       x._1 -> sampleGroup
     }
 
@@ -274,7 +293,8 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
       add(annotate)
 
       val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
-      annotatedVcf.output = swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
+      annotatedVcf.output =
+        swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
       add(annotatedVcf)
 
       val activates = sampleGroups map { x =>
@@ -284,7 +304,8 @@ class Toucan(val parent: Configurable) extends QScript with BiopetQScript with S
       val finalLn = new Ln(this)
       activates.foreach(x => finalLn.deps :+= x.output)
       finalLn.input = annotatedVcf.output
-      finalLn.output = swapExt(outputDir, annotatedVcf.output, "manwe.annot.vcf.gz", ".varda_annotated.vcf.gz")
+      finalLn.output =
+        swapExt(outputDir, annotatedVcf.output, "manwe.annot.vcf.gz", ".varda_annotated.vcf.gz")
       finalLn.relative = true
       add(finalLn)
 
