@@ -58,7 +58,8 @@ abstract class Picard extends BiopetJavaCommandLineFunction with Version {
   def picardToolName = getClass.getSimpleName
 
   def versionCommand = {
-    if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + s" $picardToolName -h"
+    if (jarFile != null)
+      executable + " -cp " + jarFile + " " + javaMainClass + s" $picardToolName -h"
     else null
   }
   def versionRegex = """Version: (.*)""".r
