@@ -1,24 +1,24 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import htsjdk.samtools.{ SAMReadGroupRecord, SAMSequenceRecord, SAMLineParser, SAMFileHeader }
+import htsjdk.samtools.{SAMReadGroupRecord, SAMSequenceRecord, SAMLineParser, SAMFileHeader}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -27,8 +27,8 @@ import picard.annotation.Gene
 import scala.collection.JavaConversions._
 
 /**
- * Created by pjvan_thof on 1/29/16.
- */
+  * Created by pjvan_thof on 1/29/16.
+  */
 class BaseCounterTest extends TestNGSuite with Matchers {
 
   import BaseCounter._
@@ -55,7 +55,8 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
   @Test
   def testBamRecordBasesOverlapBlocks(): Unit = {
-    val read = BaseCounterTest.lineParser.parseLine("r02\t0\tchrQ\t50\t60\t4M2D4M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val read = BaseCounterTest.lineParser.parseLine(
+      "r02\t0\tchrQ\t50\t60\t4M2D4M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     bamRecordBasesOverlap(read, 40, 70) shouldBe 8
     bamRecordBasesOverlap(read, 50, 59) shouldBe 8
     bamRecordBasesOverlap(read, 50, 55) shouldBe 4
@@ -71,7 +72,8 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
   @Test
   def testBamRecordBasesOverlap(): Unit = {
-    val read = BaseCounterTest.lineParser.parseLine("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val read = BaseCounterTest.lineParser.parseLine(
+      "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     bamRecordBasesOverlap(read, 40, 70) shouldBe 10
     bamRecordBasesOverlap(read, 50, 59) shouldBe 10
     bamRecordBasesOverlap(read, 50, 55) shouldBe 6
@@ -100,12 +102,18 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
   @Test
   def testSamRecordStrand: Unit = {
-    val readPlusUnpaired = BaseCounterTest.lineParser.parseLine("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readMinUnpaired = BaseCounterTest.lineParser.parseLine("r02\t16\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readPlusPairedR1 = BaseCounterTest.lineParser.parseLine("r02\t73\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readMinPairedR1 = BaseCounterTest.lineParser.parseLine("r02\t89\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readPlusPairedR2 = BaseCounterTest.lineParser.parseLine("r02\t137\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readMinPairedR2 = BaseCounterTest.lineParser.parseLine("r02\t153\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readPlusUnpaired = BaseCounterTest.lineParser.parseLine(
+      "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readMinUnpaired = BaseCounterTest.lineParser.parseLine(
+      "r02\t16\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readPlusPairedR1 = BaseCounterTest.lineParser.parseLine(
+      "r02\t73\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readMinPairedR1 = BaseCounterTest.lineParser.parseLine(
+      "r02\t89\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readPlusPairedR2 = BaseCounterTest.lineParser.parseLine(
+      "r02\t137\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readMinPairedR2 = BaseCounterTest.lineParser.parseLine(
+      "r02\t153\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
 
     samRecordStrand(readPlusUnpaired, true) shouldBe false
     samRecordStrand(readMinUnpaired, true) shouldBe true
@@ -138,8 +146,10 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
   @Test
   def testGeneCount: Unit = {
-    val readPlus = BaseCounterTest.lineParser.parseLine("r02\t0\tchrQ\t101\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
-    val readMin = BaseCounterTest.lineParser.parseLine("r02\t16\tchrQ\t101\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readPlus = BaseCounterTest.lineParser.parseLine(
+      "r02\t0\tchrQ\t101\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
+    val readMin = BaseCounterTest.lineParser.parseLine(
+      "r02\t16\tchrQ\t101\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     val geneCount = new GeneCount(geneA)
 
     geneCount.gene shouldBe geneA
@@ -194,8 +204,15 @@ class BaseCounterTest extends TestNGSuite with Matchers {
     val prefix = "test"
     val bamFile = new File(resourcePath("/empty.bam"))
     val refflat = new File(resourcePath("/chrQ.refflat"))
-    main(Array("-o", outputDir.getAbsolutePath, "-p", prefix,
-      "-b", bamFile.getAbsolutePath, "-r", refflat.getAbsolutePath))
+    main(
+      Array("-o",
+            outputDir.getAbsolutePath,
+            "-p",
+            prefix,
+            "-b",
+            bamFile.getAbsolutePath,
+            "-r",
+            refflat.getAbsolutePath))
     outputDir.list().size shouldBe 34
   }
 }

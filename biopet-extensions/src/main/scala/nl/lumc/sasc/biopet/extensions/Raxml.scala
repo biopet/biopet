@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 import scalaz.std.boolean.option
 
 /**
- * extension for raxml
- * based on version 8.1.3
- */
+  * extension for raxml
+  * based on version 8.1.3
+  */
 class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   override def defaultThreads = 1
@@ -73,17 +73,20 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   /** Sets correct output files to job */
   override def beforeGraph() {
     require(w != null)
-    executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
+    executable =
+      if (threads > 1 && executableThreads.isDefined) executableThreads.get
+      else executableNonThreads
     super.beforeGraph()
     out :::= List(Some(getInfoFile), getBestTreeFile, getBootstrapFile, getBipartitionsFile).flatten
     f match {
-      case "d" if b.isEmpty => for (t <- 0 until N.getOrElse(1)) {
-        out +:= new File(w, "RAxML_log." + n + ".RUN." + t)
-        out +:= new File(w, "RAxML_parsimonyTree." + n + ".RUN." + t)
-        out +:= new File(w, "RAxML_result." + n + ".RUN." + t)
-      }
+      case "d" if b.isEmpty =>
+        for (t <- 0 until N.getOrElse(1)) {
+          out +:= new File(w, "RAxML_log." + n + ".RUN." + t)
+          out +:= new File(w, "RAxML_parsimonyTree." + n + ".RUN." + t)
+          out +:= new File(w, "RAxML_result." + n + ".RUN." + t)
+        }
       case "b" => out +:= new File(w, "RAxML_bipartitionsBranchLabels." + n)
-      case _   =>
+      case _ =>
     }
   }
 
@@ -100,17 +103,18 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   def getInfoFile = new File(w, "RAxML_info." + n)
 
   /** return commandline to execute */
-  def cmdLine = required(executable) +
-    required("-m", m) +
-    required("-s", input) +
-    optional("-p", p) +
-    optional("-b", b) +
-    optional("-N", N) +
-    optional("-n", n) +
-    optional("-w", w) +
-    optional("-f", f) +
-    optional("-t", t) +
-    optional("-z", z) +
-    conditional(noBfgs, "--no-bfgs") +
-    required("-T", threads)
+  def cmdLine =
+    required(executable) +
+      required("-m", m) +
+      required("-s", input) +
+      optional("-p", p) +
+      optional("-b", b) +
+      optional("-N", N) +
+      optional("-n", n) +
+      optional("-w", w) +
+      optional("-f", f) +
+      optional("-t", t) +
+      optional("-z", z) +
+      conditional(noBfgs, "--no-bfgs") +
+      required("-T", threads)
 }

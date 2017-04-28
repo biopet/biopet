@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
-import org.broadinstitute.gatk.queue.{ QScript, QSettings }
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -29,8 +29,8 @@ import scala.language.reflectiveCalls
 import scala.collection.mutable.ListBuffer
 
 /**
- * Created by pjvan_thof on 12/29/15.
- */
+  * Created by pjvan_thof on 12/29/15.
+  */
 class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   import MultiSampleQScriptTest._
 
@@ -58,7 +58,8 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
         sample.libraries.foreach {
           case (libId, library) =>
             library.libDir shouldBe new File(sample.sampleDir, s"lib_$libId")
-            library.createFile("bla.txt") shouldBe new File(library.libDir, s"$sampleId-$libId.bla.txt")
+            library.createFile("bla.txt") shouldBe new File(library.libDir,
+                                                            s"$sampleId-$libId.bla.txt")
             library.summaryFiles shouldBe Map()
             library.summaryStats shouldBe Map()
             library.summarySettings shouldBe Map()
@@ -122,41 +123,49 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
   @Test
   def testNoLibSample(): Unit = {
-    an[IllegalStateException] shouldBe thrownBy(MultiSampleQScriptTest(Map("output_dir" -> ".") :: noLibSample :: Nil).script())
+    an[IllegalStateException] shouldBe thrownBy(
+      MultiSampleQScriptTest(Map("output_dir" -> ".") :: noLibSample :: Nil).script())
   }
 }
 
 object MultiSampleQScriptTest {
-  val sample1 = Map("samples" -> Map("sample1" -> Map(
-    "tags" -> Map(
-      "gender" -> "blablablablabla",
-      "groups" -> List("1")
-    ),
-    "libraries" -> Map(
-      "lib1" -> Map("test" -> "1-1")
-    )))
-  )
+  val sample1 = Map(
+    "samples" -> Map(
+      "sample1" -> Map("tags" -> Map(
+                         "gender" -> "blablablablabla",
+                         "groups" -> List("1")
+                       ),
+                       "libraries" -> Map(
+                         "lib1" -> Map("test" -> "1-1")
+                       ))))
 
-  val sample2 = Map("samples" -> Map("sample2" -> Map(
-    "tags" -> Map(
-      "groups" -> List("2")
-    ),
-    "libraries" -> Map(
-      "lib1" -> Map("test" -> "2-1", "tags" -> Map(
-        "groups" -> List("3")
-      )),
-      "lib2" -> Map("test" -> "2-2")
-    ))))
+  val sample2 = Map(
+    "samples" -> Map(
+      "sample2" -> Map("tags" -> Map(
+                         "groups" -> List("2")
+                       ),
+                       "libraries" -> Map(
+                         "lib1" -> Map("test" -> "2-1",
+                                       "tags" -> Map(
+                                         "groups" -> List("3")
+                                       )),
+                         "lib2" -> Map("test" -> "2-2")
+                       ))))
 
-  val sample3 = Map("samples" -> Map("sample3" -> Map("libraries" -> Map(
-    "lib1" -> Map("test" -> "3-1"),
-    "lib2" -> Map("test" -> "3-2"),
-    "lib3" -> Map("test" -> "3-3")
-  ))))
+  val sample3 = Map(
+    "samples" -> Map(
+      "sample3" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map("test" -> "3-1"),
+          "lib2" -> Map("test" -> "3-2"),
+          "lib3" -> Map("test" -> "3-3")
+        ))))
 
-  val sample4 = Map("samples" -> Map("Something.Invalid" -> Map("libraries" -> Map(
-    "lib1" -> Map("test" -> "4-1")
-  ))))
+  val sample4 = Map(
+    "samples" -> Map(
+      "Something.Invalid" -> Map("libraries" -> Map(
+        "lib1" -> Map("test" -> "4-1")
+      ))))
 
   val child = Map(
     "samples" -> Map(
@@ -211,8 +220,10 @@ object MultiSampleQScriptTest {
 
       var buffer = new ListBuffer[String]()
 
-      override def globalConfig = new Config(configs
-        .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
+      override def globalConfig =
+        new Config(
+          configs
+            .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
 
       val parent = null
 
@@ -222,6 +233,7 @@ object MultiSampleQScriptTest {
 
       class Sample(id: String) extends AbstractSample(id) {
         class Library(id: String) extends AbstractLibrary(id) {
+
           /** Function that add library jobs */
           protected def addJobs(): Unit = {
             buffer += config("test")
@@ -235,10 +247,10 @@ object MultiSampleQScriptTest {
         }
 
         /**
-         * Factory method for Library class
-         * @param id SampleId
-         * @return Sample class
-         */
+          * Factory method for Library class
+          * @param id SampleId
+          * @return Sample class
+          */
         def makeLibrary(id: String): Library = new Library(id)
 
         /** Function to add sample jobs */
@@ -256,17 +268,17 @@ object MultiSampleQScriptTest {
       }
 
       /**
-       * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
-       */
+        * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+        */
       def addMultiSampleJobs(): Unit = {
         add(new Md5sum(qscript))
       }
 
       /**
-       * Factory method for Sample class
-       * @param id SampleId
-       * @return Sample class
-       */
+        * Factory method for Sample class
+        * @param id SampleId
+        * @return Sample class
+        */
       def makeSample(id: String): Sample = new Sample(id)
 
       /** Must return a map with used settings for this pipeline */
@@ -279,8 +291,7 @@ object MultiSampleQScriptTest {
       def summaryFile: File = new File("./summary.json")
 
       /** Init for pipeline */
-      def init(): Unit = {
-      }
+      def init(): Unit = {}
 
       /** Pipeline itself */
       def biopetScript(): Unit = {

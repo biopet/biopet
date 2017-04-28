@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 
 /**
- * This trait will control resources given to a CommandlineFunction
- */
+  * This trait will control resources given to a CommandlineFunction
+  */
 trait CommandLineResources extends CommandLineFunction with Configurable {
 
   /**
-   * This value is overruling threads method when this is set.
-   * This can be used to limit the number of threads on a global level.
-   */
+    * This value is overruling threads method when this is set.
+    * This can be used to limit the number of threads on a global level.
+    */
   lazy val maxThreads: Option[Int] = config("max_threads")
 
   /** To set an other default threads this method need to be override */
@@ -76,15 +76,15 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def getThreads: Int = getThreads(defaultThreads)
 
   /**
-   * Get threads from config
-   * @param default default when not found in config
-   * @return number of threads
-   */
+    * Get threads from config
+    * @param default default when not found in config
+    * @return number of threads
+    */
   private def getThreads(default: Int): Int = {
     val threads: Int = config("threads", default = default)
     maxThreads match {
       case Some(max) => if (max > threads) threads else max
-      case _         => threads
+      case _ => threads
     }
   }
 
@@ -107,11 +107,17 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     else memoryLimit = Some(_coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) threads else 1))
+    else
+      residentLimit = Some(
+        (_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) threads
+                                                                   else 1))
 
     if (!config.contains("vmem"))
-      vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) threads else 1)) + "G")
-    jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
+      vmem = Some(
+        (_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) threads
+                                                                else 1)) + "G")
+    jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName
+                                       else jobOutputFile)
   }
 
   override def setupRetry(): Unit = {
@@ -128,12 +134,20 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
     nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
-    nCoresRequest = nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
+    nCoresRequest =
+      nCoresRequest.map(x => if (x > maxThreads.getOrElse(x)) maxThreads.getOrElse(x) else x)
 
-    _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
+    _coreMemory =
+      commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * nCoresRequest.getOrElse(threads))
-    residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads) nCoresRequest.getOrElse(threads) else 1))
-    vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads) nCoresRequest.getOrElse(threads) else 1)) + "G")
+    residentLimit = Some(
+      (_coreMemory + (0.5 * retry)) * residentFactor * (if (multiplyRssThreads)
+                                                          nCoresRequest.getOrElse(threads)
+                                                        else 1))
+    vmem = Some(
+      (_coreMemory * (vmemFactor + (0.5 * retry)) * (if (multiplyVmemThreads)
+                                                       nCoresRequest.getOrElse(threads)
+                                                     else 1)) + "G")
   }
 
 }
