@@ -1,38 +1,38 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCCNVPlot }
+import nl.lumc.sasc.biopet.extensions.freec.{FreeC, FreeCAssessSignificancePlot, FreeCCNVPlot}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 import scala.collection.mutable.ListBuffer
 
 /**
- * Test class for [[Kopisu]]
- *
- * Created by pjvan_thof on 3/2/15.
- */
+  * Test class for [[Kopisu]]
+  *
+  * Created by pjvan_thof on 3/2/15.
+  */
 class KopisuTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any], dir: File): Kopisu = {
     new Kopisu() {
@@ -48,28 +48,26 @@ class KopisuTest extends TestNGSuite with Matchers {
   @DataProvider(name = "shivaSvCallingOptions")
   def shivaSvCallingOptions = {
     val bool = Array(true, false)
-    (for (
-      bams <- 0 to 3;
-      freec <- bool;
-      conifer <- bool
-    ) yield Array(bams, freec, conifer)).toArray
+    (for (bams <- 0 to 3;
+          freec <- bool;
+          conifer <- bool) yield Array(bams, freec, conifer)).toArray
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
-  def testKopisu(bams: Int,
-                 freec: Boolean,
-                 conifer: Boolean) = {
+  def testKopisu(bams: Int, freec: Boolean, conifer: Boolean) = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
 
     val callers: ListBuffer[String] = ListBuffer()
     val map = Map("sv_callers" -> callers.toList)
     val pipeline = initPipeline(map ++ Map(
-      "use_freec_method" -> freec,
-      "use_conifer_method" -> conifer
-    ), outputDir)
+                                  "use_freec_method" -> freec,
+                                  "use_conifer_method" -> conifer
+                                ),
+                                outputDir)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> KopisuTest.inputTouch("bam_" + n + ".bam")).toMap
+    pipeline.inputBams =
+      (for (n <- 1 to bams) yield n.toString -> KopisuTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || (!freec && !conifer)
 
@@ -86,7 +84,9 @@ class KopisuTest extends TestNGSuite with Matchers {
       pipeline.summarySettings.get("freec_method") shouldBe Some(freec)
 
       pipeline.functions.count(_.isInstanceOf[FreeC]) shouldBe (if (freec) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[FreeCAssessSignificancePlot]) shouldBe (if (freec) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[FreeCAssessSignificancePlot]) shouldBe (if (freec)
+                                                                                        bams
+                                                                                      else 0)
       pipeline.functions.count(_.isInstanceOf[FreeCCNVPlot]) shouldBe (if (freec) bams else 0)
     }
   }

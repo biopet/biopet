@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
@@ -19,15 +19,19 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 import scala.collection.immutable.Nil
 
 /** Extension for picard CollectInsertSizeMetrics */
-class CollectInsertSizeMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
+class CollectInsertSizeMetrics(val parent: Configurable)
+    extends Picard
+    with Summarizable
+    with Reference {
   javaMainClass = new picard.analysis.CollectInsertSizeMetrics().getClass.getName
 
-  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
+  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
+         required = true)
   var input: File = null
 
   @Output(doc = "The output file to write statistics to", required = true)
@@ -63,16 +67,17 @@ class CollectInsertSizeMetrics(val parent: Configurable) extends Picard with Sum
   }
 
   /** Returns command to execute */
-  override def cmdLine = super.cmdLine +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false) +
-    optional("HISTOGRAM_FILE=", outputHistogram, spaceSeparated = false) +
-    required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    optional("DEVIATIONS=", deviations, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
-    optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
-    optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated = false) +
-    conditional(assumeSorted, "ASSUME_SORTED=TRUE")
+  override def cmdLine =
+    super.cmdLine +
+      required("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", output, spaceSeparated = false) +
+      optional("HISTOGRAM_FILE=", outputHistogram, spaceSeparated = false) +
+      required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
+      optional("DEVIATIONS=", deviations, spaceSeparated = false) +
+      repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+      optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
+      optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated = false) +
+      conditional(assumeSorted, "ASSUME_SORTED=TRUE")
 
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
@@ -81,11 +86,13 @@ class CollectInsertSizeMetrics(val parent: Configurable) extends Picard with Sum
 }
 
 object CollectInsertSizeMetrics {
+
   /** Returns default CollectInsertSizeMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectInsertSizeMetrics = {
     val collectInsertSizeMetrics = new CollectInsertSizeMetrics(root)
     collectInsertSizeMetrics.input = input
-    collectInsertSizeMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".insertsizemetrics")
+    collectInsertSizeMetrics.output =
+      new File(outputDir, input.getName.stripSuffix(".bam") + ".insertsizemetrics")
     collectInsertSizeMetrics
   }
 }

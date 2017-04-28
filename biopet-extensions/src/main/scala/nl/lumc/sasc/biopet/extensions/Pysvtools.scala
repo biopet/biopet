@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
@@ -22,8 +22,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
 /**
- * Created by wyleung on 8-1-16.
- */
+  * Created by wyleung on 8-1-16.
+  */
 class Pysvtools(val parent: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Input file", required = true)
@@ -61,12 +61,13 @@ class Pysvtools(val parent: Configurable) extends BiopetCommandLineFunction {
   }
 
   /** return commandline to execute */
-  def cmdLine = required(executable) +
-    repeat("-c", exclusionRegions) +
-    optional("-f", flanking) +
-    "-i " + repeat(input) +
-    "-o " + required(tsvoutput) +
-    "-b " + required(bedoutput) +
-    "-v " + required(output) +
-    "-r " + required(regionsoutput)
+  def cmdLine =
+    required(executable) +
+      repeat("-c", exclusionRegions) +
+      optional("-f", flanking) +
+      "-i " + repeat(input) +
+      "-o " + required(tsvoutput) +
+      "-b " + required(bedoutput) +
+      "-v " + required(output) +
+      "-r " + required(regionsoutput)
 }

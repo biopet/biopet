@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -28,8 +28,8 @@ import org.testng.annotations.Test
 import scala.collection.JavaConversions._
 
 /**
- * Created by ahbbollen on 27-8-15.
- */
+  * Created by ahbbollen on 27-8-15.
+  */
 class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import MpileupToVcf._
@@ -52,7 +52,16 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def validateOutVcf() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
     tmp.deleteOnExit()
-    val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1", "--minAP", "1")
+    val args = Array("-I",
+                     pileup,
+                     "--sample",
+                     "test",
+                     "-o",
+                     tmp.getAbsolutePath,
+                     "--minDP",
+                     "1",
+                     "--minAP",
+                     "1")
     main(args)
 
     val vcfReader = new VCFFileReader(tmp, false)
@@ -68,7 +77,16 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def extraValidateOutVcf() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
     tmp.deleteOnExit()
-    val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1", "--minAP", "1")
+    val args = Array("-I",
+                     pileup,
+                     "--sample",
+                     "test",
+                     "-o",
+                     tmp.getAbsolutePath,
+                     "--minDP",
+                     "1",
+                     "--minAP",
+                     "1")
     main(args)
 
     val vcfReader = new VCFFileReader(tmp, false)
@@ -84,8 +102,9 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
       refAlleles.size should be >= 1
 
-      val realRef = Allele.create(sequenceFile.getSubsequenceAt(record.getContig,
-        record.getStart, record.getEnd).getBases, true)
+      val realRef = Allele.create(
+        sequenceFile.getSubsequenceAt(record.getContig, record.getStart, record.getEnd).getBases,
+        true)
 
       for (ref <- refAlleles) {
         record.extraStrictValidation(ref, realRef, Set(""))

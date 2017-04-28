@@ -1,30 +1,30 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * WipeReads function class for usage in Biopet pipelines
- *
- * @param parent Configuration object for the pipeline
- */
+  * WipeReads function class for usage in Biopet pipelines
+  *
+  * @param parent Configuration object for the pipeline
+  */
 class WipeReads(val parent: Configurable) extends ToolCommandFunction {
 
   def toolObject = nl.lumc.sasc.biopet.tools.WipeReads
@@ -41,7 +41,8 @@ class WipeReads(val parent: Configurable) extends ToolCommandFunction {
   @Argument(doc = "Read group IDs to be removed (default: remove reads from all read groups)")
   var readgroup: Set[String] = config("read_group", default = Nil)
 
-  @Argument(doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
+  @Argument(
+    doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
   var limitRemoval: Boolean = config("limit_removal", default = false)
 
   @Argument(doc = "Whether to index output BAM file or not")
@@ -70,17 +71,18 @@ class WipeReads(val parent: Configurable) extends ToolCommandFunction {
     if (!noMakeIndex) outputIndex = Some(new File(outputBam.getPath.stripSuffix(".bam") + ".bai"))
   }
 
-  override def cmdLine = super.cmdLine +
-    required("-I", inputBam) +
-    required("-r", intervalFile) +
-    required("-o", outputBam) +
-    optional("-f", discardedBam) +
-    optional("-Q", minMapQ) +
-    readgroup.foreach(rg => required("-G", rg)) +
-    conditional(limitRemoval, "--limit_removal") +
-    conditional(noMakeIndex, "--no_make_index") +
-    optional("-t", featureType) +
-    optional("--bloom_size", bloomSize) +
-    optional("--false_positive", falsePositive)
+  override def cmdLine =
+    super.cmdLine +
+      required("-I", inputBam) +
+      required("-r", intervalFile) +
+      required("-o", outputBam) +
+      optional("-f", discardedBam) +
+      optional("-Q", minMapQ) +
+      readgroup.foreach(rg => required("-G", rg)) +
+      conditional(limitRemoval, "--limit_removal") +
+      conditional(noMakeIndex, "--no_make_index") +
+      optional("-t", featureType) +
+      optional("--bloom_size", bloomSize) +
+      optional("--false_positive", falsePositive)
 
 }

@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gwastest
 
 import java.io.File
@@ -24,11 +24,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, Test }
+import org.testng.annotations.{AfterClass, Test}
 
 /**
- * Created by pjvan_thof on 4/11/16.
- */
+  * Created by pjvan_thof on 4/11/16.
+  */
 class GwasTestTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GwasTest = {
     new GwasTest {
@@ -46,10 +46,9 @@ class GwasTestTest extends TestNGSuite with Matchers {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     Logging.errors.clear()
-    val pipeline = initPipeline(GwasTestTest.config(outputDir) ++
-      Map("input_vcf" -> GwasTestTest.vcfFile.toString
-      )
-    )
+    val pipeline = initPipeline(
+      GwasTestTest.config(outputDir) ++
+        Map("input_vcf" -> GwasTestTest.vcfFile.toString))
     pipeline.script()
   }
 

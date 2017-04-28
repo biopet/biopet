@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.report.ReportBuilder
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.rscript.LinePlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ ModuleName, PipelineName, SampleName }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ModuleName, PipelineName, SampleName}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -30,15 +30,26 @@ object ShivaSvCallingReport extends Logging {
   implicit lazy val ec = ReportBuilder.ec
 
   val histogramBinBoundaries: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000)
-  val histogramPlotTicks: Array[Int] = Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
-  val histogramText: List[String] = List("<=100bp", "0.1-1kb", "1-10kb", "10-100kb", "0.1-1Mb", "1-10Mb", ">10Mb")
+  val histogramPlotTicks: Array[Int] =
+    Array(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
+  val histogramText: List[String] =
+    List("<=100bp", "0.1-1kb", "1-10kb", "10-100kb", "0.1-1Mb", "1-10Mb", ">10Mb")
 
-  def parseSummaryForSvCounts(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Map[String, Array[Long]]] = {
+  def parseSummaryForSvCounts(summary: SummaryDb,
+                              runId: Int,
+                              sampleNames: Seq[String]): Map[String, Map[String, Array[Long]]] = {
     var delCounts, insCounts, dupCounts, invCounts: Map[String, Array[Long]] = Map()
 
     for (sampleName <- sampleNames) {
-      val sampleCounts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("vcfstats-sv"), SampleName(sampleName)), Duration.Inf).get
-      for ((svType, counts) <- sampleCounts.collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
+      val sampleCounts: Map[String, Any] = Await
+        .result(summary.getStat(runId,
+                                PipelineName("shivasvcalling"),
+                                ModuleName("vcfstats-sv"),
+                                SampleName(sampleName)),
+                Duration.Inf)
+        .get
+      for ((svType, counts) <- sampleCounts
+             .collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
         val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
           case "DEL" => delCounts += elem
@@ -57,21 +68,36 @@ object ShivaSvCallingReport extends Logging {
     result
   }
 
-  def parseSummaryForTranslocations(summary: SummaryDb, runId: Int, sampleNames: Seq[String]): Map[String, Long] = {
+  def parseSummaryForTranslocations(summary: SummaryDb,
+                                    runId: Int,
+                                    sampleNames: Seq[String]): Map[String, Long] = {
     var traCounts: Map[String, Long] = Map()
     for (sampleName <- sampleNames) {
-      val counts: Map[String, Any] = Await.result(summary.getStat(runId, PipelineName("shivasvcalling"), ModuleName("vcfstats-sv"), SampleName(sampleName)), Duration.Inf).get
+      val counts: Map[String, Any] = Await
+        .result(summary.getStat(runId,
+                                PipelineName("shivasvcalling"),
+                                ModuleName("vcfstats-sv"),
+                                SampleName(sampleName)),
+                Duration.Inf)
+        .get
       counts.get("TRA") match {
         case Some(c: Long) => traCounts += (sampleName -> c)
-        case Some(c)       => logger.error(s"Unable to parse translocation counts from summary db for sample $sampleName (type mismatch, type in the db: ${c.getClass})")
-        case _             => logger.error(s"Summary db doesn't have translocation counts for sample $sampleName")
+        case Some(c) =>
+          logger.error(
+            s"Unable to parse translocation counts from summary db for sample $sampleName (type mismatch, type in the db: ${c.getClass})")
+        case _ =>
+          logger.error(s"Summary db doesn't have translocation counts for sample $sampleName")
       }
 
     }
     if (traCounts.exists(elem => elem._2 > 0)) traCounts else Map.empty
   }
 
-  def writeTsvFiles(sampleNames: Seq[String], counts: Map[String, Map[String, Array[Long]]], svTypes: List[SvTypeForReport], outFileAllTypes: String, outDir: File): Unit = {
+  def writeTsvFiles(sampleNames: Seq[String],
+                    counts: Map[String, Map[String, Array[Long]]],
+                    svTypes: List[SvTypeForReport],
+                    outFileAllTypes: String,
+                    outDir: File): Unit = {
 
     val tsvWriter = new PrintWriter(new File(outDir, outFileAllTypes))
     tsvWriter.print("sv_type\tsample")
@@ -91,7 +117,8 @@ object ShivaSvCallingReport extends Logging {
           val sampleCounts: Array[String] = countsForSvType.get(sampleName) match {
             case Some(c) => c.collect({ case x => x.toString() })
             case None => {
-              logger.error(s"Internal error, missing sv counts, sample-$sampleName, sv type-${sv.svType}")
+              logger.error(
+                s"Internal error, missing sv counts, sample-$sampleName, sv type-${sv.svType}")
               missingCounts
             }
           }
@@ -108,7 +135,10 @@ object ShivaSvCallingReport extends Logging {
     tsvWriter.close()
   }
 
-  def writeTsvFileForSvType(svType: SvTypeForReport, counts: Map[String, Array[Long]], sampleNames: Seq[String], outDir: File): Unit = {
+  def writeTsvFileForSvType(svType: SvTypeForReport,
+                            counts: Map[String, Array[Long]],
+                            sampleNames: Seq[String],
+                            outDir: File): Unit = {
     val tsvWriter = new PrintWriter(new File(outDir, svType.tsvFileName))
 
     tsvWriter.print("histogramBin")
@@ -118,7 +148,8 @@ object ShivaSvCallingReport extends Logging {
 
     for (i <- histogramPlotTicks.indices) {
       tsvWriter.print(histogramPlotTicks(i))
-      samplesWithCounts.foreach(sampleName => tsvWriter.print("\t" + counts.get(sampleName).get(i)))
+      samplesWithCounts.foreach(sampleName =>
+        tsvWriter.print("\t" + counts.get(sampleName).get(i)))
       tsvWriter.println()
     }
 
@@ -129,12 +160,15 @@ object ShivaSvCallingReport extends Logging {
     for (sv <- svTypes) {
       val tsvFile = new File(outDir, sv.tsvFileName)
       val pngFile: File = new File(outDir, sv.pngFileName)
-      val plot = LinePlot(tsvFile, pngFile,
+      val plot = LinePlot(
+        tsvFile,
+        pngFile,
         xlabel = Some(s"${sv.displayText.substring(0, sv.displayText.length - 1)} size"),
         ylabel = Some("Number of loci"),
         title = Some(sv.displayText),
         width = 400,
-        removeZero = false)
+        removeZero = false
+      )
       plot.height = Some(300)
       plot.llabel = Some("Sample")
       plot.xLog10 = true
@@ -148,4 +182,7 @@ object ShivaSvCallingReport extends Logging {
 
 }
 
-case class SvTypeForReport(svType: String, displayText: String, tsvFileName: String, pngFileName: String)
+case class SvTypeForReport(svType: String,
+                           displayText: String,
+                           tsvFileName: String,
+                           pngFileName: String)

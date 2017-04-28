@@ -1,24 +1,28 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.config
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
-class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValueIndex, val value: Any, val default: Boolean) {
+class ConfigValue(val requestIndex: ConfigValueIndex,
+                  val foundIndex: ConfigValueIndex,
+                  val value: Any,
+                  val default: Boolean) {
+
   /** Get value as String */
   def asString = any2string(value)
 
@@ -60,26 +64,30 @@ class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValu
 }
 
 object ConfigValue {
+
   /**
-   *
-   * @param requestIndex Index where to start searching
-   * @param foundIndex Index where value is found
-   * @param value Found value
-   * @return ConfigValue object
-   */
+    *
+    * @param requestIndex Index where to start searching
+    * @param foundIndex Index where value is found
+    * @param value Found value
+    * @return ConfigValue object
+    */
   def apply(requestIndex: ConfigValueIndex, foundIndex: ConfigValueIndex, value: Any) = {
     new ConfigValue(requestIndex, foundIndex, value, false)
   }
 
   /**
-   *
-   * @param requestIndex Index where to start searching
-   * @param foundIndex Index where value is found
-   * @param value Found value
-   * @param default Value is a default value
-   * @return ConfigValue object
-   */
-  def apply(requestIndex: ConfigValueIndex, foundIndex: ConfigValueIndex, value: Any, default: Boolean) = {
+    *
+    * @param requestIndex Index where to start searching
+    * @param foundIndex Index where value is found
+    * @param value Found value
+    * @param default Value is a default value
+    * @return ConfigValue object
+    */
+  def apply(requestIndex: ConfigValueIndex,
+            foundIndex: ConfigValueIndex,
+            value: Any,
+            default: Boolean) = {
     new ConfigValue(requestIndex, foundIndex, value, default)
   }
 }
