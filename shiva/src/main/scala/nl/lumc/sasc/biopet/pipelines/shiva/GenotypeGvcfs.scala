@@ -2,19 +2,19 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.extensions.gatk
-import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
+import scala.collection.mutable.ListBuffer
+
 /**
- * Created by pjvan_thof on 26-4-17.
- */
-class GenotypeGvcfs(val parent: Configurable) extends QScript
-  with BiopetQScript
-  with Reference { qscript =>
+  * Created by pjvan_thof on 26-4-17.
+  */
+class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript with Reference {
+  qscript =>
 
   def this() = this(null)
 
@@ -23,16 +23,18 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript
 
   val namePrefix = config("name_prefix", default = "multisample")
 
-  def finalGvcfFile = new File(outputDir, s"$namePrefix.gvcf.vcf")
-  def finalVcfFile = new File(outputDir, s"$namePrefix.vcf")
+  def finalGvcfFile = new File(outputDir, s"$namePrefix.gvcf.vcf.gz")
+  def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
 
   /** Init for pipeline */
   def init(): Unit = {}
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    val jobs = getCombineGvcfs(inputGvcfs, finalGvcfFile, isIntermediate = false)
-    jobs.foreach(add(_))
+    inputGvcfs.foreach(inputFiles :+= InputFile(_))
+
+    val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
+    combineJob.allJobs.foreach(add(_))
 
     val genotype = new gatk.GenotypeGVCFs(this)
     genotype.variant = List(finalGvcfFile)
@@ -40,30 +42,33 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript
     add(genotype)
   }
 
-  private def groupDir(group: List[Int]): File = {
-    val rootGroupDir = new File(outputDir, ".group")
-    new File(rootGroupDir, group.mkString(File.separator))
-  }
+  class CombineJob(outputFile: File, outputDir: File, allInput: List[File], group: List[Int] = Nil) {
+    val job: gatk.CombineGVCFs = new gatk.CombineGVCFs(qscript)
+    job.out = outputFile
+    job.isIntermediate = group.nonEmpty
+    val subJobs: ListBuffer[CombineJob] = ListBuffer()
+    val groupedInput = makeEqualGroups(allInput)
+    if (groupedInput.size == 1) job.variant = groupedInput.head
+    else {
+      for ((list, i) <- groupedInput.zipWithIndex) {
+        val tempFile = new File(outputDir,
+                                ".grouped" + File.separator + group
+                                  .mkString(File.separator) + File.separator + s"$i.g.vcf.gz")
+        subJobs += new CombineJob(tempFile, outputDir, list, group ::: i :: Nil)
+        job.variant :+= tempFile
+      }
+    }
 
-  def getCombineGvcfs(inputFiles: List[File],
-                      outputFile: File,
-                      isIntermediate: Boolean = true,
-                      group: List[Int] = Nil): List[CombineGVCFs] = {
-    if (inputFiles.size > 10) {
-      inputFiles.size
+    def makeEqualGroups(files: List[File]): List[List[File]] = {
+      val groupSize = if (files.size > 100) {
+        files.size / 10
+      } else if (files.size < 10) files.size
+      else files.size / (files.size / 10)
+      files.grouped(groupSize).toList
+    }
 
-      val bla = (for ((list, i) <- inputFiles.grouped(10).zipWithIndex) yield {
-        val groupedOutputFile = new File(groupDir(group), outputFile.getName)
-        val job = getCombineGvcfs(list, groupedOutputFile)
-        (job, groupedOutputFile)
-      }).toList
-      getCombineGvcfs(bla.map(_._2), outputFile) ::: bla.flatMap(_._1)
-    } else {
-      val cg = new CombineGVCFs(this)
-      cg.variant = inputFiles
-      cg.out = outputFile
-      cg.isIntermediate = isIntermediate
-      List(cg)
+    def allJobs: List[gatk.CombineGVCFs] = {
+      job :: subJobs.flatMap(_.allJobs).toList
     }
   }
 }
