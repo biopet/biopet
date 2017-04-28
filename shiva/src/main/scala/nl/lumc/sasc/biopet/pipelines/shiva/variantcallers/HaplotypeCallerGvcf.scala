@@ -21,7 +21,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.extensions.gatk
-import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
+import nl.lumc.sasc.biopet.pipelines.shiva.GenotypeGvcfs
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
@@ -65,8 +65,14 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
       Logging.addError("Gender aware variantcalling is enabled but no haploid bed files are given")
   }
 
+  protected val genotypeGvcfs = new GenotypeGvcfs(this)
+
+  override def outputFile = genotypeGvcfs.finalVcfFile
+
+  def finalGvcfFile = genotypeGvcfs.finalGvcfFile
+
   def biopetScript() {
-    gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
+    for ((sample, inputBam) <- inputBams) {
       if (genderAwareCalling) {
         val finalFile = new File(outputDir, sample + ".gvcf.vcf.gz")
         val gender = genders.getOrElse(sample, Gender.Unknown)
@@ -91,6 +97,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
           hc.scatterCount = (hc.scatterCount * fraction).toInt
           hc.sample_ploidy = Some(1)
           add(hc)
+          genotypeGvcfs.inputGvcfs :+= hc.out
           Some(hc.out)
         } else None
 
@@ -101,10 +108,11 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
         hcDiploid.excludeIntervals = haploidBedFiles
         hcDiploid.scatterCount = (hcDiploid.scatterCount * (1 - fraction)).toInt
         add(hcDiploid)
+        genotypeGvcfs.inputGvcfs :+= hcDiploid.out
 
         haploidGvcf match {
           case Some(file) =>
-            val combine = new CombineGVCFs(this)
+            val combine = new gatk.CombineGVCFs(this)
             combine.variant = Seq(hcDiploid.out, file)
             combine.out = new File(outputDir, sample + ".gvcf.vcf.gz")
             add(combine)
@@ -116,11 +124,12 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
           gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".gvcf.vcf.gz"))
         hc.BQSR = inputBqsrFiles.get(sample)
         add(hc)
+        genotypeGvcfs.inputGvcfs :+= hc.out
         sample -> hc.out
       }
     }
 
-    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gVcfFiles.values.toList, outputFile)
-    add(genotypeGVCFs)
+    genotypeGvcfs.outputDir = outputDir
+    add(genotypeGvcfs)
   }
 }
