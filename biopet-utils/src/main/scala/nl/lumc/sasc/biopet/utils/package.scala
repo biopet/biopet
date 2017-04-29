@@ -76,37 +76,6 @@ package object utils {
     case _ => Try(throw new Exception(s"Can not extract number from string $raw"))
   }
 
-  val semanticVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
-
-  /**
-    * Check whether a version string is a semantic version.
-    *
-    * @param version version string
-    * @return boolean
-    */
-  def isSemanticVersion(version: String): Boolean = getSemanticVersion(version).isDefined
-
-  case class SemanticVersion(major: Int, minor: Int, patch: Int, build: Option[String] = None)
-
-  /**
-    * Check whether a version string is a semantic version.
-    * Note: the toInt calls here are only safe because the regex only matches numbers
-    *
-    * @param version version string
-    * @return SemanticVersion case class
-    */
-  def getSemanticVersion(version: String) = {
-    version match {
-      case semanticVersionRegex(major, minor, patch, build) =>
-        Some(
-          SemanticVersion(major.toInt,
-                          minor.toInt,
-                          patch.toInt,
-                          Option(build).map(x => x.stripPrefix("-"))))
-      case _ => None
-    }
-  }
-
   /** Converts string with underscores into camel-case strings */
   def camelize(ustring: String): String =
     ustring
