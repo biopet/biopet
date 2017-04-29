@@ -26,7 +26,6 @@ class CollectGcBiasMetrics(val parent: Configurable)
     extends Picard
     with Summarizable
     with Reference {
-  javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
          required = true)

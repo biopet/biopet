@@ -23,8 +23,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 /** Extension for picard MarkDuplicates */
 class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable {
 
-  javaMainClass = new picard.sam.markduplicates.MarkDuplicates().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
          required = true)
   var input: List[File] = Nil
