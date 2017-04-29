@@ -24,8 +24,6 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
   */
 class NormalizeFasta(val parent: Configurable) extends Picard {
 
-  javaMainClass = new picard.reference.NormalizeFasta().getClass.getName
-
   @Input(doc = "The input fasta file", required = true)
   var input: File = _
 

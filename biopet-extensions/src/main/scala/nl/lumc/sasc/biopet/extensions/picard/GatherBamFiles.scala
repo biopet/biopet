@@ -21,8 +21,6 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 class GatherBamFiles(val parent: Configurable) extends Picard {
 
-  javaMainClass = new picard.sam.GatherBamFiles().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: List[File] = Nil
 
