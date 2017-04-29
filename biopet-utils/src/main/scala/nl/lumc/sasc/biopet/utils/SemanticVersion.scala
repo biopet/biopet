@@ -56,9 +56,9 @@ object SemanticVersion {
       case semanticVersionRegex(major, minor, patch, build) =>
         Some(
           SemanticVersion(major.toInt,
-            minor.toInt,
-            patch.toInt,
-            Option(build).map(x => x.stripPrefix("-"))))
+                          minor.toInt,
+                          patch.toInt,
+                          Option(build).map(x => x.stripPrefix("-"))))
       case _ => None
     }
   }

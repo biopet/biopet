@@ -32,14 +32,14 @@ class SemanticVersionTest extends TestNGSuite with Matchers {
   val nonSemanticVersion = "v1222.1"
 
   @Test
-  def testIsSemantic() = {
+  def testIsSemantic(): Unit = {
     isSemanticVersion(semanticVersion) shouldBe true
     isSemanticVersion(semanticVersionWithBuild) shouldBe true
     isSemanticVersion(nonSemanticVersion) shouldBe false
   }
 
   @Test
-  def testMajorVersion() = {
+  def testMajorVersion(): Unit = {
     getSemanticVersion(semanticVersion).map(_.major) shouldBe Some(1)
     getSemanticVersion(semanticVersionWith_v).map(_.major) shouldBe Some(1)
     getSemanticVersion(semanticVersionWith_V).map(_.major) shouldBe Some(1)
@@ -47,7 +47,7 @@ class SemanticVersionTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMinorVersion() = {
+  def testMinorVersion(): Unit = {
     getSemanticVersion(semanticVersion).map(_.minor) shouldBe Some(2)
     getSemanticVersion(semanticVersionWith_v).map(_.minor) shouldBe Some(2)
     getSemanticVersion(semanticVersionWith_V).map(_.minor) shouldBe Some(2)
@@ -55,7 +55,7 @@ class SemanticVersionTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testPatchVersion() = {
+  def testPatchVersion(): Unit = {
     getSemanticVersion(semanticVersion).map(_.patch) shouldBe Some(3)
     getSemanticVersion(semanticVersionWith_v).map(_.patch) shouldBe Some(3)
     getSemanticVersion(semanticVersionWith_V).map(_.patch) shouldBe Some(3)
@@ -63,7 +63,7 @@ class SemanticVersionTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testBuildVersion() = {
+  def testBuildVersion(): Unit = {
     getSemanticVersion(semanticVersion).flatMap(_.build) shouldBe None
     getSemanticVersion(semanticVersionWith_v).flatMap(_.build) shouldBe None
     getSemanticVersion(semanticVersionWith_V).flatMap(_.build) shouldBe None
@@ -71,47 +71,47 @@ class SemanticVersionTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGreaterThen() {
-    SemanticVersion(1,1,1) > SemanticVersion(1,1,1) shouldBe false
-    SemanticVersion(1,1,1) > SemanticVersion(0,1,1) shouldBe true
-    SemanticVersion(1,1,1) > SemanticVersion(1,0,1) shouldBe true
-    SemanticVersion(1,1,1) > SemanticVersion(1,1,0) shouldBe true
-    SemanticVersion(1,1,1) > SemanticVersion(2,1,1) shouldBe false
-    SemanticVersion(1,1,1) > SemanticVersion(1,2,1) shouldBe false
-    SemanticVersion(1,1,1) > SemanticVersion(1,1,2) shouldBe false
+  def testGreaterThen(): Unit = {
+    SemanticVersion(1, 1, 1) > SemanticVersion(1, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) > SemanticVersion(0, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) > SemanticVersion(1, 0, 1) shouldBe true
+    SemanticVersion(1, 1, 1) > SemanticVersion(1, 1, 0) shouldBe true
+    SemanticVersion(1, 1, 1) > SemanticVersion(2, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) > SemanticVersion(1, 2, 1) shouldBe false
+    SemanticVersion(1, 1, 1) > SemanticVersion(1, 1, 2) shouldBe false
   }
 
   @Test
-  def testLesserThen() {
-    SemanticVersion(1,1,1) < SemanticVersion(1,1,1) shouldBe false
-    SemanticVersion(1,1,1) < SemanticVersion(0,1,1) shouldBe false
-    SemanticVersion(1,1,1) < SemanticVersion(1,0,1) shouldBe false
-    SemanticVersion(1,1,1) < SemanticVersion(1,1,0) shouldBe false
-    SemanticVersion(1,1,1) < SemanticVersion(2,1,1) shouldBe true
-    SemanticVersion(1,1,1) < SemanticVersion(1,2,1) shouldBe true
-    SemanticVersion(1,1,1) < SemanticVersion(1,1,2) shouldBe true
+  def testLesserThen(): Unit = {
+    SemanticVersion(1, 1, 1) < SemanticVersion(1, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) < SemanticVersion(0, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) < SemanticVersion(1, 0, 1) shouldBe false
+    SemanticVersion(1, 1, 1) < SemanticVersion(1, 1, 0) shouldBe false
+    SemanticVersion(1, 1, 1) < SemanticVersion(2, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) < SemanticVersion(1, 2, 1) shouldBe true
+    SemanticVersion(1, 1, 1) < SemanticVersion(1, 1, 2) shouldBe true
   }
 
   @Test
-  def testGreaterThenOrEqual() {
-    SemanticVersion(1,1,1) >= SemanticVersion(1,1,1) shouldBe true
-    SemanticVersion(1,1,1) >= SemanticVersion(0,1,1) shouldBe true
-    SemanticVersion(1,1,1) >= SemanticVersion(1,0,1) shouldBe true
-    SemanticVersion(1,1,1) >= SemanticVersion(1,1,0) shouldBe true
-    SemanticVersion(1,1,1) >= SemanticVersion(2,1,1) shouldBe false
-    SemanticVersion(1,1,1) >= SemanticVersion(1,2,1) shouldBe false
-    SemanticVersion(1,1,1) >= SemanticVersion(1,1,2) shouldBe false
+  def testGreaterThenOrEqual(): Unit = {
+    SemanticVersion(1, 1, 1) >= SemanticVersion(1, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) >= SemanticVersion(0, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) >= SemanticVersion(1, 0, 1) shouldBe true
+    SemanticVersion(1, 1, 1) >= SemanticVersion(1, 1, 0) shouldBe true
+    SemanticVersion(1, 1, 1) >= SemanticVersion(2, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) >= SemanticVersion(1, 2, 1) shouldBe false
+    SemanticVersion(1, 1, 1) >= SemanticVersion(1, 1, 2) shouldBe false
   }
 
   @Test
-  def testLesserThenOrEqual() {
-    SemanticVersion(1,1,1) <= SemanticVersion(1,1,1) shouldBe true
-    SemanticVersion(1,1,1) <= SemanticVersion(0,1,1) shouldBe false
-    SemanticVersion(1,1,1) <= SemanticVersion(1,0,1) shouldBe false
-    SemanticVersion(1,1,1) <= SemanticVersion(1,1,0) shouldBe false
-    SemanticVersion(1,1,1) <= SemanticVersion(2,1,1) shouldBe true
-    SemanticVersion(1,1,1) <= SemanticVersion(1,2,1) shouldBe true
-    SemanticVersion(1,1,1) <= SemanticVersion(1,1,2) shouldBe true
+  def testLesserThenOrEqual(): Unit = {
+    SemanticVersion(1, 1, 1) <= SemanticVersion(1, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) <= SemanticVersion(0, 1, 1) shouldBe false
+    SemanticVersion(1, 1, 1) <= SemanticVersion(1, 0, 1) shouldBe false
+    SemanticVersion(1, 1, 1) <= SemanticVersion(1, 1, 0) shouldBe false
+    SemanticVersion(1, 1, 1) <= SemanticVersion(2, 1, 1) shouldBe true
+    SemanticVersion(1, 1, 1) <= SemanticVersion(1, 2, 1) shouldBe true
+    SemanticVersion(1, 1, 1) <= SemanticVersion(1, 1, 2) shouldBe true
   }
 
 }
