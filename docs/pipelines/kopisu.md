@@ -64,7 +64,7 @@ Freec is a tool that needs a few tricks and workarounds to make it work. The wor
 ```
 kopisu: 
   use_freec_method: true  
-  output_dir: <output dir>
+  output_dir: </path/to/output_dir/>
   reference_name: GRCh38_no_alt_analysis_set
   reference_fasta: </path/to/reference.fa>
   chrFiles: </path/to/reference_files/>
