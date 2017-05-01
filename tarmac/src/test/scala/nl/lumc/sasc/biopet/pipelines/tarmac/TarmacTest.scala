@@ -1,6 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
-import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.core.BiopetFifoPipe
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln }
+import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsSort
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
@@ -97,7 +99,14 @@ class TarmacTest extends TestNGSuite with Matchers {
     script.biopetScript()
 
     script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
-    script.functions.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
+    script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 7
+    script.functions.collect {
+      case b: BiopetFifoPipe =>
+        b.beforeGraph()
+        b.pipesJobs.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 1
+        b.pipesJobs.count(_.isInstanceOf[BedtoolsSort]) shouldBe 1
+        b.pipesJobs.count(_.isInstanceOf[Bgzip]) shouldBe 1
+    }
   }
 
 }
