@@ -23,6 +23,8 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
 
   val namePrefix = config("name_prefix", default = "multisample")
 
+  val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
+
   def finalGvcfFile = new File(outputDir, s"$namePrefix.gvcf.vcf.gz")
   def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
 
@@ -60,10 +62,10 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     }
 
     def makeEqualGroups(files: List[File]): List[List[File]] = {
-      val groupSize = if (files.size > 100) {
-        files.size / 10
-      } else if (files.size < 10) files.size
-      else files.size / (files.size / 10)
+      val groupSize = if (files.size > (maxNumberOfFiles * maxNumberOfFiles)) {
+        files.size / maxNumberOfFiles
+      } else if (files.size < maxNumberOfFiles) files.size
+      else files.size / (files.size / maxNumberOfFiles)
       files.grouped(groupSize).toList
     }
 
