@@ -93,7 +93,17 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       val reader = Source.fromFile(runIdFile)
       val id = reader.getLines().next().toInt
       reader.close()
-      id
+
+      // Checking if run exist in database
+      Await.result(
+        SummaryDb.openSqliteSummary(summaryDbFile).getRuns(runId = Some(id)).map(_.headOption),
+        Duration.Inf) match {
+        case Some(x) => id
+        case _ =>
+          logger.warn(
+            s"Run id found in '$runIdFile' does not exist in summary, creating a new run")
+          createRun()
+      }
     } else createRun()
   }
 
