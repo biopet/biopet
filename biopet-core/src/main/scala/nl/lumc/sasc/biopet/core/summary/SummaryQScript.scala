@@ -1,24 +1,24 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import nl.lumc.sasc.biopet.core.extensions.{CheckChecksum, Md5sum}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.LastCommitHash
@@ -30,14 +30,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
 /**
- * This trait is used for qscript / pipelines that will produce a summary
- *
- * Created by pjvan_thof on 2/14/15.
- */
+  * This trait is used for qscript / pipelines that will produce a summary
+  *
+  * Created by pjvan_thof on 2/14/15.
+  */
 trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   /** Key is sample/library, None is sample or library is not applicable */
-  private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
+  private[summary] var summarizables
+    : Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
 
   /** Qscripts summaries that need to be merge into this summary */
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
@@ -53,18 +54,18 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   def summaryDbFile: File = root match {
     case s: SummaryQScript => new File(s.outputDir, s"${s.summaryName}.summary.db")
-    case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
+    case _ => throw new IllegalStateException("Root should be a SummaryQScript")
   }
 
   /**
-   * Add a module to summary for this pipeline
-   *
-   * @param summarizable summarizable to add to summary for this pipeline
-   * @param name Name of module
-   * @param sampleId Id of sample
-   * @param libraryId Id of libary
-   * @param forceSingle If true it replaces summarizable instead of adding to it
-   */
+    * Add a module to summary for this pipeline
+    *
+    * @param summarizable summarizable to add to summary for this pipeline
+    * @param name Name of module
+    * @param sampleId Id of sample
+    * @param libraryId Id of libary
+    * @param forceSingle If true it replaces summarizable instead of adding to it
+    */
   def addSummarizable(summarizable: Summarizable,
                       name: String,
                       sampleId: Option[String] = None,
@@ -72,11 +73,12 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
                       forceSingle: Boolean = false): Unit = {
     val (sId, lId) = this match {
       case tag: SampleLibraryTag => (tag.sampleId, tag.libId)
-      case _                     => (sampleId, libraryId)
+      case _ => (sampleId, libraryId)
     }
     if (lId.isDefined) require(sId.isDefined) // Library always require a sample
     if (forceSingle) summarizables = summarizables.filterNot(_._1 == (name, sId, lId))
-    summarizables += (name, sId, lId) -> (summarizable :: summarizables.getOrElse((name, sId, lId), Nil))
+    summarizables += (name, sId, lId) -> (summarizable :: summarizables.getOrElse((name, sId, lId),
+                                                                                  Nil))
   }
 
   /** Add an other qscript to merge in output summary */
@@ -97,21 +99,25 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   private def runIdFile = root match {
     case s: SummaryQScript => new File(s.outputDir, s".log/summary.runid")
-    case _                 => throw new IllegalStateException("Root should be a SummaryQscript")
+    case _ => throw new IllegalStateException("Root should be a SummaryQscript")
   }
 
   private def createRun(): Int = {
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
     val dir = root match {
       case q: BiopetQScript => q.outputDir
-      case _                => throw new IllegalStateException("Root should be a BiopetQscript")
+      case _ => throw new IllegalStateException("Root should be a BiopetQscript")
     }
     val name = root match {
       case q: SummaryQScript => q.summaryName
-      case _                 => throw new IllegalStateException("Root should be a SummaryQScript")
+      case _ => throw new IllegalStateException("Root should be a SummaryQScript")
     }
-    val id = Await.result(db.createRun(name, dir.getAbsolutePath, nl.lumc.sasc.biopet.Version,
-      LastCommitHash, new Date(System.currentTimeMillis())), Duration.Inf)
+    val id = Await.result(db.createRun(name,
+                                       dir.getAbsolutePath,
+                                       nl.lumc.sasc.biopet.Version,
+                                       LastCommitHash,
+                                       new Date(System.currentTimeMillis())),
+                          Duration.Inf)
     runIdFile.getParentFile.mkdir()
     val writer = new PrintWriter(runIdFile)
     writer.println(id)
@@ -121,7 +127,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   /** Add jobs to qscript to execute summary, also add checksum jobs */
   def addSummaryJobs(): Unit = {
-    if (addedJobs) throw new IllegalStateException("Summary jobs for this QScript are already executed")
+    if (addedJobs)
+      throw new IllegalStateException("Summary jobs for this QScript are already executed")
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
@@ -130,17 +137,21 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
           val md5sum = new Md5sum(this) {
             override def configNamespace = "md5sum"
 
-            override def cmdLine: String = super.cmdLine + " || " +
-              required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)
+            override def cmdLine: String =
+              super.cmdLine + " || " +
+                required("echo") + required("error_on_capture  " + input.toString) + " > " + required(
+                output)
           }
           md5sum.input = file
-          md5sum.output = if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
-            new File(file.getParentFile, file.getName + ".md5")
-          else {
-            // Need to not write a md5 file outside the outputDir
-            new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
-          }
-          md5sum.jobOutputFile = new File(md5sum.output.getParentFile, s".${file.getName}.md5.md5sum.out")
+          md5sum.output =
+            if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
+              new File(file.getParentFile, file.getName + ".md5")
+            else {
+              // Need to not write a md5 file outside the outputDir
+              new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+            }
+          md5sum.jobOutputFile =
+            new File(md5sum.output.getParentFile, s".${file.getName}.md5.md5sum.out")
 
           writeSummary.deps :+= md5sum.output
           SummaryQScript.md5sumCache += file -> md5sum.output
@@ -153,16 +164,17 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {
       summarizable match {
         case f: BiopetCommandLineFunction => f.beforeGraph()
-        case _                            =>
+        case _ =>
       }
     }
 
     //Automatic checksums
-    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles) {
+    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList;
+         (_, file) <- summarizable.summaryFiles) {
       addChecksum(file)
       summarizable match {
         case f: BiopetJavaCommandLineFunction => if (f.jarFile != null) addChecksum(f.jarFile)
-        case _                                =>
+        case _ =>
       }
     }
 
@@ -191,7 +203,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
             addChecksum(inputFile.file)
           checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
           checkMd5.checksum = checksum
-          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile, checkMd5.checksumFile.getName + ".check.out")
+          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile,
+                                            checkMd5.checksumFile.getName + ".check.out")
           add(checkMd5)
         }
         case _ =>
@@ -202,7 +215,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       addChecksum(file)
 
     this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+      case q: MultiSampleQScript
+          if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
     }

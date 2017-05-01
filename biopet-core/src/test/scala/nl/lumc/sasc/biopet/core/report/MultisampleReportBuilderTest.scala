@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.report
 
 import java.io.File
@@ -24,12 +24,12 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 /**
- * Created by pjvanthof on 24/02/16.
- */
+  * Created by pjvanthof on 24/02/16.
+  */
 class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
@@ -40,12 +40,17 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     val builder = new MultisampleReportBuilder {
       def pipelineName = "test"
       def reportName: String = "test"
-      def indexPage: Future[ReportPage] = Future(ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map()))
+      def indexPage: Future[ReportPage] =
+        Future(ReportPage("Samples" -> generateSamplesPage(Map()) :: Nil, Nil, Map()))
 
       def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] =
-        Future(ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil, Nil, Map()))
+        Future(
+          ReportPage("Libraries" -> generateLibraryPage(Map("sampleId" -> Some(sampleId))) :: Nil,
+                     Nil,
+                     Map()))
 
-      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) = Future(ReportPage(Nil, Nil, Map()))
+      def libraryPage(sampleId: Int, libraryId: Int, args: Map[String, Any]) =
+        Future(ReportPage(Nil, Nil, Map()))
     }
 
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -56,7 +61,8 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     db.createTables()
 
     Await.ready(db.createPipeline("test", 0), Duration.Inf)
-    Await.ready(db.createRun("test", "", "", "", new Date(System.currentTimeMillis())), Duration.Inf)
+    Await.ready(db.createRun("test", "", "", "", new Date(System.currentTimeMillis())),
+                Duration.Inf)
 
     val sample = Some("sampleName")
     val lib = Some("libName")
@@ -73,7 +79,8 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     tempDir.deleteOnExit()
     val args = Array("-s", dbFile.getAbsolutePath, "-o", tempDir.getAbsolutePath)
     builder.main(args)
-    builder.extFiles.foreach(x => new File(tempDir, "ext" + File.separator + x.targetPath) should exist)
+    builder.extFiles.foreach(x =>
+      new File(tempDir, "ext" + File.separator + x.targetPath) should exist)
 
     def createFile(path: String*) = new File(tempDir, path.mkString(File.separator))
 

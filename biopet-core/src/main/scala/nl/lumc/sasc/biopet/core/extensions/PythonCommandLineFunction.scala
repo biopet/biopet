@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.Logging
@@ -29,9 +29,9 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   protected var pythonScriptName: String = _
 
   /**
-   * checks if script already exist in jar otherwise try to fetch from the jar
-   * @param script name / location of script
-   */
+    * checks if script already exist in jar otherwise try to fetch from the jar
+    * @param script name / location of script
+    */
   def setPythonScript(script: String) {
     pythonScript = new File(script).getAbsoluteFile
     if (!pythonScript.exists()) {
@@ -42,10 +42,10 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   }
 
   /**
-   * Set and extract python script from jar file
-   * @param script name of script in jar
-   * @param subpackage location of script in jar
-   */
+    * Set and extract python script from jar file
+    * @param script name of script in jar
+    * @param subpackage location of script in jar
+    */
   def setPythonScript(script: String, subpackage: String) {
     pythonScriptName = script
     pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile

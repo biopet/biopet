@@ -1,23 +1,24 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.config
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
+
   /** Should be object of parant object */
   def parent: Configurable
   def globalConfig: Config = if (parent != null) parent.globalConfig else Config.global
@@ -42,9 +43,9 @@ trait Configurable extends ImplicitConversions {
   /** This method merge defaults from the root to it's own */
   protected[config] def internalDefaults: Map[String, Any] = {
     (parent != null, defaults.isEmpty) match {
-      case (true, true)   => parent.internalDefaults
-      case (true, false)  => ConfigUtils.mergeMaps(defaults, parent.internalDefaults)
-      case (false, true)  => globalConfig.defaults
+      case (true, true) => parent.internalDefaults
+      case (true, false) => ConfigUtils.mergeMaps(defaults, parent.internalDefaults)
+      case (false, true) => globalConfig.defaults
       case (false, false) => ConfigUtils.mergeMaps(defaults, globalConfig.defaults)
     }
   }
@@ -55,18 +56,18 @@ trait Configurable extends ImplicitConversions {
   /** This method merge fixedValues from the root to it's own */
   protected def internalFixedValues: Map[String, Any] = {
     (parent != null, fixedValues.isEmpty) match {
-      case (true, true)  => parent.internalFixedValues
+      case (true, true) => parent.internalFixedValues
       case (true, false) => ConfigUtils.mergeMaps(fixedValues, parent.internalFixedValues)
-      case _             => fixedValues
+      case _ => fixedValues
     }
   }
 
   val config = new ConfigFunctions
 
   /**
-   * Creates path with a prefix for sample and library
-   * "samples" -> "sampleID" -> "libraries" -> "libraryID" -> rest of path
-   */
+    * Creates path with a prefix for sample and library
+    * "samples" -> "sampleID" -> "libraries" -> "libraryID" -> rest of path
+    */
   def getConfigPath(sample: String = null, library: String = null, submodule: String = null) = {
     (if (sample != null) "samples" :: sample :: Nil else Nil) :::
       (if (library != null) "libraries" :: library :: Nil else Nil) :::
@@ -74,7 +75,8 @@ trait Configurable extends ImplicitConversions {
   }
 
   /** Class is used for retrieval of config values */
-  protected class ConfigFunctions(val defaultSample: Option[String] = None, val defaultLibrary: Option[String] = None) {
+  protected class ConfigFunctions(val defaultSample: Option[String] = None,
+                                  val defaultLibrary: Option[String] = None) {
     def this(defaultSample: String, defaultLibrary: String) = {
       this(defaultSample = Some(defaultSample), defaultLibrary = Some(defaultLibrary))
     }
@@ -86,19 +88,19 @@ trait Configurable extends ImplicitConversions {
     (defaultSample, defaultLibrary) match {
       case (Some(null), _) => throw new IllegalArgumentException("defaultSample can not be null")
       case (_, Some(null)) => throw new IllegalArgumentException("defaultLibrary can not be null")
-      case _               =>
+      case _ =>
     }
 
     /**
-     *
-     * @param key Name of value
-     * @param default Default value if not found
-     * @param namespace Adds to the path
-     * @param freeVar Default true, if set false value must exist in module
-     * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
-     * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
-     * @return
-     */
+      *
+      * @param key Name of value
+      * @param default Default value if not found
+      * @param namespace Adds to the path
+      * @param freeVar Default true, if set false value must exist in module
+      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
+      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
+      * @return
+      */
     def apply(key: String,
               default: Any = null,
               namespace: String = null,
@@ -110,7 +112,9 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (namespace != null) namespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath else path ::: extraSubPath
+      val p =
+        if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath
+        else path ::: extraSubPath
       val d = {
         val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -120,14 +124,14 @@ trait Configurable extends ImplicitConversions {
     }
 
     /**
-     * Check if value exist in config
-     * @param key Name of value
-     * @param namespace Adds to the path
-     * @param freeVar Default true, if set false value must exist in module
-     * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
-     * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
-     * @return true when value is found in config
-     */
+      * Check if value exist in config
+      * @param key Name of value
+      * @param namespace Adds to the path
+      * @param freeVar Default true, if set false value must exist in module
+      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
+      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
+      * @return true when value is found in config
+      */
     def contains(key: String,
                  namespace: String = null,
                  freeVar: Boolean = true,
@@ -138,9 +142,13 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (namespace != null) namespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath else path ::: extraSubPath
+      val p =
+        if (path == null) getConfigPath(s, l, namespace) ::: subPath ::: extraSubPath
+        else path ::: extraSubPath
 
-      globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
+      globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config
+        .getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
+        .isDefined
     }
   }
 }

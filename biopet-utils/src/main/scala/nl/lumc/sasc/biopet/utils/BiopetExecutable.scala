@@ -1,29 +1,29 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 
-import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
+import nl.lumc.sasc.biopet.{FullVersion, LastCommitHash}
 import org.apache.log4j.Logger
 
 import scala.io.Source
 
 /**
- * This is the main trait for the biopet executable
- */
+  * This is the main trait for the biopet executable
+  */
 trait BiopetExecutable extends Logging {
 
   def pipelines: List[MainCommand]
@@ -32,19 +32,20 @@ trait BiopetExecutable extends Logging {
 
   def templates: List[MainCommand]
 
-  val modules: Map[String, List[MainCommand]] = Map(
-    "pipeline" -> pipelines,
-    "tool" -> tools,
-    "template" -> templates)
+  val modules: Map[String, List[MainCommand]] =
+    Map("pipeline" -> pipelines, "tool" -> tools, "template" -> templates)
 
   /**
-   * @param args the command line arguments
-   */
+    * @param args the command line arguments
+    */
   def main(args: Array[String]): Unit = {
     checkDirtyBuild(logger)
 
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
-      "Available %s(s):\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
+      "Available %s(s):\n  ".format(kind) + bullet + " " + m
+        .map(x => x.commandName)
+        .sorted
+        .mkString("\n  " + bullet + " ")
 
     def usage(module: String = null): String = {
       if (module != null) checkModule(module)
@@ -78,7 +79,8 @@ trait BiopetExecutable extends Logging {
       checkModule(module)
       val command = modules(module).find(p => p.commandName.toLowerCase == name.toLowerCase)
       if (command.isEmpty) {
-        System.err.println(s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
+        System.err.println(
+          s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
         System.exit(1)
       }
       command.get
@@ -89,7 +91,7 @@ trait BiopetExecutable extends Logging {
         println("version: " + FullVersion)
       case Array("license") =>
         println(BiopetExecutable.getLicense)
-      case Array(module, name, passArgs @ _*) =>
+      case Array(module, name, passArgs @ _ *) =>
         try {
           getCommand(module, name).main(passArgs.toArray)
         } catch {

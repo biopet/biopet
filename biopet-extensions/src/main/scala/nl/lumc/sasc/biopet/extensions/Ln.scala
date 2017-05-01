@@ -1,30 +1,30 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 
 /**
- * This class can execute ln as InProcessFunction or used to only generate the ln command
- */
+  * This class can execute ln as InProcessFunction or used to only generate the ln command
+  */
 class Ln(val parent: Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
@@ -87,7 +87,8 @@ class Ln(val parent: Configurable) extends InProcessFunction with Configurable {
     val process = Process(cmd).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
     val exitcode = process.exitValue()
     if (exitcode != 0) {
-      throw new Exception("Error creating symbolic link, this was the original message: \n" + stderr)
+      throw new Exception(
+        "Error creating symbolic link, this was the original message: \n" + stderr)
     }
     logger.info("cmd: '" + cmd + "', exitcode: " + exitcode)
   }
@@ -95,15 +96,15 @@ class Ln(val parent: Configurable) extends InProcessFunction with Configurable {
 
 /** Object for constructors for ln */
 object Ln {
-  /**
-   * Basis constructor
-   * @param root root object for config
-   * @param input list of files to use
-   * @param output output File
-   * @param relative make reletive links (default true)
-   * @return
-   */
 
+  /**
+    * Basis constructor
+    * @param root root object for config
+    * @param input list of files to use
+    * @param output output File
+    * @param relative make reletive links (default true)
+    * @return
+    */
   def apply(root: Configurable, input: File, output: File, relative: Boolean = true): Ln = {
     val ln = new Ln(root)
     ln.input = input
@@ -112,12 +113,16 @@ object Ln {
     ln
   }
 
-  def linkBamFile(root: Configurable, input: File, output: File, index: Boolean = true, relative: Boolean = true): List[Ln] = {
+  def linkBamFile(root: Configurable,
+                  input: File,
+                  output: File,
+                  index: Boolean = true,
+                  relative: Boolean = true): List[Ln] = {
     val bamLn = Ln(root, input, output, relative)
     bamLn :: (if (index) {
-      val inputIndex = new File(input.getAbsolutePath.stripSuffix(".bam") + ".bai")
-      val outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
-      List(Ln(root, inputIndex, outputIndex, relative))
-    } else Nil)
+                val inputIndex = new File(input.getAbsolutePath.stripSuffix(".bam") + ".bai")
+                val outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+                List(Ln(root, inputIndex, outputIndex, relative))
+              } else Nil)
   }
 }

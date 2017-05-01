@@ -1,29 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Created by pjvan_thof on 12/4/15.
- */
-class PickOpenReferenceOtus(val parent: Configurable) extends BiopetCommandLineFunction with Version {
+  * Created by pjvan_thof on 12/4/15.
+  */
+class PickOpenReferenceOtus(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Version {
   executable = config("exe", default = "pick_open_reference_otus.py")
 
   @Input(required = true)
@@ -69,20 +71,21 @@ class PickOpenReferenceOtus(val parent: Configurable) extends BiopetCommandLineF
     outputFiles ::= otuMap
   }
 
-  def cmdLine = executable + required("-f") +
-    required("-i", inputFasta) +
-    required("-o", outputDir) +
-    optional("--reference_fp", referenceFp) +
-    optional("--parameter_fp", parameterFp) +
-    optional("--taxonomy_fp", taxonomyFp) +
-    conditional(force, "--force") +
-    conditional(printOnly, "--print_only") +
-    conditional(suppressTaxonomyAssignment, "--suppress_taxonomy_assignment") +
-    (if (threads > 1) required("-a") + required("-O", threads) else "") +
-    optional("--percent_subsample", percentSubsample) +
-    optional("--prefilter_percent_id", prefilterPercentId) +
-    conditional(suppressStep4, "--suppress_step4") +
-    optional("-min_otu_size", minOtuSize) +
-    conditional(suppressAlignAndTree, "--suppress_align_and_tree")
+  def cmdLine =
+    executable + required("-f") +
+      required("-i", inputFasta) +
+      required("-o", outputDir) +
+      optional("--reference_fp", referenceFp) +
+      optional("--parameter_fp", parameterFp) +
+      optional("--taxonomy_fp", taxonomyFp) +
+      conditional(force, "--force") +
+      conditional(printOnly, "--print_only") +
+      conditional(suppressTaxonomyAssignment, "--suppress_taxonomy_assignment") +
+      (if (threads > 1) required("-a") + required("-O", threads) else "") +
+      optional("--percent_subsample", percentSubsample) +
+      optional("--prefilter_percent_id", prefilterPercentId) +
+      conditional(suppressStep4, "--suppress_step4") +
+      optional("-min_otu_size", minOtuSize) +
+      conditional(suppressAlignAndTree, "--suppress_align_and_tree")
 
 }

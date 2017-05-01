@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.intervals
 
-import java.io.{ PrintWriter, File }
+import java.io.{PrintWriter, File}
 
 import htsjdk.samtools.util.Interval
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, AfterClass, BeforeClass }
+import org.testng.annotations.{Test, AfterClass, BeforeClass}
 
 import scala.io.Source
 
 /**
- * Created by pjvan_thof on 8/25/15.
- */
+  * Created by pjvan_thof on 8/25/15.
+  */
 class BedRecordListTest extends TestNGSuite with Matchers {
   @BeforeClass
   def start: Unit = {
@@ -47,7 +47,8 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testReadBedFile {
+  @Test
+  def testReadBedFile {
     val records = BedRecordList.fromFile(BedRecordListTest.bedFile)
     records.allRecords.size shouldBe 2
     records.header shouldBe Nil
@@ -59,7 +60,8 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     tempFile.delete()
   }
 
-  @Test def testReadBedFileUcscHeader {
+  @Test
+  def testReadBedFileUcscHeader {
     val records = BedRecordList.fromFile(BedRecordListTest.bedFileUcscHeader)
     records.allRecords.size shouldBe 2
     records.header shouldBe BedRecordListTest.ucscHeader.split("\n").toList
@@ -72,7 +74,8 @@ class BedRecordListTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSorted: Unit = {
-    val unsorted = BedRecordList.fromList(List(BedRecord("chrQ", 10, 20), BedRecord("chrQ", 0, 10)))
+    val unsorted =
+      BedRecordList.fromList(List(BedRecord("chrQ", 10, 20), BedRecord("chrQ", 0, 10)))
     unsorted.isSorted shouldBe false
     unsorted.sorted.isSorted shouldBe true
     val sorted = BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 10, 20)))
@@ -96,28 +99,32 @@ class BedRecordListTest extends TestNGSuite with Matchers {
   }
 
   @Test def testCombineOverlap: Unit = {
-    val noOverlapList = BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 10, 20)))
+    val noOverlapList =
+      BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 10, 20)))
     noOverlapList.length shouldBe 20
     noOverlapList.combineOverlap.length shouldBe 20
 
-    val overlapList = BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 5, 15), BedRecord("chrQ", 10, 20)))
+    val overlapList = BedRecordList.fromList(
+      List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 5, 15), BedRecord("chrQ", 10, 20)))
     overlapList.length shouldBe 30
     overlapList.combineOverlap.length shouldBe 20
   }
 
   @Test def testSquishBed: Unit = {
-    val noOverlapList = BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 10, 20)))
+    val noOverlapList =
+      BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 10, 20)))
     noOverlapList.length shouldBe 20
     noOverlapList.squishBed().length shouldBe 20
 
-    val overlapList = BedRecordList.fromList(List(
-      BedRecord("chrQ", 0, 10),
-      BedRecord("chrQ", 5, 15),
-      BedRecord("chrQ", 10, 20),
-      BedRecord("chrQ", 25, 35),
-      BedRecord("chrQ", 50, 80),
-      BedRecord("chrQ", 60, 70)
-    ))
+    val overlapList = BedRecordList.fromList(
+      List(
+        BedRecord("chrQ", 0, 10),
+        BedRecord("chrQ", 5, 15),
+        BedRecord("chrQ", 10, 20),
+        BedRecord("chrQ", 25, 35),
+        BedRecord("chrQ", 50, 80),
+        BedRecord("chrQ", 60, 70)
+      ))
     overlapList.length shouldBe 80
     val squishedList = overlapList.squishBed(strandSensitive = false, nameSensitive = false)
     squishedList.allRecords.size shouldBe 5
@@ -126,7 +133,8 @@ class BedRecordListTest extends TestNGSuite with Matchers {
 
   @Test def testSamInterval: Unit = {
     val list = BedRecordList.fromList(List(BedRecord("chrQ", 0, 10), BedRecord("chrQ", 5, 15)))
-    list.toSamIntervals.toList shouldBe List(new Interval("chrQ", 1, 10), new Interval("chrQ", 6, 15))
+    list.toSamIntervals.toList shouldBe List(new Interval("chrQ", 1, 10),
+                                             new Interval("chrQ", 6, 15))
   }
 
   @Test def testTraversable: Unit = {
@@ -141,14 +149,16 @@ class BedRecordListTest extends TestNGSuite with Matchers {
   }
 
   @Test def testScatter: Unit = {
-    val list = BedRecordList.fromList(List(BedRecord("chrQ", 0, 1000), BedRecord("chrQ", 3000, 3500)))
+    val list =
+      BedRecordList.fromList(List(BedRecord("chrQ", 0, 1000), BedRecord("chrQ", 3000, 3500)))
     list.scatter(100).allRecords.size shouldBe 15
     list.scatter(100).length shouldBe 1500
   }
 }
 
 object BedRecordListTest {
-  val ucscHeader = """browser position chr7:127471196-127495720
+  val ucscHeader =
+    """browser position chr7:127471196-127495720
                      |browser hide all
                      |track name="ItemRGBDemo" description="Item RGB demonstration" visibility=2 itemRgb="On"
                      |""".stripMargin

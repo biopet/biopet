@@ -1,53 +1,59 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 /**
- * Due to the license issue with GATK, this part of Biopet can only be used inside the
- * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
- * on how to use this protected part of biopet or contact us at sasc@lumc.nl
- */
+  * Due to the license issue with GATK, this part of Biopet can only be used inside the
+  * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
+  * on how to use this protected part of biopet or contact us at sasc@lumc.nl
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
-import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance, HaplotypeCaller, UnifiedGenotyper }
+import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
+import nl.lumc.sasc.biopet.extensions.gatk.{
+  CombineVariants,
+  GenotypeConcordance,
+  HaplotypeCaller,
+  UnifiedGenotyper
+}
 import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
+import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
+import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 import scala.collection.mutable.ListBuffer
 
 /**
- * Class for testing ShivaVariantcalling
- *
- * Created by pjvan_thof on 3/2/15.
- */
+  * Class for testing ShivaVariantcalling
+  *
+  * Created by pjvan_thof on 3/2/15.
+  */
 trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any], dir: File): ShivaVariantcalling = {
     new ShivaVariantcalling() {
       override def configNamespace = "shivavariantcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config(dir)))
+      override def globalConfig =
+        new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config(dir)))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -72,10 +78,21 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
-    (for (bams <- 0 to 2) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper,
-      haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele,
-      freebayes, varscanCnsSinglesample)
-    ).toArray
+    (for (bams <- 0 to 2)
+      yield
+        Array[Any](
+          bams,
+          raw,
+          bcftools,
+          bcftools_singlesample,
+          unifiedGenotyper,
+          haplotypeCaller,
+          haplotypeCallerGvcf,
+          haplotypeCallerAllele,
+          unifiedGenotyperAllele,
+          freebayes,
+          varscanCnsSinglesample
+        )).toArray
   }
 
   private var dirs: List[File] = Nil
@@ -109,10 +126,12 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       "execute_vt_normalize" -> normalize,
       "execute_vt_decompose" -> decompose,
       "regions_of_interest" -> roiBedFiles.map(_.getAbsolutePath)
-    ) ++ referenceVcf.map("reference_vcf" -> _) ++ ampliconBedFile.map("amplicon_bed" -> _.getAbsolutePath)
+    ) ++ referenceVcf.map("reference_vcf" -> _) ++ ampliconBedFile.map(
+      "amplicon_bed" -> _.getAbsolutePath)
     val pipeline = initPipeline(map, outputDir)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
+    pipeline.inputBams = (for (n <- 1 to bams)
+      yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || callers.isEmpty
 
@@ -123,26 +142,45 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     if (!illegalArgumentException) {
       pipeline.script()
 
-      val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+      val pipesJobs = pipeline.functions
+        .filter(_.isInstanceOf[BiopetPipe])
+        .flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
 
-      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
-      pipesJobs.count(_.isInstanceOf[BcftoolsCall]) shouldBe (if (bcftools) 1 else 0) + (if (bcftoolsSinglesample) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[BcftoolsMerge]) shouldBe (if (bcftoolsSinglesample && bams > 1) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample)
+                                                                                                       1
+                                                                                                     else
+                                                                                                       0))
+      pipesJobs.count(_.isInstanceOf[BcftoolsCall]) shouldBe (if (bcftools) 1 else 0) + (if (bcftoolsSinglesample)
+                                                                                           bams
+                                                                                         else 0)
+      pipeline.functions.count(_.isInstanceOf[BcftoolsMerge]) shouldBe (if (bcftoolsSinglesample && bams > 1)
+                                                                          1
+                                                                        else 0)
       pipesJobs.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
       pipesJobs.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[HaplotypeCaller]) shouldBe (if (haplotypeCaller) 1 else 0) +
+      pipeline.functions.count(_.isInstanceOf[HaplotypeCaller]) shouldBe (if (haplotypeCaller) 1
+                                                                          else 0) +
         (if (haplotypeCallerAllele) 1 else 0) + (if (haplotypeCallerGvcf) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1 else 0) +
+      pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1
+                                                                           else 0) +
         (if (unifiedGenotyperAllele) 1 else 0)
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length * (1 + callers.size))
-      pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
-      pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
-      pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 + callers.size else 0)
+      pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size
+                                                                      else 0)
+      pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size
+                                                                      else 0)
+      pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined)
+                                                                                1 + callers.size
+                                                                              else 0)
 
-      pipeline.summarySettings.get("variantcallers").map(_.asInstanceOf[List[String]].toSet) shouldBe Some(callers.toSet)
-      pipeline.summarySettings.get("amplicon_bed") shouldBe Some(ampliconBedFile.map(_.getAbsolutePath))
-      pipeline.summarySettings.get("regions_of_interest") shouldBe Some(roiBedFiles.map(_.getAbsolutePath))
+      pipeline.summarySettings
+        .get("variantcallers")
+        .map(_.asInstanceOf[List[String]].toSet) shouldBe Some(callers.toSet)
+      pipeline.summarySettings.get("amplicon_bed") shouldBe Some(
+        ampliconBedFile.map(_.getAbsolutePath))
+      pipeline.summarySettings.get("regions_of_interest") shouldBe Some(
+        roiBedFiles.map(_.getAbsolutePath))
     }
   }
 

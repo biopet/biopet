@@ -1,25 +1,25 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{ AnnotationGff, AnnotationGtf, AnnotationRefFlat }
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationGff, AnnotationGtf, AnnotationRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
-import nl.lumc.sasc.biopet.pipelines.gentrap.measures.{ BaseCounts, FragmentsPerGene }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.pipelines.gentrap.measures.{BaseCounts, FragmentsPerGene}
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.tinycap.measures.FragmentsPerSmallRna
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -27,17 +27,17 @@ import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
- * Created by pjvan_thof on 12/29/15.
- * Design based on work from Henk Buermans (e-Mir)
- * Implementation by wyleung started 19/01/16
- */
-class TinyCap(val parent: Configurable) extends QScript
-  with MultisampleMappingTrait
-  with AnnotationRefFlat
-  with AnnotationGff
-  with AnnotationGtf
-  with Reference {
-  qscript =>
+  * Created by pjvan_thof on 12/29/15.
+  * Design based on work from Henk Buermans (e-Mir)
+  * Implementation by wyleung started 19/01/16
+  */
+class TinyCap(val parent: Configurable)
+    extends QScript
+    with MultisampleMappingTrait
+    with AnnotationRefFlat
+    with AnnotationGff
+    with AnnotationGtf
+    with Reference { qscript =>
   def this() = this(null)
 
   var annotateSam: Boolean = config("annotate_sam", default = false)
@@ -93,7 +93,8 @@ class TinyCap(val parent: Configurable) extends QScript
 
   override def init = {
     super.init()
-    executedMeasures.foreach(x => x.outputDir = new File(outputDir, "expression_measures" + File.separator + x.name))
+    executedMeasures.foreach(x =>
+      x.outputDir = new File(outputDir, "expression_measures" + File.separator + x.name))
   }
 
   override def makeSample(id: String) = new Sample(id)
