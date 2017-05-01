@@ -29,7 +29,7 @@
         val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.collect {
             case path => {
-                val file = new File(run.outputDir + File.separator + path.path.toString)
+                val file = new File(run.outputDir + File.separator + path.path)
                 val newFile = new File(outputDir, read + "_" + file.getName)
                 if (file.exists()) FileUtils.copyFile(file, newFile)
                 newFile.getName
