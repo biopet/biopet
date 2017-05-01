@@ -21,8 +21,6 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 class CreateSequenceDictionary(val parent: Configurable) extends Picard {
 
-  javaMainClass = new picard.sam.CreateSequenceDictionary().getClass.getName
-
   @Input(required = true)
   var reference: File = _
 
