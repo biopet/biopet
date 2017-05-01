@@ -48,24 +48,38 @@ Freec is a tool that needs a few tricks and workarounds to make it work. The wor
 3. `mateOrientation` should be set to 0. 
 
 **Freec config example**
+For the full list of options of Freec, please refer to the tool's [manual](http://boevalab.com/FREEC/tutorial.html)
+
+Freec is a tool that needs a few tricks and workarounds to make it work. The workarounds were successfully tested for version 10.5:
+
+1. User must provide each of the chromosomes (or contigs) of his reference in seperate fasta files. These fasta files are located in the path set in `chrFiles` field of the config. To split the contents of a fasta file into several (one for each chromosome), one can use `samtools faidx`
+
+2. Chromosome names in the `.fai` file that is set in `chrLenFile` config field, must start with the prefix `chr`. Even if the chromosome names in the reference do not start with `chr`, the tool will still work  
+
+3. `mateOrientation` should be set to 0. 
+
+
+**Freec config example**
+
 ```
 kopisu: 
-  use_freec_method: true
-freec:
+  use_freec_method: true  
+  output_dir: /exports/sasc/project-200-Karoly-SV/analysis/04_kopisu
   reference_name: GRCh38_no_alt_analysis_set
   reference_fasta: /exports/genomes/species/H.sapiens/GRCh38_no_alt_analysis_set/reference.fa
-  chrFiles: /path/to/referenceFastaFiles/
-  chrLenFile: /path/to/referenceIndex/reference.fa.fai
+  chrFiles: /exports/sasc/project-200-Karoly-SV/analysis/03_kopisu/freec_method/testFREEC/reference/
+  chrLenFile: /exports/sasc/project-200-Karoly-SV/analysis/03_kopisu/freec_method/testFREEC/reference.fa.fai
   coefficientOfVariation: 0.05
-  output_dir: /path/to/output
   ploidy: 2
   mateOrientation: 0
   inputFormat: BAM
+  freec:
+    exe: /exports/sasc/ioannis/freec/FREEC/src/freec
   bedtools:
     exe: /usr/local/bin/bedtools
-  freec:
-    exe: /usr/local/sasc/programs/FREEC/FREEC_v10.5/freec
+
 ```
+
 
 ### Cn.mops
 
