@@ -73,7 +73,8 @@ object FlexiprepReport extends ReportBuilder {
           fastqcPlotSection("Base sequence content", "plot_per_base_sequence_content"),
           fastqcPlotSection("Duplication", "plot_duplication_levels"),
           fastqcPlotSection("Kmers", "plot_kmer_profiles"),
-          fastqcPlotSection("Length distribution", "plot_sequence_length_distribution")
+          fastqcPlotSection("Length distribution", "plot_sequence_length_distribution"),
+          fastqcPlotSection("Adapters", "plot_adapter_content")
         ),
         Map()
       ))
