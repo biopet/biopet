@@ -62,7 +62,10 @@ object FastaUtils {
   }
 
   /** This method returns the fraction of GC for a given region */
-  def getSequenceGc(referenceFile: IndexedFastaSequenceFile, contig: String, start: Long, end: Long): Double = {
+  def getSequenceGc(referenceFile: IndexedFastaSequenceFile,
+                    contig: String,
+                    start: Long,
+                    end: Long): Double = {
     require(referenceFile.isIndexed)
     val sequence = referenceFile.getSubsequenceAt(contig, start, end)
     val total = sequence.length()

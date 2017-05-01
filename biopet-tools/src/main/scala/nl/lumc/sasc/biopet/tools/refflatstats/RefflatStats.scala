@@ -1,15 +1,16 @@
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.tools.refflatstats
 
 import java.io.{File, PrintWriter}
 
-import htsjdk.samtools.reference.{FastaSequenceFile, IndexedFastaSequenceFile}
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 import picard.annotation.{Gene, GeneAnnotationReader}
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 /**
   * Created by pjvan_thof on 1-5-17.
@@ -67,17 +68,18 @@ object RefflatStats extends ToolCommand {
 
   def generateGeneStats(gene: Gene, fastaFile: File) = Future {
     val referenceFile = new IndexedFastaSequenceFile(fastaFile)
+    val contig = gene.getContig
     val start = List(gene.getStart, gene.getEnd).min
     val end = List(gene.getStart, gene.getEnd).max
-    val gcCompleteGene = FastaUtils.getSequenceGc(referenceFile, gene.getContig, start, end)
+    val gcCompleteGene = FastaUtils.getSequenceGc(referenceFile, contig, start, end)
 
-    val bla = for (transcript <- gene) yield {
+    val exons = (for (transcript <- gene) yield {
       for (exon <- transcript.exons) yield {
         val start = List(exon.start, exon.end).min
         val end = List(exon.start, exon.end).max
-        exon -> FastaUtils.getSequenceGc(referenceFile, gene.getContig, start, end)
+        BedRecord(contig, start, end)
       }
-    }
+    }).flatten.toList.distinct.map(exon => exon -> exon.getGc(referenceFile)).toMap
 
     referenceFile.close()
     s"${gene.getName} - $gcCompleteGene"
