@@ -260,6 +260,7 @@ class Fastqc(root: Configurable)
       "plot_per_sequence_gc_content" -> ("Images" + File.separator + "per_sequence_gc_content.png"),
       "plot_per_sequence_quality" -> ("Images" + File.separator + "per_sequence_quality.png"),
       "plot_sequence_length_distribution" -> ("Images" + File.separator + "sequence_length_distribution.png"),
+      "plot_adapter_content" -> ("Images" + File.separator + "adapter_content.png"),
       "fastqc_data" -> "fastqc_data.txt"
     ).map(x => x._1 -> new File(outputDir, x._2))
 
