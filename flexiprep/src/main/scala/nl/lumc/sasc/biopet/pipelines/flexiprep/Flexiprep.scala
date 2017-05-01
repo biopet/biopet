@@ -120,7 +120,7 @@ class Flexiprep(val parent: Configurable)
     outputFiles += ("fastq_input_R1" -> inputR1)
     if (paired) outputFiles += ("fastq_input_R2" -> inputR2.get)
 
-    fastqcR1 = Fastqc(this, inputR1, new File(outputDir, R1Name + ".fastqc/"))
+    fastqcR1 = Fastqc(this, inputR1, outputDir)
     add(fastqcR1)
     addSummarizable(fastqcR1, "fastqc_R1")
     outputFiles += ("fastqc_R1" -> fastqcR1.output)
@@ -139,7 +139,7 @@ class Flexiprep(val parent: Configurable)
     }
 
     if (paired) {
-      fastqcR2 = Fastqc(this, inputR2.get, new File(outputDir, R2Name + ".fastqc/"))
+      fastqcR2 = Fastqc(this, inputR2.get, outputDir)
       add(fastqcR2)
       addSummarizable(fastqcR2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqcR2.output)
@@ -317,12 +317,12 @@ class Flexiprep(val parent: Configurable)
     outputFiles += ("output_R1_gzip" -> fastqR1Qc)
     if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
 
-    fastqcR1After = Fastqc(this, fastqR1Qc, new File(outputDir, R1Name + ".qc.fastqc/"))
+    fastqcR1After = Fastqc(this, fastqR1Qc, outputDir)
     add(fastqcR1After)
     addSummarizable(fastqcR1After, "fastqc_R1_qc")
 
     if (paired) {
-      fastqcR2After = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2Name + ".qc.fastqc/"))
+      fastqcR2After = Fastqc(this, fastqR2Qc.get, outputDir)
       add(fastqcR2After)
       addSummarizable(fastqcR2After, "fastqc_R2_qc")
     }

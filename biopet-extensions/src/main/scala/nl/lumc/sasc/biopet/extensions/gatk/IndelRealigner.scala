@@ -45,7 +45,7 @@ class IndelRealigner(val parent: Configurable) extends CommandLineGATK with Scat
 
   /** Output bam */
   @Output(fullName = "out", shortName = "o", doc = "Output bam", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[BamGatherFunction])
+  @Gather(classOf[MergeSamFiles])
   var out: File = _
 
   /** Automatically generated md5 for out */
