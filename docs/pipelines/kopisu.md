@@ -64,19 +64,19 @@ Freec is a tool that needs a few tricks and workarounds to make it work. The wor
 ```
 kopisu: 
   use_freec_method: true  
-  output_dir: /exports/sasc/project-200-Karoly-SV/analysis/04_kopisu
+  output_dir: <output dir>
   reference_name: GRCh38_no_alt_analysis_set
-  reference_fasta: /exports/genomes/species/H.sapiens/GRCh38_no_alt_analysis_set/reference.fa
-  chrFiles: /exports/sasc/project-200-Karoly-SV/analysis/03_kopisu/freec_method/testFREEC/reference/
-  chrLenFile: /exports/sasc/project-200-Karoly-SV/analysis/03_kopisu/freec_method/testFREEC/reference.fa.fai
+  reference_fasta: </path/to/reference.fa>
+  chrFiles: </path/to/reference_files/>
+  chrLenFile: </path/to/reference.fa.fai>
   coefficientOfVariation: 0.05
   ploidy: 2
   mateOrientation: 0
   inputFormat: BAM
   freec:
-    exe: /exports/sasc/ioannis/freec/FREEC/src/freec
+    exe: </path/to/freec_v10.5>
   bedtools:
-    exe: /usr/local/bin/bedtools
+    exe: </path/to/bedtools>
 
 ```
 
