@@ -212,7 +212,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   Create jobs for wisecondor reference creation
   Returns both jobs and the resulting reference file
    */
-  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): Tuple2[List[QFunction], File] = {
+  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): (List[QFunction], File) = {
     val gccs = referenceSamples.map(_.outputWisecondorGccFile).collect { case \/-(file) => file }.toList
     val reference = new WisecondorNewRef(this)
     reference.inputBeds = gccs
