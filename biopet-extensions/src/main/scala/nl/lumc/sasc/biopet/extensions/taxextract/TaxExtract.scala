@@ -20,14 +20,12 @@ abstract class TaxExtract extends BiopetCommandLineFunction with Version {
   @Argument(required = true, doc = "taxonomy name to extract")
   var taxName: String = _
 
-
   def cmdLine: String = {
     executable +
       required(subCommand) +
       required("-i", inputKreport) +
       required("-n", taxName)
   }
-
 
   def versionCommand = executable + " --version"
   def versionRegex = """.+, version (.*)""".r

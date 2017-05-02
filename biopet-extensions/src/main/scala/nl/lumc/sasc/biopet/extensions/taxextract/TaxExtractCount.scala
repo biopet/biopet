@@ -8,7 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
 /**
   * Created by Sander Bollen on 2-5-17.
   */
-class TaxExtractCount(val parent: Configurable ) extends TaxExtract {
+class TaxExtractCount(val parent: Configurable) extends TaxExtract {
 
   def subCommand = "count"
 

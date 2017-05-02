@@ -17,13 +17,13 @@ class TaxExtractExtract(val parent: Configurable) extends TaxExtract {
   var centrifugeResult: File = _
 
   @Input
-  var fq1 : File = _
+  var fq1: File = _
 
   @Input(required = false)
   var fq2: Option[File] = None
 
   @Output
-  var out1 : File = _
+  var out1: File = _
 
   @Output(required = false)
   var out2: Option[File] = None
