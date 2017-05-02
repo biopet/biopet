@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-import nl.lumc.sasc.biopet.utils.getSemanticVersion
+import nl.lumc.sasc.biopet.utils.SemanticVersion
 
 /**
   * Wrapper for the Cnmops command line tool.
@@ -54,7 +54,7 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
     * @return
     */
   def versionCheck: Boolean = {
-    getVersion.flatMap(getSemanticVersion(_)) match {
+    getVersion.flatMap(SemanticVersion.getSemanticVersion(_)) match {
       case Some(version) => (version.major == 1 && version.minor >= 18) || version.major >= 2
       case _ => false
     }

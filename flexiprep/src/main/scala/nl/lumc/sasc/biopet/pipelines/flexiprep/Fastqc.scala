@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
+import nl.lumc.sasc.biopet.utils.SemanticVersion
 import org.broadinstitute.gatk.utils.commandline.Output
 
 /**
@@ -285,7 +286,11 @@ object Fastqc {
     if (filename.endsWith(".gz")) filename = filename.substring(0, filename.length - 3)
     if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.length - 5)
     if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.length - 6)
-    //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
+    fastqcCommand.getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
+      case Some(v) if v >= SemanticVersion(0, 11, 4) =>
+        if (filename.endsWith(".fq")) filename = filename.substring(0, filename.size - 3)
+      case _ =>
+    }
     fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")
     fastqcCommand.beforeGraph()
     fastqcCommand
