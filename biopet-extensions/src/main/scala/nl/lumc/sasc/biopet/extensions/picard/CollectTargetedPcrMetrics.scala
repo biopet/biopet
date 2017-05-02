@@ -31,8 +31,6 @@ class CollectTargetedPcrMetrics(val parent: Configurable)
     with Summarizable
     with Reference {
 
-  javaMainClass = new picard.analysis.directed.CollectTargetedPcrMetrics().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
          required = true)
   var input: File = _

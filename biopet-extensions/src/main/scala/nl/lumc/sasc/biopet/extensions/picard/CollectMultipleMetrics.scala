@@ -33,8 +33,6 @@ class CollectMultipleMetrics(val parent: Configurable)
     with Reference {
   import CollectMultipleMetrics._
 
-  javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
-
   override def defaultCoreMemory = 8.0
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)

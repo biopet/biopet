@@ -226,6 +226,24 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+    * This is a generic method to create plots
+    * @param outputDir Outputdir of the plot
+    * @param prefix Files will start with this name
+    * @param summary Summary where the data is
+    * @param libraryLevel If enabled the plots will show data per library
+    * @param sampleId If set only this sample is shown
+    * @param libraryId If set onlt this library is shown
+    * @param statsPaths Paths in summary where the tables can be found
+    * @param yKeyList Keys to search from, first has prio over second one
+    * @param xKeyList Keys to search from, first has prio over second one
+    * @param pipeline Query for the pipeline
+    * @param module Query for the module
+    * @param xlabel X label shown on the plot
+    * @param ylabel Y label shown on the plot
+    * @param title Title of the plot
+    * @param removeZero
+    */
   def writePlotFromSummary(outputDir: File,
                            prefix: String,
                            summary: SummaryDb,
@@ -233,8 +251,8 @@ object BammetricsReport extends ReportBuilder {
                            sampleId: Option[Int] = None,
                            libraryId: Option[Int] = None,
                            statsPaths: Map[String, List[String]],
-                           yKey: String,
-                           xKey: String,
+                           yKeyList: List[String],
+                           xKeyList: List[String],
                            pipeline: PipelineQuery,
                            module: ModuleQuery,
                            xlabel: Option[String] = None,
@@ -266,13 +284,15 @@ object BammetricsReport extends ReportBuilder {
           .getOrElse(throw new IllegalStateException("Sample must be there"))
         val libraryName =
           library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
+        val yKey = yKeyList.find(x => map.contains(x) && map(x).isDefined).get
+        val xKey = xKeyList.find(x => map.contains(x) && map(x).isDefined).get
         Map(
-          yKey -> map(yKey).getOrElse(Array()),
+          yKeyList.head -> map(yKey).getOrElse(Array()),
           (sampleName + libraryName.map("-" + _).getOrElse("")) -> map(xKey).getOrElse(Array())
         )
     }.toArray
 
-    writeTableToTsv(tsvFile, mergeTables(tables, yKey), yKey)
+    writeTableToTsv(tsvFile, mergeTables(tables, yKeyList.head), yKeyList.head)
 
     LinePlot(tsvFile,
              pngFile,
@@ -311,8 +331,8 @@ object BammetricsReport extends ReportBuilder {
       sampleId,
       libraryId,
       statsPaths,
-      "insert_size",
-      "count",
+      "insert_size" :: Nil,
+      "count" :: Nil,
       "bammetrics",
       "CollectInsertSizeMetrics",
       "Insert size",
@@ -340,8 +360,8 @@ object BammetricsReport extends ReportBuilder {
       sampleId,
       libraryId,
       statsPaths,
-      "mapping_quality",
-      "count",
+      "mapping_quality" :: Nil,
+      "count" :: Nil,
       "bammetrics",
       "bamstats",
       "Mapping quality",
@@ -361,20 +381,22 @@ object BammetricsReport extends ReportBuilder {
       "count" -> List("clipping", "histogram", "counts")
     )
 
-    writePlotFromSummary(outputDir,
-                         prefix,
-                         summary,
-                         libraryLevel,
-                         sampleId,
-                         libraryId,
-                         statsPaths,
-                         "clipping",
-                         "count",
-                         "bammetrics",
-                         "bamstats",
-                         "Clipping",
-                         "Reads",
-                         "Clipping")
+    writePlotFromSummary(
+      outputDir,
+      prefix,
+      summary,
+      libraryLevel,
+      sampleId,
+      libraryId,
+      statsPaths,
+      "clipping" :: Nil,
+      "count" :: Nil,
+      "bammetrics",
+      "bamstats",
+      "Clipping",
+      "Reads",
+      "Clipping"
+    )
   }
 
   /**
@@ -394,23 +416,26 @@ object BammetricsReport extends ReportBuilder {
                        libraryId: Option[Int] = None): Unit = {
     val statsPaths = Map(
       "coverage" -> List("histogram", "coverage"),
-      "count" -> List("histogram", "count")
+      "count" -> List("histogram", "count"),
+      "high_quality_coverage_count" -> List("histogram", "high_quality_coverage_count")
     )
 
-    writePlotFromSummary(outputDir,
-                         prefix,
-                         summary,
-                         libraryLevel,
-                         sampleId,
-                         libraryId,
-                         statsPaths,
-                         "coverage",
-                         "count",
-                         "bammetrics",
-                         "wgs",
-                         "Coverage",
-                         "Bases",
-                         "Whole genome coverage")
+    writePlotFromSummary(
+      outputDir,
+      prefix,
+      summary,
+      libraryLevel,
+      sampleId,
+      libraryId,
+      statsPaths,
+      "coverage" :: Nil,
+      "count" :: "high_quality_coverage_count" :: Nil,
+      "bammetrics",
+      "wgs",
+      "Coverage",
+      "Bases",
+      "Whole genome coverage"
+    )
   }
 
   /**
@@ -441,8 +466,8 @@ object BammetricsReport extends ReportBuilder {
       sampleId,
       libraryId,
       statsPaths,
-      "position",
-      "count",
+      "position" :: Nil,
+      "count" :: Nil,
       "bammetrics",
       "rna",
       "Relative position",

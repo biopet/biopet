@@ -96,7 +96,7 @@ class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with Sca
 
   /** File to which assembled haplotypes should be written */
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[BamGatherFunction])
+  @Gather(classOf[MergeSamFiles])
   var bamOutput: File = _
 
   /** Automatically generated md5 for bamOutput */
