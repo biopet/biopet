@@ -10,30 +10,35 @@ import picard.annotation.{Gene, GeneAnnotationReader}
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, TimeoutException}
 
 /**
   * Created by pjvan_thof on 1-5-17.
   */
 object RefflatStats extends ToolCommand {
 
-  case class Args(refflatFile: File = null, referenceFasta: File = null,
-                  geneOutput: File = null, transcriptOutput: File = null,
-                  exonOutput: File = null, intronOutput: File = null) extends AbstractArgs
+  case class Args(refflatFile: File = null,
+                  referenceFasta: File = null,
+                  geneOutput: File = null,
+                  transcriptOutput: File = null,
+                  exonOutput: File = null,
+                  intronOutput: File = null)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('a', "annotation_refflat") required () maxOccurs 1 valueName "<file>" action {
+    opt[File]('a', "annotationRefflat") required () maxOccurs 1 valueName "<file>" action {
       (x, c) =>
         c.copy(refflatFile = x)
     }
-    opt[File]('R', "reference_fasta") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('R', "referenceFasta") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(referenceFasta = x)
     }
     opt[File]('g', "geneOutput") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(geneOutput = x)
     }
-    opt[File]('t', "transcriptOutput") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(transcriptOutput = x)
+    opt[File]('t', "transcriptOutput") required () maxOccurs 1 valueName "<file>" action {
+      (x, c) =>
+        c.copy(transcriptOutput = x)
     }
     opt[File]('e', "exonOutput") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(exonOutput = x)
@@ -65,9 +70,23 @@ object RefflatStats extends ToolCommand {
 
     logger.info("Reading refflat file done")
 
-    val futures = geneReader.getAll.map(generateGeneStats(_, cmdArgs.referenceFasta))
+    val futures = geneReader.getAll.map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
 
-    val geneStats = Await.result(Future.sequence(futures), Duration.Inf)
+    val f = Future.sequence(futures)
+
+    def waitOnFuture(future: Future[List[GeneStats]]): List[GeneStats] = {
+      try {
+        Await.result(future, Duration(1, "seconds"))
+      } catch {
+        case e: TimeoutException =>
+          logger.info(futures.count(_.isCompleted) + " genes done")
+          waitOnFuture(future)
+      }
+    }
+
+    val geneStats = waitOnFuture(f)
+
+    logger.info("Writing output files")
 
     val geneWriter = new PrintWriter(cmdArgs.geneOutput)
     val transcriptWriter = new PrintWriter(cmdArgs.transcriptOutput)
@@ -80,14 +99,19 @@ object RefflatStats extends ToolCommand {
     intronWriter.println("gene\ttranscript\tstart\tend\tgc")
 
     for (geneStat <- geneStats) {
-      geneWriter.println(s"${geneStat.name}\t${geneStat.totalGc}\t${geneStat.exonGc}\t${geneStat.intronGc.getOrElse("")}")
+      geneWriter.println(
+        s"${geneStat.name}\t${geneStat.totalGc}\t${geneStat.exonGc}\t${geneStat.intronGc.getOrElse("")}")
       for (transcriptStat <- geneStat.transcripts) {
-        transcriptWriter.println(s"${geneStat.name}\t${transcriptStat.name}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc.getOrElse("")}")
+        transcriptWriter.println(
+          s"${geneStat.name}\t${transcriptStat.name}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
+            .getOrElse("")}")
         for (stat <- transcriptStat.exons) {
-          exonWriter.println(s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
+          exonWriter.println(
+            s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
         }
         for (stat <- transcriptStat.introns) {
-          intronWriter.println(s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
+          intronWriter.println(
+            s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
         }
       }
     }
