@@ -15,10 +15,10 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.annotations.{RibosomalRefFlat, AnnotationRefFlat}
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.extensions.tools.WipeReads
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{StrandProtocol, ExpMeasures}
+import nl.lumc.sasc.biopet.extensions.tools.{RefflatStats, WipeReads}
+import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ExpMeasures, StrandProtocol}
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
@@ -204,6 +204,18 @@ class Gentrap(val parent: Configurable)
   /** Pipeline run for multiple samples */
   override def addMultiSampleJobs(): Unit = {
     super.addMultiSampleJobs()
+
+    val refflatStats = new RefflatStats(this)
+    refflatStats.refflatFile = this.annotationRefFlat()
+    refflatStats.geneOutput =
+      new File(outputDir, "expression_measures" + File.separator + "gene.stats")
+    refflatStats.transcriptOutput =
+      new File(outputDir, "expression_measures" + File.separator + "transcript.stats")
+    refflatStats.exonOutput =
+      new File(outputDir, "expression_measures" + File.separator + "exon.stats")
+    refflatStats.jobOutputFile = new File(outputDir, ".reflatstats.out")
+    add(refflatStats)
+
     // merge expression tables
     executedMeasures.foreach(add)
     shivaVariantcalling.foreach(add)
