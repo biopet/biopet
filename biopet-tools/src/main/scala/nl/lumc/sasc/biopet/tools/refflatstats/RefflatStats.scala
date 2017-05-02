@@ -64,13 +64,16 @@ object RefflatStats extends ToolCommand {
     htsjdk.samtools.util.Log
       .setGlobalLogLevel(htsjdk.samtools.util.Log.LogLevel.valueOf(logger.getLevel.toString))
 
+    logger.info("Reading refflat file")
+
     val geneReader = GeneAnnotationReader.loadRefFlat(
       cmdArgs.refflatFile,
       FastaUtils.getCachedDict(cmdArgs.referenceFasta))
 
-    logger.info("Reading refflat file done")
-
     val futures = geneReader.getAll.map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
+    val totalGenes = futures.length
+
+    logger.info(s"$totalGenes genes found in refflat file")
 
     val f = Future.sequence(futures)
 
@@ -79,7 +82,7 @@ object RefflatStats extends ToolCommand {
         Await.result(future, Duration(5, "seconds"))
       } catch {
         case e: TimeoutException =>
-          logger.info(futures.count(_.isCompleted) + " genes done")
+          logger.info(futures.count(_.isCompleted) + s" / $totalGenes genes done")
           waitOnFuture(future)
       }
     }
