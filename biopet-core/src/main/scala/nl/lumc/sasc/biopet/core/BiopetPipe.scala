@@ -45,15 +45,15 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   override def beforeGraph() {
     super.beforeGraph()
 
-    stdoutFile = stdoutFile.map(_.getAbsoluteFile)
-    stdinFile = stdinFile.map(_.getAbsoluteFile)
+    _stdoutFile = _stdoutFile.map(_.getAbsoluteFile)
+    _stdinFile = _stdinFile.map(_.getAbsoluteFile)
 
-    if (stdoutFile.isDefined || _outputAsStdout) {
-      commands.last.stdoutFile = None
+    if (_stdoutFile.isDefined || _outputAsStdout) {
+      commands.last._stdoutFile = None
       commands.last._outputAsStdout = true
     }
 
-    if (commands.head.stdinFile.isDefined) commands.head._inputAsStdin = true
+    if (commands.head._stdinFile.isDefined) commands.head._inputAsStdin = true
 
     val inputOutput = input.filter(x => output.contains(x))
     require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
@@ -75,10 +75,10 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   val parent: Configurable = commands.head.parent
   override def configNamespace = commands.map(_.configNamespace).mkString("-")
   def cmdLine: String = {
-    "(" + commands.head.cmdLine + (if (commands.head.stdinFile.isDefined) {
-      " < " + required(commands.head.stdinFile.map(_.getAbsoluteFile))
+    "(" + commands.head.cmdLine + (if (commands.head._stdinFile.isDefined) {
+      " < " + required(commands.head._stdinFile.map(_.getAbsoluteFile))
     } else "") + " | " + commands.tail.map(_.cmdLine).mkString(" | ") +
-      (if (commands.last.stdoutFile.isDefined) " > " + required(commands.last.stdoutFile.map(_.getAbsoluteFile)) else "") + ")"
+      (if (commands.last._stdoutFile.isDefined) " > " + required(commands.last._stdoutFile.map(_.getAbsoluteFile)) else "") + ")"
   }
 
   override def freezeFieldValues(): Unit = {
