@@ -32,14 +32,16 @@ import nl.lumc.sasc.biopet.extensions.picard.{
 }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.taxextract.TaxExtractExtract
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.utils.textToSize
+import nl.lumc.sasc.biopet.utils.{Logging, textToSize}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.utils.commandline
 
 import scala.math._
 
@@ -109,6 +111,14 @@ class Mapping(val parent: Configurable)
   protected var predictedInsertsize: Option[Int] = config("predicted_insertsize")
 
   val keepFinalBamFile: Boolean = config("keep_mapping_bam_file", default = true)
+
+  /** centrifuge output file for taxonomy extraction */
+  @Input(required = false)
+  var centrifugeOutputFile: Option[File] = None
+
+  /** Centrifuge kreport file for taxonomy extraction */
+  @Input(required = false)
+  var centrifugeKreport: Option[File] = None
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
@@ -252,6 +262,30 @@ class Mapping(val parent: Configurable)
         R2.foreach(R2 => fastqR2Output :+= R2)
       }
 
+      (centrifugeKreport, centrifugeOutputFile) match {
+        case (Some(k), Some(f)) => {
+          val taxExtract = new TaxExtractExtract(this)
+          taxExtract.centrifugeResult = f
+          taxExtract.inputKreport = k
+          taxExtract.fq1 = R1
+          taxExtract.out1 = swapExt(R1, ".fq.gz", ".extracted.fq.gz")
+          R2 match {
+            case Some(r) => {
+              taxExtract.fq2 = Some(r)
+              taxExtract.out2 = Some(swapExt(r, ".fq.gz", ".extracted.fq.gz"))
+            }
+          }
+          R1 = taxExtract.out1
+          R2 = taxExtract.out2
+          add(taxExtract)
+        }
+        case (Some(k), None) =>
+          Logging.addError("Both Kreport and centrifuge output file must be known")
+        case (None, Some(f)) =>
+          Logging.addError("Both Kreport and centrifuge output file must be known")
+        case (None, None) =>
+      }
+
       val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
@@ -272,6 +306,7 @@ class Mapping(val parent: Configurable)
         addAll(
           BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
     }
+
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastqR1Output, fastqR2Output)
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
