@@ -54,6 +54,6 @@ class ReorderSam(val parent: Configurable) extends Picard with Reference {
       required("REFERENCE=", reference, spaceSeparated = false) +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +
-      (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+      (if (outputAsStdout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
        else required("OUTPUT=", output, spaceSeparated = false))
 }

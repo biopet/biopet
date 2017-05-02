@@ -82,6 +82,6 @@ class BcftoolsCall(val parent: Configurable) extends Bcftools {
       optional("-P", P) +
       conditional(X, "-X") +
       conditional(Y, "-Y") +
-      (if (outputAsStsout) "" else required("-o", output)) +
+      (if (outputAsStdout) "" else required("-o", output)) +
       (if (inputAsStdin) "-" else required(input))
 }

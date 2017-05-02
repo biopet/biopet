@@ -39,7 +39,7 @@ class NormalizeFasta(val parent: Configurable) extends Picard {
     super.cmdLine +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +
-      (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+      (if (outputAsStdout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
        else required("OUTPUT=", output, spaceSeparated = false)) +
       required("LINE_LENGTH=", lineLength, spaceSeparated = false) +
       conditional(truncateSequenceNameAtWhitespace, "TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=TRUE")

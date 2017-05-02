@@ -25,7 +25,7 @@ class TaxExtractId(val parent: Configurable) extends TaxExtract {
     super.cmdLine +
       conditional(noChildren, "--no-children") +
       conditional(reverse, "--reverse") +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
   }
 
 }

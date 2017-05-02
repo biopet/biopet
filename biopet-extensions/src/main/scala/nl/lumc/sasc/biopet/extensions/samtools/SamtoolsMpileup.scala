@@ -59,7 +59,7 @@ class SamtoolsMpileup(val parent: Configurable) extends Samtools with Reference 
       conditional(disableBaq, "-B") +
       conditional(u, "-u") +
       conditional(v, "-v") +
-      (if (outputAsStsout) "" else required("-o", output)) +
+      (if (outputAsStdout) "" else required("-o", output)) +
       (if (inputAsStdin) "-" else repeat(input))
 }
 

@@ -31,7 +31,7 @@ class SamtoolsFlagstat(val parent: Configurable) extends Samtools {
   def cmdLine =
     required(executable) + required("flagstat") +
       (if (inputAsStdin) "-" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }
 
 object SamtoolsFlagstat {

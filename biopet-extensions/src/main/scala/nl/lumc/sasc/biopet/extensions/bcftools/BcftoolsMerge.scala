@@ -49,7 +49,7 @@ class BcftoolsMerge(val parent: Configurable) extends Bcftools {
   def cmdLine =
     required(executable) +
       required("merge") +
-      (if (outputAsStsout) "" else required("-o", output)) +
+      (if (outputAsStdout) "" else required("-o", output)) +
       conditional(forcesamples, "--force-samples") +
       conditional(printheader, "--print-header") +
       optional("--use-header", useheader) +

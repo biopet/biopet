@@ -35,7 +35,7 @@ class Gzip(val parent: Configurable) extends BiopetCommandLineFunction with Vers
   def cmdLine =
     required(executable) + " -c " +
       (if (inputAsStdin) "" else repeat(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }
 
 object Gzip {

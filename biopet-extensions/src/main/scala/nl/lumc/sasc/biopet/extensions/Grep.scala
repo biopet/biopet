@@ -46,7 +46,7 @@ class Grep(val parent: Configurable) extends BiopetCommandLineFunction {
       conditional(perlRegexp, "-P") +
       required(grepFor) +
       (if (inputAsStdin) "" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }
 
 object Grep {
