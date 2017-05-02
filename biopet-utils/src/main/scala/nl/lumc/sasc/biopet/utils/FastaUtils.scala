@@ -71,11 +71,6 @@ object FastaUtils {
     val total = sequence.length()
     val gcCount = sequence.getBaseString.toLowerCase.count(c => c == 'c' || c == 'g')
     val gc = gcCount.toDouble / total
-
-    if (gc == 0.0) {
-      ""
-    }
-
     gc
   }
 }

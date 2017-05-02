@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.utils.intervals
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.SAMSequenceDictionary
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -122,6 +123,10 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
     header.foreach(writer.println)
     allRecords.foreach(writer.println)
     writer.close()
+  }
+
+  def getGc(referenceFile: IndexedFastaSequenceFile): Double = {
+    allRecords.map(r => r.getGc(referenceFile) * r.length).sum / length
   }
 
   /** This return the fraction of the regions comparing to a length */

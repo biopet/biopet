@@ -6,6 +6,5 @@ package nl.lumc.sasc.biopet.tools.refflatstats
 case class GeneStats(name: String,
                      totalGc: Double,
                      exonGc: Double,
-                     transcripts: Array[TranscriptStats]) {
-
-}
+                     intronGc: Option[Double],
+                     transcripts: Array[TranscriptStats]) {}
