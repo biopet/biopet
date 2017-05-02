@@ -76,7 +76,7 @@ object RefflatStats extends ToolCommand {
 
     def waitOnFuture(future: Future[List[GeneStats]]): List[GeneStats] = {
       try {
-        Await.result(future, Duration(1, "seconds"))
+        Await.result(future, Duration(5, "seconds"))
       } catch {
         case e: TimeoutException =>
           logger.info(futures.count(_.isCompleted) + " genes done")
