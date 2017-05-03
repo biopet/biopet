@@ -21,7 +21,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
   @Input(required = true, shortName = "V")
   var inputGvcfs: List[File] = Nil
 
-  val namePrefix: String = config("name_prefix", default = "multisample")
+  var namePrefix: String = config("name_prefix", default = "multisample")
 
   val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
 
