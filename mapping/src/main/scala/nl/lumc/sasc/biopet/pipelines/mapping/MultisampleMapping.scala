@@ -85,6 +85,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def summarySettings: Map[String, Any] =
     Map("reference" -> referenceSummary, "merge_strategy" -> mergeStrategy.toString)
 
+  val extractTaxonomies: Boolean = config("extract_taxonomies", default = false)
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
@@ -336,6 +338,24 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
           gears.sampleId = Some(sampleId)
           gears.outputDir = new File(sampleDir, "gears")
+          if (extractTaxonomies) {
+            libraries.foreach {
+              case (_, lib) =>
+                lib.mapping match {
+                  case Some(m) => {
+                    m.centrifugeKreport = gears.centrifugeScript match {
+                      case Some(c) => c.centrifugeKReportFile
+                      case None => None
+                    }
+                    m.centrifugeOutputFile = gears.centrifugeScript match {
+                      case Some(c) => Some(c.centrifugeOutput)
+                      case None => None
+                    }
+                  }
+                  case _ =>
+                }
+            }
+          }
           add(gears)
         case "none" =>
         case x => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
