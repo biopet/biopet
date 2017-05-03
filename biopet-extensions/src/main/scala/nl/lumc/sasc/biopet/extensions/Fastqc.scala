@@ -16,7 +16,8 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.utils.SemanticVersion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -52,7 +53,7 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   /** Sets contaminants and adapters when not yet set */
   override def beforeGraph() {
-    this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
+    this.jobOutputFile = new File(output.getParentFile, s".${fastqfile.getName}.fastqc.out")
     this.preProcessExecutable()
 
     val fastqcDir = new File(executable).getParent
@@ -62,8 +63,8 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
       case userDefinedValue @ Some(_) => userDefinedValue
       // otherwise, use default contaminants file (depending on FastQC version)
       case None =>
-        val defaultContams = getVersion match {
-          case Some(v) if v.contains("v0.11") =>
+        val defaultContams = getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
+          case Some(v) if v >= SemanticVersion(0, 11, 0) =>
             new File(fastqcDir + "/Configuration/contaminant_list.txt")
           case _ => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
         }
@@ -75,8 +76,8 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
       case userDefinedValue @ Some(_) => userDefinedValue
       // otherwise, check if adapters are already present (depending on FastQC version)
       case None =>
-        val defaultAdapters = getVersion match {
-          case Some(v) if v.contains("v0.11") =>
+        val defaultAdapters = getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
+          case Some(v) if v >= SemanticVersion(0, 11, 0) =>
             Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
           case _ => None
         }
