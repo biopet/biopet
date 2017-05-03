@@ -12,5 +12,5 @@ case class GeneStats(name: String,
                      intronGc: Option[Double],
                      exonLength: Int,
                      transcripts: Array[TranscriptStats]) {
-  def length: Int = end - start
+  def length: Int = end - start + 1
 }
