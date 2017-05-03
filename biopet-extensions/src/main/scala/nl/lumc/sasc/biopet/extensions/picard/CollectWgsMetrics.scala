@@ -28,8 +28,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
   */
 class CollectWgsMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
 
-  javaMainClass = new picard.analysis.CollectWgsMetrics().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null
 

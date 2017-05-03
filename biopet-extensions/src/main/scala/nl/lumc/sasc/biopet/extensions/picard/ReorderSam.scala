@@ -22,8 +22,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 class ReorderSam(val parent: Configurable) extends Picard with Reference {
 
-  javaMainClass = new picard.sam.ReorderSam().getClass.getName
-
   @Input(doc = "Input SAM or BAM file", required = true)
   var input: File = null
 

@@ -70,7 +70,7 @@
                 <i class="glyphicon glyphicon-eye-open"></i> Show tables
             #end
         </button>
-        <a href="${tsvAllTypes}"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
+        <a href="${tsvAllTypes}"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> Data points</button></a>
     </div>
 #end
 

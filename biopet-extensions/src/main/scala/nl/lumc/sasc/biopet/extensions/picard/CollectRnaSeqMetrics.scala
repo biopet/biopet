@@ -26,8 +26,6 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
   */
 class CollectRnaSeqMetrics(val parent: Configurable) extends Picard with Summarizable {
 
-  javaMainClass = new picard.analysis.CollectRnaSeqMetrics().getClass.getName
-
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null
 
