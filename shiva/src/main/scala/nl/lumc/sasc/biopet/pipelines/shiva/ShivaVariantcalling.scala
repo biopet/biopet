@@ -76,7 +76,7 @@ class ShivaVariantcalling(val parent: Configurable)
     (sampleId, libId) match {
       case (Some(s), Some(l)) => s + "-" + l
       case (Some(s), _) => s
-      case _ => config("name_prefix")
+      case _ => config("name_prefix", default = "multisample")
     }
   }
 
