@@ -81,7 +81,7 @@ object RefflatStats extends ToolCommand {
       try {
         Await.result(future, Duration(5, "seconds"))
       } catch {
-        case e: TimeoutException =>
+        case _: TimeoutException =>
           logger.info(futures.count(_.isCompleted) + s" / $totalGenes genes done")
           waitOnFuture(future)
       }
@@ -96,25 +96,28 @@ object RefflatStats extends ToolCommand {
     val exonWriter = new PrintWriter(cmdArgs.exonOutput)
     val intronWriter = new PrintWriter(cmdArgs.intronOutput)
 
-    geneWriter.println("gene\ttotalGC\texonGc\tintronGc")
-    transcriptWriter.println("gene\ttranscript\ttotalGC\texonGc\tintronGc")
-    exonWriter.println("gene\ttranscript\tstart\tend\tgc")
-    intronWriter.println("gene\ttranscript\tstart\tend\tgc")
+    geneWriter.println("gene\tcontig\tstart\tend\ttotalGC\texonGc\tintronGc\tlength\texonLength")
+    transcriptWriter.println(
+      "gene\ttranscript\tcontig\tstart\tend\ttotalGC\texonGc\tintronGc\tlength\texonLenth\tnumberOfExons")
+    exonWriter.println("gene\ttranscript\tcontig\tstart\tend\tgc\tlength")
+    intronWriter.println("gene\ttranscript\tcontig\tstart\tend\tgc\tlength")
 
     for (geneStat <- geneStats) {
       geneWriter.println(
-        s"${geneStat.name}\t${geneStat.totalGc}\t${geneStat.exonGc}\t${geneStat.intronGc.getOrElse("")}")
+        s"${geneStat.name}\t${geneStat.totalGc}\t${geneStat.contig}\t${geneStat.start}\t${geneStat.end}\t${geneStat.exonGc}\t${geneStat.intronGc
+          .getOrElse("")}\t${geneStat.length}\t${geneStat.exonLength}")
       for (transcriptStat <- geneStat.transcripts) {
+        val exonLength = transcriptStat.exons.map(_.length).sum
         transcriptWriter.println(
-          s"${geneStat.name}\t${transcriptStat.name}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
-            .getOrElse("")}")
+          s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${transcriptStat.start}\t${transcriptStat.end}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
+            .getOrElse("")}\t${transcriptStat.length}\t$exonLength\t${transcriptStat.exons.size}")
         for (stat <- transcriptStat.exons) {
           exonWriter.println(
-            s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
+            s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${stat.start}\t${stat.end}\t${stat.gc}\t${stat.length}")
         }
         for (stat <- transcriptStat.introns) {
           intronWriter.println(
-            s"${geneStat.name}\t${transcriptStat.name}\t${stat.start}\t${stat.end}\t${stat.gc}")
+            s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${stat.start}\t${stat.end}\t${stat.gc}\t${stat.length}")
         }
       }
     }
@@ -138,8 +141,9 @@ object RefflatStats extends ToolCommand {
     val introns =
       geneToIntronRegions(gene).distinct.map(exon => exon -> exon.getGc(referenceFile)).toMap
 
-    val exonicGc = BedRecordList.fromList(exons.map(_._1)).combineOverlap.getGc(referenceFile)
-    val intronicRegions = BedRecordList.fromList(introns.map(_._1)).combineOverlap
+    val exonicRegions = BedRecordList.fromList(exons.keys).combineOverlap
+    val exonicGc = exonicRegions.getGc(referenceFile)
+    val intronicRegions = BedRecordList.fromList(introns.keys).combineOverlap
     val intronicGc =
       if (intronicRegions.length > 0)
         Some(intronicRegions.getGc(referenceFile))
@@ -164,6 +168,8 @@ object RefflatStats extends ToolCommand {
       val intronStats = intronRegions.map(x => RegionStats(x.start, x.end, introns(x))).toArray
 
       TranscriptStats(transcript.name,
+                      transcript.start(),
+                      transcript.end(),
                       gcCompleteTranscript,
                       exonicGc,
                       intronicGc,
@@ -172,7 +178,15 @@ object RefflatStats extends ToolCommand {
     }
 
     referenceFile.close()
-    GeneStats(gene.getName, gcCompleteGene, exonicGc, intronicGc, transcriptStats.toArray)
+    GeneStats(gene.getName,
+              gene.getContig,
+              gene.getStart,
+              gene.getEnd,
+              gcCompleteGene,
+              exonicGc,
+              intronicGc,
+              gene.length(),
+              transcriptStats.toArray)
   }
 
   def geneToExonRegions(gene: Gene): List[BedRecord] = {
