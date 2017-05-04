@@ -37,7 +37,45 @@ All three methods can be run concurrently. However, we do not yet provide any me
 
 ### Freec 
 
-TODO
+For the full list of options of Freec, please refer to the tool's [manual](http://boevalab.com/FREEC/tutorial.html)
+
+Freec is a tool that needs a few tricks and workarounds to make it work. The workarounds were successfully tested for version 10.5:
+
+1. User must provide each of the chromosomes (or contigs) of his reference in seperate fasta files. These fasta files
+ are located in the path set in `chrFiles` field of the config. To split the contents of a fasta file into several 
+ (one for each chromosome), one can use `samtools faidx`. This is an example filesystem tree with three contigs, 
+ named 1, 2 and 3 placed in three separate `.fa` files:  
+```
+├── 1.fa
+├── 2.fa
+├── 3.fa
+```
+
+2. Chromosome names in the `.fai` file that is set in `chrLenFile` config field, must start with the prefix `chr`. Even if the chromosome names in the reference do not start with `chr`, the tool will still work  
+
+3. `mateOrientation` should be set to 0. 
+
+**Freec config example**
+
+```
+kopisu: 
+  use_freec_method: true  
+  output_dir: </path/to/output_dir/>
+  reference_name: GRCh38_no_alt_analysis_set
+  reference_fasta: </path/to/reference.fa>
+  chrFiles: </path/to/reference_files/>
+  chrLenFile: </path/to/reference.fa.fai>
+  coefficientOfVariation: 0.05
+  ploidy: 2
+  mateOrientation: 0
+  inputFormat: BAM
+  freec:
+    exe: </path/to/freec_v10.5>
+  bedtools:
+    exe: </path/to/bedtools>
+
+```
+
 
 ### Cn.mops
 
