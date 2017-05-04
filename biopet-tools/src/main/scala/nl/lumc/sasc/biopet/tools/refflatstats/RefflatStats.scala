@@ -105,12 +105,12 @@ object RefflatStats extends ToolCommand {
     for (geneStat <- geneStats.sortBy(_.name)) {
       geneWriter.println(
         s"${geneStat.name}\t${geneStat.contig}\t${geneStat.start}\t${geneStat.end}\t${geneStat.totalGc}\t${geneStat.exonGc}\t${geneStat.intronGc
-          .getOrElse("")}\t${geneStat.length}\t${geneStat.exonLength}")
+          .getOrElse(".")}\t${geneStat.length}\t${geneStat.exonLength}")
       for (transcriptStat <- geneStat.transcripts.sortBy(_.name)) {
         val exonLength = transcriptStat.exons.map(_.length).sum
         transcriptWriter.println(
           s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${transcriptStat.start}\t${transcriptStat.end}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
-            .getOrElse("")}\t${transcriptStat.length}\t$exonLength\t${transcriptStat.exons.length}")
+            .getOrElse(".")}\t${transcriptStat.length}\t$exonLength\t${transcriptStat.exons.length}")
         for (stat <- transcriptStat.exons) {
           exonWriter.println(
             s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${stat.start}\t${stat.end}\t${stat.gc}\t${stat.length}")
