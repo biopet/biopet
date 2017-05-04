@@ -18,7 +18,7 @@ abstract class TaxExtract extends BiopetCommandLineFunction with Version {
   var inputKreport: File = _
 
   @Argument(required = true, doc = "taxonomy name to extract")
-  var taxName: String = config("taxonomy", "taxextract")
+  var taxName: String = config("taxonomy", namespace = "taxextract")
 
   def cmdLine: String = {
     executable +
