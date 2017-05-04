@@ -90,6 +90,27 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
+    lazy val gearsJob: Option[GearsSingle] = mappingToGears match {
+      case "unmapped" =>
+        val gears = new GearsSingle(qscript)
+        gears.bamFile = preProcessBam
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        Some(gears)
+      case "all" =>
+        val gears = new GearsSingle(qscript)
+        gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+        gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        Some(gears)
+      case "none" => None
+      case x => {
+        Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+        None
+      }
+    }
+
     def metricsPreprogressBam = true
 
     def makeLibrary(id: String) = new Library(id)
@@ -147,6 +168,20 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           mapping.foreach { m =>
             m.inputR1 = inputR1.get
             m.inputR2 = inputR2
+            if (extractTaxonomies) {
+              gearsJob match {
+                case Some(g) => {
+                  g.centrifugeScript match {
+                    case Some(c) => {
+                      m.centrifugeKreport = c.centrifugeKReportFile
+                      m.centrifugeOutputFile = Some(c.centrifugeOutput)
+                    }
+                    case None =>
+                  }
+                }
+                case None =>
+              }
+            }
             add(m)
           }
         } else if (inputBam.isDefined) {
@@ -160,6 +195,20 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
             mapping.foreach(m => {
               m.inputR1 = samToFastq.fastqR1
               m.inputR2 = Some(samToFastq.fastqR2)
+              if (extractTaxonomies) {
+                gearsJob match {
+                  case Some(g) => {
+                    g.centrifugeScript match {
+                      case Some(c) => {
+                        m.centrifugeKreport = c.centrifugeKReportFile
+                        m.centrifugeOutputFile = Some(c.centrifugeOutput)
+                      }
+                      case None =>
+                    }
+                  }
+                  case None =>
+                }
+              }
               add(m)
             })
           } else {
@@ -325,40 +374,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
         if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, preProcessBam.get))
       }
 
-      mappingToGears match {
-        case "unmapped" =>
-          val gears = new GearsSingle(qscript)
-          gears.bamFile = preProcessBam
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          add(gears)
-        case "all" =>
-          val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          if (extractTaxonomies) {
-            libraries.foreach {
-              case (_, lib) =>
-                lib.mapping match {
-                  case Some(m) => {
-                    m.centrifugeKreport = gears.centrifugeScript match {
-                      case Some(c) => c.centrifugeKReportFile
-                      case None => None
-                    }
-                    m.centrifugeOutputFile = gears.centrifugeScript match {
-                      case Some(c) => Some(c.centrifugeOutput)
-                      case None => None
-                    }
-                  }
-                  case _ =>
-                }
-            }
-          }
-          add(gears)
-        case "none" =>
-        case x => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+      gearsJob match {
+        case Some(g) => add(g)
+        case _ =>
       }
     }
   }
