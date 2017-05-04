@@ -173,7 +173,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
                 case Some(g) => {
                   g.centrifugeScript match {
                     case Some(c) => {
-                      m.centrifugeKreport = c.centrifugeKReportFile
+                      m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
                       m.centrifugeOutputFile = Some(c.centrifugeOutput)
                     }
                     case None =>
@@ -200,7 +200,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
                   case Some(g) => {
                     g.centrifugeScript match {
                       case Some(c) => {
-                        m.centrifugeKreport = c.centrifugeKReportFile
+                        m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
                         m.centrifugeOutputFile = Some(c.centrifugeOutput)
                       }
                       case None =>

@@ -45,8 +45,8 @@ class GearsCentrifuge(val parent: Configurable)
 
   def centrifugeOutput = new File(outputDir, s"$outputName.centrifuge.gz")
   def centrifugeMetOutput = new File(outputDir, s"$outputName.centrifuge.met")
-  private var _centrifugeKReportFile: Option[File] = None
-  def centrifugeKReportFile = _centrifugeKReportFile
+  def centrifugeNonUniqueKReport = new File(outputDir, s"$outputName.centrifuge.kreport")
+  def centrifugeUniqueKReport = new File(outputDir, s"$outputName.centrifuge_unique.kreport")
 
   def biopetScript(): Unit = {
     val centrifuge = new Centrifuge(this)
@@ -69,8 +69,7 @@ class GearsCentrifuge(val parent: Configurable)
     val fifo = new File(outputDir, s"$outputName.$name.fifo")
     val centrifugeKreport = new CentrifugeKreport(this)
     centrifugeKreport.centrifugeOutputFiles :+= fifo
-    _centrifugeKReportFile = Some(new File(outputDir, s"$outputName.$name.kreport"))
-    centrifugeKreport.output = centrifugeKReportFile.get
+    centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
     val pipe =
       new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo)))

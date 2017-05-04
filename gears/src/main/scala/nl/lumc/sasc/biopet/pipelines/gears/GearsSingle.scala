@@ -51,12 +51,61 @@ class GearsSingle(val parent: Configurable)
   @Argument(required = false)
   var outputName: String = _
 
-  lazy val krakenScript =
-    if (config("gears_use_kraken", default = false)) Some(new GearsKraken(this)) else None
-  lazy val centrifugeScript =
-    if (config("gears_use_centrifuge", default = true)) Some(new GearsCentrifuge(this)) else None
-  lazy val qiimeRatx =
-    if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
+  def getOutputName = {
+    if (outputName == null) {
+      sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
+    } else outputName
+  }
+
+  def mergedR1: File = {
+    if (fastqR1.size <= 1) {
+      fastqR1.head
+    } else {
+      new File(outputDir, "merged.R1.fq.gz")
+    }
+  }
+
+  def mergedR2: Option[File] = {
+    if (fastqR2.size <= 1) {
+      fastqR2.headOption
+    } else {
+      Some(new File(outputDir, "merged.R2.fq.gz"))
+    }
+
+  }
+
+  lazy val krakenScript = {
+    if (config("gears_use_kraken", default = false)) {
+      val kraken = new GearsKraken(this)
+      kraken.outputDir = new File(outputDir, "kraken")
+      kraken.fastqR1 = mergedR1
+      kraken.fastqR2 = mergedR2
+      kraken.outputName = getOutputName
+      Some(kraken)
+    } else None
+  }
+
+  lazy val centrifugeScript = {
+    if (config("gears_use_centrifuge", default = true)) {
+      val centrifuge = new GearsCentrifuge(this)
+      centrifuge.outputDir = new File(outputDir, "centrifuge")
+      centrifuge.fastqR1 = mergedR1
+      centrifuge.fastqR2 = mergedR2
+      centrifuge.outputName = getOutputName
+      Some(centrifuge)
+    } else None
+  }
+
+  lazy val qiimeRatx = {
+    if (config("gears_use_qiime_rtax", default = false)) {
+      val qiimeRatx = new GearsQiimeRtax(this)
+      qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
+      qiimeRatx.fastqR1 = mergedR1
+      qiimeRatx.fastqR2 = mergedR2
+      Some(qiimeRatx)
+    } else None
+  }
+
   lazy val qiimeClosed =
     if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this))
     else None
@@ -115,19 +164,17 @@ class GearsSingle(val parent: Configurable)
 
   protected def executeFlexiprep(r1: List[File], r2: List[File]): (File, Option[File]) = {
     val read1: File =
-      if (r1.size == 1) r1.head
+      if (r1.size == 1) mergedR1
       else {
-        val outputFile = new File(outputDir, "merged.R1.fq.gz")
-        add(Zcat(this, r1) | new Gzip(this) > outputFile)
-        outputFile
+        add(Zcat(this, r1) | new Gzip(this) > mergedR1)
+        mergedR1
       }
 
     val read2: Option[File] =
-      if (r2.size <= 1) r2.headOption
+      if (r2.size <= 1) mergedR2
       else {
-        val outputFile = new File(outputDir, "merged.R2.fq.gz")
-        add(Zcat(this, r2) | new Gzip(this) > outputFile)
-        Some(outputFile)
+        add(Zcat(this, r2) | new Gzip(this) > mergedR2.get)
+        mergedR2
       }
 
     flexiprep
@@ -175,26 +222,15 @@ class GearsSingle(val parent: Configurable)
     }
 
     krakenScript foreach { kraken =>
-      kraken.outputDir = new File(outputDir, "kraken")
-      kraken.fastqR1 = r1
-      kraken.fastqR2 = r2
-      kraken.outputName = outputName
       add(kraken)
     }
 
     centrifugeScript foreach { centrifuge =>
-      centrifuge.outputDir = new File(outputDir, "centrifuge")
-      centrifuge.fastqR1 = r1
-      centrifuge.fastqR2 = r2
-      centrifuge.outputName = outputName
       add(centrifuge)
       outputFiles += "centrifuge_output" -> centrifuge.centrifugeOutput
     }
 
     qiimeRatx foreach { qiimeRatx =>
-      qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
-      qiimeRatx.fastqR1 = r1
-      qiimeRatx.fastqR2 = r2
       add(qiimeRatx)
     }
 
