@@ -12,7 +12,7 @@
 <%@ var pipeline: String %>
 #{
     val annotationRefflat = Await.result(summary.getFile(run.id, pipeline, key = "annotation_refflat"), Duration.Inf)
-    val annotationGtf = Await.result(summary.getFile(run.id, pipeline, key = "fragments_per_gene"), Duration.Inf)
+    val annotationGtf = Await.result(summary.getFile(run.id, "fragmentspergene", key = "annotation_gtf"), Duration.Inf)
     val ribosomalRefflat = Await.result(summary.getFile(run.id, pipeline, key = "ribosome_refflat"), Duration.Inf)
 }#
 <table class="table">
