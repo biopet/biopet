@@ -68,9 +68,9 @@ object FastaUtils {
                     end: Long): Double = {
     require(referenceFile.isIndexed)
     val sequence = referenceFile.getSubsequenceAt(contig, start, end)
-    val total = sequence.length()
     val gcCount = sequence.getBaseString.toLowerCase.count(c => c == 'c' || c == 'g')
-    val gc = gcCount.toDouble / total
+    val atCount = sequence.getBaseString.toLowerCase.count(c => c == 'a' || c == 't')
+    val gc = gcCount.toDouble / (gcCount + atCount)
     gc
   }
 }
