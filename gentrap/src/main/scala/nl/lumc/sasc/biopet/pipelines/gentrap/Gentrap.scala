@@ -15,10 +15,10 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.annotations.{RibosomalRefFlat, AnnotationRefFlat}
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.extensions.tools.WipeReads
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{StrandProtocol, ExpMeasures}
+import nl.lumc.sasc.biopet.extensions.tools.{RefflatStats, WipeReads}
+import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ExpMeasures, StrandProtocol}
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
@@ -82,7 +82,7 @@ class Gentrap(val parent: Configurable)
   lazy val removeRibosomalReads: Boolean = config("remove_ribosomal_reads", default = false)
 
   /** Default pipeline config */
-  override def defaults = super.defaults ++ Map(
+  override def defaults: Map[String, Any] = super.defaults ++ Map(
     "htseqcount" -> (if (strandProtocol.isSet) Map("stranded" -> (strandProtocol() match {
                        case StrandProtocol.NonSpecific => "no"
                        case StrandProtocol.Dutp => "reverse"
@@ -107,18 +107,18 @@ class Gentrap(val parent: Configurable)
     "bammetrics" -> Map(
       "wgs_metrics" -> false,
       "rna_metrics" -> true,
-      "collectrnaseqmetrics" -> ((if (strandProtocol.isSet)
-                                    Map(
-                                      "strand_specificity" -> (strandProtocol() match {
-                                        case StrandProtocol.NonSpecific =>
-                                          StrandSpecificity.NONE.toString
-                                        case StrandProtocol.Dutp =>
-                                          StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
-                                        case otherwise =>
-                                          throw new IllegalStateException(otherwise.toString)
-                                      })
-                                    )
-                                  else Map()) )
+      "collectrnaseqmetrics" -> (if (strandProtocol.isSet)
+                                   Map(
+                                     "strand_specificity" -> (strandProtocol() match {
+                                       case StrandProtocol.NonSpecific =>
+                                         StrandSpecificity.NONE.toString
+                                       case StrandProtocol.Dutp =>
+                                         StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
+                                       case otherwise =>
+                                         throw new IllegalStateException(otherwise.toString)
+                                     })
+                                   )
+                                 else Map())
     ),
     "cutadapt" -> Map("minimum_length" -> 20),
     // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
@@ -136,41 +136,42 @@ class Gentrap(val parent: Configurable)
     )
   )
 
-  lazy val fragmentsPerGene =
+  lazy val fragmentsPerGene: Option[FragmentsPerGene] =
     if (expMeasures().contains(ExpMeasures.FragmentsPerGene))
       Some(new FragmentsPerGene(this))
     else None
 
-  lazy val baseCounts =
+  lazy val baseCounts: Option[BaseCounts] =
     if (expMeasures().contains(ExpMeasures.BaseCounts))
       Some(new BaseCounts(this))
     else None
 
-  lazy val cufflinksBlind =
+  lazy val cufflinksBlind: Option[CufflinksBlind] =
     if (expMeasures().contains(ExpMeasures.CufflinksBlind))
       Some(new CufflinksBlind(this))
     else None
 
-  lazy val cufflinksGuided =
+  lazy val cufflinksGuided: Option[CufflinksGuided] =
     if (expMeasures().contains(ExpMeasures.CufflinksGuided))
       Some(new CufflinksGuided(this))
     else None
 
-  lazy val cufflinksStrict =
+  lazy val cufflinksStrict: Option[CufflinksStrict] =
     if (expMeasures().contains(ExpMeasures.CufflinksStrict))
       Some(new CufflinksStrict(this))
     else None
 
-  def executedMeasures =
+  def executedMeasures: List[QScript with Measurement] =
     (fragmentsPerGene :: baseCounts :: cufflinksBlind ::
       cufflinksGuided :: cufflinksStrict :: Nil).flatten
 
   /** Whether to do simple variant calling on RNA or not */
-  lazy val shivaVariantcalling = if (config("call_variants", default = false)) {
-    val pipeline = new ShivaVariantcalling(this)
-    pipeline.outputDir = new File(outputDir, "variantcalling")
-    Some(pipeline)
-  } else None
+  lazy val shivaVariantcalling: Option[ShivaVariantcalling] =
+    if (config("call_variants", default = false)) {
+      val pipeline = new ShivaVariantcalling(this)
+      pipeline.outputDir = new File(outputDir, "variantcalling")
+      Some(pipeline)
+    } else None
 
   /** Files that will be listed in the summary file */
   override def summaryFiles: Map[String, File] =
@@ -204,6 +205,18 @@ class Gentrap(val parent: Configurable)
   /** Pipeline run for multiple samples */
   override def addMultiSampleJobs(): Unit = {
     super.addMultiSampleJobs()
+
+    val refflatStats = new RefflatStats(this)
+    refflatStats.refflatFile = this.annotationRefFlat()
+    refflatStats.geneOutput =
+      new File(outputDir, "expression_measures" + File.separator + "gene.stats")
+    refflatStats.transcriptOutput =
+      new File(outputDir, "expression_measures" + File.separator + "transcript.stats")
+    refflatStats.exonOutput =
+      new File(outputDir, "expression_measures" + File.separator + "exon.stats")
+    refflatStats.jobOutputFile = new File(outputDir, ".reflatstats.out")
+    add(refflatStats)
+
     // merge expression tables
     executedMeasures.foreach(add)
     shivaVariantcalling.foreach(add)
@@ -225,7 +238,7 @@ class Gentrap(val parent: Configurable)
       "all_single" -> allSingle
     )
 
-    override lazy val preProcessBam = if (removeRibosomalReads) {
+    override lazy val preProcessBam: Option[File] = if (removeRibosomalReads) {
       val job = new WipeReads(qscript)
       job.inputBam = bamFile.get
       ribosomalRefFlat().foreach(job.intervalFile = _)
