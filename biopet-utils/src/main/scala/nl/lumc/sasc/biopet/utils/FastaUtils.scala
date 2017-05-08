@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 
 import htsjdk.samtools.SAMSequenceDictionary
-import htsjdk.samtools.reference.FastaSequenceFile
+import htsjdk.samtools.reference.{FastaSequenceFile, IndexedFastaSequenceFile}
 
 /**
   * Created by pjvan_thof on 25-10-16.
@@ -54,5 +54,23 @@ object FastaUtils {
   def getCachedDict(fastaFile: File): SAMSequenceDictionary = {
     if (!dictCache.contains(fastaFile)) getDictFromFasta(fastaFile)
     else dictCache(fastaFile)
+  }
+
+  /** This method returns the fraction of GC for a given region */
+  def getSequenceGc(fastaFile: File, contig: String, start: Long, end: Long): Double = {
+    getSequenceGc(new IndexedFastaSequenceFile(fastaFile), contig, start, end)
+  }
+
+  /** This method returns the fraction of GC for a given region */
+  def getSequenceGc(referenceFile: IndexedFastaSequenceFile,
+                    contig: String,
+                    start: Long,
+                    end: Long): Double = {
+    require(referenceFile.isIndexed)
+    val sequence = referenceFile.getSubsequenceAt(contig, start, end)
+    val gcCount = sequence.getBaseString.toLowerCase.count(c => c == 'c' || c == 'g')
+    val atCount = sequence.getBaseString.toLowerCase.count(c => c == 'a' || c == 't')
+    val gc = gcCount.toDouble / (gcCount + atCount)
+    gc
   }
 }

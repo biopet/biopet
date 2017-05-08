@@ -14,7 +14,9 @@
   */
 package nl.lumc.sasc.biopet.utils.intervals
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval
+import nl.lumc.sasc.biopet.utils.FastaUtils
 
 import scala.collection.mutable.ListBuffer
 
@@ -60,6 +62,10 @@ case class BedRecord(chr: String,
       buffer += BedRecord(chr, start + ((binNumber - 1) * size), end)
       buffer.toList
     }
+  }
+
+  def getGc(referenceFile: IndexedFastaSequenceFile): Double = {
+    FastaUtils.getSequenceGc(referenceFile, chr, start, end)
   }
 
   lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
