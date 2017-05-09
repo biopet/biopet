@@ -68,4 +68,6 @@ class FragmentsPerGene(val parent: Configurable)
 
   def mergedTable = new File(outputDir, s"$name.fragments_per_gene.tsv")
   def heatmap = new File(outputDir, s"$name.fragments_per_gene.png")
+
+  override def summaryFiles = super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf)
 }
