@@ -51,8 +51,6 @@ class GearsSingle(val parent: Configurable)
   @Argument(required = false)
   var outputName: String = _
 
-  var indirect: Boolean = false
-
   def getOutputName = {
     if (outputName == null) {
       sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
@@ -80,8 +78,6 @@ class GearsSingle(val parent: Configurable)
     if (config("gears_use_kraken", default = false)) {
       val kraken = new GearsKraken(this)
       kraken.outputDir = new File(outputDir, "kraken")
-      kraken.fastqR1 = mergedR1
-      kraken.fastqR2 = mergedR2
       kraken.outputName = getOutputName
       Some(kraken)
     } else None
@@ -91,8 +87,6 @@ class GearsSingle(val parent: Configurable)
     if (config("gears_use_centrifuge", default = true)) {
       val centrifuge = new GearsCentrifuge(this)
       centrifuge.outputDir = new File(outputDir, "centrifuge")
-      centrifuge.fastqR1 = mergedR1
-      centrifuge.fastqR2 = mergedR2
       centrifuge.outputName = getOutputName
       Some(centrifuge)
     } else None
@@ -102,8 +96,6 @@ class GearsSingle(val parent: Configurable)
     if (config("gears_use_qiime_rtax", default = false)) {
       val qiimeRatx = new GearsQiimeRtax(this)
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
-      qiimeRatx.fastqR1 = mergedR1
-      qiimeRatx.fastqR2 = mergedR2
       Some(qiimeRatx)
     } else None
   }
@@ -147,7 +139,7 @@ class GearsSingle(val parent: Configurable)
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
 
-    if (fastqR1.nonEmpty && !indirect) {
+    if (fastqR1.nonEmpty) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
     } else bamFile.foreach(inputFiles :+= InputFile(_))
@@ -224,15 +216,21 @@ class GearsSingle(val parent: Configurable)
     }
 
     krakenScript foreach { kraken =>
+      kraken.fastqR1 = mergedR1
+      kraken.fastqR2 = mergedR2
       add(kraken)
     }
 
     centrifugeScript foreach { centrifuge =>
+      centrifuge.fastqR1 = mergedR1
+      centrifuge.fastqR2 = mergedR2
       add(centrifuge)
       outputFiles += "centrifuge_output" -> centrifuge.centrifugeOutput
     }
 
     qiimeRatx foreach { qiimeRatx =>
+      qiimeRatx.fastqR1 = mergedR1
+      qiimeRatx.fastqR2 = mergedR2
       add(qiimeRatx)
     }
 

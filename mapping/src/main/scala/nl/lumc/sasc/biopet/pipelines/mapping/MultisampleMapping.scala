@@ -90,17 +90,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
-    lazy val gearsJob: Option[GearsSingle] = mappingToGears match {
+    val gearsJob: Option[GearsSingle] = mappingToGears match {
       case "unmapped" =>
         val gears = new GearsSingle(qscript)
-        gears.bamFile = preProcessBam
         gears.sampleId = Some(sampleId)
         gears.outputDir = new File(sampleDir, "gears")
         Some(gears)
       case "all" =>
         val gears = new GearsSingle(qscript)
-        gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
-        gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
         gears.sampleId = Some(sampleId)
         gears.outputDir = new File(sampleDir, "gears")
         Some(gears)
@@ -146,10 +143,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           m.sampleId = Some(sampleId)
           m.libId = Some(libId)
           m.outputDir = libDir
-          m.beforeInit()
-          if (inputR2.isDefined) {
-            m.flexiprep.paired = true
-          }
+          m.centrifugeKreport =
+            gearsJob.flatMap(g => g.centrifugeScript.map(c => c.centrifugeNonUniqueKReport))
+          m.centrifugeOutputFile =
+            gearsJob.flatMap(g => g.centrifugeScript.map(c => c.centrifugeOutput))
           Some(m)
         } else None
 
@@ -162,21 +159,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
       /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
       def preProcessBam: Option[File] = bamFile
 
-      def setTaxExtractInGears(m: Mapping): Unit = {
-          gearsJob match {
-            case Some(g) => {
-              g.centrifugeScript match {
-                case Some(c) => {
-                  m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
-                  m.centrifugeOutputFile = Some(c.centrifugeOutput)
-                }
-                case None =>
-              }
-            }
-            case None =>
-          }
-      }
-
       /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
       def addJobs(): Unit = {
         inputR1.foreach(inputFiles :+= new InputFile(_, config("R1_md5")))
@@ -187,9 +169,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           mapping.foreach { m =>
             m.inputR1 = inputR1.get
             m.inputR2 = inputR2
-            if (extractTaxonomies) {
-              setTaxExtractInGears(m)
-            }
             add(m)
           }
         } else if (inputBam.isDefined) {
@@ -203,9 +182,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
             mapping.foreach(m => {
               m.inputR1 = samToFastq.fastqR1
               m.inputR2 = Some(samToFastq.fastqR2)
-              if (extractTaxonomies) {
-                setTaxExtractInGears(m)
-              }
               add(m)
             })
           } else {
@@ -371,8 +347,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
         if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, preProcessBam.get))
       }
 
-      gearsJob match {
-        case Some(g) => add(g)
+      mappingToGears match {
+        case "unmapped" =>
+          gearsJob.get.bamFile = preProcessBam
+          add(gearsJob.get)
+        case "all" =>
+          gearsJob.get.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gearsJob.get.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
+          add(gearsJob.get)
         case _ =>
       }
     }
