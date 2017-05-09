@@ -162,6 +162,21 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
       /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
       def preProcessBam: Option[File] = bamFile
 
+      def setTaxExtractInGears(m: Mapping): Unit = {
+          gearsJob match {
+            case Some(g) => {
+              g.centrifugeScript match {
+                case Some(c) => {
+                  m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
+                  m.centrifugeOutputFile = Some(c.centrifugeOutput)
+                }
+                case None =>
+              }
+            }
+            case None =>
+          }
+      }
+
       /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
       def addJobs(): Unit = {
         inputR1.foreach(inputFiles :+= new InputFile(_, config("R1_md5")))
@@ -173,19 +188,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
             m.inputR1 = inputR1.get
             m.inputR2 = inputR2
             if (extractTaxonomies) {
-              gearsJob match {
-                case Some(g) => {
-                  g.indirect = true
-                  g.centrifugeScript match {
-                    case Some(c) => {
-                      m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
-                      m.centrifugeOutputFile = Some(c.centrifugeOutput)
-                    }
-                    case None =>
-                  }
-                }
-                case None =>
-              }
+              setTaxExtractInGears(m)
             }
             add(m)
           }
@@ -201,19 +204,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
               m.inputR1 = samToFastq.fastqR1
               m.inputR2 = Some(samToFastq.fastqR2)
               if (extractTaxonomies) {
-                gearsJob match {
-                  case Some(g) => {
-                    g.indirect = true
-                    g.centrifugeScript match {
-                      case Some(c) => {
-                        m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
-                        m.centrifugeOutputFile = Some(c.centrifugeOutput)
-                      }
-                      case None =>
-                    }
-                  }
-                  case None =>
-                }
+                setTaxExtractInGears(m)
               }
               add(m)
             })
