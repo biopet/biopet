@@ -121,7 +121,9 @@ class Mapping(val parent: Configurable)
   var centrifugeKreport: Option[File] = None
 
   protected var paired: Boolean = false
+
   val flexiprep = new Flexiprep(this)
+
   def mergedBamFile = new File(outputDir, outputName + ".bam")
   def finalBamFile: File =
     if (skipMarkduplicates) mergedBamFile
@@ -170,6 +172,14 @@ class Mapping(val parent: Configurable)
     Some(mappingReport)
   }
 
+  def beforeInit(): Unit = {
+    if (!skipFlexiprep) {
+      flexiprep.outputDir = new File(outputDir, "flexiprep")
+      flexiprep.sampleId = this.sampleId
+      flexiprep.libId = this.libId
+    }
+  }
+
   /** Will be executed before script */
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
@@ -212,11 +222,8 @@ class Mapping(val parent: Configurable)
   /** Adds all jobs of the pipeline */
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = new File(outputDir, "flexiprep")
       flexiprep.inputR1 = inputR1
       flexiprep.inputR2 = inputR2
-      flexiprep.sampleId = this.sampleId
-      flexiprep.libId = this.libId
       flexiprep.init()
       flexiprep.runInitialJobs()
     }
@@ -268,11 +275,11 @@ class Mapping(val parent: Configurable)
           taxExtract.centrifugeResult = f
           taxExtract.inputKreport = k
           taxExtract.fq1 = R1
-          taxExtract.out1 = swapExt(R1, ".fq.gz", ".extracted.fq.gz")
+          taxExtract.out1 = swapExt(R1, ".fq.gz", ".extracted.fq.gz").getAbsoluteFile
           R2 match {
             case Some(r) => {
               taxExtract.fq2 = Some(r)
-              taxExtract.out2 = Some(swapExt(r, ".fq.gz", ".extracted.fq.gz"))
+              taxExtract.out2 = Some(swapExt(r, ".fq.gz", ".extracted.fq.gz").getAbsoluteFile)
             }
           }
           R1 = taxExtract.out1
