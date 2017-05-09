@@ -53,7 +53,7 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   /** Sets contaminants and adapters when not yet set */
   override def beforeGraph() {
-    this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
+    this.jobOutputFile = new File(output.getParentFile, s".${fastqfile.getName}.fastqc.out")
     this.preProcessExecutable()
 
     val fastqcDir = new File(executable).getParent

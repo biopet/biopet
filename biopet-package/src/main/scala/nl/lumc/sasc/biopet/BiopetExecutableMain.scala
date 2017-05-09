@@ -38,6 +38,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty,
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
+    nl.lumc.sasc.biopet.pipelines.shiva.GenotypeGvcfs,
     nl.lumc.sasc.biopet.pipelines.generateindexes.DownloadGenomes,
     nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes
   )
