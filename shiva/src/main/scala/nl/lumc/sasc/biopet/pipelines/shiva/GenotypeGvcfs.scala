@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.extensions.gatk
+import nl.lumc.sasc.biopet.extensions.{Ln, gatk}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -21,7 +21,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
   @Input(required = true, shortName = "V")
   var inputGvcfs: List[File] = Nil
 
-  val namePrefix = config("name_prefix", default = "multisample")
+  var namePrefix: String = config("name_prefix", default = "multisample")
 
   val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
 
@@ -35,8 +35,14 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
   def biopetScript(): Unit = {
     inputGvcfs.foreach(inputFiles :+= InputFile(_))
 
-    val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
-    combineJob.allJobs.foreach(add(_))
+    if (inputGvcfs.size > 1) {
+      val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
+      combineJob.allJobs.foreach(add(_))
+    } else
+      inputGvcfs.headOption.foreach { file =>
+        add(Ln(this, file, finalGvcfFile))
+        add(Ln(this, file + ".tbi", finalGvcfFile + ".tbi"))
+      }
 
     val genotype = new gatk.GenotypeGVCFs(this)
     genotype.variant = List(finalGvcfFile)

@@ -124,6 +124,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
     }
 
     genotypeGvcfs.outputDir = outputDir
+    genotypeGvcfs.namePrefix = s"$namePrefix.$name"
     add(genotypeGvcfs)
   }
 }
