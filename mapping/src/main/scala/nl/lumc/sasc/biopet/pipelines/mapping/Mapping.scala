@@ -60,8 +60,16 @@ class Mapping(val parent: Configurable)
   @Input(doc = "R2 fastq file", shortName = "R2", fullName = "inputR2", required = false)
   var inputR2: Option[File] = None
 
+  @Input(required = false)
+  var centrifugeOutput: Option[File] = None
+
+  @Input(required = false)
+  var centrifugeKreport: Option[File] = None
+
   /** Output name */
   var outputName: String = _
+
+  var useTaxExtract: Boolean = config("use_tax_extract", default = false)
 
   /** Skip flexiprep */
   protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
@@ -171,6 +179,13 @@ class Mapping(val parent: Configurable)
     inputR2.foreach(r =>
       if (r.exists() && r.length() == 0) logger.warn(s"Input R2 is a empty file: $r"))
 
+    if (useTaxExtract)
+      require(centrifugeOutput.isDefined,
+              "To use tar extract a centrifuge file is required as input")
+    if (useTaxExtract)
+      require(centrifugeKreport.isDefined,
+              "To use tar extract a centrifuge kreport is required as input")
+
     inputFiles :+= new InputFile(inputR1)
     inputR2.foreach(inputFiles :+= new InputFile(_))
 
@@ -250,6 +265,15 @@ class Mapping(val parent: Configurable)
         if (paired) R2 = flexiout._2
         fastqR1Output :+= R1
         R2.foreach(R2 => fastqR2Output :+= R2)
+      }
+
+      if (useTaxExtract) {
+        val job = new FakeJob(this)
+        job.inputFiles = R1 :: R2.toList ::: centrifugeOutput.toList ::: centrifugeKreport.toList
+        R1 = swapExt(chunkDir, R1, ".fq.gz", ".tax.fq.gz")
+        R2 = R2.map(r => swapExt(chunkDir, r, ".fq.gz", ".tax.fq.gz"))
+        job.outputFiles = R1 :: R2.toList
+        add(job)
       }
 
       val outputBam = new File(chunkDir, outputName + ".bam")

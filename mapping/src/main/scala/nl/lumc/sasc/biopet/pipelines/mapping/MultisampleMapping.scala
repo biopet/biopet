@@ -123,6 +123,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           m.sampleId = Some(sampleId)
           m.libId = Some(libId)
           m.outputDir = libDir
+          m.centrifugeOutput = gearsSingle.flatMap(_.centrifugeScript.map(_.centrifugeOutput))
+          m.centrifugeKreport =
+            gearsSingle.flatMap(_.centrifugeScript.map(_.centrifugeNonUniqueKReport))
           Some(m)
         } else None
 
@@ -325,21 +328,33 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
 
       mappingToGears match {
         case "unmapped" =>
-          val gears = new GearsSingle(qscript)
-          gears.bamFile = preProcessBam
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          add(gears)
+          gearsSingle.get.bamFile = preProcessBam
+          add(gearsSingle.get)
         case "all" =>
-          val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          add(gears)
-        case "none" =>
-        case x => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+          gearsSingle.get.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gearsSingle.get.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
+          add(gearsSingle.get)
+        case _ =>
       }
+    }
+
+    val gearsSingle: Option[GearsSingle] = mappingToGears match {
+      case "unmapped" =>
+        val gears = new GearsSingle(qscript)
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        gears.outputName = sampleId
+        Some(gears)
+      case "all" =>
+        val gears = new GearsSingle(qscript)
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        gears.outputName = sampleId
+        Some(gears)
+      case "none" => None
+      case x =>
+        Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+        None
     }
   }
 }

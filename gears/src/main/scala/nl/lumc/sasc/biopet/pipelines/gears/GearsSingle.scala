@@ -54,7 +54,12 @@ class GearsSingle(val parent: Configurable)
   lazy val krakenScript =
     if (config("gears_use_kraken", default = false)) Some(new GearsKraken(this)) else None
   lazy val centrifugeScript =
-    if (config("gears_use_centrifuge", default = true)) Some(new GearsCentrifuge(this)) else None
+    if (config("gears_use_centrifuge", default = true)) {
+      val gearsCentrifuge = new GearsCentrifuge(this)
+      gearsCentrifuge.outputDir = new File(outputDir, "centrifuge")
+      gearsCentrifuge.outputName = outputName
+      Some(gearsCentrifuge)
+    } else None
   lazy val qiimeRatx =
     if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
   lazy val qiimeClosed =
@@ -183,7 +188,6 @@ class GearsSingle(val parent: Configurable)
     }
 
     centrifugeScript foreach { centrifuge =>
-      centrifuge.outputDir = new File(outputDir, "centrifuge")
       centrifuge.fastqR1 = r1
       centrifuge.fastqR2 = r2
       centrifuge.outputName = outputName
