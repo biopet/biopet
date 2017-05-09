@@ -146,6 +146,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           m.sampleId = Some(sampleId)
           m.libId = Some(libId)
           m.outputDir = libDir
+          m.flexiprep.sampleId = Some(sampleId)
+          m.flexiprep.libId = Some(libId)
           Some(m)
         } else None
 
