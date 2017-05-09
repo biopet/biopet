@@ -123,7 +123,9 @@ class GearsSingle(val parent: Configurable)
       if (r1.size == 1) r1.head
       else {
         val outputFile = new File(outputDir, "merged.R1.fq.gz")
-        add(Zcat(this, r1) | new Gzip(this) > outputFile)
+        val merge = Zcat(this, r1) | new Gzip(this) > outputFile
+        merge.isIntermediate = true
+        add(merge)
         outputFile
       }
 
