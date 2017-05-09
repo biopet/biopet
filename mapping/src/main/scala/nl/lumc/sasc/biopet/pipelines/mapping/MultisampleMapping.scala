@@ -85,8 +85,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def summarySettings: Map[String, Any] =
     Map("reference" -> referenceSummary, "merge_strategy" -> mergeStrategy.toString)
 
-  val extractTaxonomies: Boolean = config("extract_taxonomies", default = false)
-
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 

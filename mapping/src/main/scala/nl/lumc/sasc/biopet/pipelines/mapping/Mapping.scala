@@ -112,6 +112,9 @@ class Mapping(val parent: Configurable)
 
   val keepFinalBamFile: Boolean = config("keep_mapping_bam_file", default = true)
 
+  /* Extract taxonomies */
+  val extractTaxonomies: Boolean = config("extract_taxonomies", default = false)
+
   /** centrifuge output file for taxonomy extraction */
   @Input(required = false)
   var centrifugeOutputFile: Option[File] = None
@@ -187,6 +190,11 @@ class Mapping(val parent: Configurable)
     inputR2.foreach(inputFiles :+= new InputFile(_))
 
     paired = inputR2.isDefined
+
+    if (extractTaxonomies) {
+      require(centrifugeKreport.isDefined, "Missing centrifuge Kreport")
+      require(centrifugeOutputFile.isDefined, "Missing centrifuge output file")
+    }
 
     if (readgroupId == null)
       readgroupId = config("readgroup_id", default = sampleId.get + "-" + libId.get)
@@ -264,26 +272,19 @@ class Mapping(val parent: Configurable)
         R2.foreach(R2 => fastqR2Output :+= R2)
       }
 
-      (centrifugeKreport, centrifugeOutputFile) match {
-        case (Some(k), Some(f)) => {
-          val taxExtract = new TaxExtractExtract(this)
-          taxExtract.centrifugeResult = f
-          taxExtract.inputKreport = k
-          taxExtract.fq1 = R1
-          taxExtract.out1 = swapExt(chunkDir, R1, ".fq.gz", ".extracted.fq.gz")
-          R2 foreach { r =>
-            taxExtract.fq2 = Some(r)
-            taxExtract.out2 = Some(swapExt(chunkDir, r, ".fq.gz", ".extracted.fq.gz"))
-          }
-          R1 = taxExtract.out1
-          R2 = taxExtract.out2
-          add(taxExtract)
+      if (extractTaxonomies) {
+        val taxExtract = new TaxExtractExtract(this)
+        taxExtract.centrifugeResult = centrifugeOutputFile.get
+        taxExtract.inputKreport = centrifugeKreport.get
+        taxExtract.fq1 = R1
+        taxExtract.out1 = swapExt(chunkDir, R1, ".fq.gz", ".extracted.fq.gz")
+        R2 foreach { r =>
+          taxExtract.fq2 = Some(r)
+          taxExtract.out2 = Some(swapExt(chunkDir, r, ".fq.gz", ".extracted.fq.gz"))
         }
-        case (Some(k), None) =>
-          Logging.addError("Both Kreport and centrifuge output file must be known")
-        case (None, Some(f)) =>
-          Logging.addError("Both Kreport and centrifuge output file must be known")
-        case (None, None) =>
+        R1 = taxExtract.out1
+        R2 = taxExtract.out2
+        add(taxExtract)
       }
 
       val outputBam = new File(chunkDir, outputName + ".bam")
