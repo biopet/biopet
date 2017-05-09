@@ -51,6 +51,8 @@ class GearsSingle(val parent: Configurable)
   @Argument(required = false)
   var outputName: String = _
 
+  var indirect: Boolean = false
+
   def getOutputName = {
     if (outputName == null) {
       sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
@@ -145,7 +147,7 @@ class GearsSingle(val parent: Configurable)
       outputName = sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     }
 
-    if (fastqR1.nonEmpty) {
+    if (fastqR1.nonEmpty && !indirect) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
     } else bamFile.foreach(inputFiles :+= InputFile(_))

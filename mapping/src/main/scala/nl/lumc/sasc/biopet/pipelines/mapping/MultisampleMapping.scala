@@ -173,6 +173,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
             if (extractTaxonomies) {
               gearsJob match {
                 case Some(g) => {
+                  g.indirect = true
                   g.centrifugeScript match {
                     case Some(c) => {
                       m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
@@ -200,6 +201,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
               if (extractTaxonomies) {
                 gearsJob match {
                   case Some(g) => {
+                    g.indirect = true
                     g.centrifugeScript match {
                       case Some(c) => {
                         m.centrifugeKreport = Some(c.centrifugeNonUniqueKReport)
