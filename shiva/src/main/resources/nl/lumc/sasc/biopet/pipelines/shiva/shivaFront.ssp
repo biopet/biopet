@@ -21,17 +21,20 @@
         "sv_calling" -> List("sv_calling"),
         "variantcallers" -> List("variantcallers")
     ))
+    val variantcallingSettings = summary.getSettingKeys(runId, "shivavariantcalling",
+    keyValues = Map(
+        "variantcallers" -> List("variantcallers")
+    ))
 }#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Shiva</td></tr>
-    <tr><th>Pipeline</th><td>Gears</td></tr>
     <tr><th>Version</th><td>${run.version}</td></tr>
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
     <tr>
         <th>Variantcallers</th>
-        <td>${settings.get("variantcallers")}</td>
+        <td>${variantcallingSettings.get("variantcallers")}</td>
     </tr>
     <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
     <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
