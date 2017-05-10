@@ -155,7 +155,18 @@ The extraction can be fine-tuned with two additional optional config values:
  | ---- | --------- | ---- | -------- |
  | reverse | taxextract | Boolean | Set to true to select those reads _not_ matching the taxonomy. |
  | no_children | taxextract | Boolean | Set to true to put an exact match on the taxonomy, rather than the specific node and its children |
-
+ 
+ 
+### Example config
+ 
+```yaml
+extract_taxonomies: true
+mapping_to_gears: all
+taxextract:
+  exe: /path/to/taxextract
+  taxonomy: H.sapiens
+```
+ 
 
 ## Running Carp
 
