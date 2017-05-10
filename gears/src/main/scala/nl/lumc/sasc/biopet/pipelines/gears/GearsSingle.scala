@@ -160,14 +160,18 @@ class GearsSingle(val parent: Configurable)
     val read1: File =
       if (r1.size == 1) mergedR1
       else {
-        add(Zcat(this, r1) | new Gzip(this) > mergedR1)
+        val merger = Zcat(this, r1) | new Gzip(this) > mergedR1
+        merger.isIntermediate = true
+        add(merger)
         mergedR1
       }
 
     val read2: Option[File] =
       if (r2.size <= 1) mergedR2
       else {
-        add(Zcat(this, r2) | new Gzip(this) > mergedR2.get)
+        val merger = Zcat(this, r2) | new Gzip(this) > mergedR2.get
+        merger.isIntermediate = true
+        add(merger)
         mergedR2
       }
 
