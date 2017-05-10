@@ -198,6 +198,8 @@ class GearsSingle(val parent: Configurable)
         extract.bamFile = bam
         extract.outputName = outputName
         add(extract)
+        fastqR1 = extract.fastqUnmappedR1 :: Nil
+        fastqR2 = extract.fastqUnmappedR2.toList
         executeFlexiprep(extract.fastqUnmappedR1 :: Nil, extract.fastqUnmappedR2.toList)
       case _ => throw new IllegalArgumentException("Missing input files")
     }
