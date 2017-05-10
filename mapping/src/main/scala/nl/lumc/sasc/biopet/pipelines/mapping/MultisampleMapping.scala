@@ -88,7 +88,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
-    val gearsJob: Option[GearsSingle] = mappingToGears match {
+    val gearsPipeline: Option[GearsSingle] = mappingToGears match {
       case "unmapped" =>
         val gears = new GearsSingle(qscript)
         gears.sampleId = Some(sampleId)
@@ -142,9 +142,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           m.libId = Some(libId)
           m.outputDir = libDir
           m.centrifugeKreport =
-            gearsJob.flatMap(g => g.centrifugeScript.map(c => c.centrifugeNonUniqueKReport))
+            gearsPipeline.flatMap(g => g.centrifugeScript.map(c => c.centrifugeNonUniqueKReport))
           m.centrifugeOutputFile =
-            gearsJob.flatMap(g => g.centrifugeScript.map(c => c.centrifugeOutput))
+            gearsPipeline.flatMap(g => g.centrifugeScript.map(c => c.centrifugeOutput))
           Some(m)
         } else None
 
@@ -347,12 +347,12 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
 
       mappingToGears match {
         case "unmapped" =>
-          gearsJob.get.bamFile = preProcessBam
-          add(gearsJob.get)
+          gearsPipeline.get.bamFile = preProcessBam
+          add(gearsPipeline.get)
         case "all" =>
-          gearsJob.get.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
-          gearsJob.get.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
-          add(gearsJob.get)
+          gearsPipeline.get.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gearsPipeline.get.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
+          add(gearsPipeline.get)
         case _ =>
       }
     }
