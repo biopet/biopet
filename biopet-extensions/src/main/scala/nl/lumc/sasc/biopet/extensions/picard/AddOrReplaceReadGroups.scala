@@ -68,7 +68,7 @@ class AddOrReplaceReadGroups(val parent: Configurable) extends Picard {
     super.cmdLine +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +
-      (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+      (if (outputAsStdout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
        else required("OUTPUT=", output, spaceSeparated = false)) +
       required("SORT_ORDER=", sortOrder, spaceSeparated = false) +
       required("RGID=", RGID, spaceSeparated = false) +

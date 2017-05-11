@@ -48,6 +48,6 @@ class SamtoolsSort(val parent: Configurable) extends Samtools {
       optional("-O", outputFormat) +
       required("-T", prefix) +
       conditional(sortByName, "-n") +
-      (if (outputAsStsout) "" else required("-o", output)) +
+      (if (outputAsStdout) "" else required("-o", output)) +
       (if (inputAsStdin) "" else required(input))
 }

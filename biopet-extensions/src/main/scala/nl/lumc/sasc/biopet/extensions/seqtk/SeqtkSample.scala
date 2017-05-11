@@ -43,6 +43,6 @@ class SeqtkSample(val parent: Configurable) extends Seqtk {
       optional("-s", s) +
       required(input) +
       (if (sample > 1) required(sample.toInt) else required(sample)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 
 }

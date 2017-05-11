@@ -151,7 +151,7 @@ class Centrifuge(val parent: Configurable)
         case Some(r2) => required("-1", inputR1) + required("-2", r2)
         case _ => required("-U", inputR1)
       }) +
-      (if (outputAsStsout) "" else required("-S", output)) +
+      (if (outputAsStdout) "" else required("-S", output)) +
       optional("--report-file", report)
 
   /** Must return files to store into summary */

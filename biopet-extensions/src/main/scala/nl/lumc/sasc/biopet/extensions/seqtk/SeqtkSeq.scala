@@ -106,7 +106,7 @@ class SeqtkSeq(val parent: Configurable) extends Seqtk {
       conditional(flag2, "-2") +
       conditional(V, "-V") +
       (if (inputAsStdin) "" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
   }
 
   /**

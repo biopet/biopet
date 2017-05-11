@@ -59,7 +59,7 @@ class BedtoolsCoverage(val parent: Configurable) extends Bedtools with Reference
       conditional(sorted, "-sorted") +
       (if (sorted) required("-g", BedtoolsCoverage.getGenomeFile(referenceFai, jobTempDir))
        else "") +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 
 }
 

@@ -67,5 +67,5 @@ class VarscanMpileup2cns(val parent: Configurable) extends Varscan {
       optional("--output-vcf", outputVcf) +
       optional("--vcf-sample-list", vcfSampleList) +
       optional("--variants", variants) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }

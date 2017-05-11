@@ -206,5 +206,5 @@ class Freebayes(val parent: Configurable)
       conditional(debug, "--debug") +
       optional("--haplotype-length", haplotypeLength) +
       (if (inputAsStdin) required("--stdin") else "") +
-      (if (outputAsStsout) "" else optional("--vcf", outputVcf))
+      (if (outputAsStdout) "" else optional("--vcf", outputVcf))
 }

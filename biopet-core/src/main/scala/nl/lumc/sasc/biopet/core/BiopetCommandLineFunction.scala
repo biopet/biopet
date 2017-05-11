@@ -149,7 +149,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   private[core] var _inputAsStdin = false
   def inputAsStdin = _inputAsStdin
   private[core] var _outputAsStdout = false
-  def outputAsStsout = _outputAsStdout
+  def outputAsStdout = _outputAsStdout
 
   /**
     * This operator sends stdout to `that` and combine this into 1 command line function

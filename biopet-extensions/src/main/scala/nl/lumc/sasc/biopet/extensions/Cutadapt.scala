@@ -165,7 +165,7 @@ class Cutadapt(val parent: Configurable)
       optional("--untrimmed-paired-output", untrimmedPairedOutput) +
       // input / output
       required(fastqInput) +
-      (if (outputAsStsout) ""
+      (if (outputAsStdout) ""
        else
          required("--output", fastqOutput) +
            " > " + required(statsOutput))
