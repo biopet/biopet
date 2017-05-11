@@ -51,7 +51,7 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
-    val centrifugePage = (if (centrifugeExecuted) Some("Centriguge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
+    val centrifugePage = (if (centrifugeExecuted) Some("Centrifuge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
       Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
@@ -99,7 +99,7 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_closed_otu_table"), Duration.Inf)
     val qiimeOpenOtuTable = Await.result(summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"), Duration.Inf)
 
-    ReportPage((if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+    ReportPage((if (centrifugeExecuted) List("Centrifuge analysis" -> Future.successful(ReportPage(List(
       "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
@@ -136,7 +136,7 @@ object GearsReport extends MultisampleReportBuilder {
 
     ReportPage(
       (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
-      ) ::: (if (centrifugeExecuted) List("Centriguge analysis" -> Future.successful(ReportPage(List(
+      ) ::: (if (centrifugeExecuted) List("Centrifuge analysis" -> Future.successful(ReportPage(List(
         "Non-unique" -> Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
           Map("summaryStatsTag" -> "centrifuge_report")
         )), Map()))), List(
