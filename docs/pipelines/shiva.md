@@ -173,6 +173,45 @@ and this should be specified in the [config](../general/config) file. To call Ge
 *`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
 *`mapping_to_gears: unmapped` : Only send unmapped reads after alignment to Gears, e.g., a kind of "trash bin" analysis.
 
+### Taxonomy extraction 
+
+It is possible to only align reads matching a certain taxonomy.  
+This is useful in situations where known contaminants exist in the sequencing files.
+
+By default this option is **disabled**. 
+Due to technical reasons, we **cannot** recover reads that do not match to any known taxonomy.
+
+Taxonomies are determined using [Gears](gears.md) as a sub-pipeline. 
+
+To enable taxonomy extraction, specify the following additional flags in your
+config file:
+
+| Name | Namespace | Type | Function |
+| ---- | --------- | ---- | -------- |
+| mapping_to_gears | mapping | Boolean | Must be set to **true** |
+| taxonomy_extract | mapping | Boolean (must be **true** for this purpose) | enable taxonomy extraction |
+| taxonomy | taxextract | string | The name of the taxonomy you wish to extract | 
+
+The extraction can be fine-tuned with two additional optional config values:
+ 
+ | Name | Namespace | Type | Function |
+ | ---- | --------- | ---- | -------- |
+ | reverse | taxextract | Boolean | Set to true to select those reads _not_ matching the taxonomy. |
+ | no_children | taxextract | Boolean | Set to true to put an exact match on the taxonomy, rather than the specific node and its children |
+ 
+ 
+#### Example config
+  
+```yaml
+extract_taxonomies: true
+mapping_to_gears: all
+taxextract:
+  exe: /path/to/taxextract
+  taxonomy: H.sapiens
+```
+  
+
+
 ### Only variant calling
 
 It is possible to run Shiva while only performing its variant calling steps starting from BAM files.

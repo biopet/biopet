@@ -46,6 +46,6 @@ class Sed(val parent: Configurable) extends BiopetCommandLineFunction with Versi
     executable +
       repeat("-e", expressions) +
       (if (inputAsStdin) "" else required(inputFile)) +
-      (if (outputAsStsout) "" else " > " + required(outputFile))
+      (if (outputAsStdout) "" else " > " + required(outputFile))
 
 }

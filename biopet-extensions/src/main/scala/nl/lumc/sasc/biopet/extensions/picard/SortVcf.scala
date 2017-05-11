@@ -51,7 +51,7 @@ class SortVcf(val parent: Configurable) extends Picard with Reference {
     super.cmdLine +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +
-      (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+      (if (outputAsStdout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
        else required("OUTPUT=", output, spaceSeparated = false)) +
       required("SEQUENCE_DICTIONARY=", sequenceDictionary, spaceSeparated = false)
 }

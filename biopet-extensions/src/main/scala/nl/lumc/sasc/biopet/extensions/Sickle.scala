@@ -78,13 +78,13 @@ class Sickle(val parent: Configurable)
     cmd +
       (if (inputAsStdin) required("-f", new File("/dev/stdin")) else required("-f", inputR1)) +
       required("-t", qualityType) +
-      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else required("-o", outputR1)) +
+      (if (outputAsStdout) required("-o", new File("/dev/stdout")) else required("-o", outputR1)) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
       conditional(noFiveprime, "-x") +
       conditional(discardN, "-n") +
-      conditional(quiet || outputAsStsout, "--quiet") +
-      (if (outputAsStsout) "" else " > " + required(outputStats))
+      conditional(quiet || outputAsStdout, "--quiet") +
+      (if (outputAsStdout) "" else " > " + required(outputStats))
   }
 
   override def summaryDeps = outputStats :: super.summaryDeps

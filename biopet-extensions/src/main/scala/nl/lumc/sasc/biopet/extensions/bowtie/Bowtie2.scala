@@ -256,5 +256,5 @@ class Bowtie2(val parent: Configurable)
             optional("-2", r2)
         case _ => required("-U", R1)
       }) +
-      (if (outputAsStsout) "" else required("-S", output))
+      (if (outputAsStdout) "" else required("-S", output))
 }

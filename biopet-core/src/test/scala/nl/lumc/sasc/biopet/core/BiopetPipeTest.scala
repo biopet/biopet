@@ -27,7 +27,7 @@ class BiopetPipeTest extends TestNGSuite with Matchers {
     def cmdLine =
       "pipe1" +
         (if (!inputAsStdin) " input1 " else "") +
-        (if (!outputAsStsout) " output1 " + "")
+        (if (!outputAsStdout) " output1 " + "")
   }
 
   class Pipe2 extends BiopetCommandLineFunction {
@@ -35,7 +35,7 @@ class BiopetPipeTest extends TestNGSuite with Matchers {
     def cmdLine =
       "pipe2" +
         (if (!inputAsStdin) " input2 " else "") +
-        (if (!outputAsStsout) " output2 " + "")
+        (if (!outputAsStdout) " output2 " + "")
   }
 
   @Test def testPipeCommands: Unit = {

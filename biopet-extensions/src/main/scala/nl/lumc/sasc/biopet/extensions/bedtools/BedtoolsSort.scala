@@ -37,6 +37,6 @@ class BedtoolsSort(val parent: Configurable) extends Bedtools with Reference {
   def cmdLine =
     required(executable) + required("sort") + required("-i", input) +
       optional("-faidx", faidx) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 
 }

@@ -260,5 +260,5 @@ class Hisat2(val parent: Configurable)
         case Some(r2) => required("-1", R1) + optional("-2", r2)
         case otherwise => required("-U", R1)
       }) +
-      (if (outputAsStsout) "" else required("-S", output))
+      (if (outputAsStdout) "" else required("-S", output))
 }

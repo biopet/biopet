@@ -47,7 +47,7 @@ class SamtoolsView(val parent: Configurable) extends Samtools {
       conditional(b, "-b") +
       conditional(h, "-h") +
       (if (inputAsStdin) "-" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }
 
 object SamtoolsView {

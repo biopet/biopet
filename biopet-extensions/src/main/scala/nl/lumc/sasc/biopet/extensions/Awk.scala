@@ -44,7 +44,7 @@ class Awk(val parent: Configurable) extends BiopetCommandLineFunction with Versi
     executable +
       required(command) +
       (if (inputAsStdin) "" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
+      (if (outputAsStdout) "" else " > " + required(output))
 }
 
 object Awk {
