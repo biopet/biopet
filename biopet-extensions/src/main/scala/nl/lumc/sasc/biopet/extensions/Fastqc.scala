@@ -51,6 +51,8 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   def versionCommand = executable + " --version"
   override def defaultThreads = 4
 
+  override def defaultCoreMemory: Double = 4.0
+
   /** Sets contaminants and adapters when not yet set */
   override def beforeGraph() {
     this.jobOutputFile = new File(output.getParentFile, s".${fastqfile.getName}.fastqc.out")
