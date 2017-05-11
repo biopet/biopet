@@ -274,7 +274,7 @@ class VariantEffectPredictor(val parent: Configurable)
         optional("--build", build) +
         optional("--compress", compress) +
         optional("--cache_region_size", cacheRegionSize) +
-        optional("--fork", threads) +
+        (if (threads > 1) optional("--fork", threads) else "") +
         optional("--cache_version", cacheVersion) +
         optional("--freq_freq", freqFreq) +
         optional("--port", port) +
