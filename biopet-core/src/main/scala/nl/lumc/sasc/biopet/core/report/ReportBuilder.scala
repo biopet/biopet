@@ -15,9 +15,10 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
+import java.util.concurrent.{ArrayBlockingQueue, ThreadPoolExecutor, TimeUnit}
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample, Run}
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Run, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
 import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
@@ -112,6 +113,23 @@ trait ReportBuilder extends ToolCommand {
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
+
+  /** Limiting the amount of futures to save memory **/
+  val numWorkers: Int = sys.runtime.availableProcessors()
+  val queueCapacity = 100
+
+  implicit val ec = ExecutionContext.fromExecutorService(
+    new ThreadPoolExecutor(
+      numWorkers, numWorkers,
+      0L, TimeUnit.SECONDS,
+      new ArrayBlockingQueue[Runnable](queueCapacity) {
+        override def offer(e: Runnable) = {
+          put(e);
+          true
+        }
+      }
+    )
+  )
 
   /** summary object internaly */
   private var setSummary: SummaryDb = _
