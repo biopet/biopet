@@ -1,14 +1,14 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PedigreeQscript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
 import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
 import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
 import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Tabix }
-import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{ BedThreshold, SampleFromMatrix }
+import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{ BedThreshold, SampleFromMatrix, TarmacPlot }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -167,6 +167,76 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     addAll(zScoreMergeJobs.values)
     addAll(windowStouffJobs.values.flatMap(_.values))
     addAll(thresholdJobs.values.flatMap(_.values))
+
+    val xhmmZGzip = xhmmZJobs map {
+      case (sample, jobAndRefFile) =>
+        val sort = sortBgzipAndTabix(jobAndRefFile._2)
+        val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
+        add(sort.tabixJob)
+        add(pipeJob)
+        sample -> sort
+    }
+
+    val wisecondorZGzip = wisecondorZJobs map {
+      case (sample, job) =>
+        val sort = sortBgzipAndTabix(job.output)
+        val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
+        add(pipeJob)
+        add(sort.tabixJob)
+        sample -> sort
+    }
+
+    val stouffGzip = windowStouffJobs map {
+      case (sample, subMap) =>
+        val nMap = subMap map {
+          case (window, stouffJob) =>
+            val sort = sortBgzipAndTabix(stouffJob.output)
+            val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
+            add(pipeJob)
+            add(sort.tabixJob)
+            window -> sort
+        }
+        sample -> nMap
+    }
+
+    thresholdJobs foreach {
+      case (sample, subMap) =>
+        subMap foreach {
+          case (window, threshJob) =>
+            val imageDir = new File(threshJob.output.get.getParentFile, "plots")
+            val sort = sortBgzipAndTabix(threshJob.output.get)
+            val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
+            add(pipeJob)
+            add(sort.tabixJob)
+            val xhmmZ = xhmmZGzip(sample)
+            val wiseZ = wisecondorZGzip(sample)
+            val stouff = stouffGzip(sample)(window)
+            val plotter = new TarmacPlot(this)
+            plotter.outputDir = imageDir
+            plotter.callFile = threshJob.output.get
+            plotter.stouffFile = stouff.bgzipJob.output
+            plotter.xhmmFile = xhmmZ.bgzipJob.output
+            plotter.wisecondorFile = wiseZ.bgzipJob.output
+            plotter.deps ++= xhmmZ.tabixJob.outputIndex :: wiseZ.tabixJob.outputIndex :: stouff.tabixJob.outputIndex :: Nil
+            add(plotter)
+        }
+    }
+  }
+
+  case class SortBgzipTabix(sortJob: BedtoolsSort, bgzipJob: Bgzip, tabixJob: Tabix)
+
+  def sortBgzipAndTabix(file: File): SortBgzipTabix = {
+    val sorter = new BedtoolsSort(this)
+    sorter.input = file
+    sorter.isIntermediate = true
+    val sortFile = swapExt(file.getParentFile, file, ".bed", ".sorted.bed")
+    sorter.output = sortFile
+    val gzFile = swapExt(file.getParentFile, file, ".bed", ".sorted.bed.gz")
+    val bgzip = new Bgzip(this)
+    bgzip.input = List(sortFile)
+    bgzip.output = gzFile
+    val tbi = Tabix(this, gzFile)
+    SortBgzipTabix(sorter, bgzip, tbi)
   }
 
   /**
