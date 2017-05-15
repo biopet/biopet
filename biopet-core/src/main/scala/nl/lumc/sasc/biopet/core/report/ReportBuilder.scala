@@ -15,7 +15,7 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
-import java.util.concurrent.{ArrayBlockingQueue, ThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ArrayBlockingQueue, ThreadPoolExecutor, TimeUnit, Executors}
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Run, Sample}
@@ -113,23 +113,6 @@ trait ReportBuilder extends ToolCommand {
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
-
-  /** Limiting the amount of futures to save memory **/
-  val numWorkers: Int = sys.runtime.availableProcessors()
-  val queueCapacity = 100
-
-  implicit val ec = ExecutionContext.fromExecutorService(
-    new ThreadPoolExecutor(
-      numWorkers, numWorkers,
-      0L, TimeUnit.SECONDS,
-      new ArrayBlockingQueue[Runnable](queueCapacity) {
-        override def offer(e: Runnable) = {
-          put(e);
-          true
-        }
-      }
-    )
-  )
 
   /** summary object internaly */
   private var setSummary: SummaryDb = _
@@ -416,7 +399,25 @@ trait ReportBuilder extends ToolCommand {
 
 object ReportBuilder {
 
-  implicit lazy val ec = ExecutionContext.global
+  /** Limiting the number of threads and instantiated futures */
+  def maxThreads = Some(2)
+  val numWorkers: Int = maxThreads.getOrElse(2)
+  val queueCapacity = 100
+
+  implicit lazy val ec = ExecutionContext.fromExecutorService(
+    new ThreadPoolExecutor(
+      numWorkers,
+      numWorkers,
+      0L,
+      TimeUnit.SECONDS,
+      new ArrayBlockingQueue[Runnable](queueCapacity) {
+        override def offer(e: Runnable) = {
+          put(e);
+          true
+        }
+      }
+    )
+  )
 
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
