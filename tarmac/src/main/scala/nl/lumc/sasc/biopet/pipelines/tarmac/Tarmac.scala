@@ -213,11 +213,11 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
             val stouff = stouffGzip(sample)(window)
             val plotter = new TarmacPlot(this)
             plotter.outputDir = imageDir
-            plotter.callFile = threshJob.output.get
+            plotter.callFile = sort.bgzipJob.output
             plotter.stouffFile = stouff.bgzipJob.output
             plotter.xhmmFile = xhmmZ.bgzipJob.output
             plotter.wisecondorFile = wiseZ.bgzipJob.output
-            plotter.deps ++= xhmmZ.tabixJob.outputIndex :: wiseZ.tabixJob.outputIndex :: stouff.tabixJob.outputIndex :: Nil
+            plotter.deps ++= sort.tabixJob.outputIndex :: xhmmZ.tabixJob.outputIndex :: wiseZ.tabixJob.outputIndex :: stouff.tabixJob.outputIndex :: Nil
             add(plotter)
         }
     }

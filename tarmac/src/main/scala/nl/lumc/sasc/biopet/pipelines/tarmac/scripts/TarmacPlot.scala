@@ -34,6 +34,7 @@ class TarmacPlot(val parent: Configurable) extends PythonCommandLineFunction {
       required("-c", callFile) +
       required("-w", wisecondorFile) +
       required("-s", stouffFile) +
+      required("-x", xhmmFile) +
       required("-m", margin) +
       required("-o", outputDir)
   }
