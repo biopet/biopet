@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.process.Sys
 
+import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 import scala.sys.process.ProcessLogger
@@ -42,7 +43,7 @@ trait Rscript extends Configurable {
     * @param dir Directory to store temp script, if None or not given File.createTempFile is called
     */
   protected def checkScript(dir: Option[File] = None): Unit = {
-    if (script.exists()) {
+    if (Rscript.alreadyCopied.contains(script)) {
       script = script.getAbsoluteFile
     } else {
       val rScript: File = dir match {
@@ -59,6 +60,7 @@ trait Rscript extends Configurable {
 
       org.apache.commons.io.IOUtils.copy(is, os)
       os.close()
+      Rscript.alreadyCopied += script
 
       script = rScript
     }
@@ -91,4 +93,8 @@ trait Rscript extends Configurable {
   def runLocal()(implicit ec: ExecutionContext): Unit = {
     runLocal(ProcessLogger(Logging.logger.info(_)))
   }
+}
+
+object Rscript {
+  val alreadyCopied: mutable.Set[File] = mutable.Set()
 }

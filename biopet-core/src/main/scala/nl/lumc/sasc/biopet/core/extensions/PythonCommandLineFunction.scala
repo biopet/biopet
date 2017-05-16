@@ -19,6 +19,7 @@ import java.io.{File, FileOutputStream}
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.utils.commandline.Input
+import scala.collection.mutable
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc = "Python script", required = false)
@@ -34,8 +35,9 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String) {
     pythonScript = new File(script).getAbsoluteFile
-    if (!pythonScript.exists()) {
+    if (!PythonCommandLineFunction.alreadyCopied.contains(pythonScript)) {
       setPythonScript(script, "")
+      PythonCommandLineFunction.alreadyCopied += pythonScript
     } else {
       pythonScriptName = script
     }
@@ -62,4 +64,8 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   def getPythonCommand: String = {
     required(executable) + required(pythonScript)
   }
+}
+
+object PythonCommandLineFunction {
+  private val alreadyCopied: mutable.Set[File] = mutable.Set()
 }
