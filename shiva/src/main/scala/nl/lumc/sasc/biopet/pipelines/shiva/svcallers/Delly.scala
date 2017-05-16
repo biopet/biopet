@@ -38,6 +38,7 @@ class Delly(val parent: Configurable) extends SvCaller {
       val mergeVariants = new BcftoolsMerge(this)
       mergeVariants.output = new File(dellyDir, sample + ".delly.vcf")
       mergeVariants.m = Some("id")
+      mergeVariants.forcesamples = true
 
       if (del) {
         val delly = new DellyCallerCall(this)
@@ -73,7 +74,7 @@ class Delly(val parent: Configurable) extends SvCaller {
       if (tra) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "TRA"
+        delly.analysistype = "BND"
         delly.isIntermediate = true
         delly.outputbcf = new File(dellyDir, sample + ".delly.tra.bcf")
         add(delly)
