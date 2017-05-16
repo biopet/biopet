@@ -15,7 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsMerge
-import nl.lumc.sasc.biopet.extensions.delly.{DellyCaller, DellyCallerCall}
+import nl.lumc.sasc.biopet.extensions.delly.DellyCallerCall
 import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
