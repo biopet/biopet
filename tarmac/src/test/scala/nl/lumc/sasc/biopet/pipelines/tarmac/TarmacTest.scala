@@ -99,14 +99,12 @@ class TarmacTest extends TestNGSuite with Matchers {
     script.biopetScript()
 
     script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
-    script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 7
-    script.functions.collect {
-      case b: BiopetFifoPipe =>
-        b.beforeGraph()
-        b.pipesJobs.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 1
-        b.pipesJobs.count(_.isInstanceOf[BedtoolsSort]) shouldBe 1
-        b.pipesJobs.count(_.isInstanceOf[Bgzip]) shouldBe 1
-    }
+    script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 35
+    val fifos = script.functions.collect { case b: BiopetFifoPipe => b}
+    fifos.flatMap{f =>
+      f.beforeGraph()
+      f.pipesJobs
+    }.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
   }
 
 }
@@ -246,7 +244,10 @@ object TarmacTest {
     "gatk_jar" -> "gatk.jar",
     "discover_params" -> "discover_params",
     "tarmac" -> Map(
-      "targets" -> "targets.bed"
-    )
+      "targets" -> "targets.bed",
+      "stouff_window_size" -> List(1),
+      "threshold" -> 5
+    ),
+    "reference_fasta" -> "dummy"
   )
 }
