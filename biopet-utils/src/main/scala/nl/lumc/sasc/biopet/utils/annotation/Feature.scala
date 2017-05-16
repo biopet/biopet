@@ -4,6 +4,8 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 
 /**
+  * This class can store a gtf or gff line.
+  *
   * Created by pjvanthof on 14/05/2017.
   */
 case class Feature(contig: String,
