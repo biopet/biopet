@@ -2,11 +2,30 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 class MuTect2(val parent: Configurable) extends CommandLineGATK {
 
   def analysis_type: String = "MuTect2"
+
+  /** Bam file for the tumor sample. */
+  @Input(fullName = "tumor_bam", required = false)
+  var tumorSampleBam: File = _
+
+  /** Vcf file of the dbSNP database. When it's provided, then it's possible to use the param 'dbsnpNormalLod', see the
+    * description of that parameter for explanation. sIDs from this file are used to populate the ID column of the output.
+    * Also, the DB INFO flag will be set when appropriate.
+    * */
+  @Input(fullName = "dbsnp", shortName = "D", required = false)
+  var dbsnp: Option[File] = dbsnpVcfFile
+
+  /** TODO  */
+  @Input(fullName = "cosmic", shortName = "cosmic", doc = "", required = false)
+  var cosmic: Option[File] = None
+
+  /** Output file of the program. */
+  @Output(fullName = "out", shortName = "o", required = true)
+  var outputVcf: File = _
 
   /**
     * The very first threshold value that is used when assessing if a particular site is a variant in the tumor sample.
@@ -18,13 +37,13 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
     *
     * Default value: 6.3
     * */
-  @Input(fullName = "tumor_lod", required = false)
+  @Argument(fullName = "tumor_lod", required = false)
   var tumorLOD: Option[Double] = None
 
   /** TODO: unclear how it differs from the param above 'tumorLod'.
     * Default value: 4.0
     * */
-  @Input(fullName = "initial_tumor_lod", required = false)
+  @Argument(fullName = "initial_tumor_lod", required = false)
   var initialTumorLOD: Option[Double] = None
 
   /**
@@ -36,8 +55,14 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
     *
     * Default value: 2.2
     * */
-  @Input(fullName = "normal_lod", required = false)
+  @Argument(fullName = "normal_lod", required = false)
   var normalLOD: Option[Double] = None
+
+  /** TODO: unclear how it differs from the param above 'normalLod'.
+    * Default value: 0.5
+    * */
+  @Argument(fullName = "initial_normal_lod", required = false)
+  var initialNormalLOD: Option[Double] = None
 
   /**
     * Modelling takes into account also the probability for a site to have a variant in the general population. For sites
@@ -47,24 +72,13 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
     *
     * Default value: 5.5
     * */
-  @Input(fullName = "dbsnp_normal_lod", required = false)
+  @Argument(fullName = "dbsnp_normal_lod", required = false, otherArgumentRequired = "dbsnp")
   var dbsnpNormalLod: Option[Double] = None
-
-  /** Vcf file of the dbSNP database. When it's provided then it is possible to use the param 'dbsnpNormalLod', see the
-    * description of the parameter above for explanation. sIDs from this file are used to populate the ID column of the output.
-    * Also, the DB INFO flag will be set when appropriate.
-    * */
-  @Input(fullName = "dbsnp", shortName = "D", required = false)
-  var dbsnp: Option[File] = dbsnpVcfFile
-
-  /**   */
-  @Input(fullName = "cosmic", shortName = "cosmic", doc = "", required = false)
-  var cosmic: Option[File] = None
 
   /** Ploidy per sample. For pooled data, this should be set to (Number of samples in each pool x Sample Ploidy).
     * Default value: 2
     * */
-  @Input(fullName = "sample_ploidy", shortName="ploidy", required = false)
+  @Argument(fullName = "sample_ploidy", shortName="ploidy", required = false)
   var ploidy: Option[Int] = None
 
 }
