@@ -23,7 +23,9 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import pysam
 
-from os.path import join
+from os.path import join, isdir
+from os import makedirs
+import sys
 
 
 def get_middle_pos(record):
@@ -61,14 +63,23 @@ def plot_call(chrom, start, end, whandle, xhandle, shandle, margin, output_loc):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--calls")
-    parser.add_argument("-w", "--wisecondor-file")
-    parser.add_argument("-x", "--xhmm-file")
-    parser.add_argument("-s", "--stouff-file")
+    parser.add_argument("-c", "--calls", required=True)
+    parser.add_argument("-w", "--wisecondor-file", required=True)
+    parser.add_argument("-x", "--xhmm-file", required=True)
+    parser.add_argument("-s", "--stouff-file", required=True)
     parser.add_argument("-m", "--margin", type=int, default=5000)
-    parser.add_argument("-o", "--output-dir")
+    parser.add_argument("-o", "--output-dir", required=True)
 
     args = parser.parse_args()
+
+    if sys.version_info[0] == 3:
+        makedirs(args.output_dir, exists_ok=True)
+    elif sys.version_info[0] == 2:
+        try:
+            makedirs(args.output_dir)
+        except OSError:
+            if not isdir(args.output_dir):
+                raise
 
     c_handle = pysam.TabixFile(args.calls, parser=pysam.asTuple())
     s_handle = pysam.TabixFile(args.stouff_file, parser=pysam.asTuple())
