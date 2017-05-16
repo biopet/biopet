@@ -39,6 +39,11 @@ object GtfToRefflat {
           case "gene" =>
             if (geneBuffer.contains(geneId)) throw new IllegalArgumentException(s"Gene '$geneId' is found twice in $gtfFile")
             geneBuffer += geneId -> new Gene(feature.contig, feature.start, feature.end, !feature.strand.getOrElse(true), geneId)
+            val transcripts = transcriptBuffer.remove(geneId).flatMap(_.values)
+            transcripts.foreach { t =>
+              val newT = geneBuffer(geneId).addTranscript(t.name, t.transcriptionStart, t.transcriptionEnd, t.codingStart, t.codingEnd, t.exons.length)
+              t.exons.foreach(e => newT.addExon(e.start, e.end))
+            }
           case "transcript" =>
             val id = transcriptId
             val exons = exonBuffer.remove((geneId, id)).getOrElse(Nil).toArray
@@ -53,7 +58,14 @@ object GtfToRefflat {
               exons.foreach(e => transcriptBuffer(geneId)(id).addExon(e.start, e.end))
             }
           case "exon" =>
-
+            val id = transcriptId
+            geneBuffer.get(geneId).flatMap(_.find(_.name == id)) match {
+              case Some(t) => t.addExon(feature.start, feature.end)
+              case _ =>
+                val exon = new Gene#Transcript#Exon(feature.start, feature.end)
+                if (!exonBuffer.contains((geneId, id))) exonBuffer += (geneId, id) -> ListBuffer(exon)
+                else exonBuffer(geneId, id) += exon
+            }
           case _ => //TODO: count not used features
         }
         count += 1
