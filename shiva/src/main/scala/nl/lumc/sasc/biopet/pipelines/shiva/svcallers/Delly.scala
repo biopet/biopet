@@ -37,9 +37,7 @@ class Delly(val parent: Configurable) extends SvCaller {
       // Use bcftools merge to merge the bcf files. Output is an uncompressed vcf
       val mergeVariants = new BcftoolsMerge(this)
       mergeVariants.output = new File(dellyDir, sample + ".delly.vcf")
-      mergeVariants.m = "id"
-      mergeVariants.input = _
-
+      mergeVariants.m = Some("id")
 
       if (del) {
         val delly = new DellyCallerCall(this)

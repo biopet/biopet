@@ -12,7 +12,6 @@
   * license; For commercial users or users who do not want to follow the AGPL
   * license, please contact us to obtain a separate license.
   */
-
 package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
@@ -25,9 +24,10 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
   *
   * Created by imoustakas on 9-5-17.
   */
-class DellyCallerCall(val parent: Configurable) extends BiopetCommandLineFunction
-  with Version
-  with Reference {
+class DellyCallerCall(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Version
+    with Reference {
   executable = config("exe", default = "delly")
 
   private lazy val versionexecutable: File = new File(executable)
@@ -36,12 +36,12 @@ class DellyCallerCall(val parent: Configurable) extends BiopetCommandLineFunctio
   override def defaultCoreMemory = 4.0
 
   def versionCommand = versionexecutable.getAbsolutePath
-  def versionRegex = """DELLY \(Version: (.*)\)""".r
+  def versionRegex = """Delly \(Version: (.*)\)""".r
   override def versionExitcode = List(0, 1)
   @Input(doc = "Input file (bam)")
   var input: File = _
 
-  @Input(doc = "Reference file", required= true)
+  @Input(doc = "Reference file", required = true)
   var reference: File = _
 
   @Output(doc = "Delly BCF output")
@@ -57,11 +57,10 @@ class DellyCallerCall(val parent: Configurable) extends BiopetCommandLineFunctio
   var buffersize: Option[Int] = config("buffer-size")
   var outputdir: String = _
 
-  override def beforeGraph(): Unit ={
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
-
 
   def cmdLine =
     required(executable) +
@@ -69,7 +68,6 @@ class DellyCallerCall(val parent: Configurable) extends BiopetCommandLineFunctio
       required("-t", analysistype) + // SV type (DEL, DUP, INV, BND, INS)
       required("-o", outputbcf) + // delly BCF output
       required("-g", reference) + // reference file, on which the reads are aligned
-      required(input)  // BAM file with the alignments
-
+      required(input) // BAM file with the alignments
 
 }
