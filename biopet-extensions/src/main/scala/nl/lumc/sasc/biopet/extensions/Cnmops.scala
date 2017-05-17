@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
@@ -21,12 +21,12 @@ import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-import nl.lumc.sasc.biopet.utils.getSemanticVersion
+import nl.lumc.sasc.biopet.utils.SemanticVersion
 
 /**
- * Wrapper for the Cnmops command line tool.
- * Written based on Cnmops version v2.2.1.
- */
+  * Wrapper for the Cnmops command line tool.
+  * Written based on Cnmops version v2.2.1.
+  */
 class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with Version {
 
   override def defaultThreads = 4
@@ -49,14 +49,14 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
   }
 
   /**
-   * Check whether version of cn mops is at least 1.18.0
-   *
-   * @return
-   */
+    * Check whether version of cn mops is at least 1.18.0
+    *
+    * @return
+    */
   def versionCheck: Boolean = {
-    getVersion.flatMap(getSemanticVersion(_)) match {
+    getVersion.flatMap(SemanticVersion.getSemanticVersion(_)) match {
       case Some(version) => (version.major == 1 && version.minor >= 18) || version.major >= 2
-      case _             => false
+      case _ => false
     }
   }
 
@@ -74,7 +74,9 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
   lazy val outputCnv: File = {
     outputDir match {
       case Some(dir) => new File(dir, "cnv.txt")
-      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNV output")
+      case _ =>
+        throw new IllegalArgumentException(
+          "Unexpected error when trying to set cn.MOPS CNV output")
     }
   }
 
@@ -82,7 +84,9 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
   lazy val outputCnr: File = {
     outputDir match {
       case Some(dir) => new File(dir, "cnr.txt")
-      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS CNR output")
+      case _ =>
+        throw new IllegalArgumentException(
+          "Unexpected error when trying to set cn.MOPS CNR output")
     }
   }
 
@@ -90,7 +94,9 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
   lazy val rawOutput: File = {
     outputDir match {
       case Some(dir) => new File(dir, "rawoutput.txt")
-      case _         => throw new IllegalArgumentException("Unexpected error when trying to set cn.MOPS raw output")
+      case _ =>
+        throw new IllegalArgumentException(
+          "Unexpected error when trying to set cn.MOPS raw output")
     }
   }
 
@@ -102,16 +108,18 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
     require(outputDir.isDefined, "Outputdir for cn.MOPS should not be empty")
     require(input.length >= 2, "Please supply at least 2 BAM files for cn.MOPS")
     if (!versionCheck) {
-      logger.warn("cn.mops version is below 1.18.0. Contigs containing little to no reads WILL fail")
+      logger.warn(
+        "cn.mops version is below 1.18.0. Contigs containing little to no reads WILL fail")
     }
   }
 
-  override def cmdLine = super.cmdLine +
-    required("--cnr", outputCnr) +
-    required("--cnv", outputCnv) +
-    required("--chr", chromosome) +
-    required("--rawoutput", rawOutput) +
-    required("--threads", threads) +
-    optional("--wl", windowLength) +
-    repeat(input)
+  override def cmdLine =
+    super.cmdLine +
+      required("--cnr", outputCnr) +
+      required("--cnv", outputCnv) +
+      required("--chr", chromosome) +
+      required("--rawoutput", rawOutput) +
+      required("--threads", threads) +
+      optional("--wl", windowLength) +
+      repeat(input)
 }

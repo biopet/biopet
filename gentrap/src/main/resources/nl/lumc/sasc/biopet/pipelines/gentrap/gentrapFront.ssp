@@ -1,12 +1,31 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
-<%@ var summary: Summary %>
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
+<%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var pipeline: String %>
+#{
+    val annotationRefflat = Await.result(summary.getFile(run.id, pipeline, key = "annotation_refflat"), Duration.Inf)
+    val annotationGtf = Await.result(summary.getFile(run.id, "fragmentspergene", key = "annotation_gtf"), Duration.Inf)
+    val ribosomalRefflat = Await.result(summary.getFile(run.id, pipeline, key = "ribosome_refflat"), Duration.Inf)
+}#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Gentrap</td></tr>
-    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
-    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
-    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
-</tbody>
+    <tr><th>Version</th><td>${run.version}</td></tr>
+    <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
+    <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
+    <tr><th>Annotation refflat</th><td>${annotationRefflat.map(_.path)}</td></tr>
+    <tr><th>Annotation GTF</th><td>${annotationGtf.map(_.path).getOrElse("Not available")}</td></tr>
+    <tr><th>Annotation ribosomal refflat</th><td>${ribosomalRefflat.map(_.path).getOrElse("Not available")}</td></tr>
+    </tbody>
 </table>
 <br/>
 <div class="row">

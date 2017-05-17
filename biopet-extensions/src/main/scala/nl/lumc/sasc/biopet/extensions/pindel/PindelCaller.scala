@@ -1,33 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
 /**
- * Extension for pindel
- *
- * Based on version 0.2.5b8
- */
-
-class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for pindel
+  *
+  * Based on version 0.2.5b8
+  */
+class PindelCaller(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
   executable = config("exe", default = "pindel")
 
   override def defaultCoreMemory = 4.0
@@ -38,8 +40,8 @@ class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction w
   def versionCommand = executable
 
   /**
-   * Required parameters
-   */
+    * Required parameters
+    */
   @Input
   var reference: File = referenceFasta
 
@@ -89,8 +91,10 @@ class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction w
   var reportLongInsertions: Boolean = config("report_long_insertions", default = false)
   var reportBreakpoints: Boolean = config("report_breakpoints", default = false)
   var reportCloseMappedReads: Boolean = config("report_close_mapped_reads", default = false)
-  var reportOnlyCloseMappedReads: Boolean = config("report_only_close_mapped_reads", default = false)
-  var reportInterchromosomalEvents: Boolean = config("report_interchromosomal_events", default = false)
+  var reportOnlyCloseMappedReads: Boolean =
+    config("report_only_close_mapped_reads", default = false)
+  var reportInterchromosomalEvents: Boolean =
+    config("report_interchromosomal_events", default = false)
 
   var IndelCorrection: Boolean = config("IndelCorrection", default = false)
   var NormalSamples: Boolean = config("NormalSamples", default = false)
@@ -128,8 +132,10 @@ class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction w
     // we should check whether the `pindel-config-file` is set or the `config-file` for the bam-list
     // at least one of them should be set.
     (pindelFile, configFile) match {
-      case (None, None)       => Logging.addError("No pindel config is given")
-      case (Some(a), Some(b)) => Logging.addError(s"Please specify either a pindel config or bam-config. Not both for Pindel: $a or $b")
+      case (None, None) => Logging.addError("No pindel config is given")
+      case (Some(a), Some(b)) =>
+        Logging.addError(
+          s"Please specify either a pindel config or bam-config. Not both for Pindel: $a or $b")
       case (Some(a), None) => {
         Logging.logger.info(s"Using '${a}' as pindel config for Pindel")
         input = a.getAbsoluteFile
@@ -141,7 +147,6 @@ class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction w
     }
 
     /** setting the output files for the many outputfiles pindel has */
-
     outputINV = new File(outputPrefix + File.separator, "sample_INV")
     outputTD = new File(outputPrefix + File.separator, "sample_TD")
     if (reportLongInsertions) {
@@ -161,51 +166,52 @@ class PindelCaller(val parent: Configurable) extends BiopetCommandLineFunction w
     outputFile = new File(outputPrefix + File.separator, "sample_D")
   }
 
-  def cmdLine = required(executable) +
-    required("--fasta ", reference) +
-    optional("--pindel-config-file", pindelFile) +
-    optional("--config-file", configFile) +
-    required("--output-prefix ", new File(outputPrefix + File.separator, "sample")) +
-    optional("--RP", RP) +
-    optional("--min_distance_to_the_end", minDistanceToTheEnd) +
-    optional("--number_of_threads", threads) +
-    optional("--max_range_index", maxRangeIndex) +
-    optional("--windows_size", windowSize) +
-    optional("--sequencing_error_rate", sequencingErrorRate) +
-    optional("--sensitivity", sensitivity) +
-    optional("--maximum_allowed_mismatch_rate", maximumAllowedMismatchRate) +
-    optional("--NM", nm) +
-    conditional(reportInversions, "--report_inversions") +
-    conditional(reportDuplications, "--report_duplications") +
-    conditional(reportLongInsertions, "--report_long_insertions") +
-    conditional(reportBreakpoints, "--report_breakpoints") +
-    conditional(reportCloseMappedReads, "--report_close_mapped_reads") +
-    conditional(reportOnlyCloseMappedReads, "--report_only_close_mapped_reads") +
-    conditional(reportInterchromosomalEvents, "--report_interchromosomal_events") +
-    conditional(IndelCorrection, "--IndelCorrection") +
-    conditional(NormalSamples, "--NormalSamples") +
-    optional("--breakdancer", breakdancer) +
-    optional("--include", include) +
-    optional("--exclude", exclude) +
-    optional("--additional_mismatch", additionalMismatch) +
-    optional("--min_perfect_match_around_BP", minPerfectMatchAroundBP) +
-    optional("--min_inversion_size", minInversionSize) +
-    optional("--min_num_matched_bases", minNumMatchedBases) +
-    optional("--balance_cutoff", balanceCutoff) +
-    optional("--anchor_quality", anchorQuality) +
-    optional("--minimum_support_for_event", minimumSupportForEvent) +
-    optional("--input_SV_Calls_for_assembly", inputSVCallsForAssembly) +
-    conditional(genotyping, "-g") +
-    optional("--output_of_breakdancer_events", outputOfBreakdancerEvents) +
-    optional("--name_of_logfile", nameOfLogfile) +
-    optional("--Ploidy", ploidy) +
-    conditional(detectDD, "detect_DD") +
-    optional("--MAX_DD_BREAKPOINT_DISTANCE", maxDdBreakpointDistance) +
-    optional("--MAX_DISTANCE_CLUSTER_READS", maxDistanceClusterReads) +
-    optional("--MIN_DD_CLUSTER_SIZE", minDdClusterSize) +
-    optional("--MIN_DD_BREAKPOINT_SUPPORT", minDdBreakpointSupport) +
-    optional("--MIN_DD_MAP_DISTANCE", minDdMapDistance) +
-    optional("--DD_REPORT_DUPLICATION_READS", ddReportDuplicationReads)
+  def cmdLine =
+    required(executable) +
+      required("--fasta ", reference) +
+      optional("--pindel-config-file", pindelFile) +
+      optional("--config-file", configFile) +
+      required("--output-prefix ", new File(outputPrefix + File.separator, "sample")) +
+      optional("--RP", RP) +
+      optional("--min_distance_to_the_end", minDistanceToTheEnd) +
+      optional("--number_of_threads", threads) +
+      optional("--max_range_index", maxRangeIndex) +
+      optional("--windows_size", windowSize) +
+      optional("--sequencing_error_rate", sequencingErrorRate) +
+      optional("--sensitivity", sensitivity) +
+      optional("--maximum_allowed_mismatch_rate", maximumAllowedMismatchRate) +
+      optional("--NM", nm) +
+      conditional(reportInversions, "--report_inversions") +
+      conditional(reportDuplications, "--report_duplications") +
+      conditional(reportLongInsertions, "--report_long_insertions") +
+      conditional(reportBreakpoints, "--report_breakpoints") +
+      conditional(reportCloseMappedReads, "--report_close_mapped_reads") +
+      conditional(reportOnlyCloseMappedReads, "--report_only_close_mapped_reads") +
+      conditional(reportInterchromosomalEvents, "--report_interchromosomal_events") +
+      conditional(IndelCorrection, "--IndelCorrection") +
+      conditional(NormalSamples, "--NormalSamples") +
+      optional("--breakdancer", breakdancer) +
+      optional("--include", include) +
+      optional("--exclude", exclude) +
+      optional("--additional_mismatch", additionalMismatch) +
+      optional("--min_perfect_match_around_BP", minPerfectMatchAroundBP) +
+      optional("--min_inversion_size", minInversionSize) +
+      optional("--min_num_matched_bases", minNumMatchedBases) +
+      optional("--balance_cutoff", balanceCutoff) +
+      optional("--anchor_quality", anchorQuality) +
+      optional("--minimum_support_for_event", minimumSupportForEvent) +
+      optional("--input_SV_Calls_for_assembly", inputSVCallsForAssembly) +
+      conditional(genotyping, "-g") +
+      optional("--output_of_breakdancer_events", outputOfBreakdancerEvents) +
+      optional("--name_of_logfile", nameOfLogfile) +
+      optional("--Ploidy", ploidy) +
+      conditional(detectDD, "detect_DD") +
+      optional("--MAX_DD_BREAKPOINT_DISTANCE", maxDdBreakpointDistance) +
+      optional("--MAX_DISTANCE_CLUSTER_READS", maxDistanceClusterReads) +
+      optional("--MIN_DD_CLUSTER_SIZE", minDdClusterSize) +
+      optional("--MIN_DD_BREAKPOINT_SUPPORT", minDdBreakpointSupport) +
+      optional("--MIN_DD_MAP_DISTANCE", minDdMapDistance) +
+      optional("--DD_REPORT_DUPLICATION_READS", ddReportDuplicationReads)
 }
 
 object PindelCaller {

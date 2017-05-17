@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
@@ -19,6 +19,7 @@ import java.io.File
 import org.testng.annotations.Test
 
 class CutadaptTest extends FastqcV0101Test {
+
   /** Mock output file of a Cutadapt 1.9 run */
   private[flexiprep] val cutadaptOut: File = resourceFile("ct-test.R1.clip.stats")
 
@@ -63,9 +64,18 @@ class CutadaptTest extends FastqcV0101Test {
     val cutadapt = testCutadaptInst
     val summary = cutadapt.summaryStats
 
-    summary.keys shouldBe Set("num_bases_input", "num_reads_input", "num_reads_output",
-      "num_reads_with_adapters", "num_reads_affected", "num_reads_discarded_too_long",
-      "adapters", "num_reads_discarded_many_n", "num_reads_discarded_too_short", "num_bases_output")
+    summary.keys shouldBe Set(
+      "num_bases_input",
+      "num_reads_input",
+      "num_reads_output",
+      "num_reads_with_adapters",
+      "num_reads_affected",
+      "num_reads_discarded_too_long",
+      "adapters",
+      "num_reads_discarded_many_n",
+      "num_reads_discarded_too_short",
+      "num_bases_output"
+    )
 
     summary.keys.size shouldBe 10
     summary("adapters").asInstanceOf[Map[String, Map[String, Any]]].keys.size shouldBe 4

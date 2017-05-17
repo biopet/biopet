@@ -1,37 +1,42 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.basty
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.{ Raxml, RunGubbins }
-import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
+import nl.lumc.sasc.biopet.extensions.{Raxml, RunGubbins}
+import nl.lumc.sasc.biopet.extensions.gatk.{
+  BaseRecalibrator,
+  IndelRealigner,
+  PrintReads,
+  RealignerTargetCreator
+}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
-import nl.lumc.sasc.biopet.extensions.tools.{ BastyGenerateFasta, VcfStats }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.extensions.tools.{BastyGenerateFasta, VcfStats}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
- * Created by pjvanthof on 27/09/16.
- */
+  * Created by pjvanthof on 27/09/16.
+  */
 class BastyTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Basty = {
     new Basty() {
@@ -44,9 +49,7 @@ class BastyTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "bastyOptions")
   def bastyOptions = {
-    for (
-      s1 <- sample1; s2 <- sample2
-    ) yield Array("", s1, s2)
+    for (s1 <- sample1; s2 <- sample2) yield Array("", s1, s2)
   }
 
   def sample1 = Array(false, true)
@@ -73,16 +76,20 @@ class BastyTest extends TestNGSuite with Matchers {
       if (sample1) m = ConfigUtils.mergeMaps(BastyTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(BastyTest.sample2, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp_vcf" -> "test.vcf.gz"), m)
-      ConfigUtils.mergeMaps(Map(
-        "multisample_variantcalling" -> multisampleCalling,
-        "single_sample_variantcalling" -> sampleCalling,
-        "library_variantcalling" -> libraryCalling,
-        "use_indel_realigner" -> realign,
-        "use_base_recalibration" -> baseRecalibration,
-        "sv_calling" -> svCalling,
-        "cnv_calling" -> cnvCalling,
-        "annotation" -> annotation,
-        "boot_runs" -> bootRuns), m)
+      ConfigUtils.mergeMaps(
+        Map(
+          "multisample_variantcalling" -> multisampleCalling,
+          "single_sample_variantcalling" -> sampleCalling,
+          "library_variantcalling" -> libraryCalling,
+          "use_indel_realigner" -> realign,
+          "use_base_recalibration" -> baseRecalibration,
+          "sv_calling" -> svCalling,
+          "cnv_calling" -> cnvCalling,
+          "annotation" -> annotation,
+          "boot_runs" -> bootRuns
+        ),
+        m
+      )
 
     }
 
@@ -98,13 +105,20 @@ class BastyTest extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample2) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + numberSamples)
 
       // Gatk preprocess
-      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
-      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (if (realign) numberSamples
+                                                                         else 0)
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (if (realign)
+                                                                                   numberSamples
+                                                                                 else 0)
+      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration)
+                                                                             (numberLibs * 2)
+                                                                           else 0)
+      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration)
+                                                                       numberLibs
+                                                                     else 0)
 
       pipeline.summarySettings.get("boot_runs") shouldBe Some(bootRuns.getOrElse(100))
 
@@ -128,8 +142,8 @@ class BastyTest extends TestNGSuite with Matchers {
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (
-        (if (multisampleCalling) 2 else 0) +
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe ((if (multisampleCalling) 2
+                                                                    else 0) +
         (if (sampleCalling) numberSamples * 2 else 0) +
         (if (libraryCalling) numberLibs * 2 else 0))
 
@@ -201,10 +215,9 @@ object BastyTest {
     "delly" -> Map("exe" -> "test"),
     "rungubbins" -> Map("exe" -> "test"),
     "raxml" -> Map("exe" -> "test"),
-    "pysvtools" -> Map(
-      "exe" -> "test",
-      "exclusion_regions" -> "test",
-      "translocations_only" -> false),
+    "pysvtools" -> Map("exe" -> "test",
+                       "exclusion_regions" -> "test",
+                       "translocations_only" -> false),
     "freec" -> Map(
       "exe" -> "test",
       "chrFiles" -> "test",
@@ -213,24 +226,26 @@ object BastyTest {
   )
 
   val sample1 = Map(
-    "samples" -> Map("sample1" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("1_1_R1.fq"),
-        "R2" -> inputTouch("1_1_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample1" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("1_1_R1.fq"),
+            "R2" -> inputTouch("1_1_R2.fq")
+          )
+        ))))
 
   val sample2 = Map(
-    "samples" -> Map("sample3" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("2_1_R1.fq"),
-        "R2" -> inputTouch("2_1_R2.fq")
-      ),
-      "lib2" -> Map(
-        "R1" -> inputTouch("2_2_R1.fq"),
-        "R2" -> inputTouch("2_2_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample3" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("2_1_R1.fq"),
+            "R2" -> inputTouch("2_1_R2.fq")
+          ),
+          "lib2" -> Map(
+            "R1" -> inputTouch("2_2_R1.fq"),
+            "R2" -> inputTouch("2_2_R2.fq")
+          )
+        ))))
 }

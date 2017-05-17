@@ -1,29 +1,29 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Created by pjvan_thof on 1/29/15.
- * Versions from the executable are not reliable, this extension is based on md5 '3d033ff8a1f4ea9cb3ede12939561141' from the executable
- */
+  * Created by pjvan_thof on 1/29/15.
+  * Versions from the executable are not reliable, this extension is based on md5 '3d033ff8a1f4ea9cb3ede12939561141' from the executable
+  */
 class WigToBigWig(val parent: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input wig file")
   var inputWigFile: File = _
@@ -44,12 +44,13 @@ class WigToBigWig(val parent: Configurable) extends BiopetCommandLineFunction {
   var unc: Boolean = config("unc", default = false)
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
-    optional("-blockSize=", blockSize, spaceSeparated = false) +
-    optional("-itemsPerSlot=", itemsPerSlot, spaceSeparated = false) +
-    conditional(clip, "-clip") +
-    conditional(unc, "-unc") +
-    required(inputWigFile) +
-    required(inputChromSizesFile) +
-    required(outputBigWig)
+  def cmdLine =
+    required(executable) +
+      optional("-blockSize=", blockSize, spaceSeparated = false) +
+      optional("-itemsPerSlot=", itemsPerSlot, spaceSeparated = false) +
+      conditional(clip, "-clip") +
+      conditional(unc, "-unc") +
+      required(inputWigFile) +
+      required(inputChromSizesFile) +
+      required(outputBigWig)
 }

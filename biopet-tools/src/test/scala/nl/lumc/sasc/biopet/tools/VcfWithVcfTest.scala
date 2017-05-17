@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -30,10 +30,10 @@ import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.utils.VcfUtils.identicalVariantContext
 
 /**
- * Test class for [[VcfWithVcfTest]]
- *
- * Created by ahbbollen on 10-4-15.
- */
+  * Test class for [[VcfWithVcfTest]]
+  *
+  * Created by ahbbollen on 10-4-15.
+  */
 class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   import VcfWithVcf._
 
@@ -52,7 +52,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testOutputTypeVcf() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
+    val arguments = Array("-I",
+                          unveppedPath,
+                          "-s",
+                          veppedPath,
+                          "-o",
+                          tmpFile.getAbsolutePath,
+                          "-f",
+                          "CSQ",
+                          "-R",
+                          referenceFasta)
     main(arguments)
   }
 
@@ -60,7 +69,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testOutputTypeVcfGz() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
+    val arguments = Array("-I",
+                          unveppedPath,
+                          "-s",
+                          veppedPath,
+                          "-o",
+                          tmpFile.getAbsolutePath,
+                          "-f",
+                          "CSQ",
+                          "-R",
+                          referenceFasta)
     main(arguments)
   }
 
@@ -68,7 +86,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testOutputTypeBcf() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".bcf")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
+    val arguments = Array("-I",
+                          unveppedPath,
+                          "-s",
+                          veppedPath,
+                          "-o",
+                          tmpFile.getAbsolutePath,
+                          "-f",
+                          "CSQ",
+                          "-R",
+                          referenceFasta)
     main(arguments)
   }
 
@@ -76,7 +103,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testOutputFieldException() = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:AC", "-R", referenceFasta)
+    val args = Array("-I",
+                     unveppedPath,
+                     "-s",
+                     veppedPath,
+                     "-o",
+                     tmpFile.getAbsolutePath,
+                     "-f",
+                     "CSQ:AC",
+                     "-R",
+                     referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Field 'AC' already exists in input vcf")
@@ -86,7 +122,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testInputFieldException() = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", unveppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:NEW_CSQ", "-R", referenceFasta)
+    val args = Array("-I",
+                     unveppedPath,
+                     "-s",
+                     unveppedPath,
+                     "-o",
+                     tmpFile.getAbsolutePath,
+                     "-f",
+                     "CSQ:NEW_CSQ",
+                     "-R",
+                     referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Field 'CSQ' does not exist in secondary vcf")
@@ -96,7 +141,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testMinMethodException() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:min", "-R", referenceFasta)
+    val args = Array("-I",
+                     unveppedPath,
+                     "-s",
+                     veppedPath,
+                     "-o",
+                     tmpFile.getAbsolutePath,
+                     "-f",
+                     "CSQ:CSQ:min",
+                     "-R",
+                     referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Type of field CSQ is not numeric")
@@ -106,7 +160,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testMaxMethodException() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:max", "-R", referenceFasta)
+    val args = Array("-I",
+                     unveppedPath,
+                     "-s",
+                     veppedPath,
+                     "-o",
+                     tmpFile.getAbsolutePath,
+                     "-f",
+                     "CSQ:CSQ:max",
+                     "-R",
+                     referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Type of field CSQ is not numeric")
@@ -221,7 +284,16 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testNumberAOutput() = {
     val tmpFile = File.createTempFile("numberA", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", monoPath, "-s", multiPath, "-o", tmpFile.getAbsolutePath, "-f", "AF:MULTI_AF", "-R", referenceFasta)
+    val arguments = Array("-I",
+                          monoPath,
+                          "-s",
+                          multiPath,
+                          "-o",
+                          tmpFile.getAbsolutePath,
+                          "-f",
+                          "AF:MULTI_AF",
+                          "-R",
+                          referenceFasta)
     main(arguments)
     val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
     annotatedRecord.getAttribute("MULTI_AF").toString shouldBe "0.333"
@@ -232,13 +304,22 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   def testNumberROutput() = {
     val tmpFile = File.createTempFile("numberR", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", monoPath, "-s", multiPath, "-o", tmpFile.getAbsolutePath, "-f", "ALL_ALLELE:MULTI_ALL_ALLELE", "-R", referenceFasta)
+    val arguments = Array("-I",
+                          monoPath,
+                          "-s",
+                          multiPath,
+                          "-o",
+                          tmpFile.getAbsolutePath,
+                          "-f",
+                          "ALL_ALLELE:MULTI_ALL_ALLELE",
+                          "-R",
+                          referenceFasta)
     main(arguments)
     val annotatedRecord = new VCFFileReader(tmpFile).iterator().next()
     annotatedRecord.getAttribute("MULTI_ALL_ALLELE") match {
-      case l: List[_]           => l shouldBe List("C", "A")
+      case l: List[_] => l shouldBe List("C", "A")
       case u: util.ArrayList[_] => u.toList shouldBe List("C", "A")
-      case _                    => throw new IllegalStateException("Not a list")
+      case _ => throw new IllegalStateException("Not a list")
     }
   }
 

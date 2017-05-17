@@ -1,38 +1,47 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, WriteSummary }
+import nl.lumc.sasc.biopet.core.summary.{SummaryQScript, WriteSummary}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.queue.{ QScript, QSettings }
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.broadinstitute.gatk.queue.function.QFunction
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import org.broadinstitute.gatk.queue.util.{Logging => GatkLogging}
 
 import scala.collection.mutable.ListBuffer
 
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
-  @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
+  @Argument(doc = "JSON / YAML config file(s)",
+            fullName = "config_file",
+            shortName = "config",
+            required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'namespace:namespace:key=value'", fullName = "config_value", shortName = "cv", required = false)
+  @Argument(
+    doc =
+      "Config values, value should be formatted like 'key=value' or 'namespace:namespace:key=value'",
+    fullName = "config_value",
+    shortName = "cv",
+    required = false
+  )
   val configValues: List[String] = Nil
 
   /** Output directory of pipeline */
@@ -67,6 +76,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
   val skipWriteDependencies: Boolean = config("skip_write_dependencies", default = false)
 
+  val writeHtmlReport: Boolean = config("write_html_report", default = true)
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -82,7 +93,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       logger.info("Disable scatters")
       for (function <- functions) function match {
         case f: ScatterGatherableFunction => f.scatterCount = 1
-        case _                            =>
+        case _ =>
       }
     }
 
@@ -97,10 +108,11 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
           f.internalBeforeGraph()
           f.commandLine
         case f: WriteSummary => f.init()
-        case _               =>
+        case _ =>
       }
       count += 1
-      if (count % 500 == 0) logger.info(s"Preprocessing done for $count jobs out of $totalCount total")
+      if (count % 500 == 0)
+        logger.info(s"Preprocessing done for $count jobs out of $totalCount total")
     }
     logger.info(s"Preprocessing done for $totalCount functions")
 
@@ -108,7 +120,9 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(new File(logDir, "config"))
-    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writable, output directory cannot be created")
+    else
+      Logging.addError(
+        "Parent of output dir: '" + outputDir.getParent + "' is not writable, output directory cannot be created")
 
     logger.info("Checking input files")
     inputFiles.par.foreach { i =>
@@ -118,31 +132,40 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     }
 
     logger.info("Set stdout file when not set")
-    functions.filter(_.jobOutputFile == null).foreach(f => {
-      val className = if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName else f.getClass.getSimpleName
-      BiopetQScript.safeOutputs(f) match {
-        case Some(o) => f.jobOutputFile = new File(o.head.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + className + ".out")
-        case _       => f.jobOutputFile = new File("./stdout") // Line is here for test backup
-      }
-    })
-
-    logger.info("Adding report")
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach { report =>
-        for (f <- functions) f match {
-          case w: WriteSummary => report.deps :+= w.jobOutputFile
-          case _               =>
+    functions
+      .filter(_.jobOutputFile == null)
+      .foreach(f => {
+        val className =
+          if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName
+          else f.getClass.getSimpleName
+        BiopetQScript.safeOutputs(f) match {
+          case Some(o) =>
+            f.jobOutputFile = new File(o.head.getAbsoluteFile.getParent,
+                                       "." + f.firstOutput.getName + "." + className + ".out")
+          case _ => f.jobOutputFile = new File("./stdout") // Line is here for test backup
         }
-        report.jobOutputFile = new File(report.outputDir, ".report.out")
-        add(report)
+      })
+
+    if (writeHtmlReport) {
+      logger.info("Adding report")
+      this match {
+        case q: MultiSampleQScript
+            if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+          logger.info("Write report is skipped because sample flag is used")
+        case _ =>
+          reportClass.foreach { report =>
+            for (f <- functions) f match {
+              case w: WriteSummary => report.deps :+= w.jobOutputFile
+              case _ =>
+            }
+            report.jobOutputFile = new File(report.outputDir, ".report.out")
+            add(report)
+          }
       }
     }
 
-    if (!skipWriteDependencies) WriteDependencies.writeDependencies(
-      functions,
-      new File(logDir, "graph"))
+    if (!skipWriteDependencies)
+      WriteDependencies.writeDependencies(functions, new File(logDir, "graph"))
     else logger.debug("Write dependencies is skipped")
 
     Logging.checkErrors()
@@ -169,7 +192,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
         that.biopetScript()
         this match {
           case s: SummaryQScript => s.addSummaryQScript(that)
-          case _                 =>
+          case _ =>
         }
       case that: BiopetQScript =>
         that.init()
@@ -185,8 +208,10 @@ object BiopetQScript {
 
   def checkOutputDir(outputDir: File): Unit = {
     // Sanity checks
-    require(outputDir.getAbsoluteFile.getParentFile.canRead, s"No premision to read parent of outputdir: ${outputDir.getParentFile}")
-    require(outputDir.getAbsoluteFile.getParentFile.canWrite, s"No premision to write parent of outputdir: ${outputDir.getParentFile}")
+    require(outputDir.getAbsoluteFile.getParentFile.canRead,
+            s"No premision to read parent of outputdir: ${outputDir.getParentFile}")
+    require(outputDir.getAbsoluteFile.getParentFile.canWrite,
+            s"No premision to write parent of outputdir: ${outputDir.getParentFile}")
     outputDir.mkdir()
     require(outputDir.getAbsoluteFile.canRead, s"No premision to read outputdir: $outputDir")
     require(outputDir.getAbsoluteFile.canWrite, s"No premision to write outputdir: $outputDir")

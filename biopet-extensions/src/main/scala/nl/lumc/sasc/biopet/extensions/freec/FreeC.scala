@@ -58,10 +58,9 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   private var _ratioBedGraph: File = _
   def ratioBedGraph = new File(outputPath, input.getName + "_ratio.BedGraph")
 
-  executable = config("exe", default = "freec")
+  executable = config("exe", default = "freec", freeVar = false)
   var bedGraphOutput: Boolean = config("BedGraphOutput", default = false)
-  var _bedtools: File = config("exe", default = "bedtools", namespace = "bedtools")
-  var bedtools: Option[String] = config("bedtools", default = _bedtools, freeVar = false)
+  var bedtools: Option[File] = config("exe", default = "bedtools", namespace = "bedtools", freeVar = false)
   var breakPointThreshold: Option[Double] = config("breakPointThreshold")
   var breakPointType: Option[Int] = config("breakPointType")
 
@@ -84,7 +83,6 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   var minExpectedGC: Option[Double] = config("minExpectedGC")
   var maxExpectedGC: Option[Double] = config("maxExpectedGC")
   var minimalSubclonePresence: Option[Int] = config("minimalSubclonePresence")
-  var maxThreads: Int = getThreads
 
   var noisyData: Boolean = config("noisyData", default = false)
   //var outputDir: File
@@ -92,12 +90,10 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   var printNA: Boolean = config("printNA", default = false)
   var readCountThreshold: Option[Int] = config("readCountThreshold")
 
-  var _sambamba: File = config("exe", namespace = "sambamba", default = "sambamba")
-  var sambamba: File = config("sambamba", default = _sambamba, freeVar = false)
+  var sambamba: File = config("exe", namespace = "sambamba", default = "sambamba", freeVar = false)
   var sambambaThreads: Option[Int] = config("SambambaThreads")
 
-  var _samtools: File = config("exe", namespace = "samtools", default = "samtools")
-  var samtools: File = config("samtools", default = _samtools, freeVar = false)
+  var samtools: File = config("exe", namespace = "samtools", default = "samtools", freeVar = false)
 
   var sex: Option[String] = config("sex")
   var step: Option[Int] = config("step")

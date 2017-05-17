@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
 import java.io.File
@@ -29,10 +29,10 @@ import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Carp pipeline
- * Chip-Seq analysis pipeline
- * This pipeline performs QC,mapping and peak calling
- */
+  * Carp pipeline
+  * Chip-Seq analysis pipeline
+  * This pipeline performs QC,mapping and peak calling
+  */
 class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrait with Reference {
   qscript =>
   def this() = this(null)
@@ -77,14 +77,18 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
       samtoolsView.h = true
       add(samtoolsView)
 
-      val bamMetricsFilter = BamMetrics(qscript, preProcessBam.get, new File(sampleDir, "metrics-filter"), sampleId = Some(sampleId))
+      val bamMetricsFilter = BamMetrics(qscript,
+                                        preProcessBam.get,
+                                        new File(sampleDir, "metrics-filter"),
+                                        sampleId = Some(sampleId))
       addAll(bamMetricsFilter.functions)
       bamMetricsFilter.summaryName = "bammetrics-filter"
       addSummaryQScript(bamMetricsFilter)
 
       val buildBamIndex = new BuildBamIndex(qscript)
       buildBamIndex.input = preProcessBam.get
-      buildBamIndex.output = swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
+      buildBamIndex.output =
+        swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
       add(buildBamIndex)
 
       val macs2 = new Macs2CallPeak(qscript)
@@ -106,7 +110,9 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
   lazy val paired: Boolean = {
     val notPaired = samples.forall(_._2.libraries.forall(_._2.inputR2.isEmpty))
     val p = samples.forall(_._2.libraries.forall(_._2.inputR2.isDefined))
-    if (!notPaired && !p) Logging.addError("Combination of Paired-end and Single-end detected, this is not allowed in Carp")
+    if (!notPaired && !p)
+      Logging.addError(
+        "Combination of Paired-end and Single-end detected, this is not allowed in Carp")
     p
   }
 
@@ -114,7 +120,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     super.init()
     // ensure that no samples are called 'control' since that is our reserved keyword
     require(!sampleIds.contains("control"),
-      "No sample should be named 'control' since it is a reserved for the Carp pipeline")
+            "No sample should be named 'control' since it is a reserved for the Carp pipeline")
   }
 
   override def addMultiSampleJobs(): Unit = {
@@ -122,7 +128,8 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     for ((sampleId, sample) <- samples) {
       for (controlId <- sample.controls) {
         if (!samples.contains(controlId))
-          throw new IllegalStateException("For sample: " + sampleId + " this control: " + controlId + " does not exist")
+          throw new IllegalStateException(
+            "For sample: " + sampleId + " this control: " + controlId + " does not exist")
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = sample.preProcessBam.get
         macs2.control = samples(controlId).preProcessBam.get

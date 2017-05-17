@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader }
+import htsjdk.samtools.fastq.{AsyncFastqWriter, BasicFastqWriter, FastqReader}
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 object FastqSplitter extends ToolCommand {
 
   /**
-   * Arg for commandline program
-   * @param inputFile input fastq file
-   * @param outputFile output fastq files
-   */
+    * Arg for commandline program
+    * @param inputFile input fastq file
+    * @param outputFile output fastq files
+    */
   case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -38,16 +38,18 @@ object FastqSplitter extends ToolCommand {
   }
 
   /**
-   * Program will split fastq file in multiple fastq files
-   *
-   * @param args the command line arguments
-   */
+    * Program will split fastq file in multiple fastq files
+    *
+    * @param args the command line arguments
+    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val commandArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val groupSize = 100
-    val output = for (file <- commandArgs.outputFile) yield new AsyncFastqWriter(new BasicFastqWriter(file), groupSize)
+    val output = for (file <- commandArgs.outputFile)
+      yield new AsyncFastqWriter(new BasicFastqWriter(file), groupSize)
     val reader = new FastqReader(commandArgs.inputFile)
 
     logger.info("Starting to split fatsq file: " + commandArgs.inputFile)

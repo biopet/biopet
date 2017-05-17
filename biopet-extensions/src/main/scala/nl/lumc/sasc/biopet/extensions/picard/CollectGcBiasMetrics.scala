@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
@@ -19,13 +19,16 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /** Extension for picard CollectGcBiasMetrics */
-class CollectGcBiasMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
-  javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
+class CollectGcBiasMetrics(val parent: Configurable)
+    extends Picard
+    with Summarizable
+    with Reference {
 
-  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
+  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
+         required = true)
   var input: Seq[File] = Nil
 
   @Output(doc = "The output file to write statistics to", required = true)
@@ -61,16 +64,17 @@ class CollectGcBiasMetrics(val parent: Configurable) extends Picard with Summari
   }
 
   /** Returns command to execute */
-  override def cmdLine = super.cmdLine +
-    repeat("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false) +
-    optional("CHART_OUTPUT=", outputChart, spaceSeparated = false) +
-    required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    required("SUMMARY_OUTPUT=", outputSummary, spaceSeparated = false) +
-    optional("WINDOW_SIZE=", windowSize, spaceSeparated = false) +
-    optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated = false) +
-    conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
-    conditional(isBisulfiteSequinced.getOrElse(false), "IS_BISULFITE_SEQUENCED=TRUE")
+  override def cmdLine =
+    super.cmdLine +
+      repeat("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", output, spaceSeparated = false) +
+      optional("CHART_OUTPUT=", outputChart, spaceSeparated = false) +
+      required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
+      required("SUMMARY_OUTPUT=", outputSummary, spaceSeparated = false) +
+      optional("WINDOW_SIZE=", windowSize, spaceSeparated = false) +
+      optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated = false) +
+      conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
+      conditional(isBisulfiteSequinced.getOrElse(false), "IS_BISULFITE_SEQUENCED=TRUE")
 
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map()
@@ -80,12 +84,15 @@ class CollectGcBiasMetrics(val parent: Configurable) extends Picard with Summari
 }
 
 object CollectGcBiasMetrics {
+
   /** Returns default CollectGcBiasMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectGcBiasMetrics = {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
-    collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")
-    collectGcBiasMetrics.outputSummary = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics.summary")
+    collectGcBiasMetrics.output =
+      new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")
+    collectGcBiasMetrics.outputSummary =
+      new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics.summary")
     collectGcBiasMetrics
   }
 }

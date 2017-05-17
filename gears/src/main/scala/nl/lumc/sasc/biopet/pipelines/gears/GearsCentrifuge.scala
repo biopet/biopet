@@ -1,31 +1,34 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, SampleLibraryTag}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
-import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
+import nl.lumc.sasc.biopet.extensions.centrifuge.{Centrifuge, CentrifugeKreport}
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvanthof on 19/09/16.
- */
-class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+  * Created by pjvanthof on 19/09/16.
+  */
+class GearsCentrifuge(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -42,6 +45,8 @@ class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScr
 
   def centrifugeOutput = new File(outputDir, s"$outputName.centrifuge.gz")
   def centrifugeMetOutput = new File(outputDir, s"$outputName.centrifuge.met")
+  def centrifugeNonUniqueKReport = new File(outputDir, s"$outputName.centrifuge.kreport")
+  def centrifugeUniqueKReport = new File(outputDir, s"$outputName.centrifuge_unique.kreport")
 
   def biopetScript(): Unit = {
     val centrifuge = new Centrifuge(this)
@@ -66,7 +71,8 @@ class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScr
     centrifugeKreport.centrifugeOutputFiles :+= fifo
     centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
     centrifugeKreport.onlyUnique = unique
-    val pipe = new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo)))
+    val pipe =
+      new BiopetFifoPipe(this, List(centrifugeKreport, Zcat(this, centrifugeOutput, fifo)))
     add(pipe)
 
     val krakenReportJSON = new KrakenReportToJson(this)
@@ -81,9 +87,10 @@ class GearsCentrifuge(val parent: Configurable) extends QScript with SummaryQScr
   def summarySettings: Map[String, Any] = Map()
 
   /** Statistics shown in the summary file */
-  def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1, "centrifuge_output" -> centrifugeOutput) ++
-    (fastqR2 match {
-      case Some(file) => Map("input_R2" -> file)
-      case _          => Map()
-    })
+  def summaryFiles: Map[String, File] =
+    outputFiles + ("input_R1" -> fastqR1, "centrifuge_output" -> centrifugeOutput) ++
+      (fastqR2 match {
+        case Some(file) => Map("input_R2" -> file)
+        case _ => Map()
+      })
 }

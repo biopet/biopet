@@ -1,13 +1,26 @@
+/**
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.summary.db
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 import slick.driver.H2Driver.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
-import java.io.{ Closeable, File }
+import scala.concurrent.{Await, ExecutionContext, Future}
+import java.io.{Closeable, File}
 import java.sql.Date
 
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
@@ -16,11 +29,13 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import scala.language.implicitConversions
 
 /**
- * This class interface wityh a summary database
- *
- * Created by pjvanthof on 05/02/2017.
- */
+  * This class interface wityh a summary database
+  *
+  * Created by pjvanthof on 05/02/2017.
+  */
 trait SummaryDb extends Closeable {
+
+  implicit val ec: ExecutionContext
 
   def db: Database
 
@@ -35,7 +50,9 @@ trait SummaryDb extends Closeable {
         runId.map(run.id === _),
         runName.map(run.runName === _),
         outputDir.map(run.outputDir === _)
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+      ).collect({ case Some(criteria) => criteria })
+        .reduceLeftOption(_ && _)
+        .getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
   }
@@ -49,7 +66,9 @@ trait SummaryDb extends Closeable {
         sampleId.map(sample.id === _),
         runId.map(sample.runId === _),
         name.map(sample.name === _)
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+      ).collect({ case Some(criteria) => criteria })
+        .reduceLeftOption(_ && _)
+        .getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
   }
@@ -81,16 +100,17 @@ trait SummaryDb extends Closeable {
         sampleId.map(lib.sampleId === _),
         runId.map(lib.runId === _),
         name.map(lib.name === _) // not a condition as `criteriaRoast` evaluates to `None`
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+      ).collect({ case Some(criteria) => criteria })
+        .reduceLeftOption(_ && _)
+        .getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
   }
 
   /** Return a libraryId for a specific combination */
-  def getLibraryId(runId: Int,
-                   sampleId: Int,
-                   name: String): Future[Option[Int]] = {
-    getLibraries(runId = Some(runId), sampleId = Some(sampleId), name = Some(name)).map(_.headOption.map(_.id))
+  def getLibraryId(runId: Int, sampleId: Int, name: String): Future[Option[Int]] = {
+    getLibraries(runId = Some(runId), sampleId = Some(sampleId), name = Some(name))
+      .map(_.headOption.map(_.id))
   }
 
   /** Return a libraryId for a specific combination */
@@ -113,14 +133,15 @@ trait SummaryDb extends Closeable {
         pipelineId.map(lib.id === _),
         runId.map(lib.runId === _),
         name.map(lib.name === _)
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+      ).collect({ case Some(criteria) => criteria })
+        .reduceLeftOption(_ && _)
+        .getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
   }
 
   /** Return pipelineId of a specific pipelineName */
-  def getPipelineId(runId: Int,
-                    pipelineName: String): Future[Option[Int]] = {
+  def getPipelineId(runId: Int, pipelineName: String): Future[Option[Int]] = {
     getPipelines(runId = Some(runId), name = Some(pipelineName)).map(_.headOption.map(_.id))
   }
 
@@ -140,56 +161,62 @@ trait SummaryDb extends Closeable {
         runId.map(lib.runId === _),
         pipelineId.map(lib.pipelineId === _),
         name.map(lib.name === _)
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+      ).collect({ case Some(criteria) => criteria })
+        .reduceLeftOption(_ && _)
+        .getOrElse(true: Rep[Boolean])
     }
     db.run(q.result)
   }
 
   /** Return moduleId of a specific moduleName */
-  def getmoduleId(runId: Int,
-                  moduleName: String,
-                  pipelineId: Int): Future[Option[Int]] = {
-    getModules(runId = Some(runId), name = Some(moduleName), pipelineId = Some(pipelineId)).map(_.headOption.map(_.id))
+  def getmoduleId(runId: Int, moduleName: String, pipelineId: Int): Future[Option[Int]] = {
+    getModules(runId = Some(runId), name = Some(moduleName), pipelineId = Some(pipelineId))
+      .map(_.headOption.map(_.id))
   }
 
   /** Returns name of a module */
-  def getModuleName(pipelineId: Int,
-                    moduleId: Int): Future[Option[String]] = {
-    getModules(pipelineId = Some(pipelineId), moduleId = Some(moduleId)).map(_.headOption.map(_.name))
+  def getModuleName(pipelineId: Int, moduleId: Int): Future[Option[String]] = {
+    getModules(pipelineId = Some(pipelineId), moduleId = Some(moduleId))
+      .map(_.headOption.map(_.name))
   }
 
   /** Return a Query for [[Stats]] */
-  def statsFilter(runId: Option[Int] = None,
-                  pipeline: Option[PipelineQuery] = None,
-                  module: Option[ModuleQuery] = None,
-                  sample: Option[SampleQuery] = None,
-                  library: Option[LibraryQuery] = None,
-                  mustHaveSample: Boolean = false,
-                  mustHaveLibrary: Boolean = false): slick.driver.H2Driver.api.Query[Stats, Stat, Seq] = {
+  def statsFilter(
+      runId: Option[Int] = None,
+      pipeline: Option[PipelineQuery] = None,
+      module: Option[ModuleQuery] = None,
+      sample: Option[SampleQuery] = None,
+      library: Option[LibraryQuery] = None,
+      mustHaveSample: Boolean = false,
+      mustHaveLibrary: Boolean = false): slick.driver.H2Driver.api.Query[Stats, Stat, Seq] = {
     var f: Query[Stats, Stats#TableElementType, Seq] = stats
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
-      case Some(p: PipelineId)   => f.filter(_.pipelineId === p.id)
-      case Some(p: PipelineName) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
-      case _                     => f
+      case Some(p: PipelineId) => f.filter(_.pipelineId === p.id)
+      case Some(p: PipelineName) =>
+        f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
+      case _ => f
     }
     f = module match {
-      case Some(m: ModuleId)   => f.filter(_.moduleId === m.id)
-      case Some(m: ModuleName) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
-      case Some(NoModule)      => f.filter(_.moduleId.isEmpty)
-      case _                   => f
+      case Some(m: ModuleId) => f.filter(_.moduleId === m.id)
+      case Some(m: ModuleName) =>
+        f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
+      case Some(NoModule) => f.filter(_.moduleId.isEmpty)
+      case _ => f
     }
     f = sample match {
-      case Some(s: SampleId)   => f.filter(_.sampleId === s.id)
-      case Some(s: SampleName) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
-      case Some(NoSample)      => f.filter(_.sampleId.isEmpty)
-      case _                   => f
+      case Some(s: SampleId) => f.filter(_.sampleId === s.id)
+      case Some(s: SampleName) =>
+        f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
+      case Some(NoSample) => f.filter(_.sampleId.isEmpty)
+      case _ => f
     }
     f = library match {
-      case Some(l: LibraryId)   => f.filter(_.libraryId === l.id)
-      case Some(l: LibraryName) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
-      case Some(NoLibrary)      => f.filter(_.libraryId.isEmpty)
-      case _                    => f
+      case Some(l: LibraryId) => f.filter(_.libraryId === l.id)
+      case Some(l: LibraryName) =>
+        f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
+      case Some(NoLibrary) => f.filter(_.libraryId.isEmpty)
+      case _ => f
     }
 
     if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
@@ -205,7 +232,8 @@ trait SummaryDb extends Closeable {
                library: Option[LibraryQuery] = None,
                mustHaveSample: Boolean = false,
                mustHaveLibrary: Boolean = false): Future[Seq[Stat]] = {
-    db.run(statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).result)
+    db.run(
+      statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).result)
   }
 
   /** Return number of results */
@@ -216,7 +244,8 @@ trait SummaryDb extends Closeable {
                    library: Option[LibraryQuery] = None,
                    mustHaveSample: Boolean = false,
                    mustHaveLibrary: Boolean = false): Future[Int] = {
-    db.run(statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).size.result)
+    db.run(
+      statsFilter(runId, pipeline, module, sample, library, mustHaveSample, mustHaveLibrary).size.result)
   }
 
   /** Get a single stat as [[Map[String, Any]] */
@@ -236,34 +265,52 @@ trait SummaryDb extends Closeable {
                   library: LibraryQuery = NoLibrary,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
+    if (module == ModuleName("rna")) {
+      ""
+    }
     keyValues.map {
       case (key, path) =>
         stats match {
           case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
-          case None      => key -> None
+          case None => key -> None
         }
     }
   }
 
-  def getStatsForSamples(runId: Int,
-                         pipeline: PipelineQuery,
-                         module: ModuleQuery = NoModule,
-                         sample: Option[SampleQuery] = None,
-                         keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
-    val samples = Await.result(getSamples(runId = Some(runId), sampleId = sample.collect { case s: SampleId => s.id }, name = sample.collect { case s: SampleName => s.name }), Duration.Inf)
+  def getStatsForSamples(
+      runId: Int,
+      pipeline: PipelineQuery,
+      module: ModuleQuery = NoModule,
+      sample: Option[SampleQuery] = None,
+      keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
+    val samples = Await.result(getSamples(runId = Some(runId), sampleId = sample.collect {
+      case s: SampleId => s.id
+    }, name = sample.collect { case s: SampleName => s.name }), Duration.Inf)
     (for (s <- samples) yield {
-      s.id -> getStatKeys(runId, pipeline, module, SampleId(s.id), NoLibrary, keyValues = keyValues)
+      s.id -> getStatKeys(runId,
+                          pipeline,
+                          module,
+                          SampleId(s.id),
+                          NoLibrary,
+                          keyValues = keyValues)
     }).toMap
   }
 
-  def getStatsForLibraries(runId: Int,
-                           pipeline: PipelineQuery,
-                           module: ModuleQuery = NoModule,
-                           sampleId: Option[Int] = None,
-                           keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
-    val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+  def getStatsForLibraries(
+      runId: Int,
+      pipeline: PipelineQuery,
+      module: ModuleQuery = NoModule,
+      sampleId: Option[Int] = None,
+      keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
+    val libraries =
+      Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
-      (lib.sampleId, lib.id) -> getStatKeys(runId, pipeline, module, SampleId(lib.sampleId), LibraryId(lib.id), keyValues = keyValues)
+      (lib.sampleId, lib.id) -> getStatKeys(runId,
+                                            pipeline,
+                                            module,
+                                            SampleId(lib.sampleId),
+                                            LibraryId(lib.id),
+                                            keyValues = keyValues)
     }).toMap
   }
 
@@ -273,31 +320,36 @@ trait SummaryDb extends Closeable {
                      sample: Option[SampleQuery] = None,
                      library: Option[LibraryQuery] = None,
                      mustHaveSample: Boolean = false,
-                     mustHaveLibrary: Boolean = false): slick.driver.H2Driver.api.Query[Settings, Setting, Seq] = {
+                     mustHaveLibrary: Boolean = false)
+    : slick.driver.H2Driver.api.Query[Settings, Setting, Seq] = {
     var f: Query[Settings, Settings#TableElementType, Seq] = settings
     runId.foreach(r => f = f.filter(_.runId === r))
     f = pipeline match {
-      case Some(p: PipelineId)   => f.filter(_.pipelineId === p.id)
-      case Some(p: PipelineName) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
-      case _                     => f
+      case Some(p: PipelineId) => f.filter(_.pipelineId === p.id)
+      case Some(p: PipelineName) =>
+        f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
+      case _ => f
     }
     f = module match {
-      case Some(m: ModuleId)   => f.filter(_.moduleId === m.id)
-      case Some(m: ModuleName) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
-      case Some(NoModule)      => f.filter(_.moduleId.isEmpty)
-      case _                   => f
+      case Some(m: ModuleId) => f.filter(_.moduleId === m.id)
+      case Some(m: ModuleName) =>
+        f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
+      case Some(NoModule) => f.filter(_.moduleId.isEmpty)
+      case _ => f
     }
     f = sample match {
-      case Some(s: SampleId)   => f.filter(_.sampleId === s.id)
-      case Some(s: SampleName) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
-      case Some(NoSample)      => f.filter(_.sampleId.isEmpty)
-      case _                   => f
+      case Some(s: SampleId) => f.filter(_.sampleId === s.id)
+      case Some(s: SampleName) =>
+        f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
+      case Some(NoSample) => f.filter(_.sampleId.isEmpty)
+      case _ => f
     }
     f = library match {
-      case Some(l: LibraryId)   => f.filter(_.libraryId === l.id)
-      case Some(l: LibraryName) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
-      case Some(NoLibrary)      => f.filter(_.libraryId.isEmpty)
-      case _                    => f
+      case Some(l: LibraryId) => f.filter(_.libraryId === l.id)
+      case Some(l: LibraryName) =>
+        f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
+      case Some(NoLibrary) => f.filter(_.libraryId.isEmpty)
+      case _ => f
     }
 
     if (mustHaveSample) f = f.filter(_.sampleId.nonEmpty)
@@ -335,30 +387,43 @@ trait SummaryDb extends Closeable {
       case (key, path) =>
         stats match {
           case Some(map) => key -> ConfigUtils.getValueFromPath(map, path)
-          case None      => key -> None
+          case None => key -> None
         }
     }
   }
 
-  def getSettingsForSamples(runId: Int,
-                            pipeline: PipelineQuery,
-                            module: ModuleQuery = NoModule,
-                            sampleId: Option[Int] = None,
-                            keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
+  def getSettingsForSamples(
+      runId: Int,
+      pipeline: PipelineQuery,
+      module: ModuleQuery = NoModule,
+      sampleId: Option[Int] = None,
+      keyValues: Map[String, List[String]]): Map[Int, Map[String, Option[Any]]] = {
     val samples = Await.result(getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (sample <- samples) yield {
-      sample.id -> getSettingKeys(runId, pipeline, module, SampleId(sample.id), NoLibrary, keyValues = keyValues)
+      sample.id -> getSettingKeys(runId,
+                                  pipeline,
+                                  module,
+                                  SampleId(sample.id),
+                                  NoLibrary,
+                                  keyValues = keyValues)
     }).toMap
   }
 
-  def getSettingsForLibraries(runId: Int,
-                              pipeline: PipelineQuery,
-                              module: ModuleQuery = NoModule,
-                              sampleId: Option[Int] = None,
-                              keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
-    val libraries = Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+  def getSettingsForLibraries(
+      runId: Int,
+      pipeline: PipelineQuery,
+      module: ModuleQuery = NoModule,
+      sampleId: Option[Int] = None,
+      keyValues: Map[String, List[String]]): Map[(Int, Int), Map[String, Option[Any]]] = {
+    val libraries =
+      Await.result(getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
     (for (lib <- libraries) yield {
-      (lib.sampleId, lib.id) -> getSettingKeys(runId, pipeline, module, SampleId(lib.sampleId), LibraryId(lib.id), keyValues = keyValues)
+      (lib.sampleId, lib.id) -> getSettingKeys(runId,
+                                               pipeline,
+                                               module,
+                                               SampleId(lib.sampleId),
+                                               LibraryId(lib.id),
+                                               keyValues = keyValues)
     }).toMap
   }
 
@@ -372,52 +437,72 @@ trait SummaryDb extends Closeable {
                   pipelineName: Option[String] = None,
                   moduleName: Option[Option[String]] = None,
                   sampleName: Option[Option[String]] = None,
-                  libraryName: Option[Option[String]] = None): slick.driver.H2Driver.api.Query[Files, Files#TableElementType, Seq] = {
+                  libraryName: Option[Option[String]] = None)
+    : slick.driver.H2Driver.api.Query[Files, Files#TableElementType, Seq] = {
     var f: Query[Files, Files#TableElementType, Seq] = files
     runId.foreach(r => f = f.filter(_.runId === r))
     key.foreach(r => f = f.filter(_.key === r))
 
     f = pipeline match {
-      case Some(p: PipelineId)   => f.filter(_.pipelineId === p.id)
-      case Some(p: PipelineName) => f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
-      case _                     => f
+      case Some(p: PipelineId) => f.filter(_.pipelineId === p.id)
+      case Some(p: PipelineName) =>
+        f.join(pipelines).on(_.pipelineId === _.id).filter(_._2.name === p.name).map(_._1)
+      case _ => f
     }
     f = module match {
-      case Some(m: ModuleId)   => f.filter(_.moduleId === m.id)
-      case Some(m: ModuleName) => f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
-      case Some(NoModule)      => f.filter(_.moduleId.isEmpty)
-      case _                   => f
+      case Some(m: ModuleId) => f.filter(_.moduleId === m.id)
+      case Some(m: ModuleName) =>
+        f.join(modules).on(_.moduleId === _.id).filter(_._2.name === m.name).map(_._1)
+      case Some(NoModule) => f.filter(_.moduleId.isEmpty)
+      case _ => f
     }
     f = sample match {
-      case Some(s: SampleId)   => f.filter(_.sampleId === s.id)
-      case Some(s: SampleName) => f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
-      case Some(NoSample)      => f.filter(_.sampleId.isEmpty)
-      case _                   => f
+      case Some(s: SampleId) => f.filter(_.sampleId === s.id)
+      case Some(s: SampleName) =>
+        f.join(samples).on(_.sampleId === _.id).filter(_._2.name === s.name).map(_._1)
+      case Some(NoSample) => f.filter(_.sampleId.isEmpty)
+      case _ => f
     }
     f = library match {
-      case Some(l: LibraryId)   => f.filter(_.libraryId === l.id)
-      case Some(l: LibraryName) => f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
-      case Some(NoLibrary)      => f.filter(_.libraryId.isEmpty)
-      case _                    => f
+      case Some(l: LibraryId) => f.filter(_.libraryId === l.id)
+      case Some(l: LibraryName) =>
+        f.join(libraries).on(_.libraryId === _.id).filter(_._2.name === l.name).map(_._1)
+      case Some(NoLibrary) => f.filter(_.libraryId.isEmpty)
+      case _ => f
     }
     f
   }
 
   /** Returns all [[Files]] with the given criteria */
-  def getFiles(runId: Option[Int] = None, pipeline: Option[PipelineQuery] = None, module: Option[ModuleQuery] = None,
-               sample: Option[SampleQuery] = None, library: Option[LibraryQuery] = None,
+  def getFiles(runId: Option[Int] = None,
+               pipeline: Option[PipelineQuery] = None,
+               module: Option[ModuleQuery] = None,
+               sample: Option[SampleQuery] = None,
+               library: Option[LibraryQuery] = None,
                key: Option[String] = None): Future[Seq[Schema.File]] = {
     db.run(filesFilter(runId, pipeline, module, sample, library, key).result)
   }
 
-  def getFile(runId: Int, pipeline: PipelineQuery, module: ModuleQuery = NoModule, sample: SampleQuery = NoSample,
-              library: LibraryQuery = NoLibrary, key: String): Future[Option[Schema.File]] = {
-    db.run(filesFilter(Some(runId), Some(pipeline), Some(module), Some(sample), Some(library), Some(key)).result).map(_.headOption)
+  def getFile(runId: Int,
+              pipeline: PipelineQuery,
+              module: ModuleQuery = NoModule,
+              sample: SampleQuery = NoSample,
+              library: LibraryQuery = NoLibrary,
+              key: String): Future[Option[Schema.File]] = {
+    db.run(
+        filesFilter(Some(runId),
+                    Some(pipeline),
+                    Some(module),
+                    Some(sample),
+                    Some(library),
+                    Some(key)).result)
+      .map(_.headOption)
   }
 
   /** Returns a [[Query]] for [[Executables]] */
-  def executablesFilter(runId: Option[Int],
-                        toolName: Option[String]): slick.driver.H2Driver.api.Query[Executables, Executable, Seq] = {
+  def executablesFilter(
+      runId: Option[Int],
+      toolName: Option[String]): slick.driver.H2Driver.api.Query[Executables, Executable, Seq] = {
     var q: Query[Executables, Executables#TableElementType, Seq] = executables
     runId.foreach(r => q = q.filter(_.runId === r))
     toolName.foreach(r => q = q.filter(_.toolName === r))
@@ -425,15 +510,17 @@ trait SummaryDb extends Closeable {
   }
 
   /** Return all executables with given criteria */
-  def getExecutables(runId: Option[Int] = None, toolName: Option[String] = None): Future[Seq[Executable]] = {
+  def getExecutables(runId: Option[Int] = None,
+                     toolName: Option[String] = None): Future[Seq[Executable]] = {
     db.run(executablesFilter(runId, toolName).result)
   }
 
 }
 
-class SummaryDbReadOnly(val db: Database) extends SummaryDb
+class SummaryDbReadOnly(val db: Database)(implicit val ec: ExecutionContext) extends SummaryDb
 
-class SummaryDbWrite(val db: Database) extends SummaryDb {
+class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extends SummaryDb {
+
   /** This method will create all tables */
   def createTables(): Unit = {
     try {
@@ -449,10 +536,14 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
   }
 
   /** This method will create a new run and return the runId */
-  def createRun(runName: String, outputDir: String, version: String, commitHash: String,
+  def createRun(runName: String,
+                outputDir: String,
+                version: String,
+                commitHash: String,
                 creationDate: Date): Future[Int] = {
     val id = Await.result(db.run(runs.size.result), Duration.Inf)
-    db.run(runs.forceInsert(Run(id, runName, outputDir, version, commitHash, creationDate))).map(_ => id)
+    db.run(runs.forceInsert(Run(id, runName, outputDir, version, commitHash, creationDate)))
+      .map(_ => id)
   }
 
   /** This creates a new sample and return the sampleId */
@@ -461,9 +552,7 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
     db.run(samples.forceInsert(Sample(id, name, runId, tags))).map(_ => id)
   }
 
-  def createOrUpdateSample(name: String,
-                           runId: Int,
-                           tags: Option[String] = None): Future[Int] = {
+  def createOrUpdateSample(name: String, runId: Int, tags: Option[String] = None): Future[Int] = {
     getSampleId(runId, name).flatMap {
       case Some(id: Int) =>
         db.run(samples.filter(_.name === name).filter(_.id === id).map(_.tags).update(tags))
@@ -487,27 +576,30 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                             tags: Option[String] = None): Future[Int] = {
     getLibraryId(runId, sampleId, name).flatMap {
       case Some(id: Int) =>
-        db.run(libraries.filter(_.name === name).filter(_.id === id).filter(_.sampleId === sampleId).map(_.tags).update(tags))
+        db.run(
+            libraries
+              .filter(_.name === name)
+              .filter(_.id === id)
+              .filter(_.sampleId === sampleId)
+              .map(_.tags)
+              .update(tags))
           .map(_ => id)
       case _ => createLibrary(name, runId, sampleId, tags)
     }
   }
 
   /** Creates a new pipeline, even if it already exist. This may give a database exeption */
-  def forceCreatePipeline(name: String,
-                          runId: Int): Future[Int] = {
+  def forceCreatePipeline(name: String, runId: Int): Future[Int] = {
     val id = Await.result(db.run(pipelines.size.result), Duration.Inf)
     db.run(pipelines.forceInsert(Pipeline(id, name, runId))).map(_ => id)
   }
 
   /** Creates a new pipeline if it does not yet exist */
-  def createPipeline(name: String,
-                     runId: Int): Future[Int] = {
+  def createPipeline(name: String, runId: Int): Future[Int] = {
     getPipelines(name = Some(name), runId = Some(runId))
-      .flatMap {
-        m =>
-          if (m.isEmpty) forceCreatePipeline(name, runId)
-          else Future(m.head.id)
+      .flatMap { m =>
+        if (m.isEmpty) forceCreatePipeline(name, runId)
+        else Future(m.head.id)
       }
   }
 
@@ -520,10 +612,9 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
   /** Creates a new module if it does not yet exist */
   def createModule(name: String, runId: Int, pipelineId: Int): Future[Int] = {
     getModules(name = Some(name), runId = Some(runId), pipelineId = Some(pipelineId))
-      .flatMap {
-        m =>
-          if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
-          else Future(m.head.id)
+      .flatMap { m =>
+        if (m.isEmpty) forceCreateModule(name, runId, pipelineId)
+        else Future(m.head.id)
       }
   }
 
@@ -544,8 +635,13 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                          sampleId: Option[Int] = None,
                          libId: Option[Int] = None,
                          content: String): Future[Int] = {
-    val filter = statsFilter(Some(runId), pipelineId, Some(moduleId.map(ModuleId).getOrElse(NoModule)),
-      Some(sampleId.map(SampleId).getOrElse(NoSample)), Some(libId.map(LibraryId).getOrElse(NoLibrary)))
+    val filter = statsFilter(
+      Some(runId),
+      pipelineId,
+      Some(moduleId.map(ModuleId).getOrElse(NoModule)),
+      Some(sampleId.map(SampleId).getOrElse(NoSample)),
+      Some(libId.map(LibraryId).getOrElse(NoLibrary))
+    )
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createStat(runId, pipelineId, moduleId, sampleId, libId, content)
     else db.run(filter.map(_.content).update(content))
@@ -568,7 +664,11 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                             sampleId: Option[Int] = None,
                             libId: Option[Int] = None,
                             content: String): Future[Int] = {
-    val filter = settingsFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId))
+    val filter = settingsFilter(Some(runId),
+                                PipelineId(pipelineId),
+                                moduleId.map(ModuleId),
+                                sampleId.map(SampleId),
+                                libId.map(LibraryId))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createSetting(runId, pipelineId, moduleId, sampleId, libId, content)
     else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
@@ -585,7 +685,9 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                  md5: String,
                  link: Boolean = false,
                  size: Long): Future[Int] = {
-    db.run(files.forceInsert(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+    db.run(
+      files.forceInsert(
+        Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
 
   /** Create or update a File */
@@ -599,10 +701,19 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                          md5: String,
                          link: Boolean = false,
                          size: Long): Future[Int] = {
-    val filter = filesFilter(Some(runId), PipelineId(pipelineId), moduleId.map(ModuleId), sampleId.map(SampleId), libId.map(LibraryId), Some(key))
+    val filter = filesFilter(Some(runId),
+                             PipelineId(pipelineId),
+                             moduleId.map(ModuleId),
+                             sampleId.map(SampleId),
+                             libId.map(LibraryId),
+                             Some(key))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
-    if (r == 0) createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
-    else db.run(filter.update(Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
+    if (r == 0)
+      createFile(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)
+    else
+      db.run(
+        filter.update(
+          Schema.File(runId, pipelineId, moduleId, sampleId, libId, key, path, md5, link, size)))
   }
 
   /** Creates a exeutable. This method will raise expection if it already exist */
@@ -610,8 +721,13 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
                        toolName: String,
                        version: Option[String] = None,
                        path: Option[String] = None,
-                       javaVersion: Option[String] = None, exeMd5: Option[String] = None, javaMd5: Option[String] = None, jarPath: Option[String] = None): Future[Int] = {
-    db.run(executables.forceInsert(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
+                       javaVersion: Option[String] = None,
+                       exeMd5: Option[String] = None,
+                       javaMd5: Option[String] = None,
+                       jarPath: Option[String] = None): Future[Int] = {
+    db.run(
+      executables.forceInsert(
+        Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
   }
 
   /** Create or update a [[Executable]] */
@@ -626,7 +742,10 @@ class SummaryDbWrite(val db: Database) extends SummaryDb {
     val filter = executablesFilter(Some(runId), Some(toolName))
     val r = Await.result(db.run(filter.size.result), Duration.Inf)
     if (r == 0) createExecutable(runId, toolName, version, javaVersion, exeMd5, javaMd5)
-    else db.run(filter.update(Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
+    else
+      db.run(
+        filter.update(
+          Executable(runId, toolName, version, path, javaVersion, exeMd5, javaMd5, jarPath)))
   }
 
 }
@@ -657,8 +776,10 @@ object SummaryDb {
     implicit def intToPipelineQuery(x: Int): PipelineQuery = PipelineId(x)
     implicit def stringToPipelineQuery(x: String): PipelineQuery = PipelineName(x)
     implicit def intToOptionPipelineQuery(x: Int): Option[PipelineQuery] = Some(PipelineId(x))
-    implicit def stringToOptionPipelineQuery(x: String): Option[PipelineQuery] = Some(PipelineName(x))
-    implicit def sampleQueryToOptionPipelineQuery(x: PipelineQuery): Option[PipelineQuery] = Some(x)
+    implicit def stringToOptionPipelineQuery(x: String): Option[PipelineQuery] =
+      Some(PipelineName(x))
+    implicit def sampleQueryToOptionPipelineQuery(x: PipelineQuery): Option[PipelineQuery] =
+      Some(x)
 
     implicit def intToModuleQuery(x: Int): ModuleQuery = ModuleId(x)
     implicit def stringToModuleQuery(x: String): ModuleQuery = ModuleName(x)
@@ -688,14 +809,17 @@ object SummaryDb {
   }
 
   /** This will open a sqlite database and create tables when the database did not exist yet */
-  def openSqliteSummary(file: File): SummaryDbWrite = {
+  def openSqliteSummary(file: File)(implicit ec: ExecutionContext): SummaryDbWrite = {
     if (!summaryConnections.contains(file)) {
       val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
       config.enforceForeignKeys(true)
       config.setBusyTimeout("10000")
       config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.FULL)
       val exist = file.exists()
-      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties, executor = AsyncExecutor("single_thread", 1, 1000))
+      val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}",
+                               driver = "org.sqlite.JDBC",
+                               prop = config.toProperties,
+                               executor = AsyncExecutor("single_thread", 1, 1000))
       val s = new SummaryDbWrite(db)
       if (!exist) s.createTables()
       summaryConnections += file -> s
@@ -703,14 +827,23 @@ object SummaryDb {
     summaryConnections(file)
   }
 
-  def openReadOnlySqliteSummary(file: File): SummaryDbReadOnly = {
+  def openReadOnlySqliteSummary(file: File)(implicit ec: ExecutionContext): SummaryDbReadOnly = {
     require(file.exists(), s"File does not exist: $file")
     val config: org.sqlite.SQLiteConfig = new org.sqlite.SQLiteConfig()
     config.enforceForeignKeys(true)
     config.setBusyTimeout("10000")
     config.setSynchronous(org.sqlite.SQLiteConfig.SynchronousMode.FULL)
     config.setReadOnly(true)
-    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}", driver = "org.sqlite.JDBC", prop = config.toProperties)
+
+    val asyncExecutor = new AsyncExecutor {
+      override def executionContext: ExecutionContext = ec
+      override def close(): Unit = {}
+    }
+
+    val db = Database.forURL(s"jdbc:sqlite:${file.getAbsolutePath}",
+                             driver = "org.sqlite.JDBC",
+                             prop = config.toProperties,
+                             executor = asyncExecutor)
     new SummaryDbReadOnly(db)
   }
 }

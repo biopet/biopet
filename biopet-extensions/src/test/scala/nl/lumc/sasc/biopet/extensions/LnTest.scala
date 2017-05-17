@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
@@ -49,7 +49,8 @@ class LnTest extends TestNGSuite with Matchers {
     ln.cmd should ===("ln -s ../../target.txt /dir/nested/link.txt")
   }
 
-  @Test(description = "Target is a child of a directory one level above link, relative set to true")
+  @Test(
+    description = "Target is a child of a directory one level above link, relative set to true")
   def testTargetOneLevelAboveChildRelative() {
     val ln = new Ln(null)
     ln.relative = true
@@ -58,7 +59,8 @@ class LnTest extends TestNGSuite with Matchers {
     ln.cmd should ===("ln -s ../another_nested/target.txt /dir/nested/link.txt")
   }
 
-  @Test(description = "Target is a child of a directory multi level above link, relative set to true")
+  @Test(
+    description = "Target is a child of a directory multi level above link, relative set to true")
   def testTargetMultiLevelAboveChildRelative1() {
     val ln = new Ln(null)
     ln.relative = true
@@ -67,7 +69,8 @@ class LnTest extends TestNGSuite with Matchers {
     ln.cmd should ===("ln -s ../another_nested/1/2/3/4/target.txt /dir/nested/link.txt")
   }
 
-  @Test(description = "Target is a child of a directory multi level above link, relative set to true")
+  @Test(
+    description = "Target is a child of a directory multi level above link, relative set to true")
   def testTargetMultiLevelAboveChildRelative2() {
     val ln = new Ln(null)
     ln.relative = true
@@ -76,16 +79,19 @@ class LnTest extends TestNGSuite with Matchers {
     ln.cmd should ===("ln -s ../../another_nested/1/2/3/4/target.txt /dir/nested/2/link.txt")
   }
 
-  @Test(description = "Source is a child of a directory multi level above link, relative set to true")
+  @Test(
+    description = "Source is a child of a directory multi level above link, relative set to true")
   def testSourceMultiLevelAboveChildRelative() {
     val ln = new Ln(null)
     ln.relative = true
     ln.output = new File("/dir/another_nested/1/2/3/4/link.txt")
     ln.input = new File("/dir/nested/2/output.txt")
-    ln.cmd should ===("ln -s ../../../../../nested/2/output.txt /dir/another_nested/1/2/3/4/link.txt")
+    ln.cmd should ===(
+      "ln -s ../../../../../nested/2/output.txt /dir/another_nested/1/2/3/4/link.txt")
   }
 
-  @Test(description = "Target is a child of a directory multi level above link, relative set to false")
+  @Test(
+    description = "Target is a child of a directory multi level above link, relative set to false")
   def testTargetMultiLevelAboveChild() {
     val ln = new Ln(null)
     ln.relative = false

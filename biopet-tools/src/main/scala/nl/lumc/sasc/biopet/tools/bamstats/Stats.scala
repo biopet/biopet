@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
@@ -19,8 +19,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.tools.flagstat.FlagstatCollector
 
 /**
- * Created by pjvanthof on 05/07/16.
- */
+  * Created by pjvanthof on 05/07/16.
+  */
 case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
                  mappingQualityHistogram: Histogram[Int] = new Histogram[Int](),
                  insertSizeHistogram: Histogram[Int] = new Histogram[Int](),
@@ -62,13 +62,20 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
   def toSummaryMap = {
     Map(
       "flagstats" -> flagstat.toSummaryMap,
-      "mapping_quality" -> Map("histogram" -> mappingQualityHistogram.toSummaryMap, "general" -> mappingQualityHistogram.aggregateStats),
-      "insert_size" -> Map("histogram" -> insertSizeHistogram.toSummaryMap, "general" -> insertSizeHistogram.aggregateStats),
-      "clipping" -> Map("histogram" -> clippingHistogram.toSummaryMap, "general" -> clippingHistogram.aggregateStats),
-      "left_clipping" -> Map("histogram" -> leftClippingHistogram.toSummaryMap, "general" -> leftClippingHistogram.aggregateStats),
-      "right_clipping" -> Map("histogram" -> rightClippingHistogram.toSummaryMap, "general" -> rightClippingHistogram.aggregateStats),
-      "5_prime_clipping" -> Map("histogram" -> _5_ClippingHistogram.toSummaryMap, "general" -> _5_ClippingHistogram.aggregateStats),
-      "3_prime_clipping" -> Map("histogram" -> _3_ClippingHistogram.toSummaryMap, "general" -> _3_ClippingHistogram.aggregateStats)
+      "mapping_quality" -> Map("histogram" -> mappingQualityHistogram.toSummaryMap,
+                               "general" -> mappingQualityHistogram.aggregateStats),
+      "insert_size" -> Map("histogram" -> insertSizeHistogram.toSummaryMap,
+                           "general" -> insertSizeHistogram.aggregateStats),
+      "clipping" -> Map("histogram" -> clippingHistogram.toSummaryMap,
+                        "general" -> clippingHistogram.aggregateStats),
+      "left_clipping" -> Map("histogram" -> leftClippingHistogram.toSummaryMap,
+                             "general" -> leftClippingHistogram.aggregateStats),
+      "right_clipping" -> Map("histogram" -> rightClippingHistogram.toSummaryMap,
+                              "general" -> rightClippingHistogram.aggregateStats),
+      "5_prime_clipping" -> Map("histogram" -> _5_ClippingHistogram.toSummaryMap,
+                                "general" -> _5_ClippingHistogram.aggregateStats),
+      "3_prime_clipping" -> Map("histogram" -> _3_ClippingHistogram.toSummaryMap,
+                                "general" -> _3_ClippingHistogram.aggregateStats)
     )
   }
 }

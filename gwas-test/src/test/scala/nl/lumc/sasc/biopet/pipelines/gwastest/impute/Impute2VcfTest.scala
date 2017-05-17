@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gwastest.impute
 
 import java.io.File
@@ -23,11 +23,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, Test }
+import org.testng.annotations.{AfterClass, Test}
 
 /**
- * Created by pjvan_thof on 31-5-16.
- */
+  * Created by pjvan_thof on 31-5-16.
+  */
 class Impute2VcfTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Impute2Vcf = {
     new Impute2Vcf {
@@ -44,10 +44,9 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   def testFromGens: Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
-    val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
-      Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrQ"))
-      )
-    )
+    val pipeline = initPipeline(
+      Impute2VcfTest.config(outputDir) ++
+        Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrQ"))))
     pipeline.script()
   }
 
@@ -56,9 +55,7 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
-      Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrBla"))
-      )
-    )
+      Map("input_gens" -> List(Map("genotypes" -> Impute2VcfTest.vcfFile, "contig" -> "chrBla"))))
     intercept[IllegalStateException] {
       pipeline.script()
     }
@@ -68,9 +65,9 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   def testFromSpecs: Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
-    val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
-      Map("imute_specs_file" -> Impute2VcfTest.resourcePath("/specs/files.specs"))
-    )
+    val pipeline = initPipeline(
+      Impute2VcfTest.config(outputDir) ++
+        Map("imute_specs_file" -> Impute2VcfTest.resourcePath("/specs/files.specs")))
     pipeline.script()
   }
 

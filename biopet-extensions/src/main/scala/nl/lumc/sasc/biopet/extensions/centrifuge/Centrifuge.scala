@@ -1,34 +1,37 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.centrifuge
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.tryToParseNumber
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.io.Source
 import scala.util.matching.Regex
 
 /**
- * Created by pjvanthof on 19/09/16.
- */
-class Centrifuge(val parent: Configurable) extends BiopetCommandLineFunction with Version with Summarizable {
+  * Created by pjvanthof on 19/09/16.
+  */
+class Centrifuge(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Version
+    with Summarizable {
   @Input(doc = "Input: FastQ or FastA", required = true)
   var inputR1: File = _
 
@@ -105,59 +108,65 @@ class Centrifuge(val parent: Configurable) extends BiopetCommandLineFunction wit
   }
 
   /**
-   * This function needs to be implemented to define the command that is executed
-   *
-   * @return Command to run
-   */
-  def cmdLine: String = executable +
-    conditional(q, "-q") +
-    conditional(qseq, "--qseq") +
-    conditional(f, "-f") +
-    conditional(r, "-r") +
-    conditional(c, "-c") +
-    optional("--skip", skip) +
-    optional("--upto", upto) +
-    optional("--trim5", trim5) +
-    optional("--trim3", trim3) +
-    conditional(phred33, "--phred33") +
-    conditional(phred64, "--phred64") +
-    conditional(intQuals, "--int-quals") +
-    conditional(ignoreQuals, "--ignore-quals") +
-    conditional(nofw, "--nofw") +
-    conditional(norc, "--norc") +
-    optional("--min-hitlen", minHitlen) +
-    optional("--min-totallen", minTotallen) +
-    optional("--host-taxids", if (hostTaxids.nonEmpty) Some(hostTaxids.mkString(",")) else None) +
-    optional("--exclude-taxids", if (excludeTaxids.nonEmpty) Some(excludeTaxids.mkString(",")) else None) +
-    optional("--met-file", metFile) +
-    conditional(t, "-t") +
-    conditional(quiet, "--quiet") +
-    conditional(metStderr, "--met-stderr") +
-    optional("--met", met) +
-    optional(if (un.exists(_.getName.endsWith(".gz"))) "--un-gz" else "--un", un) +
-    optional(if (al.exists(_.getName.endsWith(".gz"))) "--al-gz" else "--al", al) +
-    optional(if (unConc.exists(_.getName.endsWith(".gz"))) "--un-conc-gz" else "--un-conc", unConc) +
-    optional(if (alConc.exists(_.getName.endsWith(".gz"))) "--al-conc-gz" else "--al-conc", alConc) +
-    optional("--threads", threads) +
-    required("-x", index) +
-    (inputR2 match {
-      case Some(r2) => required("-1", inputR1) + required("-2", r2)
-      case _        => required("-U", inputR1)
-    }) +
-    (if (outputAsStsout) "" else required("-S", output)) +
-    optional("--report-file", report)
+    * This function needs to be implemented to define the command that is executed
+    *
+    * @return Command to run
+    */
+  def cmdLine: String =
+    executable +
+      conditional(q, "-q") +
+      conditional(qseq, "--qseq") +
+      conditional(f, "-f") +
+      conditional(r, "-r") +
+      conditional(c, "-c") +
+      optional("--skip", skip) +
+      optional("--upto", upto) +
+      optional("--trim5", trim5) +
+      optional("--trim3", trim3) +
+      conditional(phred33, "--phred33") +
+      conditional(phred64, "--phred64") +
+      conditional(intQuals, "--int-quals") +
+      conditional(ignoreQuals, "--ignore-quals") +
+      conditional(nofw, "--nofw") +
+      conditional(norc, "--norc") +
+      optional("--min-hitlen", minHitlen) +
+      optional("--min-totallen", minTotallen) +
+      optional("--host-taxids", if (hostTaxids.nonEmpty) Some(hostTaxids.mkString(",")) else None) +
+      optional("--exclude-taxids",
+               if (excludeTaxids.nonEmpty) Some(excludeTaxids.mkString(",")) else None) +
+      optional("--met-file", metFile) +
+      conditional(t, "-t") +
+      conditional(quiet, "--quiet") +
+      conditional(metStderr, "--met-stderr") +
+      optional("--met", met) +
+      optional(if (un.exists(_.getName.endsWith(".gz"))) "--un-gz" else "--un", un) +
+      optional(if (al.exists(_.getName.endsWith(".gz"))) "--al-gz" else "--al", al) +
+      optional(if (unConc.exists(_.getName.endsWith(".gz"))) "--un-conc-gz" else "--un-conc",
+               unConc) +
+      optional(if (alConc.exists(_.getName.endsWith(".gz"))) "--al-conc-gz" else "--al-conc",
+               alConc) +
+      optional("--threads", threads) +
+      required("-x", index) +
+      (inputR2 match {
+        case Some(r2) => required("-1", inputR1) + required("-2", r2)
+        case _ => required("-U", inputR1)
+      }) +
+      (if (outputAsStdout) "" else required("-S", output)) +
+      optional("--report-file", report)
 
   /** Must return files to store into summary */
   override def summaryFiles: Map[String, File] = metFile.map("metrics" -> _).toMap
 
   /** Must returns stats to store into summary */
   override def summaryStats: Any = {
-    metFile.map { file =>
-      val reader = Source.fromFile(file)
-      val header = reader.getLines().next().split("\t")
-      val values = reader.getLines().next().split("\t").map(tryToParseNumber(_, true).get)
-      reader.close()
-      Map("metrics" -> header.zip(values).toMap)
-    }.getOrElse(Map())
+    metFile
+      .map { file =>
+        val reader = Source.fromFile(file)
+        val header = reader.getLines().next().split("\t")
+        val values = reader.getLines().next().split("\t").map(tryToParseNumber(_, true).get)
+        reader.close()
+        Map("metrics" -> header.zip(values).toMap)
+      }
+      .getOrElse(Map())
   }
 }

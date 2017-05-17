@@ -1,23 +1,23 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedWriter, File }
+import java.io.{BufferedWriter, File}
 import java.nio.file.Paths
 
-import org.mockito.Mockito.{ inOrder => inOrd, when }
+import org.mockito.Mockito.{inOrder => inOrd, when}
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -81,7 +81,9 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     val in2 = InputTable("file2", mock[BufferedSource])
 
     when(in1.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t1")
-    when(in2.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t100", "x\ty\t9")
+    when(in2.source.getLines()) thenReturn Iterator("feature\trandom\tvalue",
+                                                    "a\tb\t100",
+                                                    "x\ty\t9")
 
     val result = mergeTables(Seq(in1, in2), Seq(0), 2, 1)
     result.keySet shouldBe Set("file1", "file2")
@@ -90,7 +92,8 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testWriteOutput() = {
-    val map = Map("sample1" -> Map("a" -> "1", "x" -> "900"), "sample2" -> Map("a" -> "100", "x" -> "9"))
+    val map =
+      Map("sample1" -> Map("a" -> "1", "x" -> "900"), "sample2" -> Map("a" -> "100", "x" -> "9"))
     val out = mock[BufferedWriter]
     val obs = inOrd(out)
 
@@ -128,12 +131,15 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testArgsMinimum() = {
-    val args = Array(
-      "-i", "1,7",
-      "-a", "10",
-      "-o", "-",
-      // file content doesn't matter ~ they just need to exist
-      resourcePath("README.txt"), resourcePath("README.txt"))
+    val args = Array("-i",
+                     "1,7",
+                     "-a",
+                     "10",
+                     "-o",
+                     "-",
+                     // file content doesn't matter ~ they just need to exist
+                     resourcePath("README.txt"),
+                     resourcePath("README.txt"))
     val parsed = parseArgs(args)
     // remember we are doing the 1-based to 0-based coordinate conversion in the argument parser
     parsed.idColumnIndices shouldBe Seq(0, 6)
