@@ -28,7 +28,7 @@ class DellyCallerCall(val parent: Configurable)
     extends BiopetCommandLineFunction
     with Version
     with Reference {
-  executable = config("exe", default = "delly")
+  executable = config("exe", default = "/exports/sasc/ioannis/delly/delly/src/delly")
 
   private lazy val versionexecutable: File = new File(executable)
 
