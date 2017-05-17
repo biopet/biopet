@@ -113,7 +113,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[PindelVCF]) shouldBe (if (pindel) bams else 0)
 
       pipeline.functions.count(_.isInstanceOf[CleverCaller]) shouldBe (if (clever) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe (if (delly) bams * 4 else 0)
+      pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe (if (delly) bams * 5 else 0)
 
     }
   }
@@ -148,7 +148,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.script()
 
       pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe
-        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (bnd) 1 else 0))
+        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (bnd) 1 else 0) + (if (ins) 1 else 0))
     }
   }
 
