@@ -186,8 +186,7 @@ class Tarmac(val parent: Configurable)
       case (sample, jobAndRefFile) =>
         val sort = sortBgzipAndTabix(jobAndRefFile._2)
         val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
-        add(sort.tabixJob)
-        add(pipeJob)
+        add(sort.tabixJob, pipeJob)
         sample -> sort
     }
 
@@ -195,8 +194,7 @@ class Tarmac(val parent: Configurable)
       case (sample, job) =>
         val sort = sortBgzipAndTabix(job.output)
         val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
-        add(pipeJob)
-        add(sort.tabixJob)
+        add(pipeJob, pipeJob)
         sample -> sort
     }
 
@@ -206,8 +204,7 @@ class Tarmac(val parent: Configurable)
           case (window, stouffJob) =>
             val sort = sortBgzipAndTabix(stouffJob.output)
             val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
-            add(pipeJob)
-            add(sort.tabixJob)
+            add(pipeJob, sort.tabixJob)
             window -> sort
         }
         sample -> nMap
@@ -220,8 +217,7 @@ class Tarmac(val parent: Configurable)
             val imageDir = new File(threshJob.output.get.getParentFile, "plots")
             val sort = sortBgzipAndTabix(threshJob.output.get)
             val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
-            add(pipeJob)
-            add(sort.tabixJob)
+            add(pipeJob, sort.tabixJob)
             val xhmmZ = xhmmZGzip(sample)
             val wiseZ = wisecondorZGzip(sample)
             val stouff = stouffGzip(sample)(window)
