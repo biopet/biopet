@@ -6,8 +6,8 @@ import java.nio.file.Paths
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
-import org.broadinstitute.gatk.queue.{ QScript, QSettings }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -17,8 +17,8 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
- * Created by Sander Bollen on 11-4-17.
- */
+  * Created by Sander Bollen on 11-4-17.
+  */
 class PedigreeQScriptTest extends TestNGSuite with Matchers {
   import PedigreeQScriptTest._
 
@@ -144,37 +144,30 @@ object PedigreeQScriptTest {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val sample1 = Map("samples" ->
-    Map("sample1" ->
-      Map("tags" ->
-        Map("gender" -> "female",
-          "father" -> "sample2",
-          "mother" -> "sample3",
-          "family" -> "fam01"
-        )
-      )
-    )
-  )
+  val sample1 = Map(
+    "samples" ->
+      Map(
+        "sample1" ->
+          Map(
+            "tags" ->
+              Map("gender" -> "female",
+                  "father" -> "sample2",
+                  "mother" -> "sample3",
+                  "family" -> "fam01"))))
 
-  val sample2 = Map("samples" ->
-    Map("sample2" ->
-      Map("tags" ->
-        Map("gender" -> "male",
-          "family" -> "fam01"
-        )
-      )
-    )
-  )
+  val sample2 = Map(
+    "samples" ->
+      Map(
+        "sample2" ->
+          Map("tags" ->
+            Map("gender" -> "male", "family" -> "fam01"))))
 
-  val sample3 = Map("samples" ->
-    Map("sample3" ->
-      Map("tags" ->
-        Map("gender" -> "female",
-          "family" -> "fam01"
-        )
-      )
-    )
-  )
+  val sample3 = Map(
+    "samples" ->
+      Map(
+        "sample3" ->
+          Map("tags" ->
+            Map("gender" -> "female", "family" -> "fam01"))))
 
   val trioPed = Map("ped_file" -> resourcePath("/trio.ped"))
 
@@ -188,8 +181,10 @@ object PedigreeQScriptTest {
 
       var buffer = new ListBuffer[String]()
 
-      override def globalConfig = new Config(configs
-        .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
+      override def globalConfig =
+        new Config(
+          configs
+            .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
 
       val parent = null
 
@@ -199,6 +194,7 @@ object PedigreeQScriptTest {
 
       class Sample(id: String) extends AbstractSample(id) {
         class Library(id: String) extends AbstractLibrary(id) {
+
           /** Function that add library jobs */
           protected def addJobs(): Unit = {
             buffer += config("test")
@@ -212,10 +208,10 @@ object PedigreeQScriptTest {
         }
 
         /**
-         * Factory method for Library class
-         * @param id SampleId
-         * @return Sample class
-         */
+          * Factory method for Library class
+          * @param id SampleId
+          * @return Sample class
+          */
         def makeLibrary(id: String): Library = new Library(id)
 
         /** Function to add sample jobs */
@@ -233,17 +229,17 @@ object PedigreeQScriptTest {
       }
 
       /**
-       * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
-       */
+        * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+        */
       def addMultiSampleJobs(): Unit = {
         add(new Md5sum(qscript))
       }
 
       /**
-       * Factory method for Sample class
-       * @param id SampleId
-       * @return Sample class
-       */
+        * Factory method for Sample class
+        * @param id SampleId
+        * @return Sample class
+        */
       def makeSample(id: String): Sample = new Sample(id)
 
       /** Must return a map with used settings for this pipeline */
@@ -256,8 +252,7 @@ object PedigreeQScriptTest {
       def summaryFile: File = new File("./summary.json")
 
       /** Init for pipeline */
-      def init(): Unit = {
-      }
+      def init(): Unit = {}
 
       /** Pipeline itself */
       def biopetScript(): Unit = {
