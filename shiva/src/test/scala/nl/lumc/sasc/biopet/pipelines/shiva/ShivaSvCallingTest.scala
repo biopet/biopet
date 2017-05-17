@@ -124,22 +124,23 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     for (del <- bool;
          dup <- bool;
          inv <- bool;
-         tra <- bool) yield Array(1, del, dup, inv, tra)
+         bnd <- bool;
+         ins <- bool) yield Array(1, del, dup, inv, bnd, ins)
   }
 
   @Test(dataProvider = "dellyOptions")
-  def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, tra: Boolean): Unit = {
+  def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, bnd: Boolean, ins: Boolean): Unit = {
     val outputDir = ShivaSvCallingTest.outputDir
     dirs :+= outputDir
 
     val map = Map("sv_callers" -> List("delly"),
                   "delly" ->
-                    Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra))
+                    Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "BND" -> bnd, "INS" -> ins))
     val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
-    if (!del && !dup && !inv && !tra) intercept[IllegalStateException] {
+    if (!del && !dup && !inv && !bnd && !ins) intercept[IllegalStateException] {
       pipeline.init()
       pipeline.script()
     } else {
@@ -147,7 +148,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.script()
 
       pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe
-        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (tra) 1 else 0))
+        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (bnd) 1 else 0))
     }
   }
 

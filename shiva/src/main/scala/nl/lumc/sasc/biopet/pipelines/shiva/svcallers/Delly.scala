@@ -27,7 +27,8 @@ class Delly(val parent: Configurable) extends SvCaller {
   val del: Boolean = config("DEL", default = true)
   val dup: Boolean = config("DUP", default = true)
   val inv: Boolean = config("INV", default = true)
-  val tra: Boolean = config("BND", default = true)
+  val bnd: Boolean = config("BND", default = true)
+  val ins: Boolean = config("INS", default = true)
 
   def biopetScript() {
 
@@ -71,7 +72,17 @@ class Delly(val parent: Configurable) extends SvCaller {
 
         mergeVariants.input :+= delly.outputbcf
       }
-      if (tra) {
+      if (ins) {
+        val delly = new DellyCallerCall(this)
+        delly.input = bamFile
+        delly.analysistype = "INS"
+        delly.isIntermediate = true
+        delly.outputbcf = new File(dellyDir, sample + ".delly.ins.bcf")
+        add(delly)
+
+        mergeVariants.input :+= delly.outputbcf
+      }
+      if (bnd) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
         delly.analysistype = "BND"
