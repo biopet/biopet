@@ -4,11 +4,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Created by Sander Bollen on 11-5-17.
- */
+  * Created by Sander Bollen on 11-5-17.
+  */
 class TarmacPlot(val parent: Configurable) extends PythonCommandLineFunction {
   setPythonScript("tarmac_plot.py")
 

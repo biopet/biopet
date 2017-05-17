@@ -107,11 +107,13 @@ class TarmacTest extends TestNGSuite with Matchers {
 
     script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
     script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 35
-    val fifos = script.functions.collect { case b: BiopetFifoPipe => b}
-    fifos.flatMap{f =>
-      f.beforeGraph()
-      f.pipesJobs
-    }.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
+    val fifos = script.functions.collect { case b: BiopetFifoPipe => b }
+    fifos
+      .flatMap { f =>
+        f.beforeGraph()
+        f.pipesJobs
+      }
+      .count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
   }
 
 }

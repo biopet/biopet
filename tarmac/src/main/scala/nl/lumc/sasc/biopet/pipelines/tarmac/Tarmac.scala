@@ -2,13 +2,23 @@ package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsSort }
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsIntersect, BedtoolsSort}
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.stouffbed.{ StouffbedHorizontal, StouffbedVertical }
-import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef, WisecondorZscore }
-import nl.lumc.sasc.biopet.extensions.xhmm.{ XhmmMatrix, XhmmMergeGatkDepths, XhmmNormalize, XhmmPca }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Tabix }
-import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{ BedThreshold, SampleFromMatrix, TarmacPlot }
+import nl.lumc.sasc.biopet.extensions.stouffbed.{StouffbedHorizontal, StouffbedVertical}
+import nl.lumc.sasc.biopet.extensions.wisecondor.{
+  WisecondorCount,
+  WisecondorGcCorrect,
+  WisecondorNewRef,
+  WisecondorZscore
+}
+import nl.lumc.sasc.biopet.extensions.xhmm.{
+  XhmmMatrix,
+  XhmmMergeGatkDepths,
+  XhmmNormalize,
+  XhmmPca
+}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, Tabix}
+import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{BedThreshold, SampleFromMatrix, TarmacPlot}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
