@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
@@ -37,7 +37,8 @@ object BastyGenerateFasta extends ToolCommand {
                   outputName: String = null,
                   minAD: Int = 8,
                   minDepth: Int = 8,
-                  reference: File = null) extends AbstractArgs
+                  reference: File = null)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('V', "inputVcf") unbounded () valueName "<file>" action { (x, c) =>
@@ -56,8 +57,9 @@ object BastyGenerateFasta extends ToolCommand {
     opt[File]("outputConsensus") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputConsensus = x)
     } text "Consensus fasta from bam, always reference bases else 'N'"
-    opt[File]("outputConsensusVariants") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
-      c.copy(outputConsensusVariants = x)
+    opt[File]("outputConsensusVariants") maxOccurs 1 unbounded () valueName "<file>" action {
+      (x, c) =>
+        c.copy(outputConsensusVariants = x)
     } text "Consensus fasta from bam with variants from vcf file, always reference bases else 'N'"
     opt[Unit]("snpsOnly") unbounded () action { (x, c) =>
       c.copy(snpsOnly = true)
@@ -108,8 +110,8 @@ object BastyGenerateFasta extends ToolCommand {
   private val chunkSize = 100000
 
   /**
-   * @param args the command line arguments
-   */
+    * @param args the command line arguments
+    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
@@ -144,9 +146,10 @@ object BastyGenerateFasta extends ToolCommand {
 
         val variants: Map[(Int, Int), VariantContext] = if (cmdArgs.inputVcf != null) {
           val reader = new VCFFileReader(cmdArgs.inputVcf, true)
-          (for (variant <- reader.query(chrName, begin, end) if !cmdArgs.snpsOnly || variant.isSNP) yield {
-            (variant.getStart, variant.getEnd) -> variant
-          }).toMap
+          (for (variant <- reader.query(chrName, begin, end) if !cmdArgs.snpsOnly || variant.isSNP)
+            yield {
+              (variant.getStart, variant.getEnd) -> variant
+            }).toMap
         } else Map()
 
         val coverage: Array[Int] = Array.fill(end - begin + 1)(0)
@@ -237,7 +240,9 @@ object BastyGenerateFasta extends ToolCommand {
       return fillAllele("", maxSize)
     }
 
-    val AD = if (genotype.hasAD) genotype.getAD else Array.fill(vcfRecord.getAlleles.size())(cmdArgs.minAD)
+    val AD =
+      if (genotype.hasAD) genotype.getAD
+      else Array.fill(vcfRecord.getAlleles.size())(cmdArgs.minAD)
 
     if (AD == null) {
       return fillAllele("", maxSize)

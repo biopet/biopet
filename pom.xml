@@ -21,7 +21,7 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
     
     <modules>
         <module>gatk</module>
@@ -56,6 +56,7 @@
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
         <scalaVersion>2.11.4</scalaVersion>
         <scoverage.aggregate>true</scoverage.aggregate>
+        <scalaFMTVersion>0.6.8</scalaFMTVersion>
     </properties>
 
     <dependencies>
@@ -199,42 +200,37 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <!-- https://github.com/SimonJPegg/mvn_scalafmt -->
             <plugin>
-                <groupId>org.scalariform</groupId>
-                <artifactId>scalariform-maven-plugin</artifactId>
-                <version>0.1.4</version>
+                <groupId>org.antipathy</groupId>
+                <artifactId>mvn-scalafmt</artifactId>
+                <version>0.1</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>process-sources</phase>
+                        <phase>validate</phase>
                         <goals>
                             <goal>format</goal>
                         </goals>
-                        <configuration>
-                            <baseDir>${basedir}/src</baseDir>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <alignParameters>true</alignParameters>
-                            <alignSingleLineCaseStatements_maxArrowIndent>40
-                            </alignSingleLineCaseStatements_maxArrowIndent>
-                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
-                            <compactStringConcatenation>false</compactStringConcatenation>
-                            <compactControlReadability>false</compactControlReadability>
-                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
-                            <formatXml>true</formatXml>
-                            <indentLocalDefs>false</indentLocalDefs>
-                            <indentPackageBlocks>true</indentPackageBlocks>
-                            <indentSpaces>2</indentSpaces>
-                            <placeScaladocAsterisksBeneathSecondAsterisk>false
-                            </placeScaladocAsterisksBeneathSecondAsterisk>
-                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
-                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <spaceBeforeColon>false</spaceBeforeColon>
-                            <spaceInsideBrackets>false</spaceInsideBrackets>
-                            <spaceInsideParentheses>false</spaceInsideParentheses>
-                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
-                        </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-core_2.11 -->
+                    <dependency>
+                        <groupId>com.geirsson</groupId>
+                        <artifactId>scalafmt-core_2.11</artifactId>
+                        <version>${scalaFMTVersion}</version>
+                    </dependency>
+                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
+                    <dependency>
+                        <groupId>com.geirsson</groupId>
+                        <artifactId>scalafmt-cli_2.11</artifactId>
+                        <version>${scalaFMTVersion}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>

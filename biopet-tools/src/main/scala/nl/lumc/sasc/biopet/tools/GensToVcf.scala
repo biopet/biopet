@@ -1,34 +1,37 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
+import htsjdk.samtools.reference.{FastaSequenceFile, ReferenceSequenceFileFactory}
+import htsjdk.variant.variantcontext.writer.{
+  AsyncVariantContextWriter,
+  VariantContextWriterBuilder
+}
+import htsjdk.variant.variantcontext.{Allele, GenotypeBuilder, VariantContextBuilder}
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.{ FastaUtils, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
- * Created by pjvanthof on 15/03/16.
- */
+  * Created by pjvanthof on 15/03/16.
+  */
 object GensToVcf extends ToolCommand {
 
   case class Args(inputGenotypes: File = null,
@@ -37,7 +40,8 @@ object GensToVcf extends ToolCommand {
                   sampleFile: File = null,
                   referenceFasta: File = null,
                   contig: String = null,
-                  sortInput: Boolean = false) extends AbstractArgs
+                  sortInput: Boolean = false)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('g', "inputGenotypes") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -69,10 +73,16 @@ object GensToVcf extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs = argsParser.parse(args, Args()).getOrElse(throw new IllegalArgumentException)
 
-    val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").take(2).mkString("_"))
+    val samples = Source
+      .fromFile(cmdArgs.sampleFile)
+      .getLines()
+      .toArray
+      .drop(2)
+      .map(_.split("\t").take(2).mkString("_"))
 
     val infoIt = cmdArgs.inputInfo.map(Source.fromFile(_).getLines())
-    val infoHeaderKeys = infoIt.map(_.next().split(" ").filterNot(x => x == "rs_id" || x == "position"))
+    val infoHeaderKeys =
+      infoIt.map(_.next().split(" ").filterNot(x => x == "rs_id" || x == "position"))
     val infoHeaderMap = infoHeaderKeys.map(_.zipWithIndex.toMap)
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
@@ -80,28 +90,31 @@ object GensToVcf extends ToolCommand {
       metaLines.add(new VCFInfoHeaderLine(s"GENS_$key", 1, VCFHeaderLineType.String, ""))
 
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
-    metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
+    metaLines.add(
+      new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
 
     require(FastaUtils.getCachedDict(cmdArgs.referenceFasta).getSequence(cmdArgs.contig) != null,
-      s"contig '${cmdArgs.contig}' not found on reference")
+            s"contig '${cmdArgs.contig}' not found on reference")
 
     val header = new VCFHeader(metaLines, samples.toList)
     header.setSequenceDictionary(FastaUtils.getCachedDict(cmdArgs.referenceFasta))
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
-      .setOutputFile(cmdArgs.outputVcf)
-      .setReferenceDictionary(header.getSequenceDictionary)
-      .build)
+    val writer = new AsyncVariantContextWriter(
+      new VariantContextWriterBuilder()
+        .setOutputFile(cmdArgs.outputVcf)
+        .setReferenceDictionary(header.getSequenceDictionary)
+        .build)
     writer.writeHeader(header)
 
     val genotypeIt = Source.fromFile(cmdArgs.inputGenotypes).getLines()
 
-    lazy val fastaFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(cmdArgs.referenceFasta, true, true)
+    lazy val fastaFile =
+      ReferenceSequenceFileFactory.getReferenceSequenceFile(cmdArgs.referenceFasta, true, true)
 
     case class Line(genotype: String, info: Option[String])
     val lineIt: Iterator[Line] = {
       val it = infoIt match {
         case Some(x) => genotypeIt.zip(x).map(x => Line(x._1, Some(x._2)))
-        case _       => genotypeIt.map(x => Line(x, None))
+        case _ => genotypeIt.map(x => Line(x, None))
       }
 
       if (cmdArgs.sortInput) {
@@ -127,12 +140,19 @@ object GensToVcf extends ToolCommand {
       val (start, end, ref, alt) = {
         val start = genotypeValues(2).toInt
         if (genotypeValues(4) == "-") {
-          val seq = fastaFile.getSubsequenceAt(cmdArgs.contig, start - 1, start + genotypeValues(4).length - 1)
-          (start - 1, start + genotypeValues(4).length - 1,
-            Allele.create(new String(seq.getBases), true), Allele.create(new String(Array(seq.getBases.head))))
+          val seq = fastaFile.getSubsequenceAt(cmdArgs.contig,
+                                               start - 1,
+                                               start + genotypeValues(4).length - 1)
+          (start - 1,
+           start + genotypeValues(4).length - 1,
+           Allele.create(new String(seq.getBases), true),
+           Allele.create(new String(Array(seq.getBases.head))))
         } else {
           val ref = Allele.create(genotypeValues(3), true)
-          (start, ref.length - 1 + start, Allele.create(genotypeValues(3), true), Allele.create(genotypeValues(4)))
+          (start,
+           ref.length - 1 + start,
+           Allele.create(genotypeValues(3), true),
+           Allele.create(genotypeValues(4)))
         }
       }
       val genotypes = samples.toList.zipWithIndex.map {
@@ -154,9 +174,11 @@ object GensToVcf extends ToolCommand {
             .make()
       }
 
-      val infoMap = infoHeaderKeys
-        .map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x)).replaceAll(";", ",")).toMap)
-        .getOrElse(Map())
+      val infoMap =
+        infoHeaderKeys
+          .map(_.map(x =>
+            ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x)).replaceAll(";", ",")).toMap)
+          .getOrElse(Map())
 
       val builder = (new VariantContextBuilder)
         .chr(cmdArgs.contig)

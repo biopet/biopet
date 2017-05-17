@@ -1,29 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * Extension for STAR
- */
-class Star(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for STAR
+  */
+class Star(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
   @Input(doc = "The reference file for the bam files.", required = false)
   var reference: File = null
 
@@ -69,6 +72,7 @@ class Star(val parent: Configurable) extends BiopetCommandLineFunction with Refe
   var genomeLoad: Option[String] = config("genomeload")
 
   var genomeFastaFiles: Option[String] = config("genomefastafiles")
+
   /** can be a list of strings **/
   var genomeChrBinNbits: Option[Int] = config("genomechrbinnbits")
   var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
@@ -149,8 +153,10 @@ class Star(val parent: Configurable) extends BiopetCommandLineFunction with Refe
   var outSJfilterOverhangMin: List[String] = config("outsjfilteroverhandmin", default = Nil)
   var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin", default = Nil)
   var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin", default = Nil)
-  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin", default = Nil)
-  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn", default = Nil)
+  var outSJfilterDistToOtherSJmin: List[String] =
+    config("outsjfilterdisttoothersjmin", default = Nil)
+  var outSJfilterIntronMaxVsReadN: List[String] =
+    config("outsjfilterintronmaxvsreadn", default = Nil)
 
   var scoreGap: Option[Int] = config("scoregap")
   var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
@@ -213,7 +219,9 @@ class Star(val parent: Configurable) extends BiopetCommandLineFunction with Refe
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir + File.separator
+    val prefix =
+      if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix
+      else outputDir + File.separator
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
@@ -273,10 +281,22 @@ class Star(val parent: Configurable) extends BiopetCommandLineFunction with Refe
       optional("--outTmpDir", outTmpDir) +
       optional("--outStd", outStd) +
       multiArg("--outSJfilterOverhangMin", outSJfilterOverhangMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterCountUniqueMin", outSJfilterCountUniqueMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterCountTotalMin", outSJfilterCountTotalMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterDistToOtherSJmin", outSJfilterDistToOtherSJmin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterIntronMaxVsReadN", outSJfilterIntronMaxVsReadN, groupSize = 3, maxGroups = 1)
+      multiArg("--outSJfilterCountUniqueMin",
+               outSJfilterCountUniqueMin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterCountTotalMin",
+               outSJfilterCountTotalMin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterDistToOtherSJmin",
+               outSJfilterDistToOtherSJmin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterIntronMaxVsReadN",
+               outSJfilterIntronMaxVsReadN,
+               groupSize = 3,
+               maxGroups = 1)
 
     // Break as workaround for a stackoverflow error for the compiler
     cmd += optional("--outReadsUnmapped", outReadsUnmapped) +
@@ -376,18 +396,24 @@ class Star(val parent: Configurable) extends BiopetCommandLineFunction with Refe
 }
 
 object Star {
+
   /**
-   * Create default star
-   * @param configurable root object
-   * @param R1 R1 fastq file
-   * @param R2 R2 fastq file
-   * @param outputDir Outputdir for Star
-   * @param isIntermediate When set true jobs are flaged as intermediate
-   * @param deps Deps to add to wait on run
-   * @return Return Star
-   *
-   */
-  def apply(configurable: Configurable, R1: File, R2: Option[File], outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
+    * Create default star
+    * @param configurable root object
+    * @param R1 R1 fastq file
+    * @param R2 R2 fastq file
+    * @param outputDir Outputdir for Star
+    * @param isIntermediate When set true jobs are flaged as intermediate
+    * @param deps Deps to add to wait on run
+    * @return Return Star
+    *
+    */
+  def apply(configurable: Configurable,
+            R1: File,
+            R2: Option[File],
+            outputDir: File,
+            isIntermediate: Boolean = false,
+            deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
     R2.foreach(R2 => star.R2 = R2)
@@ -399,15 +425,15 @@ object Star {
   }
 
   /**
-   * returns Star with 2pass star method
-   * @param configurable root object
-   * @param R1 R1 fastq file
-   * @param R2 R2 fastq file
-   * @param outputDir Outputdir for Star
-   * @param isIntermediate When set true jobs are flaged as intermediate
-   * @param deps Deps to add to wait on run
-   * @return Return Star
-   */
+    * returns Star with 2pass star method
+    * @param configurable root object
+    * @param R1 R1 fastq file
+    * @param R2 R2 fastq file
+    * @param outputDir Outputdir for Star
+    * @param isIntermediate When set true jobs are flaged as intermediate
+    * @param deps Deps to add to wait on run
+    * @return Return Star
+    */
   def _2pass(configurable: Configurable,
              R1: File,
              R2: Option[File],

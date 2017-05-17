@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -29,8 +29,8 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
- * Created by ahbbollen on 13-10-15.
- */
+  * Created by ahbbollen on 13-10-15.
+  */
 class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
 
   private def resourcePath(p: String): String = {
@@ -60,16 +60,28 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
   def testGvcfToBedOutput = {
     val tmp = File.createTempFile("gvcf2bedtest", ".bed")
     tmp.deleteOnExit()
-    val args: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp.getAbsolutePath, "-S", "Sample_101",
-      "--minGenomeQuality", "99")
+    val args: Array[String] = Array("-I",
+                                    unvepped.getAbsolutePath,
+                                    "-O",
+                                    tmp.getAbsolutePath,
+                                    "-S",
+                                    "Sample_101",
+                                    "--minGenomeQuality",
+                                    "99")
     main(args)
 
     Source.fromFile(tmp).getLines().size shouldBe 0
 
     val tmp2 = File.createTempFile("gvcf2bedtest", ".bed")
     tmp2.deleteOnExit()
-    val args2: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp2.getAbsolutePath, "-S", "Sample_102",
-      "--minGenomeQuality", "2")
+    val args2: Array[String] = Array("-I",
+                                     unvepped.getAbsolutePath,
+                                     "-O",
+                                     tmp2.getAbsolutePath,
+                                     "-S",
+                                     "Sample_102",
+                                     "--minGenomeQuality",
+                                     "2")
     main(args2)
 
     Source.fromFile(tmp2).getLines().size shouldBe 1
@@ -81,8 +93,16 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
     val tmpInv = File.createTempFile("gvcf2bedtest", ".bed")
     tmp.deleteOnExit()
     tmpInv.deleteOnExit()
-    val args: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp.getAbsolutePath, "-S", "Sample_101",
-      "--minGenomeQuality", "99", "--invertedOutputBed", tmpInv.getAbsolutePath)
+    val args: Array[String] = Array("-I",
+                                    unvepped.getAbsolutePath,
+                                    "-O",
+                                    tmp.getAbsolutePath,
+                                    "-S",
+                                    "Sample_101",
+                                    "--minGenomeQuality",
+                                    "99",
+                                    "--invertedOutputBed",
+                                    tmpInv.getAbsolutePath)
     main(args)
 
     Source.fromFile(tmpInv).getLines().size shouldBe 1
@@ -91,8 +111,16 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
     val tmp2Inv = File.createTempFile("gvcf2bedtest", ".bed")
     tmp2.deleteOnExit()
     tmp2Inv.deleteOnExit()
-    val args2: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp.getAbsolutePath, "-S", "Sample_102",
-      "--minGenomeQuality", "3", "--invertedOutputBed", tmp2Inv.getAbsolutePath)
+    val args2: Array[String] = Array("-I",
+                                     unvepped.getAbsolutePath,
+                                     "-O",
+                                     tmp.getAbsolutePath,
+                                     "-S",
+                                     "Sample_102",
+                                     "--minGenomeQuality",
+                                     "3",
+                                     "--invertedOutputBed",
+                                     tmp2Inv.getAbsolutePath)
     main(args2)
 
     Source.fromFile(tmp2Inv).getLines().size shouldBe 0

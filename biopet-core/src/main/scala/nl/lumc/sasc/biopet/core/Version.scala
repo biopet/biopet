@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
@@ -20,13 +20,14 @@ import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.function.QFunction
 
 import scala.collection.mutable
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.matching.Regex
 
 /**
- * Created by pjvan_thof on 10/13/15.
- */
+  * Created by pjvan_thof on 10/13/15.
+  */
 trait Version extends QFunction {
+
   /** Command to get version of executable */
   def versionCommand: String
 
@@ -47,7 +48,7 @@ trait Version extends QFunction {
     if (!Version.versionCache.contains(versionCommand))
       getVersionInternal match {
         case Some(version) => Version.versionCache += versionCommand -> version
-        case _             =>
+        case _ =>
       }
     Version.versionCache.get(versionCommand)
   }
@@ -70,21 +71,25 @@ object Version extends Logging {
     else {
       val stdout = new StringBuffer()
       val stderr = new StringBuffer()
-      def outputLog = "Version command: \n" + versionCommand +
-        "\n output log: \n stdout: \n" + stdout.toString +
-        "\n stderr: \n" + stderr.toString
-      val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
+      def outputLog =
+        "Version command: \n" + versionCommand +
+          "\n output log: \n stdout: \n" + stdout.toString +
+          "\n stderr: \n" + stderr.toString
+      val process =
+        Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
       if (!versionExitcode.contains(process.exitValue())) {
-        logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
+        logger.warn(
+          "getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
         return None
       }
       for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
         line match {
           case versionRegex(m) => return Some(m)
-          case _               =>
+          case _ =>
         }
       }
-      logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
+      logger.warn(
+        "getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
       None
     }
   }

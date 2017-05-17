@@ -14,13 +14,16 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 
-import scalaz.{ -\/, \/, \/- }
+import scalaz.{-\/, \/, \/-}
 
 /**
- * Created by Sander Bollen on 23-3-17.
- */
-class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with SummaryQScript with Reference {
-  qscript =>
+  * Created by Sander Bollen on 23-3-17.
+  */
+class Tarmac(val parent: Configurable)
+    extends QScript
+    with PedigreeQscript
+    with SummaryQScript
+    with Reference { qscript =>
 
   lazy val targets: File = config("targets")
   lazy val stouffWindowSizes: List[Int] = config("stouff_window_size")
@@ -50,9 +53,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     )
   }
 
-  def init() = {
-
-  }
+  def init() = {}
 
   def biopetScript() = {
     addSamplesJobs()
@@ -60,7 +61,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   def addMultiSampleJobs() = {
-    val initRefMap = samples map { case (sampleName, sample) => sample -> getReferenceSamplesForSample(sampleName) }
+    val initRefMap = samples map {
+      case (sampleName, sample) => sample -> getReferenceSamplesForSample(sampleName)
+    }
     initRefMap.values.collect { case -\/(error) => error }.foreach(Logging.addError(_))
 
     val refMap: Map[Sample, Set[Sample]] = initRefMap.collect {
@@ -101,7 +104,8 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
         val intersect = new BedtoolsIntersect(this)
         intersect.input = job.output
         intersect.intersectFile = xhmmZJobs(sample)._2
-        intersect.output = new File(sample.wisecondorDir, s"${sample.sampleId}.wisecondor.sync.z.bed")
+        intersect.output =
+          new File(sample.wisecondorDir, s"${sample.sampleId}.wisecondor.sync.z.bed")
         sample -> intersect
     }
 
@@ -240,13 +244,13 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   }
 
   /**
-   * Get set of sample names constituting reference samples for a given sample name
-   *
-   * Reference samples must match the own gender, while excluding own parents (if any) and self
-   *
-   * @param sampleName: The sample name to create reference set for
-   * @return
-   */
+    * Get set of sample names constituting reference samples for a given sample name
+    *
+    * Reference samples must match the own gender, while excluding own parents (if any) and self
+    *
+    * @param sampleName: The sample name to create reference set for
+    * @return
+    */
   def getReferenceSamplesForSample(sampleName: String): String \/ Set[String] = {
     val allSampleNames = pedSamples.map(_.individualId)
     if (!allSampleNames.toSet.contains(sampleName)) {
@@ -256,9 +260,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       val totalSet = pedSamples.filter(p => p.gender == theSample.gender).map(_.individualId).toSet
       val referenceSet = (theSample.maternalId, theSample.paternalId) match {
         case (Some(m), Some(f)) => totalSet - (m, f, sampleName)
-        case (None, Some(f))    => totalSet - (f, sampleName)
-        case (Some(m), None)    => totalSet - (m, sampleName)
-        case _                  => totalSet - sampleName
+        case (None, Some(f)) => totalSet - (f, sampleName)
+        case (Some(m), None) => totalSet - (m, sampleName)
+        case _ => totalSet - sampleName
       }
       \/-(referenceSet)
     }
@@ -268,11 +272,14 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   Create jobs for Xhmm reference creation
   Returns both jobs and the resulting reference file
    */
-  def createXhmmReferenceJobs(sample: Sample, referenceSamples: Set[Sample], outputDirectory: File): Tuple2[List[QFunction], File] = {
+  def createXhmmReferenceJobs(sample: Sample,
+                              referenceSamples: Set[Sample],
+                              outputDirectory: File): Tuple2[List[QFunction], File] = {
     /* XHMM requires refset including self */
     val totalSet = referenceSamples + sample
     val merger = new XhmmMergeGatkDepths(this)
-    merger.gatkDepthsFiles = totalSet.map(_.outputXhmmCountFile).collect { case \/-(file) => file }.toList
+    merger.gatkDepthsFiles =
+      totalSet.map(_.outputXhmmCountFile).collect { case \/-(file) => file }.toList
     val refFile = new File(outputDirectory, "reference.matrix")
     merger.output = refFile
     (List(merger), refFile)
@@ -282,8 +289,10 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
   Create jobs for wisecondor reference creation
   Returns both jobs and the resulting reference file
    */
-  def createWisecondorReferenceJobs(referenceSamples: Set[Sample], outputDirectory: File): (List[QFunction], File) = {
-    val gccs = referenceSamples.map(_.outputWisecondorGccFile).collect { case \/-(file) => file }.toList
+  def createWisecondorReferenceJobs(referenceSamples: Set[Sample],
+                                    outputDirectory: File): (List[QFunction], File) = {
+    val gccs =
+      referenceSamples.map(_.outputWisecondorGccFile).collect { case \/-(file) => file }.toList
     val reference = new WisecondorNewRef(this)
     reference.inputBeds = gccs
     reference.output = new File(outputDirectory, "reference.bed")
@@ -300,7 +309,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     (List(new BiopetFifoPipe(this, reference :: sort :: gzipRef :: Nil), tabix), refFile)
   }
 
-  def createWisecondorZScore(sample: Sample, referenceFile: File, tbiFile: File): WisecondorZscore = {
+  def createWisecondorZScore(sample: Sample,
+                             referenceFile: File,
+                             tbiFile: File): WisecondorZscore = {
     val zscore = new WisecondorZscore(this)
     val zFile = new File(sample.wisecondorDir, s"${sample.sampleId}.z.bed")
     zscore.inputBed = sample.outputWisecondorGzFile.getOrElse(new File(""))
@@ -316,9 +327,12 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     // the filtered and centered matrix
     val filtMatrix = new XhmmMatrix(this)
     filtMatrix.inputMatrix = referenceMatrix
-    filtMatrix.outputMatrix = new File(sample.xhmmDir, s"${sample.sampleId}.filtered-centered.matrix")
-    filtMatrix.outputExcludedSamples = Some(new File(sample.xhmmDir, s"${sample.sampleId}.filtered-samples.txt"))
-    filtMatrix.outputExcludedTargets = Some(new File(sample.xhmmDir, s"${sample.sampleId}.filtered-targets.txt"))
+    filtMatrix.outputMatrix =
+      new File(sample.xhmmDir, s"${sample.sampleId}.filtered-centered.matrix")
+    filtMatrix.outputExcludedSamples = Some(
+      new File(sample.xhmmDir, s"${sample.sampleId}.filtered-samples.txt"))
+    filtMatrix.outputExcludedTargets = Some(
+      new File(sample.xhmmDir, s"${sample.sampleId}.filtered-targets.txt"))
 
     // pca generation
     val pca = new XhmmPca(this)
@@ -337,8 +351,10 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     zMatrix.centerData = true
     zMatrix.centerType = "sample"
     zMatrix.zScoreData = true
-    zMatrix.outputExcludedTargets = Some(new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-targets.txt"))
-    zMatrix.outputExcludedSamples = Some(new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-samples.txt"))
+    zMatrix.outputExcludedTargets = Some(
+      new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-targets.txt"))
+    zMatrix.outputExcludedSamples = Some(
+      new File(sample.xhmmDir, s"${sample.sampleId}.z-filtered-samples.txt"))
     zMatrix.outputMatrix = new File(sample.xhmmDir, "zscores.matrix")
 
     // select sample from matrix
@@ -361,17 +377,18 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     val xhmmDir: File = new File(sampleDir, "xhmm")
 
     /**
-     * Create XHMM count file or create link to input count file
-     * Precedence is given to existing count files.
-     * Returns a disjunction where right is the file, and left is
-     * a potential error message
-     */
+      * Create XHMM count file or create link to input count file
+      * Precedence is given to existing count files.
+      * Returns a disjunction where right is the file, and left is
+      * a potential error message
+      */
     protected lazy val outputXhmmCountJob: String \/ QFunction = {
       val outFile = new File(xhmmDir, s"$name.dcov")
       (inputXhmmCountFile, bamFile) match {
         case (Some(f), _) => {
           if (bamFile.isDefined) {
-            logger.warn(s"Both BAM and Xhmm count files are given for sample $name. The BAM file will be ignored")
+            logger.warn(
+              s"Both BAM and Xhmm count files are given for sample $name. The BAM file will be ignored")
           }
           val ln = new Ln(root)
           ln.input = f
@@ -382,8 +399,10 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
           val dcov = DepthOfCoverage(root, List(bam), outFile, List(targets))
           \/-(dcov)
         }
-        case _ => -\/(s"Cannot find bam file or xhmm count file for sample" +
-          s" $name in config. At least one must be given.")
+        case _ =>
+          -\/(
+            s"Cannot find bam file or xhmm count file for sample" +
+              s" $name in config. At least one must be given.")
       }
 
     }
@@ -391,24 +410,25 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     /* Get count file for Xhmm method */
     lazy val outputXhmmCountFile: String \/ File = {
       outputXhmmCountJob match {
-        case \/-(ln: Ln)               => \/-(ln.output)
+        case \/-(ln: Ln) => \/-(ln.output)
         case \/-(doc: DepthOfCoverage) => \/-(doc.intervalSummaryFile)
-        case -\/(error)                => -\/(error)
+        case -\/(error) => -\/(error)
       }
     }
 
     /**
-     * Create wisecondor count file or create link to input count file.
-     * Precedence is given to existing count files.
-     * Returns a disjunction where right is the file, and left is
-     * a potential error message
-     */
+      * Create wisecondor count file or create link to input count file.
+      * Precedence is given to existing count files.
+      * Returns a disjunction where right is the file, and left is
+      * a potential error message
+      */
     protected lazy val outputWisecondorCountJob: String \/ QFunction = {
       val outFile = new File(wisecondorDir, s"$name.wisecondor.bed")
       (inputWisecondorCountFile, bamFile) match {
         case (Some(f), _) => {
           if (bamFile.isDefined) {
-            logger.warn(s"Both BAM and Wisecondor count files are given for sample $name. The BAM file will be ignored")
+            logger.warn(
+              s"Both BAM and Wisecondor count files are given for sample $name. The BAM file will be ignored")
           }
           val ln = new Ln(root)
           ln.input = f
@@ -422,8 +442,10 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
           counter.binFile = Some(targets)
           \/-(counter)
         }
-        case _ => -\/(s"Cannot find bam file or wisecondor count for sample" +
-          s" $name. At least one must be given.")
+        case _ =>
+          -\/(
+            s"Cannot find bam file or wisecondor count for sample" +
+              s" $name. At least one must be given.")
       }
 
     }
@@ -431,9 +453,9 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     /* Get count file for wisecondor method */
     lazy val outputWisecondorCountFile: String \/ File = {
       outputWisecondorCountJob match {
-        case \/-(ln: Ln)                 => \/-(ln.output)
+        case \/-(ln: Ln) => \/-(ln.output)
         case \/-(count: WisecondorCount) => \/-(count.output)
-        case -\/(error)                  => -\/(error)
+        case -\/(error) => -\/(error)
       }
     }
 
@@ -450,7 +472,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
     lazy val outputWisecondorGccFile: String \/ File = {
       outputWisecondorGccJob match {
         case \/-(gcc: WisecondorGcCorrect) => \/-(gcc.output)
-        case -\/(error)                    => -\/(error)
+        case -\/(error) => -\/(error)
       }
     }
 
@@ -470,26 +492,28 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
 
     lazy val outputWisecondorGzFile: String \/ File = {
       outputWisecondorSortJobs match {
-        case -\/(error)                      => -\/(error)
-        case \/-(functions: List[QFunction]) => \/-(functions.collect { case gz: Bgzip => gz.output }.head)
+        case -\/(error) => -\/(error)
+        case \/-(functions: List[QFunction]) =>
+          \/-(functions.collect { case gz: Bgzip => gz.output }.head)
       }
     }
 
     lazy val outputWisecondorTbiFile: String \/ File = {
       outputWisecondorSortJobs match {
-        case -\/(error)                      => -\/(error)
-        case \/-(functions: List[QFunction]) => \/-(functions.collect { case tbi: Tabix => tbi.outputIndex }.head)
+        case -\/(error) => -\/(error)
+        case \/-(functions: List[QFunction]) =>
+          \/-(functions.collect { case tbi: Tabix => tbi.outputIndex }.head)
       }
     }
 
     /** Function to add sample jobs */
     def addJobs(): Unit = {
       (outputWisecondorGccJob :: outputWisecondorCountJob :: outputXhmmCountJob :: Nil).foreach {
-        case -\/(error)    => Logging.addError(error)
+        case -\/(error) => Logging.addError(error)
         case \/-(function) => add(function)
       }
       outputWisecondorSortJobs match {
-        case -\/(error)                      => Logging.addError(error)
+        case -\/(error) => Logging.addError(error)
         case \/-(functions: List[QFunction]) => addAll(functions)
       }
     }
@@ -502,6 +526,7 @@ class Tarmac(val parent: Configurable) extends QScript with PedigreeQscript with
       def summaryFiles: Map[String, File] = Map()
       def summaryStats: Any = Map()
     }
+
     /** Must return files to store into summary */
     def summaryFiles: Map[String, File] = Map()
 

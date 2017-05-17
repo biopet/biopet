@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
-import nl.lumc.sasc.biopet.extensions.{ Ln, Cufflinks }
+import nl.lumc.sasc.biopet.extensions.{Ln, Cufflinks}
 import nl.lumc.sasc.biopet.extensions.tools.MergeTables
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvanthof on 20/01/16.
- */
+  * Created by pjvanthof on 20/01/16.
+  */
 trait CufflinksMeasurement extends QScript with Measurement {
   def makeCufflinksJob(id: String, bamFile: File) = {
     val cufflinks = new Cufflinks(this)
@@ -52,7 +52,10 @@ trait CufflinksMeasurement extends QScript with Measurement {
     }
 
     addMergeTableJob(genesFpkmFiles, mergeGenesFpkmTable, "genes_fpkm", ".genes_fpkm.counts")
-    addMergeTableJob(isoFormFpkmFiles, mergeIsoFormFpkmTable, "iso_form_fpkn", ".iso_form_fpkn.counts")
+    addMergeTableJob(isoFormFpkmFiles,
+                     mergeIsoFormFpkmTable,
+                     "iso_form_fpkn",
+                     ".iso_form_fpkn.counts")
 
     addHeatmapJob(mergeGenesFpkmTable, genesFpkmHeatmap, "genes_fpkm")
     addHeatmapJob(mergeIsoFormFpkmTable, isoFormFpkmHeatmap, "iso_form_fpkm")

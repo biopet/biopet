@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -23,12 +23,11 @@ import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import scala.collection.JavaConversions._
 
 /**
- * Created by pjvanthof on 10/12/2016.
- */
+  * Created by pjvanthof on 10/12/2016.
+  */
 object ValidateVcf extends ToolCommand {
-  case class Args(inputVcf: File = null,
-                  reference: File = null,
-                  failOnError: Boolean = true) extends AbstractArgs
+  case class Args(inputVcf: File = null, reference: File = null, failOnError: Boolean = true)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -46,7 +45,8 @@ object ValidateVcf extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val regions = BedRecordList.fromReference(cmdArgs.reference)
 
@@ -56,16 +56,19 @@ object ValidateVcf extends ToolCommand {
       for (record <- vcfReader.iterator()) {
         val contig = record.getContig
         require(regions.chrRecords.contains(contig),
-          s"The following contig in the vcf file does not exist in the reference: ${contig}")
+                s"The following contig in the vcf file does not exist in the reference: ${contig}")
         val start = record.getStart
         val end = record.getEnd
         val contigStart = regions.chrRecords(contig).head.start
         val contigEnd = regions.chrRecords(contig).head.end
         require(start >= contigStart && start <= contigEnd,
-          s"The following position does not exist on reference: ${contig}:$start")
-        if (end != start) require(end >= contigStart && end <= contigEnd,
-          s"The following position does not exist on reference: ${contig}:$end")
-        require(start <= end, "End location of variant is larger than start position. This should not be possible")
+                s"The following position does not exist on reference: ${contig}:$start")
+        if (end != start)
+          require(end >= contigStart && end <= contigEnd,
+                  s"The following position does not exist on reference: ${contig}:$end")
+        require(
+          start <= end,
+          "End location of variant is larger than start position. This should not be possible")
       }
     } catch {
       case e: IllegalArgumentException =>

@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.summary
 
 import java.io.File
@@ -19,12 +19,12 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
- * This class can read in a summary and extract values from it
- *
- * Created by pjvan_thof on 3/26/15.
- *
- * @deprecated
- */
+  * This class can read in a summary and extract values from it
+  *
+  * Created by pjvan_thof on 3/26/15.
+  *
+  * @deprecated
+  */
 class Summary(val map: Map[String, Any]) {
 
   def this(file: File) = this(ConfigUtils.fileToConfigMap(file))
@@ -33,18 +33,20 @@ class Summary(val map: Map[String, Any]) {
   lazy val samples: Set[String] = {
     ConfigUtils.getValueFromPath(map, List("samples")) match {
       case Some(s) => ConfigUtils.any2map(s).keySet
-      case _       => Set()
+      case _ => Set()
     }
   }
 
   /** List of all libraries for each sample */
   lazy val libraries: Map[String, Set[String]] = {
-    (for (sample <- samples) yield sample -> {
-      ConfigUtils.getValueFromPath(map, List("samples", sample, "libraries")) match {
-        case Some(libs) => ConfigUtils.any2map(libs).keySet
-        case _          => Set[String]()
-      }
-    }).toMap
+    (for (sample <- samples)
+      yield
+        sample -> {
+          ConfigUtils.getValueFromPath(map, List("samples", sample, "libraries")) match {
+            case Some(libs) => ConfigUtils.any2map(libs).keySet
+            case _ => Set[String]()
+          }
+        }).toMap
   }
 
   /** getValue from on given nested path */
@@ -76,21 +78,23 @@ class Summary(val map: Map[String, Any]) {
   def getValue(sampleId: Option[String], libId: Option[String], path: String*): Option[Any] = {
     (sampleId, libId) match {
       case (Some(sample), Some(lib)) => getLibraryValue(sample, lib, path: _*)
-      case (Some(sample), _)         => getSampleValue(sample, path: _*)
-      case _                         => getValue(path: _*)
+      case (Some(sample), _) => getSampleValue(sample, path: _*)
+      case _ => getValue(path: _*)
     }
   }
 
   /** Get value on nested path with prefix depending is sampleId and/or libId is None or not */
-  def getValueAsArray(sampleId: Option[String], libId: Option[String], path: String*): Option[Array[Any]] = {
+  def getValueAsArray(sampleId: Option[String],
+                      libId: Option[String],
+                      path: String*): Option[Array[Any]] = {
     this.getValue(sampleId, libId, path: _*).map(ConfigUtils.any2list(_).toArray)
   }
 
   /**
-   * Get values for all libraries on a given path
-   * @param path path to of value
-   * @return (sampleId, libId) -> value
-   */
+    * Get values for all libraries on a given path
+    * @param path path to of value
+    * @return (sampleId, libId) -> value
+    */
   def getLibraryValues(path: String*): Map[(String, String), Option[Any]] = {
     (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
       (sample, lib) -> getLibraryValue(sample, lib, path: _*)
@@ -98,11 +102,12 @@ class Summary(val map: Map[String, Any]) {
   }
 
   /**
-   * Executes method for each library
-   * @param function Function to execute
-   * @return (sampleId, libId) -> value
-   */
-  def getLibraryValues[T](function: (Summary, String, String) => Option[T]): Map[(String, String), Option[T]] = {
+    * Executes method for each library
+    * @param function Function to execute
+    * @return (sampleId, libId) -> value
+    */
+  def getLibraryValues[T](
+      function: (Summary, String, String) => Option[T]): Map[(String, String), Option[T]] = {
     (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
       (sample, lib) -> function(this, sample, lib)
     }).toMap

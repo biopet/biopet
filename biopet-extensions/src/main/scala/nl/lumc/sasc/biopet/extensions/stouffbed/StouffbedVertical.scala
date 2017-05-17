@@ -6,8 +6,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
 
 /**
- * Created by Sander Bollen on 24-4-17.
- */
+  * Created by Sander Bollen on 24-4-17.
+  */
 class StouffbedVertical(val parent: Configurable) extends Stouffbed {
 
   @Output

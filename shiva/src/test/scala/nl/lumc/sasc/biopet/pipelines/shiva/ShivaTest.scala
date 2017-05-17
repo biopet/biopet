@@ -1,38 +1,43 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
+import nl.lumc.sasc.biopet.extensions.gatk.{
+  BaseRecalibrator,
+  IndelRealigner,
+  PrintReads,
+  RealignerTargetCreator
+}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 /**
- * Class for testing shiva
- *
- * Created by pjvan_thof on 3/2/15.
- */
+  * Class for testing shiva
+  *
+  * Created by pjvan_thof on 3/2/15.
+  */
 trait ShivaTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Shiva = {
     new Shiva() {
@@ -45,10 +50,9 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaOptions")
   def shivaOptions = {
-    for (
-      s1 <- sample1; s2 <- sample2;
-      realign <- realignProvider; baseRecalibration <- baseRecalibrationProvider
-    ) yield Array("", s1, s2, realign, baseRecalibration)
+    for (s1 <- sample1; s2 <- sample2;
+         realign <- realignProvider; baseRecalibration <- baseRecalibrationProvider)
+      yield Array("", s1, s2, realign, baseRecalibration)
   }
 
   def sample1 = Array(false, true)
@@ -62,12 +66,16 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def svCalling = false
   def cnvCalling = false
   def annotation = false
+  def usePrintReads = true
 
   private var dirs: List[File] = Nil
 
   @Test(dataProvider = "shivaOptions")
-  def testShiva(f: String, sample1: Boolean, sample2: Boolean,
-                realign: Boolean, baseRecalibration: Boolean): Unit = {
+  def testShiva(f: String,
+                sample1: Boolean,
+                sample2: Boolean,
+                realign: Boolean,
+                baseRecalibration: Boolean): Unit = {
     val outputDir = ShivaTest.outputDir
     dirs :+= outputDir
     val map = {
@@ -75,15 +83,20 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp_vcf" -> "test.vcf.gz"), m)
-      ConfigUtils.mergeMaps(Map(
-        "multisample_variantcalling" -> multisampleCalling,
-        "single_sample_variantcalling" -> sampleCalling,
-        "library_variantcalling" -> libraryCalling,
-        "use_indel_realigner" -> realign,
-        "use_base_recalibration" -> baseRecalibration,
-        "sv_calling" -> svCalling,
-        "cnv_calling" -> cnvCalling,
-        "annotation" -> annotation), m)
+      ConfigUtils.mergeMaps(
+        Map(
+          "multisample_variantcalling" -> multisampleCalling,
+          "single_sample_variantcalling" -> sampleCalling,
+          "library_variantcalling" -> libraryCalling,
+          "use_indel_realigner" -> realign,
+          "use_base_recalibration" -> baseRecalibration,
+          "sv_calling" -> svCalling,
+          "cnv_calling" -> cnvCalling,
+          "annotation" -> annotation,
+          "use_printreads" -> usePrintReads
+        ),
+        m
+      )
 
     }
 
@@ -99,13 +112,20 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample2) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + numberSamples)
 
       // Gatk preprocess
-      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
-      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (if (realign) numberSamples
+                                                                         else 0)
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (if (realign)
+                                                                                   numberSamples
+                                                                                 else 0)
+      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration)
+                                                                             (numberLibs * 2)
+                                                                           else 0)
+      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration && usePrintReads)
+                                                                       numberLibs
+                                                                     else 0)
 
       pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
       pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
@@ -118,13 +138,14 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
           sample.libraries.foreach {
             case (libId, lib) =>
               lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
-              lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
-              lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
+              lib.summarySettings.get("use_indel_realigner") shouldBe None // Should not exist anymore
+              lib.summarySettings.get("use_base_recalibration") shouldBe Some(
+                baseRecalibration && dbsnp)
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (
-        (if (multisampleCalling) 2 else 0) +
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe ((if (multisampleCalling) 2
+                                                                    else 0) +
         (if (sampleCalling) numberSamples * 2 else 0) +
         (if (libraryCalling) numberLibs * 2 else 0))
     }
@@ -142,6 +163,10 @@ class ShivaNoDbsnpTest extends ShivaTestTrait {
   override def sample2 = Array(false)
   override def realignProvider = Array(true)
   override def dbsnp = false
+}
+class ShivaNoPrintReadsTest extends ShivaTestTrait {
+  override def realignProvider = Array(false)
+  override def usePrintReads = false
 }
 class ShivaLibraryCallingTest extends ShivaTestTrait {
   override def sample1 = Array(true, false)
@@ -236,10 +261,9 @@ object ShivaTest {
     "pindelvcf" -> Map("exe" -> "test"),
     "clever" -> Map("exe" -> "test"),
     "delly" -> Map("exe" -> "test"),
-    "pysvtools" -> Map(
-      "exe" -> "test",
-      "exclusion_regions" -> "test",
-      "translocations_only" -> false),
+    "pysvtools" -> Map("exe" -> "test",
+                       "exclusion_regions" -> "test",
+                       "translocations_only" -> false),
     "freec" -> Map(
       "exe" -> "test",
       "chrFiles" -> "test",
@@ -248,24 +272,26 @@ object ShivaTest {
   )
 
   val sample1 = Map(
-    "samples" -> Map("sample1" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("1_1_R1.fq"),
-        "R2" -> inputTouch("1_1_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample1" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("1_1_R1.fq"),
+            "R2" -> inputTouch("1_1_R2.fq")
+          )
+        ))))
 
   val sample2 = Map(
-    "samples" -> Map("sample3" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> inputTouch("2_1_R1.fq"),
-        "R2" -> inputTouch("2_1_R2.fq")
-      ),
-      "lib2" -> Map(
-        "R1" -> inputTouch("2_2_R1.fq"),
-        "R2" -> inputTouch("2_2_R2.fq")
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample3" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> inputTouch("2_1_R1.fq"),
+            "R2" -> inputTouch("2_1_R2.fq")
+          ),
+          "lib2" -> Map(
+            "R1" -> inputTouch("2_2_R1.fq"),
+            "R2" -> inputTouch("2_2_R2.fq")
+          )
+        ))))
 }

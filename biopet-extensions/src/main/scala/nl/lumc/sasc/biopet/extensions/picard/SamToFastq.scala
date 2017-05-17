@@ -1,27 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /** Extension for picard SamToFastq */
 class SamToFastq(val parent: Configurable) extends Picard {
-  javaMainClass = new picard.sam.SamToFastq().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _
@@ -72,26 +71,28 @@ class SamToFastq(val parent: Configurable) extends Picard {
   var includeNonPrimaryAlignments: Boolean = config("includeNonPrimaryAlignments", default = false)
 
   /** Returns command to execute */
-  override def cmdLine = super.cmdLine +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("FASTQ=", fastqR1, spaceSeparated = false) +
-    optional("SECOND_END_FASTQ=", fastqR2, spaceSeparated = false) +
-    optional("UNPAIRED_FASTQ=", fastqUnpaired, spaceSeparated = false) +
-    conditional(outputPerRg, "OUTPUT_PER_RG=TRUE") +
-    optional("OUTPUT_DIR=", outputDir, spaceSeparated = false) +
-    conditional(reReverse, "RE_REVERSE=TRUE") +
-    conditional(interleave, "INTERLEAVE=TRUE") +
-    conditional(includeNonPjReads, "INCLUDE_NON_PF_READS=TRUE") +
-    optional("CLIPPING_ATTRIBUTE=", clippingAtribute, spaceSeparated = false) +
-    optional("CLIPPING_ACTION=", clippingAction, spaceSeparated = false) +
-    optional("READ1_TRIM=", read1Trim, spaceSeparated = false) +
-    optional("READ1_MAX_BASES_TO_WRITE=", read1MaxBasesToWrite, spaceSeparated = false) +
-    optional("READ2_TRIM=", read2Trim, spaceSeparated = false) +
-    optional("READ2_MAX_BASES_TO_WRITE=", read2MaxBasesToWrite, spaceSeparated = false) +
-    conditional(includeNonPrimaryAlignments, "INCLUDE_NON_PRIMARY_ALIGNMENTS=TRUE")
+  override def cmdLine =
+    super.cmdLine +
+      required("INPUT=", input, spaceSeparated = false) +
+      required("FASTQ=", fastqR1, spaceSeparated = false) +
+      optional("SECOND_END_FASTQ=", fastqR2, spaceSeparated = false) +
+      optional("UNPAIRED_FASTQ=", fastqUnpaired, spaceSeparated = false) +
+      conditional(outputPerRg, "OUTPUT_PER_RG=TRUE") +
+      optional("OUTPUT_DIR=", outputDir, spaceSeparated = false) +
+      conditional(reReverse, "RE_REVERSE=TRUE") +
+      conditional(interleave, "INTERLEAVE=TRUE") +
+      conditional(includeNonPjReads, "INCLUDE_NON_PF_READS=TRUE") +
+      optional("CLIPPING_ATTRIBUTE=", clippingAtribute, spaceSeparated = false) +
+      optional("CLIPPING_ACTION=", clippingAction, spaceSeparated = false) +
+      optional("READ1_TRIM=", read1Trim, spaceSeparated = false) +
+      optional("READ1_MAX_BASES_TO_WRITE=", read1MaxBasesToWrite, spaceSeparated = false) +
+      optional("READ2_TRIM=", read2Trim, spaceSeparated = false) +
+      optional("READ2_MAX_BASES_TO_WRITE=", read2MaxBasesToWrite, spaceSeparated = false) +
+      conditional(includeNonPrimaryAlignments, "INCLUDE_NON_PRIMARY_ALIGNMENTS=TRUE")
 }
 
 object SamToFastq {
+
   /** Returns default SamToFastq */
   def apply(root: Configurable, input: File, fastqR1: File, fastqR2: File = null): SamToFastq = {
     val samToFastq = new SamToFastq(root)

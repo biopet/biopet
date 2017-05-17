@@ -1,29 +1,28 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.clever
 
 /**
- * Created by wyleung on 4-4-16.
- */
-
-import java.io.{ File, PrintWriter }
+  * Created by wyleung on 4-4-16.
+  */
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 import scala.io.Source
 
@@ -38,15 +37,18 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
   @Argument(doc = "Samplename")
   var sampleName: String = _
 
-  override def cmdLine = super.cmdLine +
-    required("-i", input) +
-    required("-o", output) +
-    required("-s", sampleName)
+  override def defaultCoreMemory = 4.0
+
+  override def cmdLine =
+    super.cmdLine +
+      required("-i", input) +
+      required("-o", output) +
+      required("-s", sampleName)
 }
 
 object CleverFixVCF extends ToolCommand {
-  case class Args(inputVCF: File = null, sampleLabel: String = "",
-                  outputVCF: File = null) extends AbstractArgs
+  case class Args(inputVCF: File = null, sampleLabel: String = "", outputVCF: File = null)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "inputvcf") required () valueName "<vcffile/path>" action { (x, c) =>
@@ -60,7 +62,10 @@ object CleverFixVCF extends ToolCommand {
     } text "Output path is missing"
   }
 
-  def replaceHeaderLine(inHeaderLine: String, toCheckFor: String, replacement: String, extraHeader: String): String = {
+  def replaceHeaderLine(inHeaderLine: String,
+                        toCheckFor: String,
+                        replacement: String,
+                        extraHeader: String): String = {
     (inHeaderLine == toCheckFor) match {
       case true => {
         extraHeader + "\n" + replacement + "\n"
@@ -84,7 +89,8 @@ object CleverFixVCF extends ToolCommand {
     }
   }
 
-  val extraHeader = """##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+  val extraHeader =
+    """##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
 ##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">
@@ -112,6 +118,7 @@ object CleverFixVCF extends ToolCommand {
 ##INFO=<ID=DPADJ,Number=.,Type=Integer,Description="Read Depth of adjacency">
 ##INFO=<ID=CN,Number=1,Type=Integer,Description="Copy number of segment containing breakend">
 ##INFO=<ID=CNADJ,Number=.,Type=Integer,Description="Copy number of adjacency">
+##INFO=<ID=ESUPPORT,Number=1,Type=Float,Description="Support of event, see into clever python script for more: scripts/postprocess-predictions">
 ##INFO=<ID=CICN,Number=2,Type=Integer,Description="Confidence interval around copy number for the segment">
 ##INFO=<ID=CICNADJ,Number=.,Type=Integer,Description="Confidence interval around copy number for the adjacency">
 ##FORMAT=<ID=CN,Number=1,Type=Integer,Description="Copy number genotype for imprecise events">
@@ -127,23 +134,30 @@ object CleverFixVCF extends ToolCommand {
   val vcfColHeader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tdefault"
 
   val vcfColReplacementHeader = s"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t"
+
   /**
-   * @param args the command line arguments
-   */
+    * @param args the command line arguments
+    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val commandArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val input: File = commandArgs.inputVCF
     val output: File = commandArgs.outputVCF
 
     val inputVCF = Source.fromFile(input)
     val writer = new PrintWriter(output)
-    inputVCF.getLines().foreach(x =>
-      writer.write(replaceHeaderLine(x, vcfColHeader, vcfColReplacementHeader + commandArgs.sampleLabel, extraHeader))
-    )
+    inputVCF
+      .getLines()
+      .foreach(
+        x =>
+          writer.write(
+            replaceHeaderLine(x,
+                              vcfColHeader,
+                              vcfColReplacementHeader + commandArgs.sampleLabel,
+                              extraHeader)))
     writer.close()
     inputVCF.close()
   }
 }
-
