@@ -231,6 +231,7 @@ object ShivaSvCallingTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
+  // A dummy config file. Tools being used by this test must be included
   def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
