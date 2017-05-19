@@ -88,6 +88,24 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) { sample =>
 
+    val gearsPipeline: Option[GearsSingle] = mappingToGears match {
+      case "unmapped" =>
+        val gears = new GearsSingle(qscript)
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        Some(gears)
+      case "all" =>
+        val gears = new GearsSingle(qscript)
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        Some(gears)
+      case "none" => None
+      case x => {
+        Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+        None
+      }
+    }
+
     def metricsPreprogressBam = true
 
     def makeLibrary(id: String) = new Library(id)
@@ -123,6 +141,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           m.sampleId = Some(sampleId)
           m.libId = Some(libId)
           m.outputDir = libDir
+          m.centrifugeKreport =
+            gearsPipeline.flatMap(g => g.centrifugeScript.map(c => c.centrifugeNonUniqueKReport))
+          m.centrifugeOutputFile =
+            gearsPipeline.flatMap(g => g.centrifugeScript.map(c => c.centrifugeOutput))
           Some(m)
         } else None
 
@@ -325,20 +347,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
 
       mappingToGears match {
         case "unmapped" =>
-          val gears = new GearsSingle(qscript)
-          gears.bamFile = preProcessBam
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          add(gears)
+          gearsPipeline.get.bamFile = preProcessBam
+          add(gearsPipeline.get)
         case "all" =>
-          val gears = new GearsSingle(qscript)
-          gears.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
-          gears.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
-          gears.sampleId = Some(sampleId)
-          gears.outputDir = new File(sampleDir, "gears")
-          add(gears)
-        case "none" =>
-        case x => Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
+          gearsPipeline.get.fastqR1 = libraries.flatMap(_._2.qcFastqR1).toList
+          gearsPipeline.get.fastqR2 = libraries.flatMap(_._2.qcFastqR2).toList
+          add(gearsPipeline.get)
+        case _ =>
       }
     }
   }
@@ -364,5 +379,4 @@ object MultisampleMapping extends PipelineCommand {
       file.map(_.getAbsoluteFile)
     }
   }
-
 }

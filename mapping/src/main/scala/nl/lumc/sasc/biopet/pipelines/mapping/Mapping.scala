@@ -32,14 +32,16 @@ import nl.lumc.sasc.biopet.extensions.picard.{
 }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.taxextract.TaxExtractExtract
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.utils.textToSize
+import nl.lumc.sasc.biopet.utils.{Logging, textToSize}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.utils.commandline
 
 import scala.math._
 
@@ -110,8 +112,21 @@ class Mapping(val parent: Configurable)
 
   val keepFinalBamFile: Boolean = config("keep_mapping_bam_file", default = true)
 
+  /* Extract taxonomies */
+  val extractTaxonomies: Boolean = config("extract_taxonomies", default = false)
+
+  /** centrifuge output file for taxonomy extraction */
+  @Input(required = false)
+  var centrifugeOutputFile: Option[File] = None
+
+  /** Centrifuge kreport file for taxonomy extraction */
+  @Input(required = false)
+  var centrifugeKreport: Option[File] = None
+
   protected var paired: Boolean = false
+
   val flexiprep = new Flexiprep(this)
+
   def mergedBamFile = new File(outputDir, outputName + ".bam")
   def finalBamFile: File =
     if (skipMarkduplicates) mergedBamFile
@@ -176,6 +191,11 @@ class Mapping(val parent: Configurable)
 
     paired = inputR2.isDefined
 
+    if (extractTaxonomies) {
+      require(centrifugeKreport.isDefined, "Missing centrifuge Kreport")
+      require(centrifugeOutputFile.isDefined, "Missing centrifuge output file")
+    }
+
     if (readgroupId == null)
       readgroupId = config("readgroup_id", default = sampleId.get + "-" + libId.get)
 
@@ -203,10 +223,10 @@ class Mapping(val parent: Configurable)
   def biopetScript() {
     if (!skipFlexiprep) {
       flexiprep.outputDir = new File(outputDir, "flexiprep")
-      flexiprep.inputR1 = inputR1
-      flexiprep.inputR2 = inputR2
       flexiprep.sampleId = this.sampleId
       flexiprep.libId = this.libId
+      flexiprep.inputR1 = inputR1
+      flexiprep.inputR2 = inputR2
       flexiprep.init()
       flexiprep.runInitialJobs()
     }
@@ -252,6 +272,21 @@ class Mapping(val parent: Configurable)
         R2.foreach(R2 => fastqR2Output :+= R2)
       }
 
+      if (extractTaxonomies) {
+        val taxExtract = new TaxExtractExtract(this)
+        taxExtract.centrifugeResult = centrifugeOutputFile.get
+        taxExtract.inputKreport = centrifugeKreport.get
+        taxExtract.fq1 = R1
+        taxExtract.out1 = swapExt(chunkDir, R1, ".fq.gz", ".extracted.fq.gz")
+        R2 foreach { r =>
+          taxExtract.fq2 = Some(r)
+          taxExtract.out2 = Some(swapExt(chunkDir, r, ".fq.gz", ".extracted.fq.gz"))
+        }
+        R1 = taxExtract.out1
+        R2 = taxExtract.out2
+        add(taxExtract)
+      }
+
       val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
@@ -272,6 +307,7 @@ class Mapping(val parent: Configurable)
         addAll(
           BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
     }
+
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastqR1Output, fastqR2Output)
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool

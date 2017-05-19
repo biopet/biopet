@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.centrifuge.Centrifuge
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
+import nl.lumc.sasc.biopet.extensions.taxextract.TaxExtractExtract
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
@@ -54,6 +55,9 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   def sample2 = Array(true, false)
   def sample3 = false
   def sample4 = false
+  def mappingToGears = "none"
+  def extractTaxonomies = false
+  def taxonomy = "test"
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
@@ -74,7 +78,10 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
         "merge_strategy" -> merge.toString,
         "bam_to_fastq" -> bamToFastq,
         "correct_readgroups" -> correctReadgroups,
-        "unmapped_to_gears" -> unmappedToGears
+        "unmapped_to_gears" -> unmappedToGears,
+        "mapping_to_gears" -> (if (unmappedToGears) "unmapped" else mappingToGears),
+        "extract_taxonomies" -> extractTaxonomies,
+        "taxonomy" -> taxonomy
       )
     }
 
@@ -130,10 +137,15 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
               library.summaryStats shouldBe Map()
           }
       }
-
       pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears)
                                                               (numberFastqLibs + numberSamples)
+                                                            else if (mappingToGears != "none" && mappingToGears != "unmapped")
+                                                              (numberSamples)
                                                             else 0)
+
+      pipeline.functions.count(_.isInstanceOf[TaxExtractExtract]) shouldBe (if (extractTaxonomies)
+                                                                              (numberFastqLibs)
+                                                                            else 0)
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
@@ -164,6 +176,15 @@ class MultisampleMappingGearsTest extends MultisampleMappingTestTrait {
   override def mergeStrategies =
     MultisampleMapping.MergeStrategy.values
       .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultiSampleMappingExtractionTest extends MultisampleMappingTestTrait {
+  override def mappingToGears = "all"
+  override def extractTaxonomies = true
+  override def sample1 = Array(true)
+  MultisampleMapping.MergeStrategy.values
+    .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+
 }
 
 class MultisampleMappingBamTest extends MultisampleMappingTestTrait {
@@ -254,7 +275,8 @@ object MultisampleMappingTestTrait {
     "centrifuge" -> Map("exe" -> "test"),
     "centrifugekreport" -> Map("exe" -> "test"),
     "centrifuge_index" -> "test",
-    "md5sum" -> Map("exe" -> "test")
+    "md5sum" -> Map("exe" -> "test"),
+    "taxextract" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

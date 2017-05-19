@@ -51,5 +51,5 @@ class GtfToGenePred(val parent: Configurable) extends BiopetCommandLineFunction 
       conditional(simple, "-simple") +
       conditional(geneNameAsName2, "-geneNameAsName2") +
       repeat(inputGtfs) +
-      (if (outputAsStsout) required("/dev/stdout") else required(outputGenePred))
+      (if (outputAsStdout) required("/dev/stdout") else required(outputGenePred))
 }

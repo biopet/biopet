@@ -38,6 +38,6 @@ class GffRead(val parent: Configurable) extends BiopetCommandLineFunction {
   def cmdLine =
     executable +
       (if (inputAsStdin) "" else required(input)) +
-      (if (outputAsStsout) "" else required("-o", output)) +
+      (if (outputAsStdout) "" else required("-o", output)) +
       conditional(T, "-T")
 }

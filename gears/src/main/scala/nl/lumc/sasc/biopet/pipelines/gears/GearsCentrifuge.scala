@@ -45,6 +45,8 @@ class GearsCentrifuge(val parent: Configurable)
 
   def centrifugeOutput = new File(outputDir, s"$outputName.centrifuge.gz")
   def centrifugeMetOutput = new File(outputDir, s"$outputName.centrifuge.met")
+  def centrifugeNonUniqueKReport = new File(outputDir, s"$outputName.centrifuge.kreport")
+  def centrifugeUniqueKReport = new File(outputDir, s"$outputName.centrifuge_unique.kreport")
 
   def biopetScript(): Unit = {
     val centrifuge = new Centrifuge(this)
