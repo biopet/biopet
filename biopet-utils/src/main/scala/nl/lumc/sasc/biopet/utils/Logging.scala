@@ -38,10 +38,10 @@ object Logging {
 
   private[biopet] val errors: ListBuffer[Exception] = ListBuffer()
 
-  def addError(error: String, debug: String = null): Unit = {
+  def addError(error: String, debug: String = null, cause: Exception = null): Unit = {
     val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
-    logger.error(msg)
-    errors.append(new Exception(msg))
+    logger.error(msg, cause)
+    errors.append(if (cause != null) new Exception(msg, cause) else new Exception(msg))
   }
 
   def checkErrors(debug: Boolean = false): Unit = {
