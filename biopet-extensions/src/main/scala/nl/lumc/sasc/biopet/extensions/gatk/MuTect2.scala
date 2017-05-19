@@ -1,6 +1,7 @@
+package nl.lumc.sasc.biopet.extensions.gatk
+
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
@@ -9,8 +10,12 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   def analysis_type: String = "MuTect2"
 
   /** Bam file for the tumor sample. */
-  @Input(fullName = "tumor_bam", required = false)
+  @Input(fullName = "tumor_bam", required = true)
   var tumorSampleBam: File = _
+
+  /** Bam file for the normal sample. */
+  @Input(fullName = "normal_bam", required = true)
+  var normalSampleBam: File = _
 
   /** Vcf file of the dbSNP database. When it's provided, then it's possible to use the param 'dbsnpNormalLod', see the
     * description of that parameter for explanation. sIDs from this file are used to populate the ID column of the output.
@@ -81,4 +86,18 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "sample_ploidy", shortName="ploidy", required = false)
   var ploidy: Option[Int] = None
 
+  /*override def cmdLine = {
+    super.input_file =
+    super.cmdLine
+  }*/
+}
+
+object MuTect2 {
+  def apply(parent: Configurable, tumorSampleBam: File, normalSampleBam: File, output: File): MuTect2 = {
+    val mutect2 = new MuTect2(parent)
+    mutect2.tumorSampleBam = tumorSampleBam
+    mutect2.normalSampleBam = normalSampleBam
+    mutect2.outputVcf = output
+    mutect2
+  }
 }
