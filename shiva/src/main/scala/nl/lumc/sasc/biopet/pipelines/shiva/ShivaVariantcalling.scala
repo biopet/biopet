@@ -23,6 +23,7 @@ import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.MuTect2
 import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -83,7 +84,10 @@ class ShivaVariantcalling(val parent: Configurable)
   override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
 
   /** Final merged output files of all variantcaller modes */
-  def finalFile = new File(outputDir, namePrefix + ".final.vcf.gz")
+  def finalFile: Option[File] = if (callers.exists(_.mergeVcfResults)) Some(new File(outputDir, namePrefix + ".final.vcf.gz")) else None
+
+  // TODO if there will be in the future more than one method for somatic variant calling then the outputs from those should be merged
+  def finalFileSomaticCallers: Option[File] = callers.collectFirst({case caller if caller.isInstanceOf[MuTect2] => caller.outputFile})
 
   /** Variantcallers requested by the config */
   protected val configCallers: Set[String] = config("variantcallers")
@@ -108,8 +112,8 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    if (!callers.exists(_.mergeVcfResults))
-      Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
+    require(finalFile.isDefined || finalFileSomaticCallers.isDefined,
+            "Error in configuration, when not using somatic variant caller(s) then for at least one caller the parameter 'merge_vcf_results' must be set to true.")
 
     addAll(
       dbsnpVcfFile
@@ -118,7 +122,6 @@ class ShivaVariantcalling(val parent: Configurable)
         .getOrElse(Nil))
 
     val cv = new CombineVariants(qscript)
-    cv.out = finalFile
     cv.setKey = Some("VariantCaller")
     cv.genotypemergeoption = Some("PRIORITIZE")
     cv.rod_priority_list = Some(callers.filter(_.mergeVcfResults).map(_.name).mkString(","))
@@ -163,8 +166,9 @@ class ShivaVariantcalling(val parent: Configurable)
       } else if (caller.mergeVcfResults) cv.variant :+= TaggedFile(caller.outputFile, caller.name)
     }
     if (cv.variant.nonEmpty) {
+      cv.out = finalFile.get
       add(cv)
-      addStats(finalFile, "final")
+      addStats(finalFile.get, "final")
     }
 
     addSummaryJobs()
@@ -209,7 +213,9 @@ class ShivaVariantcalling(val parent: Configurable)
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
-    callers.map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
+    var files = callers.map(x => x.name -> x.outputFile).toMap
+    if (finalFile.isDefined) files += ("final" -> finalFile.get)
+    files
   }
 }
 
@@ -226,5 +232,6 @@ object ShivaVariantcalling extends PipelineCommand {
       new RawVcf(root) ::
       new Bcftools(root) ::
       new BcftoolsSingleSample(root) ::
-      new VarscanCnsSingleSample(root) :: Nil
+      new VarscanCnsSingleSample(root) ::
+      new MuTect2(root) :: Nil
 }

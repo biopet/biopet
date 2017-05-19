@@ -1,3 +1,4 @@
+package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
 import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.Variantcaller
@@ -6,12 +7,14 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class MuTect2(val parent: Configurable) extends Variantcaller {
 
-  def name = "MuTect2"
+  def name = "mutect2"
 
+  override val mergeVcfResults: Boolean = false
 
   // currently not relevant, at the moment only one somatic variant caller exists in Biopet
   // and results from this won't be merged together with the results from other methods
   def defaultPrio = -1
+
 
   private var tnPairs: List[TumorNormalPair] = List()
 
@@ -62,8 +65,9 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
 
     var outputPerSample: List[File] = List()
     for (pair <- tnPairs) {
-      val out: File = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.vcf")
+      val out: File = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
       val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, out)
+      // TODO add also BQSR file?
       outputPerSample :+= out
       add(muTect2)
     }

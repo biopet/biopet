@@ -88,11 +88,14 @@ class Shiva(val parent: Configurable)
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
 
-      override def summaryFiles: Map[String, File] =
-        super.summaryFiles ++
-          variantcalling.map("final" -> _.finalFile) ++
+      override def summaryFiles: Map[String, File] = {
+        var files = super.summaryFiles ++
           bqsrFile.map("baserecal" -> _) ++
           bqsrAfterFile.map("baserecal_after" -> _)
+        if (variantcalling.isDefined && variantcalling.get.finalFile.isDefined)
+          files += ("final" -> variantcalling.get.finalFile.get)
+        files
+      }
 
       lazy val useBaseRecalibration: Boolean = {
         val c: Boolean = config("use_base_recalibration", default = true)
@@ -214,8 +217,12 @@ class Shiva(val parent: Configurable)
         bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
       } else bamFile
 
-    override def summaryFiles: Map[String, File] =
-      super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
+    override def summaryFiles: Map[String, File] = {
+      var files = super.summaryFiles
+      if (variantcalling.isDefined && variantcalling.get.finalFile.isDefined)
+        files += ("final" -> variantcalling.get.finalFile.get)
+      files
+    }
 
     /** This will add sample jobs */
     override def addJobs(): Unit = {
@@ -256,6 +263,13 @@ class Shiva(val parent: Configurable)
       Some(new Toucan(this))
     } else None
 
+  lazy val annotationForSomaticVariants: Option[Toucan] =
+    if (multisampleVariantCalling.isDefined &&
+      multisampleVariantCalling.get.finalFileSomaticCallers.isDefined &&
+      config("annotation", default = false).asBoolean) {
+      Some(new Toucan(this))
+    } else None
+
   /** This will add the mutisample variantcalling */
   override def addMultiSampleJobs(): Unit = {
     super.addMultiSampleJobs()
@@ -287,7 +301,12 @@ class Shiva(val parent: Configurable)
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
-        toucan.inputVcf = vc.finalFile
+        toucan.inputVcf = vc.finalFile.get
+        add(toucan)
+      }
+      annotationForSomaticVariants.foreach { toucan =>
+        toucan.outputDir = new File(outputDir, "annotation")
+        toucan.inputVcf = vc.finalFileSomaticCallers.get
         add(toucan)
       }
     })

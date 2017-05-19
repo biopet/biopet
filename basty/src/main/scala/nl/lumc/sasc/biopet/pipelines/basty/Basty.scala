@@ -210,7 +210,7 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
-    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile
+    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile.get // appropriate checks have already been done when initializing Shiva
     if (shiva.samples.contains(sampleName)) {
       bastyGenerateFasta.bamFile = shiva.samples(sampleName).preProcessBam.get
     }
