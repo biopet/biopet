@@ -4,6 +4,7 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.annotation.{Exon, Feature, Gene, Transcript}
+import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -41,81 +42,66 @@ object GtfToRefflat extends ToolCommand {
     val geneBuffer: mutable.Map[String, Gene] = mutable.Map()
     val transcriptBuffer: mutable.Map[String, mutable.Map[String, Transcript]] = mutable.Map()
     val exonBuffer: mutable.Map[(String, String), ListBuffer[Exon]] = mutable.Map()
+    val cdsBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
+    val startCodonBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
+    val stopCodonBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
 
     val featureBuffer: mutable.Map[String, Int] = mutable.Map()
 
-    reader
+    val gtfContent = reader
       .getLines()
       .filter(!_.startsWith("#"))
       .map(Feature.fromLine)
-      .foreach { feature =>
+      .map { feature =>
         featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
-        val geneId = feature.attributes.get("gene_id") match {
-          case Some(id) => id
-          case _ => throw new IllegalArgumentException(s"Feature should have a gene_id, $feature")
-        }
-
-        def transcriptId = feature.attributes.get("transcript_id") match {
-          case Some(id) => id
-          case _ =>
-            throw new IllegalArgumentException(s"Feature should have a transcript_id, $feature")
-        }
-
-        feature.feature match {
-          case "gene" =>
-            if (geneBuffer.contains(geneId))
-              throw new IllegalArgumentException(s"Gene '$geneId' is found twice in $gtfFile")
-            geneBuffer += geneId -> Gene(geneId,
-                                         feature.contig,
-                                         feature.start,
-                                         feature.end,
-                                         feature.strand.getOrElse(true),
-                                         transcriptBuffer.remove(geneId).toList.flatMap(_.values))
-          case "transcript" =>
-            val id = transcriptId
-            val exons = exonBuffer.remove((geneId, id)).getOrElse(Nil).toList
-            val transcript =
-              Transcript(id, feature.start, feature.end, feature.start, feature.end, exons)
-            if (geneBuffer.contains(geneId)) {
-              if (geneBuffer(geneId).transcripts.exists(_.name == id))
-                throw new IllegalArgumentException(s"Transcript '$id' is found twice in $gtfFile")
-              val gene = geneBuffer(geneId)
-              geneBuffer(geneId) = gene.copy(transcripts = gene.transcripts ::: transcript :: Nil)
-            } else { // Gene does not exist yet
-              if (!transcriptBuffer.contains(geneId)) transcriptBuffer += geneId -> mutable.Map()
-              if (transcriptBuffer(geneId).contains(id))
-                throw new IllegalArgumentException(s"Transcript '$id' is found twice in $gtfFile")
-              transcriptBuffer(geneId) += id -> transcript
-            }
-          case "exon" =>
-            val id = transcriptId
-            val exon = Exon(feature.start, feature.end)
-            (geneBuffer.get(geneId).flatMap(_.transcripts.find(_.name == id)),
-             transcriptBuffer.get(geneId).flatMap(_.get(id))) match {
-              case (Some(transcript), _) =>
-                val gene = geneBuffer(geneId)
-                geneBuffer(geneId) = gene.copy(
-                  transcripts = transcript
-                    .copy(exons = exon :: transcript.exons) :: gene.transcripts.filter(
-                    _.name != transcript.name))
-              case (None, Some(transcript)) =>
-                transcriptBuffer(geneId)(id) = transcript.copy(exons = exon :: transcript.exons)
-              case _ =>
-                if (!exonBuffer.contains((geneId, id)))
-                  exonBuffer += (geneId, id) -> ListBuffer(exon)
-                else exonBuffer(geneId, id) += exon
-            }
-          case _ =>
-        }
+        feature
       }
-    reader.close()
+      .toList
+      .groupBy(_.attributes.get("gene_id"))
+      .map(x => x._1 -> x._2.groupBy(_.attributes.get("transcript_id")))
+
+    val genes = for ((geneId, gtfTranscripts) <- gtfContent if (geneId.isDefined)) yield {
+      val gtfGene = gtfTranscripts(None).head
+      val transcripts =
+        for ((transcriptId, features) <- gtfTranscripts if (transcriptId.isDefined)) yield {
+          val groupedFeatures = features.groupBy(_.feature)
+          val exons =
+            groupedFeatures.getOrElse("exon", Nil).sortBy(_.start).map(x => Exon(x.start, x.end))
+          val gtfTranscript = groupedFeatures("transcript").head
+          val cdsFeatures = groupedFeatures.get("CDS").map(_.flatMap(x => List(x.start, x.end)))
+          val startFeatures =
+            groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
+          val stopFeatures =
+            groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
+          val bla =
+            startFeatures.map(x => x ::: stopFeatures.getOrElse(cdsFeatures.getOrElse(Nil)))
+          val codingStart =
+            if (gtfGene.strand.get) bla.map(_.min - 1)
+            else bla.map(_.min - 1)
+          val codingEnd =
+            if (gtfGene.strand.get) bla.map(_.max)
+            else bla.map(_.max)
+          Transcript(transcriptId.get,
+                     gtfTranscript.start,
+                     gtfTranscript.end,
+                     codingStart.getOrElse(gtfTranscript.end),
+                     codingEnd.getOrElse(gtfTranscript.end),
+                     exons)
+        }
+      Gene(geneId.get,
+           gtfGene.contig,
+           gtfGene.start,
+           gtfGene.end,
+           gtfGene.strand.getOrElse(true),
+           transcripts.toList)
+    }
 
     featureBuffer.foreach { case (k, c) => logger.info(s"$k\t$c") }
 
     val writer = new PrintWriter(refflatFile)
 
     for {
-      gene <- geneBuffer.values
+      gene <- genes
       transcript <- gene.transcripts
     } {
       val exons = transcript.exons.sortBy(_.start)
@@ -126,7 +112,7 @@ object GtfToRefflat extends ToolCommand {
         if (gene.strand) "+" else "-",
         (transcript.transcriptionStart - 1).toString, //TODO: check if this is correct
         transcript.transcriptionEnd.toString,
-        (transcript.codingStart - 1).toString, //TODO: check if this is correct
+        transcript.codingStart.toString, //TODO: check if this is correct
         transcript.codingEnd.toString, //TODO: check if this is correct
         transcript.exons.length.toString,
         exons.map(_.start - 1).mkString("", ",", ","), //TODO: check if this is correct
