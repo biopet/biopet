@@ -23,7 +23,10 @@ import scala.io.Source
   * Created by pjvanthof on 10/12/2016.
   */
 object ValidateAnnotation extends ToolCommand {
-  case class Args(refflatFile: File = null, reference: File = null, failOnError: Boolean = true, gtfFile: Option[File] = None)
+  case class Args(refflatFile: File = null,
+                  reference: File = null,
+                  failOnError: Boolean = true,
+                  gtfFile: Option[File] = None)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -56,7 +59,8 @@ object ValidateAnnotation extends ToolCommand {
 
       for (line <- refflatLines) {
         val contig = line.split("\t")(2)
-        require(dict.getSequence(contig) != null, s"Contig '$contig' found in refflat but not found on reference")
+        require(dict.getSequence(contig) != null,
+                s"Contig '$contig' found in refflat but not found on reference")
       }
 
       cmdArgs.gtfFile.foreach { file =>
