@@ -194,7 +194,7 @@ class Tarmac(val parent: Configurable)
       case (sample, job) =>
         val sort = sortBgzipAndTabix(job.output)
         val pipeJob = new BiopetFifoPipe(this, sort.sortJob :: sort.bgzipJob :: Nil)
-        add(pipeJob, pipeJob)
+        add(sort.tabixJob, pipeJob)
         sample -> sort
     }
 
