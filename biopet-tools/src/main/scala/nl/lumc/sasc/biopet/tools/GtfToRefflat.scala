@@ -6,7 +6,6 @@ import java.io.{File, PrintWriter}
 import nl.lumc.sasc.biopet.utils.annotation.{Exon, Feature, Gene, Transcript}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
@@ -40,6 +39,7 @@ object GtfToRefflat extends ToolCommand {
 
     val featureBuffer: mutable.Map[String, Int] = mutable.Map()
 
+    logger.info("Readering gtf file")
     val gtfContent = reader
       .getLines()
       .filter(!_.startsWith("#"))
@@ -51,6 +51,7 @@ object GtfToRefflat extends ToolCommand {
       .toList
       .groupBy(_.attributes.get("gene_id"))
       .map(x => x._1 -> x._2.groupBy(_.attributes.get("transcript_id")))
+    logger.info("Readering gtf file - Done")
 
     val genes = for ((geneId, gtfTranscripts) <- gtfContent if geneId.isDefined) yield {
       val gtfGene = gtfTranscripts(None).head
