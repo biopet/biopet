@@ -16,12 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
-import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import picard.annotation.GeneAnnotationReader
-
-import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
