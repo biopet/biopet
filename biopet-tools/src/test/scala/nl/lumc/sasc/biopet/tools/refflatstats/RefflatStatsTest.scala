@@ -29,13 +29,21 @@ class RefflatStatsTest extends TestNGSuite with Matchers {
     intronOutput.deleteOnExit()
     val refflatFile = new File(resourcePath("/chrQ.refflat"))
     val fastaFile = new File(resourcePath("/fake_chrQ.fa"))
-    RefflatStats.main(Array(
-      "--geneOutput", geneOutput.getAbsolutePath,
-      "--transcriptOutput", transcriptOutput.getAbsolutePath,
-      "--exonOutput", exonOutput.getAbsolutePath,
-      "--intronOutput", intronOutput.getAbsolutePath,
-      "--annotationRefflat", refflatFile.getAbsolutePath,
-      "--referenceFasta", fastaFile.getAbsolutePath))
+    RefflatStats.main(
+      Array(
+        "--geneOutput",
+        geneOutput.getAbsolutePath,
+        "--transcriptOutput",
+        transcriptOutput.getAbsolutePath,
+        "--exonOutput",
+        exonOutput.getAbsolutePath,
+        "--intronOutput",
+        intronOutput.getAbsolutePath,
+        "--annotationRefflat",
+        refflatFile.getAbsolutePath,
+        "--referenceFasta",
+        fastaFile.getAbsolutePath
+      ))
 
     val lines = Source.fromFile(geneOutput).getLines().toList
 
