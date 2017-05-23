@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.annotation.{Exon, Feature, Gene, Transcript}
@@ -13,7 +13,8 @@ import scala.io.Source
   */
 object GtfToRefflat extends ToolCommand {
 
-  case class Args(refFlat: File = null, gtfFile: File = null) extends AbstractArgs
+  case class Args(refFlat: File = null, gtfFile: File = null, referenceFasta: Option[File] = None)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
@@ -22,6 +23,9 @@ object GtfToRefflat extends ToolCommand {
     opt[File]('g', "gtfFile") required () valueName "<file>" action { (x, c) =>
       c.copy(gtfFile = x)
     } text "Output gtf file. Mandatory"
+    opt[File]('R', "referenceFasta") valueName "<file>" action { (x, c) =>
+      c.copy(referenceFasta = Some(x))
+    } text "Reference file"
   }
 
   def main(args: Array[String]): Unit = {
@@ -30,31 +34,43 @@ object GtfToRefflat extends ToolCommand {
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.info("Start")
-    gtfToRefflat(cmdArgs.gtfFile, cmdArgs.refFlat)
+    gtfToRefflat(cmdArgs.gtfFile, cmdArgs.refFlat, cmdArgs.referenceFasta)
     logger.info("Done")
   }
 
-  def gtfToRefflat(gtfFile: File, refflatFile: File): Unit = {
+  def gtfToRefflat(gtfFile: File, refflatFile: File, referenceFasta: Option[File] = None): Unit = {
     val reader = Source.fromFile(gtfFile)
 
     val featureBuffer: mutable.Map[String, Int] = mutable.Map()
 
+    val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
+
     logger.info("Readering gtf file")
-    val gtfContent = reader
+    val gtfLines = reader
       .getLines()
       .filter(!_.startsWith("#"))
       .map(Feature.fromLine)
       .map { feature =>
+        referenceDict.foreach(
+          dict =>
+            require(dict.getSequence(feature.contig) != null,
+                    s"Contig '${feature.contig}' does not exist on reference"))
         featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
         feature
       }
-      .toList
-      .groupBy(_.attributes.get("gene_id"))
-      .map(x => x._1 -> x._2.groupBy(_.attributes.get("transcript_id")))
+      .toArray
     logger.info("Readering gtf file - Done")
 
-    val genes = for ((geneId, gtfTranscripts) <- gtfContent if geneId.isDefined) yield {
-      val gtfGene = gtfTranscripts(None).head
+    val gtfGenes = gtfLines.flatMap(_.attributes.get("gene_id")).toList.distinct
+    logger.info(s"${gtfGenes.size} genes found")
+
+    val gtfContent = gtfLines.toList
+      .groupBy(_.attributes.get("gene_id"))
+    logger.info("Readering gtf file - Done")
+
+    val genes = for ((geneId, gtfFeatures) <- gtfContent if geneId.isDefined) yield {
+      val gtfGene = gtfFeatures.find(_.feature == "gene").get
+      val gtfTranscripts = gtfFeatures.groupBy(_.attributes.get("transcript_id"))
       val transcripts =
         for ((transcriptId, features) <- gtfTranscripts if transcriptId.isDefined) yield {
           val groupedFeatures = features.groupBy(_.feature)
@@ -68,16 +84,17 @@ object GtfToRefflat extends ToolCommand {
             groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
           val stopFeatures =
             groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
-          val bla = startFeatures.getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
+          val codingLocations = startFeatures
+            .getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
             cdsFeatures.getOrElse(Nil))
           val codingStart =
-            if (bla.isEmpty) None
-            else if (gtfGene.strand.get) Some(bla.min - 1)
-            else Some(bla.min - 1)
+            if (codingLocations.isEmpty) None
+            else if (gtfGene.strand.get) Some(codingLocations.min - 1)
+            else Some(codingLocations.min - 1)
           val codingEnd =
-            if (bla.isEmpty) None
-            else if (gtfGene.strand.get) Some(bla.max)
-            else Some(bla.max)
+            if (codingLocations.isEmpty) None
+            else if (gtfGene.strand.get) Some(codingLocations.max)
+            else Some(codingLocations.max)
           Transcript(transcriptId.get,
                      gtfTranscript.start,
                      gtfTranscript.end,
