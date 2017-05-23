@@ -4,7 +4,6 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.annotation.{Exon, Feature, Gene, Transcript}
-import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -39,13 +38,6 @@ object GtfToRefflat extends ToolCommand {
   def gtfToRefflat(gtfFile: File, refflatFile: File): Unit = {
     val reader = Source.fromFile(gtfFile)
 
-    val geneBuffer: mutable.Map[String, Gene] = mutable.Map()
-    val transcriptBuffer: mutable.Map[String, mutable.Map[String, Transcript]] = mutable.Map()
-    val exonBuffer: mutable.Map[(String, String), ListBuffer[Exon]] = mutable.Map()
-    val cdsBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
-    val startCodonBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
-    val stopCodonBuffer: mutable.Map[(String, String), Feature] = mutable.Map()
-
     val featureBuffer: mutable.Map[String, Int] = mutable.Map()
 
     val gtfContent = reader
@@ -60,27 +52,31 @@ object GtfToRefflat extends ToolCommand {
       .groupBy(_.attributes.get("gene_id"))
       .map(x => x._1 -> x._2.groupBy(_.attributes.get("transcript_id")))
 
-    val genes = for ((geneId, gtfTranscripts) <- gtfContent if (geneId.isDefined)) yield {
+    val genes = for ((geneId, gtfTranscripts) <- gtfContent if geneId.isDefined) yield {
       val gtfGene = gtfTranscripts(None).head
       val transcripts =
-        for ((transcriptId, features) <- gtfTranscripts if (transcriptId.isDefined)) yield {
+        for ((transcriptId, features) <- gtfTranscripts if transcriptId.isDefined) yield {
           val groupedFeatures = features.groupBy(_.feature)
-          val exons =
-            groupedFeatures.getOrElse("exon", Nil).sortBy(_.start).map(x => Exon(x.start, x.end))
+          val exons = groupedFeatures
+            .getOrElse("exon", Nil)
+            .sortBy(_.start)
+            .map(x => Exon(x.start, x.end))
           val gtfTranscript = groupedFeatures("transcript").head
           val cdsFeatures = groupedFeatures.get("CDS").map(_.flatMap(x => List(x.start, x.end)))
           val startFeatures =
             groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
           val stopFeatures =
             groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
-          val bla =
-            startFeatures.map(x => x ::: stopFeatures.getOrElse(cdsFeatures.getOrElse(Nil)))
+          val bla = startFeatures.getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
+            cdsFeatures.getOrElse(Nil))
           val codingStart =
-            if (gtfGene.strand.get) bla.map(_.min - 1)
-            else bla.map(_.min - 1)
+            if (bla.isEmpty) None
+            else if (gtfGene.strand.get) Some(bla.min - 1)
+            else Some(bla.min - 1)
           val codingEnd =
-            if (gtfGene.strand.get) bla.map(_.max)
-            else bla.map(_.max)
+            if (bla.isEmpty) None
+            else if (gtfGene.strand.get) Some(bla.max)
+            else Some(bla.max)
           Transcript(transcriptId.get,
                      gtfTranscript.start,
                      gtfTranscript.end,
