@@ -45,8 +45,8 @@ class GwasTest(val parent: Configurable) extends QScript with BiopetQScript with
   def biopetScript(): Unit = {
     val snpTests = BedRecordList
       .fromReference(referenceFasta())
-      .scatter(config("bin_size", default = 1000000))
-      .allRecords
+      .scatter(config("bin_size", default = 1000000), combineContigs = false)
+      .flatten
       .map { region =>
         val name = s"${region.chr}-${region.start + 1}-${region.end}"
 

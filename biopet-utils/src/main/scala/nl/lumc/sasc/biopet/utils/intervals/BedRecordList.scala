@@ -105,9 +105,24 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
           })
   }
 
-  def scatter(binSize: Int) = BedRecordList(
-    chrRecords.map(x => x._1 -> x._2.flatMap(_.scatter(binSize)))
-  )
+  def scatter(binSize: Int, combineContigs: Boolean = true): List[List[BedRecord]] = {
+    val list = allRecords
+      .flatMap(_.scatter(binSize))
+      .toList
+      .sortBy(_.length)
+      .foldLeft((List[List[BedRecord]](), List[BedRecord]())) {
+        case ((finalList, buffer), record) =>
+          if (buffer.isEmpty) (finalList, record :: buffer)
+          else {
+            val bufferSize = buffer.map(_.length).sum
+            if (!combineContigs && buffer.head.chr != record.chr)
+              (buffer :: finalList, List(record))
+            else if (bufferSize > (binSize / 2)) (finalList, record :: buffer)
+            else (buffer :: finalList, List(record))
+          }
+      }
+    list._2 :: list._1
+  }
 
   def validateContigs(reference: File) = {
     val dict = FastaUtils.getCachedDict(reference)
