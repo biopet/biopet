@@ -117,7 +117,7 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
             val bufferSize = buffer.map(_.length).sum
             if (!combineContigs && buffer.head.chr != record.chr)
               (buffer :: finalList, List(record))
-            else if (bufferSize > (binSize / 2)) (finalList, record :: buffer)
+            else if (bufferSize < (binSize / 2)) (finalList, record :: buffer)
             else (buffer :: finalList, List(record))
           }
       }
