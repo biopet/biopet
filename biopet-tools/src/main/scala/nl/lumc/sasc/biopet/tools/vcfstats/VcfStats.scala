@@ -120,16 +120,16 @@ object VcfStats extends ToolCommand {
     opt[String]("genotypeTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(genotypeTags = x :: c.genotypeTags)
     } text s"Summarize these genotype tags. Default is (${defaultGenotypeFields.mkString(", ")})"
-    opt[Unit]("allInfoTags") unbounded () action { (x, c) =>
+    opt[Unit]("allInfoTags") unbounded () action { (_, c) =>
       c.copy(allInfoTags = true)
     } text "Summarize all info tags. Default false"
-    opt[Unit]("allGenotypeTags") unbounded () action { (x, c) =>
+    opt[Unit]("allGenotypeTags") unbounded () action { (_, c) =>
       c.copy(allGenotypeTags = true)
     } text "Summarize all genotype tags. Default false"
     opt[Int]("binSize") unbounded () action { (x, c) =>
       c.copy(binSize = x)
     } text "Binsize in estimated base pairs"
-    opt[Unit]("writeBinStats") unbounded () action { (x, c) =>
+    opt[Unit]("writeBinStats") unbounded () action { (_, c) =>
       c.copy(writeBinStats = true)
     } text "Write bin statistics. Default False"
     opt[String]("generalWiggle") unbounded () action { (x, c) =>
@@ -205,12 +205,12 @@ object VcfStats extends ToolCommand {
     }).toList ::: defaultGenotypeFields
 
     val bedRecords = (cmdArgs.intervals match {
-      case Some(intervals) =>
-        BedRecordList.fromFile(intervals).validateContigs(cmdArgs.referenceFile)
+      case Some(i) =>
+        BedRecordList.fromFile(i).validateContigs(cmdArgs.referenceFile)
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap.scatter(cmdArgs.binSize)
 
-    val intervals: List[Interval] = bedRecords.toSamIntervals.toList
+    val intervals: List[Interval] = BedRecordList.fromList(bedRecords.flatten).toSamIntervals.toList
 
     val totalBases = bedRecords.length
 
@@ -242,9 +242,7 @@ object VcfStats extends ToolCommand {
 
     // Triple for loop to not keep all bins in memory
     val statsFutures = for (intervals <- Random
-                              .shuffle(intervals)
-                              .grouped(intervals.size / (if (intervals.size > 10) 4 else 1))
-                              .toList)
+                              .shuffle(bedRecords))
       yield
         Future {
           val chunkStats = for (intervals <- intervals.grouped(25)) yield {
@@ -254,7 +252,9 @@ object VcfStats extends ToolCommand {
               val stats = createStats
               logger.info("Starting on: " + interval)
 
-              val query = reader.query(interval.getContig, interval.getStart, interval.getEnd)
+              val samInterval = interval.toSamInterval
+
+              val query = reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
               if (!query.hasNext) {
                 Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
                 for (sample <- samples) yield {
@@ -264,7 +264,7 @@ object VcfStats extends ToolCommand {
                 chunkCounter += 1
               }
 
-              for (record <- query if record.getStart <= interval.getEnd) {
+              for (record <- query if record.getStart <= samInterval.getEnd) {
                 Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
                 for (sample1 <- samples) yield {
                   val genotype = record.getGenotype(sample1)
@@ -284,19 +284,19 @@ object VcfStats extends ToolCommand {
 
               if (cmdArgs.writeBinStats) {
                 val binOutputDir =
-                  new File(cmdArgs.outputDir, "bins" + File.separator + interval.getContig)
+                  new File(cmdArgs.outputDir, "bins" + File.separator + samInterval.getContig)
 
                 stats.writeGenotypeField(
                   samples,
                   "general",
                   binOutputDir,
-                  prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+                  prefix = "genotype-" + samInterval.getStart + "-" + samInterval.getEnd)
                 stats.writeField("general",
                                  binOutputDir,
-                                 prefix = interval.getStart + "-" + interval.getEnd)
+                                 prefix = samInterval.getStart + "-" + samInterval.getEnd)
               }
 
-              status(chunkCounter, interval)
+              status(chunkCounter, samInterval)
               stats
             }
             binStats.toList.fold(createStats)(_ += _)
@@ -404,7 +404,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    addToBuffer("QUAL", "not set", false)
+    addToBuffer("QUAL", "not set", found = false)
 
     addToBuffer("SampleDistribution-Het", "not set", found = false)
     addToBuffer("SampleDistribution-HetNonRef", "not set", found = false)
@@ -419,25 +419,25 @@ object VcfStats extends ToolCommand {
     addToBuffer("SampleDistribution-Filtered", "not set", found = false)
     addToBuffer("SampleDistribution-Variant", "not set", found = false)
 
-    addToBuffer("general", "Total", false)
-    addToBuffer("general", "Biallelic", false)
-    addToBuffer("general", "ComplexIndel", false)
-    addToBuffer("general", "Filtered", false)
-    addToBuffer("general", "FullyDecoded", false)
-    addToBuffer("general", "Indel", false)
-    addToBuffer("general", "Mixed", false)
-    addToBuffer("general", "MNP", false)
-    addToBuffer("general", "MonomorphicInSamples", false)
-    addToBuffer("general", "NotFiltered", false)
-    addToBuffer("general", "PointEvent", false)
-    addToBuffer("general", "PolymorphicInSamples", false)
-    addToBuffer("general", "SimpleDeletion", false)
-    addToBuffer("general", "SimpleInsertion", false)
-    addToBuffer("general", "SNP", false)
-    addToBuffer("general", "StructuralIndel", false)
-    addToBuffer("general", "Symbolic", false)
-    addToBuffer("general", "SymbolicOrSV", false)
-    addToBuffer("general", "Variant", false)
+    addToBuffer("general", "Total", found = false)
+    addToBuffer("general", "Biallelic", found = false)
+    addToBuffer("general", "ComplexIndel", found = false)
+    addToBuffer("general", "Filtered", found = false)
+    addToBuffer("general", "FullyDecoded", found = false)
+    addToBuffer("general", "Indel", found = false)
+    addToBuffer("general", "Mixed", found = false)
+    addToBuffer("general", "MNP", found = false)
+    addToBuffer("general", "MonomorphicInSamples", found = false)
+    addToBuffer("general", "NotFiltered", found = false)
+    addToBuffer("general", "PointEvent", found = false)
+    addToBuffer("general", "PolymorphicInSamples", found = false)
+    addToBuffer("general", "SimpleDeletion", found = false)
+    addToBuffer("general", "SimpleInsertion", found = false)
+    addToBuffer("general", "SNP", found = false)
+    addToBuffer("general", "StructuralIndel", found = false)
+    addToBuffer("general", "Symbolic", found = false)
+    addToBuffer("general", "SymbolicOrSV", found = false)
+    addToBuffer("general", "Variant", found = false)
 
     val skipTags = List("QUAL", "general")
 
@@ -460,7 +460,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    addToBuffer("QUAL", Math.round(record.getPhredScaledQual), true)
+    addToBuffer("QUAL", Math.round(record.getPhredScaledQual), found = true)
 
     addToBuffer("SampleDistribution-Het",
                 record.getGenotypes.count(genotype => genotype.isHet),
@@ -500,7 +500,7 @@ object VcfStats extends ToolCommand {
                   genotype.isHetNonRef || genotype.isHet || genotype.isHomVar),
                 found = true)
 
-    addToBuffer("general", "Total", true)
+    addToBuffer("general", "Total", found = true)
     addToBuffer("general", "Biallelic", record.isBiallelic)
     addToBuffer("general", "ComplexIndel", record.isComplexIndel)
     addToBuffer("general", "Filtered", record.isFiltered)
@@ -541,22 +541,22 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    addToBuffer("DP", "not set", false)
-    addToBuffer("GQ", "not set", false)
+    addToBuffer("DP", "not set", found = false)
+    addToBuffer("GQ", "not set", found = false)
 
-    addToBuffer("general", "Total", false)
-    addToBuffer("general", "Het", false)
-    addToBuffer("general", "HetNonRef", false)
-    addToBuffer("general", "Hom", false)
-    addToBuffer("general", "HomRef", false)
-    addToBuffer("general", "HomVar", false)
-    addToBuffer("general", "Mixed", false)
-    addToBuffer("general", "NoCall", false)
-    addToBuffer("general", "NonInformative", false)
-    addToBuffer("general", "Available", false)
-    addToBuffer("general", "Called", false)
-    addToBuffer("general", "Filtered", false)
-    addToBuffer("general", "Variant", false)
+    addToBuffer("general", "Total", found = false)
+    addToBuffer("general", "Het", found = false)
+    addToBuffer("general", "HetNonRef", found = false)
+    addToBuffer("general", "Hom", found = false)
+    addToBuffer("general", "HomRef", found = false)
+    addToBuffer("general", "HomVar", found = false)
+    addToBuffer("general", "Mixed", found = false)
+    addToBuffer("general", "NoCall", found = false)
+    addToBuffer("general", "NonInformative", found = false)
+    addToBuffer("general", "Available", found = false)
+    addToBuffer("general", "Called", found = false)
+    addToBuffer("general", "Filtered", found = false)
+    addToBuffer("general", "Variant", found = false)
 
     val skipTags = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
 
