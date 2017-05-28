@@ -210,7 +210,8 @@ object VcfStats extends ToolCommand {
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap.scatter(cmdArgs.binSize)
 
-    val intervals: List[Interval] = BedRecordList.fromList(bedRecords.flatten).toSamIntervals.toList
+    val intervals: List[Interval] =
+      BedRecordList.fromList(bedRecords.flatten).toSamIntervals.toList
 
     val totalBases = bedRecords.length
 
@@ -254,7 +255,8 @@ object VcfStats extends ToolCommand {
 
               val samInterval = interval.toSamInterval
 
-              val query = reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
+              val query =
+                reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
               if (!query.hasNext) {
                 Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
                 for (sample <- samples) yield {
