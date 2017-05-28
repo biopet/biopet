@@ -11,6 +11,7 @@
 # Genome ${species} - ${genomeName}
 
 | Species | ${species} |
+| ------- | ---------- |
 | Genome Name | ${genomeName} |
 | Genome size | ${dict.getReferenceLength} bp |
 | Number of contigs | ${dict.getSequences.size()} |
@@ -25,9 +26,10 @@ ${text}
 #end
 
 #if(indexes.nonEmpty)
-### indexes
+### Indexes
 
-|| Name || Location ||
+| Name | Location |
+| ---- | -------- |
 #end
 #for((name, location) <- indexes)
 | ${name} | ${location} |
