@@ -6,11 +6,15 @@
 <%@ var dict: SAMSequenceDictionary %>
 <%@ var indexes: Map[String, File] %>
 <%@ var extraSections: Map[String, String] %>
+<%@ var downloadUrl: Option[String] %>
+<%@ var ncbiAssemblyReport: Option[File] %>
 # Genome ${species} - ${genomeName}
 
 | Species | ${species} |
 | Genome Name | ${genomeName} |
 | Genome size | ${dict.getReferenceLength} bp |
+#if(downloadUrl.isDefined)| Download URL | ${downloadUrl} |#end
+#if(ncbiAssemblyReport.isDefined)| NCBI Assembly report | ${ncbiAssemblyReport} |#end
 
 #for((title, text) <- extraSections)
 

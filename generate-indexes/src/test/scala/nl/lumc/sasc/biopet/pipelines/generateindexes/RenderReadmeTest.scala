@@ -28,6 +28,7 @@ class RenderReadmeTest extends TestNGSuite with Matchers {
     render.genomeName = "test"
     render.extraSections = Map("tite" -> "content")
     render.indexes = Map("indexName" -> new File("test"))
+    render.downloadUrl = Some("http://this/is/a/url")
     render.run()
 
     render.outputFile should exist

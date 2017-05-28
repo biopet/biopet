@@ -23,12 +23,17 @@ class RenderReadme extends InProcessFunction {
 
   var indexes: Map[String, File] = Map()
 
+  var downloadUrl: Option[String] = None
+  var ncbiAssemblyReport: Option[File] = None
+
   var extraSections: Map[String, String] = Map()
 
   @Output(required = true)
   var outputFile: File = _
 
   def run(): Unit = {
+    require(downloadUrl.isDefined || ncbiAssemblyReport.isDefined,
+            "A download URL or a ncbiAssemblyReport is required to render a readme")
 
     val args = Map(
       "species" -> species,
@@ -36,9 +41,13 @@ class RenderReadme extends InProcessFunction {
       "fastaFile" -> fastaFile,
       "dict" -> FastaUtils.getCachedDict(fastaFile),
       "indexes" -> indexes,
-      "extraSections" -> extraSections
+      "extraSections" -> extraSections,
+      "downloadUrl" -> downloadUrl,
+      "ncbiAssemblyReport" -> ncbiAssemblyReport
     )
-    val content = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/pipelines/generateindexes/readme.ssp", args)
+    val content = ReportBuilder.renderTemplate(
+      "/nl/lumc/sasc/biopet/pipelines/generateindexes/readme.ssp",
+      args)
     val writer = new PrintWriter(outputFile)
     writer.println(content)
     writer.close()

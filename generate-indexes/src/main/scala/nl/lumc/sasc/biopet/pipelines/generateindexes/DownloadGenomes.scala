@@ -81,6 +81,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                   case Some(assemblyReport: String) =>
                     val downloadAssembly = new DownloadNcbiAssembly(this)
                     downloadAssembly.assemblyReport = new File(assemblyReport)
+                    renderReadme.ncbiAssemblyReport = Some(downloadAssembly.assemblyReport)
                     downloadAssembly.output = downloadFastaFile
                     downloadAssembly.outputReport =
                       new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
@@ -109,6 +110,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       case a: util.ArrayList[_] => a.map(_.toString).toArray
                       case a => Array(a.toString)
                     }
+                    renderReadme.downloadUrl = Some(fastaUris.mkString("\n"))
 
                     val fastaFiles = for (fastaUri <- fastaUris) yield {
                       val curl = new Curl(this)
@@ -285,6 +287,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       }
 
                       val refFlatFile: Option[File] = gtfFile.map { gtf =>
+                        //TODO: change to GtfToRefflat tool
                         val refFlat = new File(gtf + ".refFlat")
                         val gtfToGenePred = new GtfToGenePred(this)
                         gtfToGenePred.inputGtfs :+= gtf
