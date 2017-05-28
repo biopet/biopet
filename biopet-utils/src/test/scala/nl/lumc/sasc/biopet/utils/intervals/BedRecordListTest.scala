@@ -150,11 +150,16 @@ class BedRecordListTest extends TestNGSuite with Matchers {
 
   @Test def testScatter: Unit = {
     val list =
-      BedRecordList.fromList(List(BedRecord("chrQ", 0, 1000), BedRecord("chrQ", 3000, 3500)))
+      BedRecordList.fromList(
+        List(BedRecord("chrQ", 0, 1000),
+             BedRecord("chrQ", 3000, 3500),
+             BedRecord("chrQ", 3600, 3610),
+             BedRecord("chrQ", 3610, 3620),
+             BedRecord("chrQ", 3620, 3630)))
     val scatterList = list.scatter(100)
-    scatterList.flatten.size shouldBe 15
-    scatterList.size shouldBe 15
-    scatterList.flatten.map(_.length).sum shouldBe 1500
+    scatterList.flatten.size shouldBe 18
+    scatterList.size shouldBe 16
+    scatterList.flatten.map(_.length).sum shouldBe 1530
   }
 }
 

@@ -110,6 +110,7 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
       .flatMap(_.scatter(binSize))
       .toList
       .sortBy(_.length)
+      .reverse
       .foldLeft((List[List[BedRecord]](), List[BedRecord]())) {
         case ((finalList, buffer), record) =>
           if (buffer.isEmpty) (finalList, record :: buffer)
