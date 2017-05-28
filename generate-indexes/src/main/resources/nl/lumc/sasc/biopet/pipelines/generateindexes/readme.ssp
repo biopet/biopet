@@ -13,6 +13,7 @@
 | Species | ${species} |
 | Genome Name | ${genomeName} |
 | Genome size | ${dict.getReferenceLength} bp |
+| Number of contigs | ${dict.getSequences.size()} |
 #if(downloadUrl.isDefined)| Download URL | ${downloadUrl} |#end
 #if(ncbiAssemblyReport.isDefined)| NCBI Assembly report | ${ncbiAssemblyReport} |#end
 
