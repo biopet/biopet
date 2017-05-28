@@ -64,10 +64,18 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
               genomeName -> {
                 var configDeps: List[File] = Nil
                 val genomeConfig = ConfigUtils.any2map(c)
-
                 val genomeDir = new File(speciesDir, genomeName)
                 val fastaFile = new File(genomeDir, "reference.fa")
                 val downloadFastaFile = new File(genomeDir, "download.reference.fa")
+
+                val renderReadme = new RenderReadme
+                renderReadme.outputFile = new File(genomeDir, "README.md")
+                renderReadme.fastaFile = fastaFile
+                renderReadme.extraSections = ConfigUtils
+                  .any2map(genomeConfig.getOrElse("readme_sections", Map()))
+                  .map(x => x._1 -> x._2.toString)
+                renderReadme.species = speciesName
+                renderReadme.genomeName = genomeName
 
                 genomeConfig.get("ncbi_assembly_report") match {
                   case Some(assemblyReport: String) =>
@@ -159,7 +167,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                   val annotationDir = new File(genomeDir, "annotation")
 
                   def getAnnotation(tag: String): Map[String, Map[String, Any]] =
-                    (genomeConfig.get(tag) match {
+                    genomeConfig.get(tag) match {
                       case Some(s: Map[_, _]) =>
                         s.map(x =>
                           x._2 match {
@@ -172,7 +180,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       case x =>
                         throw new IllegalStateException(
                           s"tag $tag should be an object with objects, now $x")
-                    })
+                    }
 
                   // Download vep caches
                   getAnnotation("vep").foreach {
@@ -289,6 +297,9 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       }
                   }
                 }
+                renderReadme.indexes = generateIndexes.indexes
+                renderReadme.deps :+= generateIndexes.dictFile
+                add(renderReadme)
               }
         }
   }

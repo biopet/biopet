@@ -36,6 +36,8 @@ class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScri
   @Input(doc = "Input fasta file", shortName = "R")
   var fastaFile: File = _
 
+  def dictFile = new File(outputDir, fastaFile.getName.stripSuffix(".fa") + ".dict")
+
   @Argument(required = true)
   var speciesName: String = _
 
@@ -51,6 +53,15 @@ class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScri
   def init(): Unit = {
     if (outputDir == null) outputDir = fastaFile.getParentFile
   }
+
+  def indexes: Map[String, File] = Map(
+    "Bwa" -> new File(outputDir, "bwa"),
+    "Star" -> new File(outputDir, "star"),
+    "gmap / gsnap" -> new File(outputDir, "gmap"),
+    "bowtie" -> new File(outputDir, "bowtie"),
+    "bowtie2" -> new File(outputDir, "bowtie2"),
+    "hisat2" -> new File(outputDir, "hisat2")
+  )
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
@@ -68,7 +79,7 @@ class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScri
 
     val createDict = new CreateSequenceDictionary(this)
     createDict.reference = fastaFile
-    createDict.output = new File(outputDir, fastaFile.getName.stripSuffix(".fa") + ".dict")
+    createDict.output = dictFile
     createDict.species = Some(speciesName)
     createDict.genomeAssembly = Some(genomeName)
     if (fastaUris.nonEmpty) createDict.uri = Some(fastaUris.mkString(","))

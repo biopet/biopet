@@ -1,0 +1,29 @@
+#import(java.io.File)
+#import(htsjdk.samtools.SAMSequenceDictionary)
+<%@ var species: String %>
+<%@ var genomeName: String %>
+<%@ var fastaFile: File %>
+<%@ var dict: SAMSequenceDictionary %>
+<%@ var indexes: Map[String, File] %>
+<%@ var extraSections: Map[String, String] %>
+# Genome ${species} - ${genomeName}
+
+| Species | ${species} |
+| Genome Name | ${genomeName} |
+| Genome size | ${dict.getReferenceLength} bp |
+
+#for((title, text) <- extraSections)
+
+### ${title}
+
+${text}
+#end
+
+#if(indexes.nonEmpty)
+### indexes
+
+|| Name || Location ||
+#end
+#for((name, location) <- indexes)
+| ${name} | ${location} |
+#end
