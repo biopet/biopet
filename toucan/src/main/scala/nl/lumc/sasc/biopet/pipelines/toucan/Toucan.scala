@@ -49,7 +49,7 @@ class Toucan(val parent: Configurable)
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
-  def outputName = inputVcf.getName.stripSuffix(".vcf.gz")
+  def outputName: String = inputVcf.getName.stripSuffix(".vcf.gz")
 
   def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
     case (Some(_), Some(_)) => new File(outputDir, s"$outputName.vep.normalized.gonl.exac.vcf.gz")
@@ -97,23 +97,24 @@ class Toucan(val parent: Configurable)
     if (enableScatter) {
       val outputVcfFiles = BedRecordList
         .fromReference(referenceFasta())
-        .scatter(config("bin_size", default = 50000000))
-        .allRecords
-        .map { region =>
-          val chunkName = s"${region.chr}-${region.start}-${region.end}"
-          val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
-          chunkDir.mkdirs()
-          val bedFile = new File(chunkDir, chunkName + ".bed")
-          BedRecordList.fromList(List(region)).writeToFile(bedFile)
-          bedFile.deleteOnExit()
-          val sv = new SelectVariants(this)
-          sv.variant = useVcf
-          sv.out = new File(chunkDir, chunkName + ".vcf.gz")
-          sv.intervals :+= bedFile
-          sv.isIntermediate = true
-          add(sv)
+        .scatter(config("bin_size", default = 100000000))
+        .zipWithIndex
+        .map {
+          case (regions, i) =>
+            val chunkName = i.toString
+            val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
+            chunkDir.mkdirs()
+            val bedFile = new File(chunkDir, chunkName + ".bed")
+            BedRecordList.fromList(regions).writeToFile(bedFile)
+            bedFile.deleteOnExit()
+            val sv = new SelectVariants(this)
+            sv.variant = useVcf
+            sv.out = new File(chunkDir, chunkName + ".vcf.gz")
+            sv.intervals :+= bedFile
+            sv.isIntermediate = true
+            add(sv)
 
-          runChunk(sv.out, chunkDir, chunkName)
+            runChunk(sv.out, chunkDir, chunkName)
         }
 
       if (this.functions
