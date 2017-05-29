@@ -40,7 +40,9 @@ class PeakCalling(val parent: Configurable) extends QScript with SummaryQScript 
 
   /** Init for pipeline */
   override def init(): Unit = {
-    if (controls.isEmpty) controls = config("controls", default = Map()).asMap.map(x => x._1 -> ConfigUtils.any2stringList(x._2))
+    if (controls.isEmpty)
+      controls = config("controls", default = Map()).asMap.map(x =>
+        x._1 -> ConfigUtils.any2stringList(x._2))
     if (inputBamsArg.nonEmpty) {
       inputBams = BamUtils.sampleBamMap(inputBamsArg)
 
@@ -66,7 +68,9 @@ class PeakCalling(val parent: Configurable) extends QScript with SummaryQScript 
       for (control <- controls.getOrElse(sampleName, Nil)) {
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = bamFile
-        macs2.control = inputBams.getOrElse(control, throw new IllegalStateException(s"Control '$control' is not found"))
+        macs2.control = inputBams.getOrElse(
+          control,
+          throw new IllegalStateException(s"Control '$control' is not found"))
         macs2.name = Some(sampleName + "_VS_" + control)
         macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
         macs2.outputdir = new File(sampleDir(sampleName), sampleName + "_VS_" + control)
