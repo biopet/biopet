@@ -152,7 +152,7 @@ class VariantEffectPredictor(val parent: Configurable)
   var cacheRegionSize: Option[String] = config("cache_region_size")
 
   // Numeric args
-  override def defaultThreads: Int = config("fork", default = 2)
+  override def defaultThreads: Int = config("fork", default = 4)
   var cacheVersion: Option[Int] = config("cache_version")
   var freqFreq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")

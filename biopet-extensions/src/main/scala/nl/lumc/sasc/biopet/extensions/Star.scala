@@ -17,8 +17,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Extension for STAR
@@ -28,7 +30,7 @@ class Star(val parent: Configurable)
     with Reference
     with Version {
   @Input(doc = "The reference file for the bam files.", required = false)
-  var reference: File = null
+  var reference: File = _
 
   @Input(doc = "Fastq file R1", required = false)
   var R1: File = _
@@ -56,13 +58,13 @@ class Star(val parent: Configurable)
 
   executable = config("exe", "STAR")
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """(.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """(.*)""".r
 
   @Argument(doc = "Output Directory")
   var outputDir: File = _
 
-  var genomeDir: File = null
+  var genomeDir: File = _
   var runmode: String = _
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runthreadn")
@@ -75,7 +77,7 @@ class Star(val parent: Configurable)
 
   /** can be a list of strings **/
   var genomeChrBinNbits: Option[Int] = config("genomechrbinnbits")
-  var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
+  var genomeSAindexNbases: Option[Long] = config("genomesaindexnbases")
   var genomeSAsparseD: Option[Int] = config("genomesasparsed")
 
   @Input(required = false)
@@ -97,12 +99,12 @@ class Star(val parent: Configurable)
   var clip3pAdapterSeq: Option[String] = config("clip3adapterseq")
   var clip3pAdapterMMp: Option[String] = config("clip3adaptermmp")
   var clip3pAfterAdapterNbases: Option[Int] = config("clip3afteradapternbases")
-  var limitGenomeGenerateRAM: Option[Int] = config("limitgenomegenerateram")
-  var limitIObufferSize: Option[Int] = config("limitiobuffersize")
-  var limitOutSAMoneReadBytes: Option[Int] = config("limitoutsamonereadbytes")
+  var limitGenomeGenerateRAM: Option[Long] = config("limitgenomegenerateram")
+  var limitIObufferSize: Option[Long] = config("limitiobuffersize")
+  var limitOutSAMoneReadBytes: Option[Long] = config("limitoutsamonereadbytes")
   var limitOutSJoneRead: Option[Int] = config("limitoutsjoneread")
   var limitOutSJcollapsed: Option[Int] = config("limitoutsjcollapsed")
-  var limitBAMsortRAM: Option[Int] = config("limitbamsortram")
+  var limitBAMsortRAM: Option[Long] = config("limitbamsortram")
   var limitSjdbInsertNsj: Option[Int] = config("limitsjdbinsertnsj")
 
   var outTmpDir: Option[String] = config("outtmpdir")
@@ -236,7 +238,7 @@ class Star(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     var cmd: String = required("cd", outputDir) + " && " + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
