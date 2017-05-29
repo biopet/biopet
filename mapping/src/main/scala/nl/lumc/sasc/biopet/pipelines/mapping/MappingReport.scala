@@ -61,7 +61,7 @@ object MappingReport extends ReportBuilder {
     )
     val skipFlexiprep = mappingSettings.get("skip_flexiprep").flatten.getOrElse(false) == true
     val bamMetricsPage =
-      if (mappingSettings.get("skip_metrics").flatten.getOrElse(false) == true) {
+      if (mappingSettings.get("skip_metrics").flatten.getOrElse(false) == false) {
         Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
       } else None
     ReportPage(
