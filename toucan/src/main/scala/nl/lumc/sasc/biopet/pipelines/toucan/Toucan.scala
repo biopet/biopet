@@ -49,7 +49,7 @@ class Toucan(val parent: Configurable)
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
-  def outputName = inputVcf.getName.stripSuffix(".vcf.gz")
+  def outputName: String = inputVcf.getName.stripSuffix(".vcf.gz")
 
   def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
     case (Some(_), Some(_)) => new File(outputDir, s"$outputName.vep.normalized.gonl.exac.vcf.gz")
