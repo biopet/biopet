@@ -64,15 +64,24 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
               genomeName -> {
                 var configDeps: List[File] = Nil
                 val genomeConfig = ConfigUtils.any2map(c)
-
                 val genomeDir = new File(speciesDir, genomeName)
                 val fastaFile = new File(genomeDir, "reference.fa")
                 val downloadFastaFile = new File(genomeDir, "download.reference.fa")
+
+                val renderReadme = new RenderReadme
+                renderReadme.outputFile = new File(genomeDir, "README.md")
+                renderReadme.fastaFile = fastaFile
+                renderReadme.extraSections = ConfigUtils
+                  .any2map(genomeConfig.getOrElse("readme_sections", Map()))
+                  .map(x => x._1 -> x._2.toString)
+                renderReadme.species = speciesName
+                renderReadme.genomeName = genomeName
 
                 genomeConfig.get("ncbi_assembly_report") match {
                   case Some(assemblyReport: String) =>
                     val downloadAssembly = new DownloadNcbiAssembly(this)
                     downloadAssembly.assemblyReport = new File(assemblyReport)
+                    renderReadme.ncbiAssemblyReport = Some(downloadAssembly.assemblyReport)
                     downloadAssembly.output = downloadFastaFile
                     downloadAssembly.outputReport =
                       new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
@@ -101,6 +110,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       case a: util.ArrayList[_] => a.map(_.toString).toArray
                       case a => Array(a.toString)
                     }
+                    renderReadme.downloadUrl = Some(fastaUris.mkString("\n"))
 
                     val fastaFiles = for (fastaUri <- fastaUris) yield {
                       val curl = new Curl(this)
@@ -159,7 +169,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                   val annotationDir = new File(genomeDir, "annotation")
 
                   def getAnnotation(tag: String): Map[String, Map[String, Any]] =
-                    (genomeConfig.get(tag) match {
+                    genomeConfig.get(tag) match {
                       case Some(s: Map[_, _]) =>
                         s.map(x =>
                           x._2 match {
@@ -172,7 +182,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       case x =>
                         throw new IllegalStateException(
                           s"tag $tag should be an object with objects, now $x")
-                    })
+                    }
 
                   // Download vep caches
                   getAnnotation("vep").foreach {
@@ -277,6 +287,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       }
 
                       val refFlatFile: Option[File] = gtfFile.map { gtf =>
+                        //TODO: change to GtfToRefflat tool
                         val refFlat = new File(gtf + ".refFlat")
                         val gtfToGenePred = new GtfToGenePred(this)
                         gtfToGenePred.inputGtfs :+= gtf
@@ -289,6 +300,9 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                       }
                   }
                 }
+                renderReadme.indexes = generateIndexes.indexes
+                renderReadme.deps :+= generateIndexes.dictFile
+                add(renderReadme)
               }
         }
   }
