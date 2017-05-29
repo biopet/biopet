@@ -65,7 +65,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
 
   @Test(dataProvider = "expMeasuresstrandProtocol")
   def testGentrap(strandProtocol: String) = {
-    val outputDir = GentrapTest.outputDir
+    val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val settings = Map(
       "output_dir" -> outputDir,
@@ -165,7 +165,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.foreach(FileUtils.deleteDirectory)
+    dirs.distinct.foreach(FileUtils.deleteDirectory)
   }
 }
 
@@ -194,7 +194,6 @@ class GentrapCallVariantsTest extends GentrapTestAbstract(List("fragments_per_ge
 }
 
 object GentrapTest {
-  def outputDir = Files.createTempDir()
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {

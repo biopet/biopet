@@ -60,7 +60,7 @@ class CarpTest extends TestNGSuite with Matchers {
                sample3: Boolean,
                threatment: Boolean,
                control: Boolean): Unit = {
-    val outputDir = CarpTest.outputDir
+    val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val map = {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir), CarpTest.executables)
@@ -104,12 +104,11 @@ class CarpTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.foreach(FileUtils.deleteDirectory)
+    dirs.distinct.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object CarpTest {
-  def outputDir = Files.createTempDir()
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {

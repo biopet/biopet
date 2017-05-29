@@ -76,7 +76,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
                 sample2: Boolean,
                 realign: Boolean,
                 baseRecalibration: Boolean): Unit = {
-    val outputDir = ShivaTest.outputDir
+    val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val map = {
       var m: Map[String, Any] = ShivaTest.config(outputDir)
@@ -153,7 +153,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.foreach(FileUtils.deleteDirectory)
+    dirs.distinct.foreach(FileUtils.deleteDirectory)
   }
 }
 
@@ -205,8 +205,6 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 }
 
 object ShivaTest {
-  def outputDir = Files.createTempDir()
-
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {
