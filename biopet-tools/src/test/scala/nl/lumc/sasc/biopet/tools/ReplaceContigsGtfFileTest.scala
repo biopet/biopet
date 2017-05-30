@@ -41,7 +41,8 @@ class ReplaceContigsGtfFileTest extends TestNGSuite with Matchers {
     inputWriter.println("1\tbla\tbla\t1\t2\t.\t.\t.")
     inputWriter.close()
 
-    ReplaceContigsGtfFile.main(Array("-I", input.getAbsolutePath, "-o", output.getAbsolutePath, "--contig", "1=chr1"))
+    ReplaceContigsGtfFile.main(
+      Array("-I", input.getAbsolutePath, "-o", output.getAbsolutePath, "--contig", "1=chr1"))
 
     val reader = Source.fromFile(output)
     val line = reader.getLines().next()
