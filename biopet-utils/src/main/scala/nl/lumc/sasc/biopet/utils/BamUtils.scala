@@ -73,7 +73,7 @@ object BamUtils {
     val insertSizesOnAllFragments = BedRecordList
       .fromList(Seq(BedRecord(contig, start, end)))
       .scatter(binSize)
-      .allRecords
+      .flatten
       .par
       .flatMap({ bedRecord =>
         // for each scatter, open the bamfile for this specific region-query
