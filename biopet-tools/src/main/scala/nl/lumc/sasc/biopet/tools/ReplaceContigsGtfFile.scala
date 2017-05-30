@@ -37,7 +37,7 @@ object ReplaceContigsGtfFile extends ToolCommand {
         .toMap
       reader.close()
       c.copy(contigs = c.contigs ++ map)
-    } text "File how to map contig names, first column is the new name, second column is coma separated list of alternative names"
+    } text "File how to map contig names, first column is the new name, second column is semicolon separated list of alternative names"
   }
 
   /**
@@ -45,8 +45,9 @@ object ReplaceContigsGtfFile extends ToolCommand {
     */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdArgs
-      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs: Args = argsParser
+      .parse(args, Args())
+      .getOrElse(throw new IllegalArgumentException)
 
     if (!cmdArgs.input.exists)
       throw new IllegalStateException("Input file not found, file: " + cmdArgs.input)
