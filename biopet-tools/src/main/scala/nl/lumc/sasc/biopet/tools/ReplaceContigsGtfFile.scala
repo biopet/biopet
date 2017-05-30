@@ -17,13 +17,26 @@ object ReplaceContigsGtfFile extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
-    }
+    } text "Input gtf file"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
-    }
+    } text "Output gtf file"
     opt[Map[String, String]]("contig") unbounded () action { (x, c) =>
       c.copy(contigs = c.contigs ++ x)
     }
+    opt[File]("contigMappingFile") unbounded () action { (x, c) =>
+      val reader = Source.fromFile(x)
+      val map = reader
+        .getLines()
+        .flatMap { line =>
+          val columns = line.split("\t")
+          val newContig = columns(0)
+          columns(1).split(",").map(alterniveName => (alterniveName, newContig))
+        }
+        .toMap
+      reader.clone()
+      c.copy(contigs = c.contigs ++ map)
+    } text "File how to map contig names, first column is the new name, second column is coma separated list of alternative names"
   }
 
   /**
