@@ -35,9 +35,9 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String) {
     pythonScript = new File(script).getAbsoluteFile
-    if (!PythonCommandLineFunction.alreadyCopied.contains(pythonScript)) {
+    if (!PythonCommandLineFunction.alreadyCopied.contains(script)) {
       setPythonScript(script, "")
-      PythonCommandLineFunction.alreadyCopied += pythonScript
+      PythonCommandLineFunction.alreadyCopied += script
     } else {
       pythonScriptName = script
     }
@@ -50,18 +50,18 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String, subpackage: String) {
     pythonScriptName = script
-    if (new File(script).isAbsolute) {
+    if (new File(script).isAbsolute && new File(script).exists()) {
       pythonScript = new File(script)
     } else {
       pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile
+      if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
+      val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
+      if (is != null) {
+        val os = new FileOutputStream(pythonScript)
+        org.apache.commons.io.IOUtils.copy(is, os)
+        os.close()
+      } else Logging.addError(s"Python script not found: $pythonScriptName")
     }
-    if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
-    val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
-    if (is != null) {
-      val os = new FileOutputStream(pythonScript)
-      org.apache.commons.io.IOUtils.copy(is, os)
-      os.close()
-    } else Logging.addError(s"Python script not found: $pythonScriptName")
   }
 
   /** return basic command to prefix the complete command with */
@@ -71,5 +71,5 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
 }
 
 object PythonCommandLineFunction {
-  private val alreadyCopied: mutable.Set[File] = mutable.Set()
+  private val alreadyCopied: mutable.Set[String] = mutable.Set()
 }
