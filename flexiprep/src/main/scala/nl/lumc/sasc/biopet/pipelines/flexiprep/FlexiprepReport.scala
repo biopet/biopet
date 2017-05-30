@@ -139,7 +139,7 @@ object FlexiprepReport extends ReportBuilder {
 
       val sb = new StringBuffer()
       sb.append(
-        Await.result(summary.getSampleName(lib.sampleId), Duration.Inf) + "-" + lib.name + "\t")
+        Await.result(summary.getSampleName(lib.sampleId), Duration.Inf).getOrElse("") + "-" + lib.name + "\t")
       sb.append(afterTotal + "\t")
       sb.append((clippingDiscardedToShort + clippingDiscardedToLong) + "\t")
       sb.append(trimmingDiscarded + "\t")
@@ -196,7 +196,7 @@ object FlexiprepReport extends ReportBuilder {
         seqstatQcStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
 
       val sb = new StringBuffer()
-      sb.append(Await.result(summary.getSampleName(lib.sampleId), Duration.Inf) + "-" + lib + "\t")
+      sb.append(Await.result(summary.getSampleName(lib.sampleId), Duration.Inf).getOrElse("") + "-" + lib + "\t")
       sb.append(afterTotal + "\t")
       sb.append(beforeTotal - afterTotal)
 
