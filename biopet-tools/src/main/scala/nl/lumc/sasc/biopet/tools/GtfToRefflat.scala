@@ -89,11 +89,9 @@ object GtfToRefflat extends ToolCommand {
             cdsFeatures.getOrElse(Nil))
           val codingStart =
             if (codingLocations.isEmpty) None
-            else if (gtfGene.strand.get) Some(codingLocations.min - 1)
             else Some(codingLocations.min - 1)
           val codingEnd =
             if (codingLocations.isEmpty) None
-            else if (gtfGene.strand.get) Some(codingLocations.max)
             else Some(codingLocations.max)
           Transcript(transcriptId.get,
                      gtfTranscript.start,
