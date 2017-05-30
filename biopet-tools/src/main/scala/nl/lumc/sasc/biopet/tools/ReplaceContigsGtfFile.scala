@@ -11,7 +11,8 @@ import scala.io.Source
   * Created by pjvan_thof on 30-5-17.
   */
 object ReplaceContigsGtfFile extends ToolCommand {
-  case class Args(input: File = null, output: File = null, contigs: Map[String, String] = Map()) extends AbstractArgs
+  case class Args(input: File = null, output: File = null, contigs: Map[String, String] = Map())
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
@@ -31,7 +32,7 @@ object ReplaceContigsGtfFile extends ToolCommand {
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val cmdArgs
-    : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     if (!cmdArgs.input.exists)
       throw new IllegalStateException("Input file not found, file: " + cmdArgs.input)
