@@ -74,7 +74,7 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
     val regex = new Regex(
       """Filtered (\d*) reads from first read file.
                             |Filtered (\d*) reads from second read file.
-                            |Synced read files contain (\d*) reads.""".stripMargin,
+                            |Synced files contain (\d*) reads.""".stripMargin,
       "R1",
       "R2",
       "RL"
