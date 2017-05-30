@@ -79,7 +79,7 @@ object FlexiprepReport extends ReportBuilder {
         Map()
       ))
 
-  protected def fastqcPlotSection(name: String, tag: String) = {
+  protected def fastqcPlotSection(name: String, tag: String): (String, ReportSection) = {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp",
                           Map("plot" -> tag))
   }
@@ -139,7 +139,9 @@ object FlexiprepReport extends ReportBuilder {
 
       val sb = new StringBuffer()
       sb.append(
-        Await.result(summary.getSampleName(lib.sampleId), Duration.Inf).getOrElse("") + "-" + lib.name + "\t")
+        Await
+          .result(summary.getSampleName(lib.sampleId), Duration.Inf)
+          .getOrElse("") + "-" + lib.name + "\t")
       sb.append(afterTotal + "\t")
       sb.append((clippingDiscardedToShort + clippingDiscardedToLong) + "\t")
       sb.append(trimmingDiscarded + "\t")
@@ -155,7 +157,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size * 10))
+    plot.width = Some(200 + (libraries.count(s => sampleId.getOrElse(s.id) == s.id) * 10))
     plot.title = Some("QC summary on " + read + " reads")
     plot.runLocal()
   }
@@ -196,7 +198,10 @@ object FlexiprepReport extends ReportBuilder {
         seqstatQcStats((lib.sampleId, lib.id))("num_total").getOrElse(0).toString.toLong
 
       val sb = new StringBuffer()
-      sb.append(Await.result(summary.getSampleName(lib.sampleId), Duration.Inf).getOrElse("") + "-" + lib + "\t")
+      sb.append(
+        Await
+          .result(summary.getSampleName(lib.sampleId), Duration.Inf)
+          .getOrElse("") + "-" + lib + "\t")
       sb.append(afterTotal + "\t")
       sb.append(beforeTotal - afterTotal)
 
@@ -209,7 +214,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Bases")
-    plot.width = Some(200 + (libraries.filter(s => sampleId.getOrElse(s.id) == s.id).size * 10))
+    plot.width = Some(200 + (libraries.count(s => sampleId.getOrElse(s.id) == s.id) * 10))
     plot.title = Some("QC summary on " + read + " bases")
     plot.runLocal()
   }
