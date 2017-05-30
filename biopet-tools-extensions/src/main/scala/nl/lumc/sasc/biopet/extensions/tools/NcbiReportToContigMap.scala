@@ -20,21 +20,18 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
-class DownloadNcbiAssembly(val parent: Configurable) extends ToolCommandFunction {
-  def toolObject = nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly
+class NcbiReportToContigMap(val parent: Configurable) extends ToolCommandFunction {
+  def toolObject = nl.lumc.sasc.biopet.tools.NcbiReportToContigMap
 
   @Output(doc = "Output fasta file", required = true)
-  var output: File = _
+  var contigMap: File = _
 
   var outputReport: File = _
 
   @Input(required = true)
-  var assemblyReport: File = null
+  var assemblyReport: File = _
 
-  var nameHeader: Option[String] = None
-
-  var mustHaveOne: List[String] = Nil
-  var mustNotHave: List[String] = Nil
+  var nameHeader: String = _
 
   override def defaultCoreMemory = 4.0
 
@@ -42,8 +39,6 @@ class DownloadNcbiAssembly(val parent: Configurable) extends ToolCommandFunction
     super.cmdLine +
       required("-a", assemblyReport) +
       required("--report", outputReport) +
-      required("-o", output) +
-      optional("--nameHeader", nameHeader) +
-      repeat("--mustHaveOne", mustHaveOne) +
-      repeat("--mustNotHave", mustNotHave)
+      required("-o", contigMap) +
+      required("--nameHeader", nameHeader)
 }
