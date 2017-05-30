@@ -26,16 +26,16 @@ object ValidateAnnotation extends ToolCommand {
   case class Args(refflatFile: File = null,
                   reference: File = null,
                   failOnError: Boolean = true,
-                  gtfFile: Option[File] = None)
+                  gtfFiles: List[File] = Nil)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('r', "refflatFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(refflatFile = x)
     } text "Refflat file to check"
-    opt[File]('g', "gtfFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(gtfFile = Some(x))
-    } text "Gtf file to check"
+    opt[File]('g', "gtfFile") valueName "<file>" action { (x, c) =>
+      c.copy(gtfFiles = x :: c.gtfFiles)
+    } text "Gtf files to check"
     opt[File]('R', "reference") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(reference = x)
     } text "Reference fasta to check vcf file against"
@@ -63,7 +63,7 @@ object ValidateAnnotation extends ToolCommand {
                 s"Contig '$contig' found in refflat but not found on reference")
       }
 
-      cmdArgs.gtfFile.foreach { file =>
+      cmdArgs.gtfFiles.distinct.foreach { file =>
         val tempRefflat = File.createTempFile("temp.", ".refflat")
         tempRefflat.deleteOnExit()
         GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))

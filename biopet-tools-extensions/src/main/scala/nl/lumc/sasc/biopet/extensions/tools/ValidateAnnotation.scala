@@ -27,7 +27,7 @@ class ValidateAnnotation(val parent: Configurable) extends ToolCommandFunction w
   var refflatFile: File = _
 
   @Input(required = false)
-  var gtfFile: Option[File] = None
+  var gtfFile: List[File] = Nil
 
   @Input(required = true)
   var reference: File = _
@@ -44,7 +44,7 @@ class ValidateAnnotation(val parent: Configurable) extends ToolCommandFunction w
   override def cmdLine =
     super.cmdLine +
       required("-r", refflatFile) +
-      optional("-g", gtfFile) +
+      repeat("-g", gtfFile) +
       required("-R", reference) +
       conditional(disableFail, "--disableFail")
 }

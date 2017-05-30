@@ -139,7 +139,10 @@ class Gentrap(val parent: Configurable)
   override def biopetScript(): Unit = {
     val validate = new ValidateAnnotation(this)
     validate.refflatFile = annotationRefFlat.get
-    validate.gtfFile = fragmentsPerGene.map(_.annotationGtf)
+    fragmentsPerGene.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksBlind.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksGuided.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksStrict.foreach(validate.gtfFile :+= _.annotationGtf)
     validate.jobOutputFile = new File(outputDir, ".validate.annotation.out")
     add(validate)
 
