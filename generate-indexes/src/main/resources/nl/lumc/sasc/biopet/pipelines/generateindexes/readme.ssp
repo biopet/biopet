@@ -1,0 +1,36 @@
+#import(java.io.File)
+#import(htsjdk.samtools.SAMSequenceDictionary)
+<%@ var species: String %>
+<%@ var genomeName: String %>
+<%@ var fastaFile: File %>
+<%@ var dict: SAMSequenceDictionary %>
+<%@ var indexes: Map[String, File] %>
+<%@ var extraSections: Map[String, String] %>
+<%@ var downloadUrl: Option[String] %>
+<%@ var ncbiAssemblyReport: Option[File] %>
+# Genome ${species} - ${genomeName}
+
+| Species | ${species} |
+| ------- | ---------- |
+| Genome Name | ${genomeName} |
+| Genome size | ${dict.getReferenceLength} bp |
+| Number of contigs | ${dict.getSequences.size()} |
+#if(downloadUrl.isDefined)| Download URL | ${downloadUrl} |#end
+#if(ncbiAssemblyReport.isDefined)| NCBI Assembly report | ${ncbiAssemblyReport} |#end
+
+#for((title, text) <- extraSections)
+
+### ${title}
+
+${text}
+#end
+
+#if(indexes.nonEmpty)
+### Indexes
+
+| Name | Location |
+| ---- | -------- |
+#end
+#for((name, location) <- indexes)
+| ${name} | ${location} |
+#end
