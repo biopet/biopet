@@ -146,7 +146,7 @@ class Gentrap(val parent: Configurable)
     validate.jobOutputFile = new File(outputDir, ".validate.annotation.out")
     add(validate)
 
-    val check = new CheckValidateAnnotation
+    val check = new CheckValidateAnnotation(this)
     check.inputLogFile = validate.jobOutputFile
     add(check)
 
