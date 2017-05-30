@@ -34,7 +34,7 @@ object ReplaceContigsGtfFile extends ToolCommand {
           columns(1).split(",").map(alterniveName => (alterniveName, newContig))
         }
         .toMap
-      reader.clone()
+      reader.close()
       c.copy(contigs = c.contigs ++ map)
     } text "File how to map contig names, first column is the new name, second column is coma separated list of alternative names"
   }
