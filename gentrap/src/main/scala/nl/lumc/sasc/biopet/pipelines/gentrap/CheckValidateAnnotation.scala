@@ -27,7 +27,9 @@ import scala.io.Source
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckValidateAnnotation(val parent: Configurable) extends InProcessFunction with Configurable {
+class CheckValidateAnnotation(val parent: Configurable)
+    extends InProcessFunction
+    with Configurable {
   @Input(required = true)
   var inputLogFile: File = _
 
@@ -46,7 +48,8 @@ class CheckValidateAnnotation(val parent: Configurable) extends InProcessFunctio
           Runtime.getRuntime.halt(130)
         } else {
           logger.warn("Corrupt annotations files found")
-          logger.warn("**** You enabled a unsafe method by letting the pipeline continue with incorrect annotations files ****")
+          logger.warn(
+            "**** You enabled a unsafe method by letting the pipeline continue with incorrect annotations files ****")
         }
       }
     }
