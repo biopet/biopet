@@ -12,7 +12,7 @@ import org.testng.annotations.Test
   */
 class NcbiReportToContigMapTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
-    Paths.get(getClass.getResource (p).toURI).toString
+    Paths.get(getClass.getResource(p).toURI).toString
   }
 
   @Test
@@ -20,6 +20,12 @@ class NcbiReportToContigMapTest extends TestNGSuite with Matchers {
     val report = new File(resourcePath("/GCF_000844745.1.report"))
     val output = File.createTempFile("test.", ".tsv")
     output.deleteOnExit()
-    NcbiReportToContigMap.main(Array("-a", report.getAbsolutePath, "-o", output.getAbsolutePath, "--nameHeader", "Sequence-Name"))
+    NcbiReportToContigMap.main(
+      Array("-a",
+            report.getAbsolutePath,
+            "-o",
+            output.getAbsolutePath,
+            "--nameHeader",
+            "Sequence-Name"))
   }
 }

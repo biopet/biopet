@@ -15,18 +15,19 @@ object NcbiReportToContigMap extends ToolCommand {
                   outputFile: File = null,
                   reportFile: Option[File] = None,
                   contigNameHeader: String = null,
-                  names: List[String] = List("Sequence-Name", "UCSC-style-name", "GenBank-Accn", "RefSeq-Accn"))
-    extends AbstractArgs
+                  names: List[String] =
+                    List("Sequence-Name", "UCSC-style-name", "GenBank-Accn", "RefSeq-Accn"))
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('a', "assembly_report") required() unbounded() valueName "<file>" action {
+    opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(assemblyReport = x)
     } text "refseq ID from NCBI"
-    opt[File]('o', "output") required() unbounded() valueName "<file>" action { (x, c) =>
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output Fasta file"
-    opt[String]("nameHeader") required() unbounded() valueName "<string>" action { (x, c) =>
+    opt[String]("nameHeader") required () unbounded () valueName "<string>" action { (x, c) =>
       c.copy(contigNameHeader = x)
     } text
       """
@@ -35,7 +36,7 @@ object NcbiReportToContigMap extends ToolCommand {
         | - 'Sequence-Name': Name of the contig within the assembly
         | - 'UCSC-style-name': Name of the contig used by UCSC ( like hg19 )
         | - 'RefSeq-Accn': Unique name of the contig at RefSeq (default for NCBI)""".stripMargin
-    opt[String]("names")  unbounded() action { (x, c) =>
+    opt[String]("names") unbounded () action { (x, c) =>
       c.copy(names = x.split(",").toList)
     } text "output Fasta file"
   }
@@ -74,6 +75,7 @@ object NcbiReportToContigMap extends ToolCommand {
     val nameId = headers(cmdargs.contigNameHeader)
 
     val writer = new PrintWriter(cmdargs.outputFile)
+    writer.println("#Name_in_fasta\tAlternative_names")
     for (line <- assamblyReport.filter(!_.startsWith("#"))) {
       val values = line.split("\t")
       val altNames = altNameIds.map(i => values(i)).filter(_ != "na").distinct

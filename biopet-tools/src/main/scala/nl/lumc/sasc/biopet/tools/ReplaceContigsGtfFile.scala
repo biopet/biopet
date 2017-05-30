@@ -28,10 +28,11 @@ object ReplaceContigsGtfFile extends ToolCommand {
       val reader = Source.fromFile(x)
       val map = reader
         .getLines()
+        .filter(!_.startsWith("#"))
         .flatMap { line =>
           val columns = line.split("\t")
           val newContig = columns(0)
-          columns(1).split(",").map(alterniveName => (alterniveName, newContig))
+          columns(1).split(";").map(alterniveName => (alterniveName, newContig))
         }
         .toMap
       reader.close()
