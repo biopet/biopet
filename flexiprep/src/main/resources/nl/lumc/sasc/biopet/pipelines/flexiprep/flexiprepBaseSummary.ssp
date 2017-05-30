@@ -27,8 +27,8 @@
     val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
-    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
-    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(true))
+    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
+    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
     val librariesCount = libraries.size
 
     val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
@@ -50,7 +50,7 @@
             #elseif (trimCount == 0 && clipCount == 0)
                 You have selected no pre-processing step to be performed
             #elseif (trimCount > 0 && clipCount == 0)
-                You have selected <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> as pre-processing steps
+                You have chosen to perform <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> for some libraries, but not all.
             #elseif (trimCount == 0 && clipCount > 0)
                 You have chosen to turn <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> for some libraries, but not all.
             #else
