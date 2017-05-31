@@ -6,8 +6,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
- * Created by Sander Bollen on 20-3-17.
- */
+  * Created by Sander Bollen on 20-3-17.
+  */
 class WisecondorGcCorrect(val parent: Configurable) extends Wisecondor {
 
   @Input
@@ -18,14 +18,15 @@ class WisecondorGcCorrect(val parent: Configurable) extends Wisecondor {
   var nIter: Option[Int] = config("iter", namespace = "wisecondor", default = None)
   var fracLowess: Option[Float] = config("frac_lowess", namespace = "wisecondor", default = None)
 
-  def cmdLine = executable +
-    required("gc-correct") +
-    required("-I", inputBed) +
-    required("-R", referenceFasta()) +
-    required("-O", output) +
-    binCommand +
-    optional("-n", fracN) +
-    optional("-r", fracR) +
-    optional("-t", nIter) +
-    optional("-l", fracLowess)
+  def cmdLine =
+    executable +
+      required("gc-correct") +
+      required("-I", inputBed) +
+      required("-R", referenceFasta()) +
+      required("-O", output) +
+      binCommand +
+      optional("-n", fracN) +
+      optional("-r", fracR) +
+      optional("-t", nIter) +
+      optional("-l", fracLowess)
 }

@@ -1,23 +1,23 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
-import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
+import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
@@ -25,9 +25,9 @@ import scala.collection.mutable
 import scala.language.postfixOps
 
 /**
- * Created by wyleung on 01/12/14.
- * Modified by pjvanthof and warindrarto on 27/06/2015
- */
+  * Created by wyleung on 01/12/14.
+  * Modified by pjvanthof and warindrarto on 27/06/2015
+  */
 object SeqStat extends ToolCommand {
 
   import FqEncoding._
@@ -52,15 +52,14 @@ object SeqStat extends ToolCommand {
 
   class OptParser extends AbstractOptParser {
 
-    head(
-      s"""
+    head(s"""
          |$commandName - Summarize FastQ
       """.stripMargin)
 
     opt[File]('i', "fastq") required () unbounded () valueName "<fastq>" action { (x, c) =>
       c.copy(fastq = x)
-    } validate {
-      x => if (x.exists) success else failure("FASTQ file not found")
+    } validate { x =>
+      if (x.exists) success else failure("FASTQ file not found")
     } text "FastQ file to generate stats from"
     opt[File]('o', "output") unbounded () valueName "<json>" action { (x, c) =>
       c.copy(outputJson = Some(x))
@@ -68,19 +67,20 @@ object SeqStat extends ToolCommand {
   }
 
   /**
-   * Parses the command line argument
-   *
-   * @param args Array of arguments
-   * @return
-   */
-  def parseArgs(args: Array[String]): Args = new OptParser()
-    .parse(args, Args())
-    .getOrElse(throw new IllegalArgumentException)
+    * Parses the command line argument
+    *
+    * @param args Array of arguments
+    * @return
+    */
+  def parseArgs(args: Array[String]): Args =
+    new OptParser()
+      .parse(args, Args())
+      .getOrElse(throw new IllegalArgumentException)
 
   /**
-   *
-   * @param quals Computed quality histogram [flat]
-   */
+    *
+    * @param quals Computed quality histogram [flat]
+    */
   def detectPhredEncoding(quals: mutable.ArrayBuffer[Long]): Unit = {
     // substract 1 on high value, because we start from index 0
     val qualLowBoundery = quals.takeWhile(_ == 0).length
@@ -92,10 +92,10 @@ object SeqStat extends ToolCommand {
       // complex case, we cannot tell wheter this is a sanger or solexa
       // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
       // New @ 2016/01/26: Illumina X ten samples can contain Phred=Q42 (qual_high_boundery==75/K)
-      case (true, true)  => phredEncoding = Solexa
+      case (true, true) => phredEncoding = Solexa
       // this is definite a sanger sequence, the lower end is sanger only
       case (true, false) => phredEncoding = Sanger
-      case (_, _)        => phredEncoding = Unknown
+      case (_, _) => phredEncoding = Unknown
     }
   }
 
@@ -116,11 +116,11 @@ object SeqStat extends ToolCommand {
   var readLengthHistogram: mutable.Map[String, Long] = mutable.Map.empty
 
   /**
-   * Compute the quality metric per read
-   * Results are stored in baseStats and readStats
-   *
-   * @param record FastqRecord
-   */
+    * Compute the quality metric per read
+    * Results are stored in baseStats and readStats
+    *
+    * @param record FastqRecord
+    */
   def processRead(record: FastqRecord): Unit = {
 
     // Adjust/expand the length of baseStat case classes to the size of current
@@ -130,7 +130,8 @@ object SeqStat extends ToolCommand {
     }
 
     if (readStats.lengths.length <= record.length)
-      readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(0)
+      readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(
+        0)
 
     val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString
@@ -139,7 +140,8 @@ object SeqStat extends ToolCommand {
 
     for (t <- 0 until record.length()) {
       if (baseStats(t).qual.length <= readQuality(t)) {
-        baseStats(t).qual ++= mutable.ArrayBuffer.fill(readQuality(t).toInt - baseStats(t).qual.length + 1)(0)
+        baseStats(t).qual ++= mutable.ArrayBuffer.fill(
+          readQuality(t).toInt - baseStats(t).qual.length + 1)(0)
       }
       baseStats(t).qual(readQuality(t)) += 1
       baseStats(t).nucs(readNucleotides(t)) += 1
@@ -156,11 +158,11 @@ object SeqStat extends ToolCommand {
   }
 
   /**
-   * seqStat, the compute entrypoint where all statistics collection starts
-   *
-   * @param fqreader FastqReader
-   * @return numReads - number of reads counted
-   */
+    * seqStat, the compute entrypoint where all statistics collection starts
+    *
+    * @param fqreader FastqReader
+    * @return numReads - number of reads counted
+    */
   def seqStat(fqreader: FastqReader): Long = {
     var numReads: Long = 0
     for (read <- fqreader.iterator.asScala) {
@@ -192,7 +194,8 @@ object SeqStat extends ToolCommand {
       baseStats(pos).nucs.zipWithIndex foreach { case (value, index) => nucs(index) += value }
     }
     detectPhredEncoding(quals)
-    logger.debug("Detected '" + phredEncoding.toString.toLowerCase + "' encoding in fastq file ...")
+    logger.debug(
+      "Detected '" + phredEncoding.toString.toLowerCase + "' encoding in fastq file ...")
 
     nucleotideHistoMap = nucs.toList
       .foldLeft(mutable.Map[Char, Long]())(
@@ -203,10 +206,12 @@ object SeqStat extends ToolCommand {
       .retain((nucleotide, count) => (count > 0 || "ACTGN".contains(nucleotide.toString)))
 
     baseQualHistogram = quals.slice(phredEncoding.id, quals.size)
-    baseQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - baseQualHistogram.size)(0L)
+    baseQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - baseQualHistogram.size)(
+      0L)
 
     readQualHistogram = readStats.qual.slice(phredEncoding.id, readStats.qual.size)
-    readQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - readQualHistogram.size)(0L)
+    readQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - readQualHistogram.size)(
+      0L)
 
     readQualGTEHistoMap = readQualHistogram.indices
       .foldLeft(mutable.Map[Int, Long]())(
@@ -220,28 +225,28 @@ object SeqStat extends ToolCommand {
   def reportMap(fastqPath: File): Map[String, Any] = {
     Map(
       ("files",
-        Map(
-          ("fastq", Map(
-            ("path", fastqPath.getAbsolutePath))
-          )
-        )
-      ),
-      ("stats", Map(
-        ("bases", Map(
-          ("num_total", nucleotideHistoMap.values.sum),
-          ("num_qual", baseQualHistogram.toList),
-          ("nucleotides", nucleotideHistoMap.toMap)
-        )),
-        ("reads", Map(
-          ("num_with_n", readStats.withN),
-          ("num_total", readStats.qual.sum),
-          ("len_min", readStats.lengths.takeWhile(_ == 0).length),
-          ("len_max", readStats.lengths.length - 1),
-          ("num_avg_qual_gte", readQualGTEHistoMap.toMap),
-          ("qual_encoding", phredEncoding.toString.toLowerCase),
-          ("len_histogram", readStats.lengths.toList)
-        ))
-      ))
+       Map(
+         ("fastq", Map(("path", fastqPath.getAbsolutePath)))
+       )),
+      ("stats",
+       Map(
+         ("bases",
+          Map(
+            ("num_total", nucleotideHistoMap.values.sum),
+            ("num_qual", baseQualHistogram.toList),
+            ("nucleotides", nucleotideHistoMap.toMap)
+          )),
+         ("reads",
+          Map(
+            ("num_with_n", readStats.withN),
+            ("num_total", readStats.qual.sum),
+            ("len_min", readStats.lengths.takeWhile(_ == 0).length),
+            ("len_max", readStats.lengths.length - 1),
+            ("num_avg_qual_gte", readQualGTEHistoMap.toMap),
+            ("qual_encoding", phredEncoding.toString.toLowerCase),
+            ("len_histogram", readStats.lengths.toList)
+          ))
+       ))
     )
   }
 
@@ -273,4 +278,3 @@ object FqEncoding extends Enumeration {
   val Solexa = Value(64, "Solexa")
   val Unknown = Value(0, "Unknown")
 }
-

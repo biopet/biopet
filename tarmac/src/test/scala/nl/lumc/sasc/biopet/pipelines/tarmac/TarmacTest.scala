@@ -1,10 +1,14 @@
 package nl.lumc.sasc.biopet.pipelines.tarmac
 
 import nl.lumc.sasc.biopet.core.BiopetFifoPipe
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln }
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln}
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsSort
 import nl.lumc.sasc.biopet.extensions.gatk.DepthOfCoverage
-import nl.lumc.sasc.biopet.extensions.wisecondor.{ WisecondorCount, WisecondorGcCorrect, WisecondorNewRef }
+import nl.lumc.sasc.biopet.extensions.wisecondor.{
+  WisecondorCount,
+  WisecondorGcCorrect,
+  WisecondorNewRef
+}
 import nl.lumc.sasc.biopet.extensions.xhmm.XhmmMergeGatkDepths
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -14,8 +18,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
- * Created by Sander Bollen on 13-4-17.
- */
+  * Created by Sander Bollen on 13-4-17.
+  */
 class TarmacTest extends TestNGSuite with Matchers {
   import TarmacTest._
 
@@ -68,27 +72,30 @@ class TarmacTest extends TestNGSuite with Matchers {
     script.init()
     script.biopetScript()
 
-    script.
-      getReferenceSamplesForSample("sample1").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample4", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample2").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample6", "sample7").sorted
-    script.
-      getReferenceSamplesForSample("sample3").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample4", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample4").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample5").sorted
-    script.
-      getReferenceSamplesForSample("sample5").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample1", "sample3", "sample4").sorted
-    script.
-      getReferenceSamplesForSample("sample6").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample7").sorted
-    script.
-      getReferenceSamplesForSample("sample7").
-      getOrElse(Nil).toList.sorted shouldEqual List("sample2", "sample6").sorted
+    script.getReferenceSamplesForSample("sample1").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample4",
+      "sample5").sorted
+    script.getReferenceSamplesForSample("sample2").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample6",
+      "sample7").sorted
+    script.getReferenceSamplesForSample("sample3").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample1",
+      "sample4",
+      "sample5").sorted
+    script.getReferenceSamplesForSample("sample4").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample1",
+      "sample3",
+      "sample5").sorted
+    script.getReferenceSamplesForSample("sample5").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample1",
+      "sample3",
+      "sample4").sorted
+    script.getReferenceSamplesForSample("sample6").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample2",
+      "sample7").sorted
+    script.getReferenceSamplesForSample("sample7").getOrElse(Nil).toList.sorted shouldEqual List(
+      "sample2",
+      "sample6").sorted
 
   }
 
@@ -99,29 +106,26 @@ class TarmacTest extends TestNGSuite with Matchers {
     script.biopetScript()
 
     script.functions.count(_.isInstanceOf[XhmmMergeGatkDepths]) shouldBe 7
-    script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 7
-    script.functions.collect {
-      case b: BiopetFifoPipe =>
-        b.beforeGraph()
-        b.pipesJobs.count(_.isInstanceOf[WisecondorNewRef]) shouldBe 1
-        b.pipesJobs.count(_.isInstanceOf[BedtoolsSort]) shouldBe 1
-        b.pipesJobs.count(_.isInstanceOf[Bgzip]) shouldBe 1
-    }
+    script.functions.count(_.isInstanceOf[BiopetFifoPipe]) shouldBe 35
+    val fifos = script.functions.collect { case b: BiopetFifoPipe => b }
+    fifos
+      .flatMap { f =>
+        f.beforeGraph()
+        f.pipesJobs
+      }
+      .count(_.isInstanceOf[WisecondorNewRef]) shouldBe 7
   }
 
 }
 
 object TarmacTest {
 
-  val sample2 = Map("samples" ->
-    Map("sample2" ->
-      Map("tags" ->
-        Map("gender" -> "male",
-          "family" -> "fam01"
-        )
-      )
-    )
-  )
+  val sample2 = Map(
+    "samples" ->
+      Map(
+        "sample2" ->
+          Map("tags" ->
+            Map("gender" -> "male", "family" -> "fam01"))))
 
   val samplesWithBam = Map(
     "samples" -> Map(
@@ -246,7 +250,10 @@ object TarmacTest {
     "gatk_jar" -> "gatk.jar",
     "discover_params" -> "discover_params",
     "tarmac" -> Map(
-      "targets" -> "targets.bed"
-    )
+      "targets" -> "targets.bed",
+      "stouff_window_size" -> List(1),
+      "threshold" -> 5
+    ),
+    "reference_fasta" -> "dummy"
   )
 }

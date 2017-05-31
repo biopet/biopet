@@ -2,12 +2,12 @@ package nl.lumc.sasc.biopet.extensions.wisecondor
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Created by Sander Bollen on 20-3-17.
- */
+  * Created by Sander Bollen on 20-3-17.
+  */
 abstract class Wisecondor extends BiopetCommandLineFunction with Version with Reference {
   executable = config("exe", namespace = "wisecondor", default = "wisecondor")
 

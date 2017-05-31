@@ -1,4 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -16,9 +18,11 @@
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
 <%@ var multisample: Boolean = true %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
-    val samples = Await.result(summary.getSamples(runId = Some(runId), sampleId = sampleId), Duration.Inf)
-    val libraries = Await.result(summary.getLibraries(runId = Some(runId), sampleId = sampleId), Duration.Inf)
+    val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
+    val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
     val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))

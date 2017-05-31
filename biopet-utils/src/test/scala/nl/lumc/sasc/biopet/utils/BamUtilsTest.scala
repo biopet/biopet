@@ -1,32 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
 import htsjdk.samtools._
-import org.mockito.Mockito.{ inOrder => inOrd }
+import org.mockito.Mockito.{inOrder => inOrd}
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ BeforeClass, Test }
+import org.testng.annotations.{BeforeClass, Test}
 
 /**
- * Created by wyleung on 22-2-16.
- * Create samfile and records are borrowed from WipeReadsTest by @bow
- */
+  * Created by wyleung on 22-2-16.
+  * Create samfile and records are borrowed from WipeReadsTest by @bow
+  */
 class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import BamUtils._
@@ -70,10 +70,11 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
   private def makeSams(header: SAMLineParser, raws: Seq[String]): Seq[SAMRecord] =
     raws.map(s => header.parseLine(s))
 
-  private def makeSamReader(f: File): SamReader = SamReaderFactory
-    .make()
-    .validationStringency(ValidationStringency.LENIENT)
-    .open(f)
+  private def makeSamReader(f: File): SamReader =
+    SamReaderFactory
+      .make()
+      .validationStringency(ValidationStringency.LENIENT)
+      .open(f)
 
   val sBamRecs1 = Seq(
     "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
@@ -116,18 +117,34 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @BeforeClass
   def start: Unit = {
-    createTestFileFrom(makeSams(samHeaderTemplate, sBamRecs1), samHeaderTemplate, BamUtilsTest.singleEndBam01)
-    createTestFileFrom(makeSams(samHeaderTemplate, pBamRecs1), samHeaderTemplate, BamUtilsTest.pairedEndBam01)
-    createTestFileFrom(makeSams(samHeaderTemplate, pBamRecs1), samHeaderTemplate, BamUtilsTest.pairedEndBam02)
+    createTestFileFrom(makeSams(samHeaderTemplate, sBamRecs1),
+                       samHeaderTemplate,
+                       BamUtilsTest.singleEndBam01)
+    createTestFileFrom(makeSams(samHeaderTemplate, pBamRecs1),
+                       samHeaderTemplate,
+                       BamUtilsTest.pairedEndBam01)
+    createTestFileFrom(makeSams(samHeaderTemplate, pBamRecs1),
+                       samHeaderTemplate,
+                       BamUtilsTest.pairedEndBam02)
 
-    createTestFileFrom(makeSams(samHeaderTemplateDoubleSample, sBamRecs1), samHeaderTemplateDoubleSample, BamUtilsTest.singleEndBam01WithDoubleSamples)
-    createTestFileFrom(makeSams(samHeaderTemplateDoubleSample, pBamRecs1), samHeaderTemplateDoubleSample, BamUtilsTest.pairedEndBam01WithDoubleSamples)
+    createTestFileFrom(makeSams(samHeaderTemplateDoubleSample, sBamRecs1),
+                       samHeaderTemplateDoubleSample,
+                       BamUtilsTest.singleEndBam01WithDoubleSamples)
+    createTestFileFrom(makeSams(samHeaderTemplateDoubleSample, pBamRecs1),
+                       samHeaderTemplateDoubleSample,
+                       BamUtilsTest.pairedEndBam01WithDoubleSamples)
 
-    createTestFileFrom(makeSams(samHeaderTemplateErrornousNoReadgroup, sBamRecs2), samHeaderTemplateErrornousNoReadgroup, BamUtilsTest.singleEndBam01NoRG)
-    createTestFileFrom(makeSams(samHeaderTemplateErrornousNoReadgroup, pBamRecs2), samHeaderTemplateErrornousNoReadgroup, BamUtilsTest.pairedEndBam01NoRG)
+    createTestFileFrom(makeSams(samHeaderTemplateErrornousNoReadgroup, sBamRecs2),
+                       samHeaderTemplateErrornousNoReadgroup,
+                       BamUtilsTest.singleEndBam01NoRG)
+    createTestFileFrom(makeSams(samHeaderTemplateErrornousNoReadgroup, pBamRecs2),
+                       samHeaderTemplateErrornousNoReadgroup,
+                       BamUtilsTest.pairedEndBam01NoRG)
   }
 
-  private def createTestFileFrom(records: Seq[SAMRecord], header: SAMLineParser, output: File): File = {
+  private def createTestFileFrom(records: Seq[SAMRecord],
+                                 header: SAMLineParser,
+                                 output: File): File = {
     output.getParentFile.createNewFile()
     val outBam = new SAMFileWriterFactory()
       .setCreateIndex(true)
@@ -174,7 +191,8 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testMultiBamInsertsizes = {
-    val result = sampleBamsInsertSize(List(BamUtilsTest.singleEndBam01, BamUtilsTest.pairedEndBam01))
+    val result = sampleBamsInsertSize(
+      List(BamUtilsTest.singleEndBam01, BamUtilsTest.pairedEndBam01))
     result shouldEqual Map(
       BamUtilsTest.singleEndBam01 -> 0,
       BamUtilsTest.pairedEndBam01 -> 50
@@ -191,28 +209,32 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.singleEndBam01WithDoubleSamples))
     }
-    thrown.getMessage should ===("Bam contains multiple sample IDs: " + BamUtilsTest.singleEndBam01WithDoubleSamples)
+    thrown.getMessage should ===(
+      "Bam contains multiple sample IDs: " + BamUtilsTest.singleEndBam01WithDoubleSamples)
   }
 
   @Test def testSampleBamNamesMultipleSamplesPE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.pairedEndBam01WithDoubleSamples))
     }
-    thrown.getMessage should ===("Bam contains multiple sample IDs: " + BamUtilsTest.pairedEndBam01WithDoubleSamples)
+    thrown.getMessage should ===(
+      "Bam contains multiple sample IDs: " + BamUtilsTest.pairedEndBam01WithDoubleSamples)
   }
 
   @Test def testSampleBamNamesNoRGSE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.singleEndBam01NoRG))
     }
-    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.singleEndBam01NoRG)
+    thrown.getMessage should ===(
+      "Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.singleEndBam01NoRG)
   }
 
   @Test def testSampleBamNamesNoRGPE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.pairedEndBam01NoRG))
     }
-    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.pairedEndBam01NoRG)
+    thrown.getMessage should ===(
+      "Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.pairedEndBam01NoRG)
   }
 
   @Test def testSampleFoundTwice = {

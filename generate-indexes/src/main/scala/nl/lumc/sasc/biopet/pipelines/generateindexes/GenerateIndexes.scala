@@ -1,22 +1,22 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Star }
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, Star}
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2Build
@@ -28,8 +28,8 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.collection.mutable.ListBuffer
 
 /**
- * Created by pjvan_thof on 21-9-16.
- */
+  * Created by pjvan_thof on 21-9-16.
+  */
 class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
@@ -127,7 +127,9 @@ class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScri
     add(bowtieIndex)
     configDeps += bowtieIndex.jobOutputFile
     outputConfig += "bowtie" -> Map(
-      "bowtie_index" -> bowtieIndex.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta"),
+      "bowtie_index" -> bowtieIndex.reference.getAbsolutePath
+        .stripSuffix(".fa")
+        .stripSuffix(".fasta"),
       "reference_fasta" -> bowtieIndex.reference.getAbsolutePath
     )
 
@@ -138,22 +140,29 @@ class GenerateIndexes(val parent: Configurable) extends QScript with BiopetQScri
     add(bowtie2Index)
     configDeps += bowtie2Index.jobOutputFile
     outputConfig += "bowtie2" -> Map(
-      "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta"),
+      "bowtie_index" -> bowtie2Index.reference.getAbsolutePath
+        .stripSuffix(".fa")
+        .stripSuffix(".fasta"),
       "reference_fasta" -> bowtie2Index.reference.getAbsolutePath
     )
     outputConfig += "tophat" -> Map(
-      "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
+      "bowtie_index" -> bowtie2Index.reference.getAbsolutePath
+        .stripSuffix(".fa")
+        .stripSuffix(".fasta")
     )
 
     // Hisat2 index
     val hisat2Index = new Hisat2Build(this)
     hisat2Index.inputFasta = createLinks(new File(outputDir, "hisat2"))
-    hisat2Index.hisat2IndexBase = new File(new File(outputDir, "hisat2"), "reference").getAbsolutePath
+    hisat2Index.hisat2IndexBase =
+      new File(new File(outputDir, "hisat2"), "reference").getAbsolutePath
     add(hisat2Index)
     configDeps += hisat2Index.jobOutputFile
     outputConfig += "hisat2" -> Map(
       "reference_fasta" -> hisat2Index.inputFasta.getAbsolutePath,
-      "hisat_index" -> hisat2Index.inputFasta.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
+      "hisat_index" -> hisat2Index.inputFasta.getAbsolutePath
+        .stripSuffix(".fa")
+        .stripSuffix(".fasta")
     )
 
     val writeConfig = new WriteConfig

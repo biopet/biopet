@@ -27,7 +27,7 @@ class PrintReads(val parent: Configurable) extends CommandLineGATK with ScatterG
 
   /** Write output to this BAM filename instead of STDOUT */
   @Output(fullName = "out", shortName = "o", doc = "Write output to this BAM filename instead of STDOUT", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[BamGatherFunction])
+  @Gather(classOf[MergeSamFiles])
   var out: File = _
 
   /** Exclude all reads with this read group from the output */

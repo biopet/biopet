@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.sys.process.Process
 
 /**
- * Created by pjvan_thof on 7-12-16.
- */
+  * Created by pjvan_thof on 7-12-16.
+  */
 object PipelineStatus extends ToolCommand {
   case class Args(pipelineDir: File = null,
                   depsFile: Option[File] = None,
@@ -33,7 +33,8 @@ object PipelineStatus extends ToolCommand {
                   follow: Boolean = false,
                   refreshTime: Int = 30,
                   complatePlots: Boolean = false,
-                  compressPlots: Boolean = true) extends AbstractArgs
+                  compressPlots: Boolean = true)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('d', "pipelineDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -64,12 +65,17 @@ object PipelineStatus extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
     val deps = readDepsFile(depsFile)
-    writePipelineStatus(deps, cmdArgs.outputDir, follow = cmdArgs.follow, refreshTime = cmdArgs.refreshTime,
-      plots = cmdArgs.complatePlots, compressPlots = cmdArgs.compressPlots)
+    writePipelineStatus(deps,
+                        cmdArgs.outputDir,
+                        follow = cmdArgs.follow,
+                        refreshTime = cmdArgs.refreshTime,
+                        plots = cmdArgs.complatePlots,
+                        compressPlots = cmdArgs.compressPlots)
     logger.info("Done")
   }
 
@@ -88,7 +94,8 @@ object PipelineStatus extends ToolCommand {
   def readDepsFile(depsFile: File) = {
     val deps = ConfigUtils.fileToConfigMap(depsFile)
 
-    val jobs = ConfigUtils.any2map(deps("jobs")).map(x => x._1 -> new Job(x._1, ConfigUtils.any2map(x._2)))
+    val jobs =
+      ConfigUtils.any2map(deps("jobs")).map(x => x._1 -> new Job(x._1, ConfigUtils.any2map(x._2)))
     val files = ConfigUtils.any2list(deps("files")).map(x => ConfigUtils.any2map(x)).toArray
 
     Deps(jobs, files)
@@ -109,14 +116,30 @@ object PipelineStatus extends ToolCommand {
 
     var futures: List[Future[Any]] = Nil
 
-    val jobsDeps = deps.jobs.map(x => x._1 -> (x._2.dependsOnJobs match {
-      case l: List[_] => l.map(_.toString)
-    }))
+    val jobsDeps = deps.jobs.map(x =>
+      x._1 -> (x._2.dependsOnJobs match {
+        case l: List[_] => l.map(_.toString)
+      }))
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
-    futures :+= writeGraphvizFile(jobsDeps, new File(outputDir, s"compress.jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots, compress = true)
+    futures :+= writeGraphvizFile(jobsDeps,
+                                  new File(outputDir, s"jobs.gv"),
+                                  jobDone,
+                                  jobFailed,
+                                  jobsStart,
+                                  deps,
+                                  plots,
+                                  plots)
+    futures :+= writeGraphvizFile(jobsDeps,
+                                  new File(outputDir, s"compress.jobs.gv"),
+                                  jobDone,
+                                  jobFailed,
+                                  jobsStart,
+                                  deps,
+                                  compressPlots,
+                                  compressPlots,
+                                  compress = true)
 
     val mainJobs = deps.jobs.filter(_._2.mainJob == true).map {
       case (name, job) =>
@@ -126,8 +149,23 @@ object PipelineStatus extends ToolCommand {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, plots, plots)
-    futures :+= writeGraphvizFile(mainJobs, new File(outputDir, s"compress.main_jobs.gv"), jobDone, jobFailed, jobsStart, deps, compressPlots, compressPlots, compress = true)
+    futures :+= writeGraphvizFile(mainJobs,
+                                  new File(outputDir, s"main_jobs.gv"),
+                                  jobDone,
+                                  jobFailed,
+                                  jobsStart,
+                                  deps,
+                                  plots,
+                                  plots)
+    futures :+= writeGraphvizFile(mainJobs,
+                                  new File(outputDir, s"compress.main_jobs.gv"),
+                                  jobDone,
+                                  jobFailed,
+                                  jobsStart,
+                                  deps,
+                                  compressPlots,
+                                  compressPlots,
+                                  compress = true)
 
     val totalJobs = deps.jobs.size
     val totalStart = jobsStart.size
@@ -137,7 +175,8 @@ object PipelineStatus extends ToolCommand {
 
     futures.foreach(x => Await.ready(x, Duration.Inf))
 
-    logger.info(s"Total job: ${totalJobs}, Pending: ${totalPending}, Ready to run / running: ${totalStart}, Done: ${totalDone}, Failed ${totalFailed}")
+    logger.info(
+      s"Total job: ${totalJobs}, Pending: ${totalPending}, Ready to run / running: ${totalStart}, Done: ${totalDone}, Failed ${totalFailed}")
 
     if (follow) {
       Thread.sleep(refreshTime * 1000)
@@ -152,7 +191,7 @@ object PipelineStatus extends ToolCommand {
     }
     dependencies.flatMap { dep =>
       deps.jobs(dep).mainJob match {
-        case true  => List(dep)
+        case true => List(dep)
         case false => getMainDependencies(dep, deps)
       }
     }.distinct
@@ -164,7 +203,9 @@ object PipelineStatus extends ToolCommand {
       (compressedName(job)._1, compressedName(dep)._1)
     }
     // This will collapse a Set[(String, String)] to a Map[String, List[String]]
-    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList) ++ jobs.filter(_._2.isEmpty).map(job => compressedName(job._1)._1 -> Nil)
+    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList) ++ jobs
+      .filter(_._2.isEmpty)
+      .map(job => compressedName(job._1)._1 -> Nil)
   }
 
   def compressedName(jobName: String) = jobName match {
@@ -177,7 +218,9 @@ object PipelineStatus extends ToolCommand {
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
-                        png: Boolean = true, svg: Boolean = true, compress: Boolean = false): Future[Unit] = Future {
+                        png: Boolean = true,
+                        svg: Boolean = true,
+                        compress: Boolean = false): Future[Unit] = Future {
     val graph = if (compress) compressOnType(jobsDeps) else jobsDeps
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
@@ -185,14 +228,23 @@ object PipelineStatus extends ToolCommand {
     graph.foreach {
       case (job, jobDeps) =>
         // Writing color of node
-        val compressTotal = if (compress) Some(deps.jobs.keys.filter(compressedName(_)._1 == job)) else None
-        val compressDone = if (compress) Some(jobDone.filter(compressedName(_)._1 == job)) else None
-        val compressFailed = if (compress) Some(jobFailed.filter(compressedName(_)._1 == job)) else None
-        val compressStart = if (compress) Some(jobsStart.filter(compressedName(_)._1 == job)) else None
-        val compressIntermediate = if (compress) Some(deps.jobs.filter(x => compressedName(x._1)._1 == job).forall(_._2.intermediate)) else None
+        val compressTotal =
+          if (compress) Some(deps.jobs.keys.filter(compressedName(_)._1 == job)) else None
+        val compressDone =
+          if (compress) Some(jobDone.filter(compressedName(_)._1 == job)) else None
+        val compressFailed =
+          if (compress) Some(jobFailed.filter(compressedName(_)._1 == job)) else None
+        val compressStart =
+          if (compress) Some(jobsStart.filter(compressedName(_)._1 == job)) else None
+        val compressIntermediate =
+          if (compress)
+            Some(deps.jobs.filter(x => compressedName(x._1)._1 == job).forall(_._2.intermediate))
+          else None
 
         if (compress) {
-          val pend = compressTotal.get.size - compressFailed.get.filterNot(compressStart.get.contains(_)).size - compressStart.get.size - compressDone.get.size
+          val pend = compressTotal.get.size - compressFailed.get
+            .filterNot(compressStart.get.contains(_))
+            .size - compressStart.get.size - compressDone.get.size
           writer.println(s"""  $job [label = "$job
         |Total: ${compressTotal.get.size}
         |Fail: ${compressFailed.get.size}
@@ -201,26 +253,43 @@ object PipelineStatus extends ToolCommand {
         |Done: ${compressDone.get.size}"]""".stripMargin)
         }
 
-        if (jobDone.contains(job) || compress && compressTotal == compressDone) writer.println(s"  $job [color = green]")
-        else if (jobFailed.contains(job) || compress && compressFailed.get.nonEmpty) writer.println(s"  $job [color = red]")
-        else if (jobsStart.contains(job) || compress && compressTotal == compressStart) writer.println(s"  $job [color = orange]")
+        if (jobDone.contains(job) || compress && compressTotal == compressDone)
+          writer.println(s"  $job [color = green]")
+        else if (jobFailed.contains(job) || compress && compressFailed.get.nonEmpty)
+          writer.println(s"  $job [color = red]")
+        else if (jobsStart.contains(job) || compress && compressTotal == compressStart)
+          writer.println(s"  $job [color = orange]")
 
         // Dashed lined for intermediate jobs
-        if ((deps.jobs.contains(job) && deps.jobs(job).intermediate) || (compressIntermediate == Some(true)))
+        if ((deps.jobs.contains(job) && deps
+              .jobs(job)
+              .intermediate) || (compressIntermediate == Some(true)))
           writer.println(s"  $job [style = dashed]")
 
         // Writing Node deps
         jobDeps.foreach { dep =>
           if (compress) {
-            val depsNames = deps.jobs.filter(x => compressedName(x._1)._1 == dep)
+            val depsNames = deps.jobs
+              .filter(x => compressedName(x._1)._1 == dep)
               .filter(_._2.outputUsedByJobs.exists(x => compressedName(x)._1 == job))
               .map(x => x._1 -> x._2.outputUsedByJobs.filter(x => compressedName(x)._1 == job))
             val total = depsNames.size
-            val done = depsNames.map(x => x._2.exists(y => jobDone.contains(x._1))).count(_ == true).toFloat / total
-            val fail = depsNames.map(x => x._2.exists(y => jobFailed.contains(x._1))).count(_ == true).toFloat / total
-            val start = (depsNames.map(x => x._2.exists(y => jobsStart.contains(x._1))).count(_ == true).toFloat / total) - fail
-            if (total > 0) writer.println(s"""  $dep -> $job [color="red;%f:orange;%f:green;%f:black;%f"];"""
-              .format(fail, start, done, 1.0f - done - fail - start))
+            val done = depsNames
+              .map(x => x._2.exists(y => jobDone.contains(x._1)))
+              .count(_ == true)
+              .toFloat / total
+            val fail = depsNames
+              .map(x => x._2.exists(y => jobFailed.contains(x._1)))
+              .count(_ == true)
+              .toFloat / total
+            val start = (depsNames
+              .map(x => x._2.exists(y => jobsStart.contains(x._1)))
+              .count(_ == true)
+              .toFloat / total) - fail
+            if (total > 0)
+              writer.println(
+                s"""  $dep -> $job [color="red;%f:orange;%f:green;%f:black;%f"];"""
+                  .format(fail, start, done, 1.0f - done - fail - start))
             else writer.println(s"  $dep -> $job;")
           } else writer.println(s"  $dep -> $job;")
         }
@@ -237,28 +306,39 @@ object PipelineStatus extends ToolCommand {
   }
 
   def jobsReadyStart(deps: Deps, jobsDone: Set[String]): Set[String] = {
-    deps.jobs.filterNot(x => jobsDone.contains(x._1)).filter(_._2.dependsOnJobs.forall(jobsDone)).keySet
+    deps.jobs
+      .filterNot(x => jobsDone.contains(x._1))
+      .filter(_._2.dependsOnJobs.forall(jobsDone))
+      .keySet
   }
 
   def jobsDone(deps: Deps, alreadyDone: Set[String] = Set()): Set[String] = {
     val f = deps.jobs.filterNot(x => alreadyDone.contains(x._1)).map(x => x._2 -> x._2.isDone)
-    val dones = f.map(x => x._1 -> Await.result(x._2, Duration.Inf)).filter(_._2).map(_._1.name).toSet ++ alreadyDone
-    val f2 = f.map(x => x._1 -> x._2.map { d =>
-      if (d || !x._1.intermediate) d
-      else upstreamJobDone(x._1, dones, deps)
+    val dones = f
+      .map(x => x._1 -> Await.result(x._2, Duration.Inf))
+      .filter(_._2)
+      .map(_._1.name)
+      .toSet ++ alreadyDone
+    val f2 = f.map(x =>
+      x._1 -> x._2.map { d =>
+        if (d || !x._1.intermediate) d
+        else upstreamJobDone(x._1, dones, deps)
     })
     val d = f2.map(x => x._1 -> Await.result(x._2, Duration.Inf))
     d.filter(_._2).map(_._1.name).toSet
   }
 
   private def upstreamJobDone(job: Job, dones: Set[String], deps: Deps): Boolean = {
-    job.outputUsedByJobs.map(deps.jobs)
+    job.outputUsedByJobs
+      .map(deps.jobs)
       .exists(x => dones.contains(x.name) || (x.intermediate && upstreamJobDone(x, dones, deps)))
   }
 
   def jobsFailed(deps: Deps, dones: Set[String], alreadyFailed: Set[String] = Set()): Set[String] = {
-    val f = deps.jobs.filterNot(x => dones.contains(x._1))
-      .filterNot(x => alreadyFailed.contains(x._1)).map(x => x._1 -> x._2.isFailed)
+    val f = deps.jobs
+      .filterNot(x => dones.contains(x._1))
+      .filterNot(x => alreadyFailed.contains(x._1))
+      .map(x => x._1 -> x._2.isFailed)
     f.map(x => x._1 -> Await.result(x._2, Duration.Inf)).filter(_._2).keySet ++ alreadyFailed
   }
 
