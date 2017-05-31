@@ -43,9 +43,7 @@ trait Rscript extends Configurable {
     * @param dir Directory to store temp script, if None or not given File.createTempFile is called
     */
   protected def checkScript(dir: Option[File] = None): Unit = {
-    if (Rscript.alreadyCopied.contains(script)) {
-      //script = script.getAbsoluteFile
-    } else {
+    if (!Rscript.alreadyCopied.contains(script)) {
       val rScript: File = dir match {
         case Some(d) => new File(d, script.getName)
         case _ =>
