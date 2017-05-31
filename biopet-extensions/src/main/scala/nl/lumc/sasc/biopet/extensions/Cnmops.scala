@@ -20,8 +20,9 @@ import nl.lumc.sasc.biopet.core.Version
 import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
-
 import nl.lumc.sasc.biopet.utils.SemanticVersion
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the Cnmops command line tool.
@@ -34,19 +35,12 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
 
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
 
-  def versionCommand = {
+  def versionCommand: String = {
+    checkScript()
     val v = super.cmdLine + "--version"
     v.trim.replace("'", "")
   }
-  def versionRegex = "(\\d+\\.\\d+\\.\\d+)".r
-
-  private def stringToInt(s: String): Option[Int] = {
-    try {
-      Some(s.toInt)
-    } catch {
-      case e: Exception => None
-    }
-  }
+  def versionRegex: Regex = "(\\d+\\.\\d+\\.\\d+)".r
 
   /**
     * Check whether version of cn mops is at least 1.18.0
@@ -54,7 +48,7 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
     * @return
     */
   def versionCheck: Boolean = {
-    getVersion.flatMap(SemanticVersion.getSemanticVersion(_)) match {
+    getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
       case Some(version) => (version.major == 1 && version.minor >= 18) || version.major >= 2
       case _ => false
     }
@@ -103,8 +97,8 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
   /** write all output files to this directory [./] */
   var outputDir: Option[File] = None
 
-  override def beforeGraph = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(outputDir.isDefined, "Outputdir for cn.MOPS should not be empty")
     require(input.length >= 2, "Please supply at least 2 BAM files for cn.MOPS")
     if (!versionCheck) {
@@ -113,7 +107,7 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
     }
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("--cnr", outputCnr) +
       required("--cnv", outputCnv) +
