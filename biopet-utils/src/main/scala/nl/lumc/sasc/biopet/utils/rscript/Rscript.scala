@@ -36,7 +36,7 @@ trait Rscript extends Configurable {
   def rscriptExecutable: String = config("exe", default = "Rscript", namespace = "rscript")
 
   /** This is the defaul implementation, to add arguments override this */
-  def cmd: Seq[String] = Seq(rscriptExecutable, script.getAbsolutePath)
+  def cmd: Seq[String] = Seq(rscriptExecutable, Rscript.alreadyCopied(script).getAbsolutePath)
 
   /**
     * If script not exist in file system it try to copy it from the jar
@@ -44,7 +44,7 @@ trait Rscript extends Configurable {
     */
   protected def checkScript(dir: Option[File] = None): Unit = {
     if (Rscript.alreadyCopied.contains(script)) {
-      script = script.getAbsoluteFile
+      //script = script.getAbsoluteFile
     } else {
       val rScript: File = dir match {
         case Some(d) => new File(d, script.getName)
@@ -60,9 +60,7 @@ trait Rscript extends Configurable {
 
       org.apache.commons.io.IOUtils.copy(is, os)
       os.close()
-      Rscript.alreadyCopied += script
-
-      script = rScript
+      Rscript.alreadyCopied += script -> rScript
     }
   }
 
@@ -96,5 +94,5 @@ trait Rscript extends Configurable {
 }
 
 object Rscript {
-  val alreadyCopied: mutable.Set[File] = mutable.Set()
+  protected val alreadyCopied: mutable.Map[File, File] = mutable.Map()
 }
