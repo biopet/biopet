@@ -59,6 +59,8 @@ def plot_call(chrom, start, end, whandle, xhandle, shandle, margin, output_loc):
     plt.xlabel("Position along {0}".format(chrom))
     plt.legend()
     plt.savefig(output_loc, dpi=300)
+    plt.cla()
+    plt.close(figure)
 
 
 if __name__ == "__main__":
