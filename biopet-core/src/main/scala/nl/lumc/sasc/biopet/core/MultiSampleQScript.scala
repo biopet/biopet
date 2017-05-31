@@ -128,7 +128,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         if (samples.contains(father)) {
           if (samples(father).gender != Gender.Male)
             Logging.addError(s"Father of $sampleId is not a male")
-        } else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
+        } else logger.warn(s"For sample '$sampleId', its father '$father' not found in config")
       }
       g
     }
@@ -140,7 +140,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
         if (samples.contains(mother)) {
           if (samples(mother).gender != Gender.Female)
             Logging.addError(s"Mother of $sampleId is not a female")
-        } else logger.warn(s"For sample '$sampleId' is mother '$mother' not found in config")
+        } else logger.warn(s"For sample '$sampleId', its mother '$mother' not found in config")
       }
       g
     }
