@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript}
 import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle}
-import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
+import nl.lumc.sasc.biopet.extensions.seqtk.{SeqtkSample, SeqtkSeq}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -43,10 +43,20 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
 
   var compress = true
 
+  var downSampleFraction: Option[Float] =
+    config("downsample_fraction", namespace = "flexiprep", default = None)
+
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 3
 
   val seqtk = new SeqtkSeq(parent)
+  val seqtkSample: Option[SeqtkSample] = downSampleFraction match {
+    case Some(f) if 0.0 < f && f < 1.0 =>
+      val sub = new SeqtkSample(parent)
+      sub.sample = f
+      Some(sub)
+    case _ => None
+  }
   var clip: Option[Cutadapt] =
     if (!flexiprep.skipClip) Some(new Cutadapt(parent, fastqc)) else None
   var trim: Option[Sickle] = if (!flexiprep.skipTrim) {
@@ -63,7 +73,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
     cat
   }
 
-  def jobs = (Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
+  def jobs = (seqtkSample :: Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
 
   def summaryFiles = Map()
 
@@ -99,7 +109,15 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
   }
 
   override def beforeCmd(): Unit = {
-    seqtk.input = input
+    seqtkSample match {
+      case Some(subsample) =>
+        subsample.input = input
+        subsample.output = new File(output.getParentFile, input.getName + ".subsample.fq")
+        subsample.isIntermediate = true
+        addPipeJob(subsample)
+        seqtk.input = subsample.output
+      case _ => seqtk.input = input
+    }
     seqtk.output = new File(output.getParentFile, input.getName + ".seqtk.fq")
     seqtk.Q = fastqc.encoding match {
       case null => None
