@@ -282,7 +282,8 @@ class Tophat(val parent: Configurable)
                .exists(_.endsWith(".bt2")))
       throw new IllegalArgumentException("No bowtie2 index found for tophat")
     if (R2.nonEmpty && mateInnerDist.isEmpty) {
-      logger.warn("The parameter 'mate_inner_dist' is not set in the configuration, TopHat will use it's default value - 50bp, please check if this value for inner mate distance is correct for the current data.")
+      logger.warn(
+        "The parameter 'mate_inner_dist' is not set in the configuration, TopHat will use it's default value - 50bp, please check if this value for inner mate distance is correct for the current data.")
     }
   }
 
