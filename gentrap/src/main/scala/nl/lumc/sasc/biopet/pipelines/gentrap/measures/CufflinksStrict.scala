@@ -30,4 +30,5 @@ class CufflinksStrict(val parent: Configurable)
     cufflinks.GTF = Some(annotationGtf)
     cufflinks
   }
+  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_gtf_strict" -> annotationGtf)
 }
