@@ -31,5 +31,5 @@ class CufflinksGuided(val parent: Configurable)
     cufflinks
   }
 
-  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_gtf_guided" -> annotationGtf)
+  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_guided_gtf" -> annotationGtf)
 }
