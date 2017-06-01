@@ -28,6 +28,12 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Input(fullName = "cosmic", shortName = "cosmic", doc = "", required = false)
   var cosmic: Option[File] = None
 
+  @Input(fullName = "normal_panel", shortName = "PON", doc = "", required = false)
+  var ponFile: Option[File] = None
+
+  @Input(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", doc = "", required = false)
+  var contaminationFile: Option[File] = None
+
   /** Output file of the program. */
   @Output(fullName = "out", shortName = "o", required = true)
   var outputVcf: File = _
@@ -84,7 +90,66 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
     * Default value: 2
     * */
   @Argument(fullName = "sample_ploidy", shortName="ploidy", required = false)
-  var ploidy: Option[Int] = None
+  var ploidy: Option[Int] = config("sample_ploidy")
+
+  /** Default value: 0
+    * */
+  @Argument(fullName = "contamination_fraction_to_filter", shortName="contamination", required = false)
+  var contaminationFractionToFilter: Option[Double] = config("contamination_fraction_to_filter")
+
+  /** One or more classes/groups of annotations to apply to variant calls */
+  @Argument(fullName = "group", shortName = "G", doc = "One or more classes/groups of annotations to apply to variant calls", required = false)
+  var group: List[String] = config("group", default = Nil)
+
+  /** Heterozygosity value used to compute prior likelihoods for any locus.
+    * Default value:  0.001 */
+  @Argument(fullName = "heterozygosity", shortName = "hets", doc = "Heterozygosity value used to compute prior likelihoods for any locus", required = false)
+  var heterozygosity: Option[Double] = config("heterozygosity")
+
+  /** Heterozygosity for indel calling.
+    * Default value:  0.000125 */
+  @Argument(fullName = "indel_heterozygosity", shortName = "indelHeterozygosity", doc = "Heterozygosity for indel calling", required = false)
+  var heterozygosityForIndels: Option[Double] = config("indel_heterozygosity")
+
+  /** Standard deviation of heterozygosity.
+    * Default value:  0.01 */
+  @Argument(fullName = "heterozygosity_stdev", shortName = "heterozygosityStandardDeviation", doc = "Standard deviation of heterozygosity", required = false)
+  var heterozygositySD: Option[Double] = config("heterozygosity_stdev")
+
+  /** Value used for filtering tumor variants. If a position that has been found to have a variant in tumor, has reads with the variant alternate allele also in the normal sample and if the number of such reads is higher than the value given with this parameter and the sum of the quality scores in these reads in this position is higher than given with the parameter 'maxAltAllelesInNormalQScoreSum', then the variant is filtered out from the final result.
+    * Default value:  1 */
+  @Argument(fullName = "max_alt_alleles_in_normal_count", required = false)
+  var maxAltAllelesInNormalCount: Option[Int] = config("max_alt_alleles_in_normal_count")
+
+  /** Value used for filtering tumor variants. If a position that has been found to have a variant in tumor, has reads with the variant alternate allele also in the normal sample and if the fraction of such reads from all reads is higher than the value given with this parameter and the sum of the quality scores in these reads in this position is higher than given with the parameter 'maxAltAllelesInNormalQScoreSum', then the variant is filtered out from the final result.
+    * Default value:  0.03 */
+  @Argument(fullName = "max_alt_alleles_in_normal_fraction", required = false)
+  var maxAltAllelesInNormalFraction: Option[Double] = config("max_alt_alleles_in_normal_fraction")
+
+  /** For explanation see the description of the parameters above.
+    * Default value:  20 */
+  @Argument(fullName = "max_alt_alleles_in_qscore_sum", required = false)
+  var maxAltAllelesInNormalQScoreSum: Option[Int] = config("max_alt_alleles_in_qscore_sum")
+
+  /** Minimum base quality required to consider a base for calling.
+    * Default value:  10 */
+  @Argument(fullName = "min_base_quality_score", shortName = "mbq", required = false)
+  var minBaseQScore: Option[Int] = config("min_base_quality_score")
+
+  /** Value used for filtering tumor variants to exclude false positives caused by misalignments evidenced by alternate alleles occurring near the start and end of reads. Variants are rejected if their median distance from the start/end of of the reads is lower than this parameter and if the median absolute deviation is lower than the value given with the parameter 'pir_mad_threshold'. Filtering is done only if the parameter 'enableClusteredReadPositionFilter' is set to true.
+    * Default value:  10 */
+  @Argument(fullName = "pir_median_threshold", required = false)
+  var pirMedianThreshold: Option[Double] = config("pir_median_threshold")
+
+  /** Value used for filtering tumor variants to exclude false positives caused by misalignments evidenced by alternate alleles occurring near the start and end of reads. Variants are rejected if their median distance from the start/end of the reads is lower than given with the parameter 'pirMedianThreshold' and if the median absolute deviation is lower than given with this parameter. Filtering is done only if the parameter 'enableClusteredReadPositionFilter' is set to true.
+    * Default value:  3 */
+  @Argument(fullName = "pir_mad_threshold", required = false)
+  var pirMadThreshold: Option[Double] = config("pir_mad_threshold")
+
+  /** If this parameter is set to true, then tumor variants are filtered to exclude false positives that are caused by misalignments evidenced by alternate alleles occurring near the start and end of reads. For filtering values of the parameters 'pirMedianThreshold' and 'pirMadThreshold' are used.
+    * Default value:  false */
+  @Argument(fullName = "enable_clustered_read_position_filter", required = false)
+  var enableClusteredReadPositionFilter: Option[Boolean] = config("enable_clustered_read_position_filter")
 
   /*override def cmdLine = {
     super.input_file =
