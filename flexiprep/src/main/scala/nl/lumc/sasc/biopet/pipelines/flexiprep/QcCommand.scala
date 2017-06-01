@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetFifoPipe, BiopetQScript}
 import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle}
 import nl.lumc.sasc.biopet.extensions.seqtk.{SeqtkSample, SeqtkSeq}
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -55,6 +56,9 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
       val sub = new SeqtkSample(parent)
       sub.sample = f
       Some(sub)
+    case Some(f) =>
+      Logging.addError("downsample_fraction must be a number between 0 and 1")
+      None
     case _ => None
   }
   var clip: Option[Cutadapt] =
@@ -113,7 +117,6 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
       case Some(subsample) =>
         subsample.input = input
         subsample.output = new File(output.getParentFile, input.getName + ".subsample.fq")
-        subsample.isIntermediate = true
         addPipeJob(subsample)
         seqtk.input = subsample.output
       case _ => seqtk.input = input
