@@ -43,7 +43,6 @@
         <module>biopet-core</module>
         <module>biopet-utils</module>
         <module>biopet-tools</module>
-        <module>biopet-tools-extensions</module>
         <module>biopet-extensions</module>
         <module>biopet-tools-package</module>
         <module>gwas-test</module>
