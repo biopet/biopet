@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileOutputStream, IOException}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, BiopetPipe}
@@ -65,7 +65,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
 
   @Test(dataProvider = "expMeasuresstrandProtocol")
   def testGentrap(strandProtocol: String) = {
-    val outputDir = Files.createTempDir()
+    val outputDir = GentrapTest.outputDir
     dirs :+= outputDir
     val settings = Map(
       "output_dir" -> outputDir,
@@ -78,8 +78,8 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
       callVariants.map("call_variants" -> _)
     val configs: List[Option[Map[String, Any]]] = List(
       Some(settings),
-      (if (sample1) Some(GentrapTest.sample1) else None),
-      (if (sample2) Some(GentrapTest.sample2) else None))
+      if (sample1) Some(GentrapTest.sample1) else None,
+      if (sample2) Some(GentrapTest.sample2) else None)
     val config =
       configs.flatten.foldLeft(GentrapTest.executables)((a, b) => ConfigUtils.mergeMaps(a, b))
     val gentrap: Gentrap = initPipeline(config)
@@ -165,7 +165,13 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.distinct.foreach(FileUtils.deleteDirectory)
+    dirs.filter(_.exists()).foreach { dir =>
+      try {
+        FileUtils.deleteDirectory(dir)
+      } catch {
+        case e: IOException if (e.getMessage.startsWith("Unable to delete directory")) =>
+      }
+    }
   }
 }
 
@@ -194,6 +200,7 @@ class GentrapCallVariantsTest extends GentrapTestAbstract(List("fragments_per_ge
 }
 
 object GentrapTest {
+  def outputDir = Files.createTempDir()
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {

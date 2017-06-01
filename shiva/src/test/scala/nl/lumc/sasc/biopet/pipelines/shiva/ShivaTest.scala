@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileOutputStream, IOException}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.gatk.{
@@ -76,7 +76,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
                 sample2: Boolean,
                 realign: Boolean,
                 baseRecalibration: Boolean): Unit = {
-    val outputDir = Files.createTempDir()
+    val outputDir = ShivaTest.outputDir
     dirs :+= outputDir
     val map = {
       var m: Map[String, Any] = ShivaTest.config(outputDir)
@@ -153,7 +153,13 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.distinct.foreach(FileUtils.deleteDirectory)
+    dirs.filter(_.exists()).foreach { dir =>
+      try {
+        FileUtils.deleteDirectory(dir)
+      } catch {
+        case e: IOException if (e.getMessage.startsWith("Unable to delete directory")) =>
+      }
+    }
   }
 }
 
@@ -205,6 +211,8 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 }
 
 object ShivaTest {
+  def outputDir = Files.createTempDir()
+
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {

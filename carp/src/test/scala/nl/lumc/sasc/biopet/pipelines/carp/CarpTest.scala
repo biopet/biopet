@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileOutputStream, IOException}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -60,7 +60,7 @@ class CarpTest extends TestNGSuite with Matchers {
                sample3: Boolean,
                threatment: Boolean,
                control: Boolean): Unit = {
-    val outputDir = Files.createTempDir()
+    val outputDir = CarpTest.outputDir
     dirs :+= outputDir
     val map = {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir), CarpTest.executables)
@@ -104,11 +104,18 @@ class CarpTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.distinct.foreach(FileUtils.deleteDirectory)
+    dirs.filter(_.exists()).foreach { dir =>
+      try {
+        FileUtils.deleteDirectory(dir)
+      } catch {
+        case e: IOException if (e.getMessage.startsWith("Unable to delete directory")) =>
+      }
+    }
   }
 }
 
 object CarpTest {
+  def outputDir = Files.createTempDir()
   val inputDir = Files.createTempDir()
 
   def inputTouch(name: String): String = {
