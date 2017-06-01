@@ -45,68 +45,62 @@ object GtfToRefflat extends ToolCommand {
 
     val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
 
-    logger.info("Readering gtf file")
-    val gtfLines = reader
+    logger.info("Reading gtf file")
+    val genes = reader
       .getLines()
       .filter(!_.startsWith("#"))
       .map(Feature.fromLine)
       .map { feature =>
-        referenceDict.foreach(
-          dict =>
-            require(dict.getSequence(feature.contig) != null,
-                    s"Contig '${feature.contig}' does not exist on reference"))
+        referenceDict.foreach(dict =>
+          require(dict.getSequence(feature.contig) != null,
+                  s"Contig '${feature.contig}' does not exist on reference"))
         featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
+
         feature
       }
-      .toArray
-    logger.info("Readering gtf file - Done")
-
-    val gtfGenes = gtfLines.flatMap(_.attributes.get("gene_id")).toList.distinct
-    logger.info(s"${gtfGenes.size} genes found")
-
-    val gtfContent = gtfLines.toList
+      .toList
       .groupBy(_.attributes.get("gene_id"))
-    logger.info("Readering gtf file - Done")
-
-    val genes = for ((geneId, gtfFeatures) <- gtfContent if geneId.isDefined) yield {
-      val gtfGene = gtfFeatures.find(_.feature == "gene").get
-      val gtfTranscripts = gtfFeatures.groupBy(_.attributes.get("transcript_id"))
-      val transcripts =
-        for ((transcriptId, features) <- gtfTranscripts if transcriptId.isDefined) yield {
-          val groupedFeatures = features.groupBy(_.feature)
-          val exons = groupedFeatures
-            .getOrElse("exon", Nil)
-            .sortBy(_.start)
-            .map(x => Exon(x.start, x.end))
-          val gtfTranscript = groupedFeatures("transcript").head
-          val cdsFeatures = groupedFeatures.get("CDS").map(_.flatMap(x => List(x.start, x.end)))
-          val startFeatures =
-            groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
-          val stopFeatures =
-            groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
-          val codingLocations = startFeatures
-            .getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
-            cdsFeatures.getOrElse(Nil))
-          val codingStart =
-            if (codingLocations.isEmpty) None
-            else Some(codingLocations.min - 1)
-          val codingEnd =
-            if (codingLocations.isEmpty) None
-            else Some(codingLocations.max)
-          Transcript(transcriptId.get,
-                     gtfTranscript.start,
-                     gtfTranscript.end,
-                     codingStart.getOrElse(gtfTranscript.end),
-                     codingEnd.getOrElse(gtfTranscript.end),
-                     exons)
-        }
-      Gene(geneId.get,
-           gtfGene.contig,
-           gtfGene.start,
-           gtfGene.end,
-           gtfGene.strand.getOrElse(true),
-           transcripts.toList)
-    }
+      .map {
+        case (geneId, gtfFeatures) =>
+          val gtfGene = gtfFeatures.find(_.feature == "gene").get
+          val gtfTranscripts = gtfFeatures.groupBy(_.attributes.get("transcript_id"))
+          val transcripts =
+            for ((transcriptId, features) <- gtfTranscripts if transcriptId.isDefined) yield {
+              val groupedFeatures = features.groupBy(_.feature)
+              val exons = groupedFeatures
+                .getOrElse("exon", Nil)
+                .sortBy(_.start)
+                .map(x => Exon(x.start, x.end))
+              val gtfTranscript = groupedFeatures("transcript").head
+              val cdsFeatures =
+                groupedFeatures.get("CDS").map(_.flatMap(x => List(x.start, x.end)))
+              val startFeatures =
+                groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
+              val stopFeatures =
+                groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
+              val codingLocations = startFeatures
+                .getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
+                cdsFeatures.getOrElse(Nil))
+              val codingStart =
+                if (codingLocations.isEmpty) None
+                else Some(codingLocations.min - 1)
+              val codingEnd =
+                if (codingLocations.isEmpty) None
+                else Some(codingLocations.max)
+              Transcript(transcriptId.get,
+                         gtfTranscript.start,
+                         gtfTranscript.end,
+                         codingStart.getOrElse(gtfTranscript.end),
+                         codingEnd.getOrElse(gtfTranscript.end),
+                         exons)
+            }
+          Gene(geneId.get,
+               gtfGene.contig,
+               gtfGene.start,
+               gtfGene.end,
+               gtfGene.strand.getOrElse(true),
+               transcripts.toList)
+      }
 
     featureBuffer.foreach { case (k, c) => logger.info(s"$k\t$c") }
 
