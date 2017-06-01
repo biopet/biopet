@@ -157,7 +157,8 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       try {
         FileUtils.deleteDirectory(dir)
       } catch {
-        case e: IOException if (e.getMessage.startsWith("Unable to delete directory")) =>
+        case e: IOException if e.getMessage.startsWith("Unable to delete directory") =>
+          Logging.logger.error(e.getMessage)
       }
     }
   }
