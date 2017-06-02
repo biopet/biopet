@@ -51,29 +51,29 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
-    val centrifugePage = (if (centrifugeExecuted) Some("Centrifuge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
+    val centrifugePage = if (centrifugeExecuted) Some("Centrifuge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
       Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
       "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_unique_report")
       )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-    else None)
+    else None
 
-    val krakenPage = (if (krakenExecuted) Some("Kraken analysis" -> Future.successful(ReportPage(List(), List(
+    val krakenPage = if (krakenExecuted) Some("Kraken analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       ))), Map())))
-    else None)
+    else None
 
-    val qiimeClosedPage = (if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
+    val qiimeClosedPage = if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       ))), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
-    else None)
+    else None
 
-    val qiimeOpenPage = (if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
+    val qiimeOpenPage = if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
-    else None)
+    else None
     Future {
       ReportPage(
         List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
