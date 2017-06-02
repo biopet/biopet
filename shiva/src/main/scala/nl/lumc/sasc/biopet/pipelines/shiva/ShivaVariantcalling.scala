@@ -84,10 +84,13 @@ class ShivaVariantcalling(val parent: Configurable)
   override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
 
   /** Final merged output files of all variantcaller modes */
-  def finalFile: Option[File] = if (callers.exists(_.mergeVcfResults)) Some(new File(outputDir, namePrefix + ".final.vcf.gz")) else None
+  def finalFile: Option[File] =
+    if (callers.exists(_.mergeVcfResults)) Some(new File(outputDir, namePrefix + ".final.vcf.gz"))
+    else None
 
   // TODO if there will be in the future more than one method for somatic variant calling then the outputs from those should be merged
-  def finalFileSomaticCallers: Option[File] = callers.collectFirst({case caller if caller.isInstanceOf[MuTect2] => caller.outputFile})
+  def finalFileSomaticCallers: Option[File] =
+    callers.collectFirst({ case caller if caller.isInstanceOf[MuTect2] => caller.outputFile })
 
   /** Variantcallers requested by the config */
   protected val configCallers: Set[String] = config("variantcallers")
@@ -112,8 +115,10 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    require(finalFile.isDefined || finalFileSomaticCallers.isDefined,
-            "Error in configuration, when not using somatic variant caller(s) then for at least one caller the parameter 'merge_vcf_results' must be set to true.")
+    require(
+      finalFile.isDefined || finalFileSomaticCallers.isDefined,
+      "Error in configuration, when not using somatic variant caller(s) then for at least one caller the parameter 'merge_vcf_results' must be set to true."
+    )
 
     addAll(
       dbsnpVcfFile

@@ -15,13 +15,11 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
   // and results from this won't be merged together with the results from other methods
   def defaultPrio = -1
 
-
   private var tnPairs: List[TumorNormalPair] = List()
 
   var ponFile: Option[File] = config("panel_of_normals")
 
   //private var buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
-
 
   override def init(): Unit = {
     loadTnPairsFromConfig()
@@ -33,15 +31,22 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
       case Some(x) => {
         try {
           for (elem <- ConfigUtils.any2list(x)) {
-            val pair: Map[String, Any] = ConfigUtils.any2map(elem).map({ case (key, sampleName) => key.toUpperCase() -> sampleName})
+            val pair: Map[String, Any] = ConfigUtils
+              .any2map(elem)
+              .map({ case (key, sampleName) => key.toUpperCase() -> sampleName })
 
             tnPairs :+= TumorNormalPair(pair("T").toString, pair("N").toString)
           }
         } catch {
-          case e: Exception => Logging.addError("Unable to parse the parameter 'tumor_normal_pairs' from configuration.", cause = e)
+          case e: Exception =>
+            Logging.addError(
+              "Unable to parse the parameter 'tumor_normal_pairs' from configuration.",
+              cause = e)
         }
       }
-      case _ => Logging.addError("Parameter 'tumor_normal_pairs' is missing from configuration. When using MuTect2, samples configuration must give the pairs of matching tumor and normal samples.")
+      case _ =>
+        Logging.addError(
+          "Parameter 'tumor_normal_pairs' is missing from configuration. When using MuTect2, samples configuration must give the pairs of matching tumor and normal samples.")
     }
   }
 
@@ -51,28 +56,38 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
     tnPairs.foreach(pair => tnSamples ++= List(pair.tumorSample, pair.normalSample))
     tnSamples.foreach(sample => {
       if (!samplesWithBams.contains(sample))
-        Logging.addError(s"Parameter 'tumor_normal_pairs' contains a sample for which no input files can be found, sample name: $sample")
+        Logging.addError(
+          s"Parameter 'tumor_normal_pairs' contains a sample for which no input files can be found, sample name: $sample")
     })
     if (tnSamples.size != tnSamples.distinct.size)
-      Logging.addError("Each sample should appear once in the sample pairs given with the parameter 'tumor_normal_pairs'")
+      Logging.addError(
+        "Each sample should appear once in the sample pairs given with the parameter 'tumor_normal_pairs'")
     if (tnSamples.size != samplesWithBams.size)
-      Logging.addError("The number of samples given with the parameter 'tumor_normal_pairs' has to match the number of samples for which there are input files defined.")
+      Logging.addError(
+        "The number of samples given with the parameter 'tumor_normal_pairs' has to match the number of samples for which there are input files defined.")
   }
 
   def biopetScript(): Unit = {
     val samplesDir: File = new File(outputDir, "samples")
     if (!samplesDir.exists()) samplesDir.mkdir()
 
-    var outputPerSample: List[File] = List()
-    for (pair <- tnPairs) {
-      val out: File = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
-      val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, out)
-      // TODO add also BQSR file?
-      outputPerSample :+= out
+    if (tnPairs.size == 1) {
+      val pair: TumorNormalPair = tnPairs.head
+      val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, outputFile)
       add(muTect2)
-    }
 
-    add(gatk.CombineVariants(this, outputPerSample, outputFile))
+    } else {
+      var outputPerSample: List[File] = List()
+      for (pair <- tnPairs) {
+        val out: File = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
+        val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, out)
+        // TODO add also BQSR file?
+        outputPerSample :+= out
+        add(muTect2)
+      }
+
+      add(gatk.CombineVariants(this, outputPerSample, outputFile))
+    }
   }
 
 }

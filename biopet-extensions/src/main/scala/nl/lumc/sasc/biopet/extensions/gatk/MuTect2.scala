@@ -151,10 +151,10 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "enable_clustered_read_position_filter", required = false)
   var enableClusteredReadPositionFilter: Option[Boolean] = config("enable_clustered_read_position_filter")
 
-  /*override def cmdLine = {
-    super.input_file =
-    super.cmdLine
-  }*/
+  override def cmdLine = super.cmdLine +
+    required("-I:tumor", tumorSampleBam) +
+    required("-I:normal", normalSampleBam) +
+    required("-o", outputVcf)
 }
 
 object MuTect2 {
