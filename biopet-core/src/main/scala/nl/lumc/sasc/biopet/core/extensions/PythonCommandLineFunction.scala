@@ -19,6 +19,7 @@ import java.io.{File, FileOutputStream}
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.utils.commandline.Input
+import scala.collection.mutable
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc = "Python script", required = false)
@@ -34,8 +35,9 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String) {
     pythonScript = new File(script).getAbsoluteFile
-    if (!pythonScript.exists()) {
+    if (!PythonCommandLineFunction.alreadyCopied.contains(script)) {
       setPythonScript(script, "")
+      PythonCommandLineFunction.alreadyCopied += script
     } else {
       pythonScriptName = script
     }
@@ -48,18 +50,26 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String, subpackage: String) {
     pythonScriptName = script
-    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile
-    if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
-    val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
-    if (is != null) {
-      val os = new FileOutputStream(pythonScript)
-      org.apache.commons.io.IOUtils.copy(is, os)
-      os.close()
-    } else Logging.addError(s"Python script not found: $pythonScriptName")
+    if (new File(script).isAbsolute && new File(script).exists()) {
+      pythonScript = new File(script)
+    } else {
+      pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName).getAbsoluteFile
+      if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
+      val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
+      if (is != null) {
+        val os = new FileOutputStream(pythonScript)
+        org.apache.commons.io.IOUtils.copy(is, os)
+        os.close()
+      } else Logging.addError(s"Python script not found: $pythonScriptName")
+    }
   }
 
   /** return basic command to prefix the complete command with */
   def getPythonCommand: String = {
     required(executable) + required(pythonScript)
   }
+}
+
+object PythonCommandLineFunction {
+  private val alreadyCopied: mutable.Set[String] = mutable.Set()
 }
