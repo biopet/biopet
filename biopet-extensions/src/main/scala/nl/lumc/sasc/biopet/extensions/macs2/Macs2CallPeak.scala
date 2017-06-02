@@ -49,7 +49,7 @@ class Macs2CallPeak(val parent: Configurable) extends Macs2 {
   var gsize: Option[Float] = config("gsize")
   var keepdup: Boolean = config("keep-dup", default = false)
   var buffersize: Option[Int] = config("buffer-size")
-  var outputdir: String = _
+  var outputdir: File = _
   var name: Option[String] = config("name")
   var bdg: Boolean = config("bdg", default = false)
   var verbose: Boolean = config("verbose", default = false)
@@ -76,12 +76,12 @@ class Macs2CallPeak(val parent: Configurable) extends Macs2 {
   override def beforeGraph(): Unit = {
     if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
     if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
-    outputNarrow = new File(outputdir + name.get + ".narrowPeak")
-    outputBroad = new File(outputdir + name.get + ".broadPeak")
-    outputXls = new File(outputdir + name.get + ".xls")
-    outputBdg = new File(outputdir + name.get + ".bdg")
-    outputR = new File(outputdir + name.get + ".r")
-    outputGapped = new File(outputdir + name.get + ".gappedPeak")
+    outputNarrow = new File(outputdir, name.get + ".narrowPeak")
+    outputBroad = new File(outputdir, name.get + ".broadPeak")
+    outputXls = new File(outputdir, name.get + ".xls")
+    outputBdg = new File(outputdir, name.get + ".bdg")
+    outputR = new File(outputdir, name.get + ".r")
+    outputGapped = new File(outputdir, name.get + ".gappedPeak")
   }
 
   /** Returns command to execute */
