@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileOutputStream, IOException}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.gatk.{
@@ -153,7 +153,14 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    dirs.foreach(FileUtils.deleteDirectory)
+    dirs.filter(_.exists()).foreach { dir =>
+      try {
+        FileUtils.deleteDirectory(dir)
+      } catch {
+        case e: IOException if e.getMessage.startsWith("Unable to delete directory") =>
+          Logging.logger.error(e.getMessage)
+      }
+    }
   }
 }
 
