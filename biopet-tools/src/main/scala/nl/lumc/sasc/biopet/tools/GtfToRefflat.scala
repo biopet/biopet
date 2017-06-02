@@ -43,6 +43,90 @@ object GtfToRefflat extends ToolCommand {
 
     val featureBuffer: mutable.Map[String, Int] = mutable.Map()
 
+    val genesBuffer: mutable.Map[String, Gene] = mutable.Map()
+    val transcriptsBuffer: mutable.Map[String, List[Transcript]] = mutable.Map()
+    val exonBuffer: mutable.Map[(String, String), List[Exon]] = mutable.Map()
+
+    val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
+
+    logger.info("Reading gtf file")
+    reader
+      .getLines()
+      .filter(!_.startsWith("#"))
+      .foreach { line =>
+        val feature = Feature.fromLine(line)
+        referenceDict.foreach(dict =>
+          require(dict.getSequence(feature.contig) != null,
+            s"Contig '${feature.contig}' does not exist on reference"))
+        featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
+        lazy val geneId = feature.attributes("gene_id")
+        lazy val transcriptId = feature.attributes("transcript_id")
+        feature.feature match {
+          case "gene" =>
+            genesBuffer += geneId -> Gene(geneId, feature.contig, feature.minPosition, feature.maxPosition,
+              feature.strand.get, transcriptsBuffer.remove(geneId).getOrElse(Nil))
+          case "transcript" =>
+            val transcript = Transcript(transcriptId, feature.minPosition, feature.maxPosition,
+              None, None, exonBuffer.remove(geneId, transcriptId).getOrElse(Nil))
+            if (genesBuffer.contains(geneId)) {
+              val oldGene = genesBuffer(geneId)
+              genesBuffer(geneId) = oldGene.copy(transcripts = transcript :: oldGene.transcripts)
+            } else transcriptsBuffer(geneId) = transcript :: transcriptsBuffer.getOrElse(geneId, Nil)
+          case "exon" =>
+            val exon = Exon(feature.minPosition, feature.maxPosition)
+            genesBuffer.get(geneId).flatMap(_.transcripts.find(_.name == transcriptId)) match {
+              case Some(transcriptOld) =>
+                val geneOld = genesBuffer(geneId)
+                genesBuffer(geneId) = geneOld.copy(transcripts = transcriptOld.copy(exons = exon :: transcriptOld.exons) :: geneOld.transcripts.filter(_.name != transcriptOld.name))
+              case _ =>
+                transcriptsBuffer.get(geneId).flatMap(_.find(_.name == transcriptId)) match {
+                  case Some(transcriptOld) =>
+                    transcriptsBuffer(geneId) = transcriptOld.copy(exons = exon :: transcriptOld.exons) ::
+                      transcriptsBuffer(geneId).filter(_.name != transcriptId)
+                  case _ => exonBuffer((geneId, transcriptId)) = exon :: exonBuffer.getOrElse((geneId, transcriptId), Nil)
+                }
+            }
+          case "stop_codon" =>
+          case "start_codon" =>
+          case "CDS" =>
+          case _ =>
+        }
+      }
+
+    featureBuffer.foreach { case (k, c) => logger.info(s"$k\t$c") }
+
+    val writer = new PrintWriter(refflatFile)
+
+    for {
+      gene <- genesBuffer.values
+      transcript <- gene.transcripts
+    } {
+      val exons = transcript.exons.sortBy(_.start)
+      val values = List(
+        gene.name,
+        transcript.name,
+        gene.contig,
+        if (gene.strand) "+" else "-",
+        (transcript.transcriptionStart - 1).toString, //TODO: check if this is correct
+        transcript.transcriptionEnd.toString,
+        transcript.codingStart.getOrElse(transcript.transcriptionEnd).toString, //TODO: check if this is correct
+        transcript.codingEnd.getOrElse(transcript.transcriptionEnd).toString, //TODO: check if this is correct
+        transcript.exons.length.toString,
+        exons.map(_.start - 1).mkString("", ",", ","), //TODO: check if this is correct
+        exons.map(_.end).mkString("", ",", ",")
+      )
+      writer.println(values.mkString("\t"))
+    }
+
+    writer.close()
+  }
+
+
+  def gtfToRefflat_old(gtfFile: File, refflatFile: File, referenceFasta: Option[File] = None): Unit = {
+    val reader = Source.fromFile(gtfFile)
+
+    val featureBuffer: mutable.Map[String, Int] = mutable.Map()
+
     val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
 
     val genesFeatures: mutable.Map[Option[String], List[Feature]] = mutable.Map()
@@ -90,8 +174,8 @@ object GtfToRefflat extends ToolCommand {
               Transcript(transcriptId.get,
                          gtfTranscript.start,
                          gtfTranscript.end,
-                         codingStart.getOrElse(gtfTranscript.end),
-                         codingEnd.getOrElse(gtfTranscript.end),
+                         Some(codingStart.getOrElse(gtfTranscript.end)),
+                         Some(codingEnd.getOrElse(gtfTranscript.end)),
                          exons)
             }
           Gene(geneId.get,

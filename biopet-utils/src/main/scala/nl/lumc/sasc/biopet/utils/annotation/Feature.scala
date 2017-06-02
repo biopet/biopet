@@ -52,6 +52,8 @@ case class Feature(contig: String,
       attributes.map(x => x._1 + s"=${x._2}").mkString(";")
     ).mkString("\t")
 
+  def minPosition = if (start < end) start else end
+  def maxPosition = if (start > end) start else end
 }
 
 object Feature {
