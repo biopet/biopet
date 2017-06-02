@@ -1,9 +1,11 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
+import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
 import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.Variantcaller
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, IoUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 class MuTect2(val parent: Configurable) extends Variantcaller {
 
@@ -71,23 +73,39 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
     val samplesDir: File = new File(outputDir, "samples")
     if (!samplesDir.exists()) samplesDir.mkdir()
 
+    var renameSamples: List[String] = List()
+    var intermResult: File = null
+
     if (tnPairs.size == 1) {
-      val pair: TumorNormalPair = tnPairs.head
-      val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, outputFile)
-      add(muTect2)
+      val pair = tnPairs.head
+      renameSamples = List(s"TUMOR ${pair.tumorSample}", s"NORMAL ${pair.normalSample}")
+      intermResult = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
+      addMuTect2(pair, intermResult)
 
     } else {
-      var outputPerSample: List[File] = List()
+      var outputPerSample: List[TaggedFile] = List()
       for (pair <- tnPairs) {
-        val out: File = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
-        val muTect2 = gatk.MuTect2(this, pair.tumorSample, pair.normalSample, out)
-        // TODO add also BQSR file?
-        outputPerSample :+= out
-        add(muTect2)
+        val pairLabel = s"${pair.tumorSample}-${pair.normalSample}"
+        val out: File = new File(samplesDir, s"$pairLabel.$name.vcf")
+        renameSamples ++= List(s"TUMOR.$pairLabel ${pair.tumorSample}", s"NORMAL.$pairLabel ${pair.normalSample}")
+        outputPerSample :+= TaggedFile(out, pairLabel)
+        addMuTect2(pair, out)
       }
 
-      add(gatk.CombineVariants(this, outputPerSample, outputFile))
+      intermResult = new File(outputFile.getAbsolutePath + ".tmp")
+
+      val combineVariants = gatk.CombineVariants(this, outputPerSample, intermResult)
+      combineVariants.genotypemergeoption = Some("UNIQUIFY")
+      add(combineVariants)
     }
+
+    add(BcftoolsReheader(this, intermResult, IoUtils.writeLinesToFile(renameSamples), outputFile))
+  }
+
+  def addMuTect2(pair: TumorNormalPair, outFile: File): Unit = {
+    val muTect2 = gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
+    // TODO add also BQSR file?
+    add(muTect2)
   }
 
 }
