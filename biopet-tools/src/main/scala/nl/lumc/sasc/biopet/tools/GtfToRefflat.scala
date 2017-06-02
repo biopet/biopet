@@ -45,22 +45,22 @@ object GtfToRefflat extends ToolCommand {
 
     val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
 
+    val genesFeatures: mutable.Map[Option[String], List[Feature]] = mutable.Map()
     logger.info("Reading gtf file")
-    val genes = reader
+    reader
       .getLines()
       .filter(!_.startsWith("#"))
-      .map(Feature.fromLine)
-      .map { feature =>
+      .foreach { line =>
+        val feature = Feature.fromLine(line)
         referenceDict.foreach(dict =>
           require(dict.getSequence(feature.contig) != null,
                   s"Contig '${feature.contig}' does not exist on reference"))
         featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
-
-        feature
+        val geneId = feature.attributes.get("gene_id")
+        genesFeatures(geneId) = feature :: genesFeatures.getOrElse(geneId, Nil)
       }
-      .toList
-      .groupBy(_.attributes.get("gene_id"))
-      .map {
+
+      val genes = genesFeatures.map {
         case (geneId, gtfFeatures) =>
           val gtfGene = gtfFeatures.find(_.feature == "gene").get
           val gtfTranscripts = gtfFeatures.groupBy(_.attributes.get("transcript_id"))
