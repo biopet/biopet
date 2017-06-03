@@ -46,8 +46,57 @@ object GtfToRefflat extends ToolCommand {
     val genesBuffer: mutable.Map[String, Gene] = mutable.Map()
     val transcriptsBuffer: mutable.Map[String, List[Transcript]] = mutable.Map()
     val exonBuffer: mutable.Map[(String, String), List[Exon]] = mutable.Map()
+    val codingBuffer: mutable.Map[(String, String), (Option[Int], Option[Int])] = mutable.Map()
 
     val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
+
+    def updateCodingRegion(geneId: String,
+                           transcriptId: String,
+                           start: Option[Int] = None,
+                           end: Option[Int] = None): Unit = {
+      genesBuffer.get(geneId).flatMap(_.transcripts.find(_.name == transcriptId)) match {
+        case Some(transcriptOld) =>
+          val geneOld = genesBuffer(geneId)
+          genesBuffer(geneId) = geneOld.copy(transcripts = updateTranscriptCodingRegion(
+            transcriptOld,
+            start,
+            end) :: geneOld.transcripts.filter(_.name != transcriptOld.name))
+        case _ =>
+          transcriptsBuffer.get(geneId).flatMap(_.find(_.name == transcriptId)) match {
+            case Some(transcriptOld) =>
+              transcriptsBuffer(geneId) = updateTranscriptCodingRegion(transcriptOld, start, end) ::
+                transcriptsBuffer(geneId).filter(_.name != transcriptId)
+            case _ =>
+              val old = codingBuffer.getOrElse((geneId, transcriptId), (None, None))
+              codingBuffer((geneId, transcriptId)) =
+                (start.map(Some(_)).getOrElse(old._1), end.map(Some(_)).getOrElse(old._2))
+          }
+      }
+    }
+
+    def updateTranscriptCodingRegion(transcript: Transcript,
+                                     start: Option[Int] = None,
+                                     end: Option[Int] = None): Transcript = {
+      val newStart: Option[Int] = start match {
+        case Some(x) =>
+          transcript.codingStart match {
+            case Some(y) if y < x => Some(y)
+            case _ => Some(x)
+          }
+        case _ => transcript.codingStart
+      }
+
+      val newEnd: Option[Int] = end match {
+        case Some(x) =>
+          transcript.codingEnd match {
+            case Some(y) if y > x => Some(y)
+            case _ => Some(x)
+          }
+        case _ => transcript.codingEnd
+      }
+
+      transcript.copy(codingStart = newStart, codingEnd = newEnd)
+    }
 
     logger.info("Reading gtf file")
     reader
@@ -55,40 +104,67 @@ object GtfToRefflat extends ToolCommand {
       .filter(!_.startsWith("#"))
       .foreach { line =>
         val feature = Feature.fromLine(line)
-        referenceDict.foreach(dict =>
-          require(dict.getSequence(feature.contig) != null,
-            s"Contig '${feature.contig}' does not exist on reference"))
+        referenceDict.foreach(
+          dict =>
+            require(dict.getSequence(feature.contig) != null,
+                    s"Contig '${feature.contig}' does not exist on reference"))
         featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
         lazy val geneId = feature.attributes("gene_id")
         lazy val transcriptId = feature.attributes("transcript_id")
         feature.feature match {
           case "gene" =>
-            genesBuffer += geneId -> Gene(geneId, feature.contig, feature.minPosition, feature.maxPosition,
-              feature.strand.get, transcriptsBuffer.remove(geneId).getOrElse(Nil))
+            genesBuffer += geneId -> Gene(geneId,
+                                          feature.contig,
+                                          feature.minPosition,
+                                          feature.maxPosition,
+                                          feature.strand.get,
+                                          transcriptsBuffer.remove(geneId).getOrElse(Nil))
           case "transcript" =>
-            val transcript = Transcript(transcriptId, feature.minPosition, feature.maxPosition,
-              None, None, exonBuffer.remove(geneId, transcriptId).getOrElse(Nil))
+            val coding = codingBuffer.remove((geneId, transcriptId)).getOrElse((None, None))
+            val transcript = Transcript(transcriptId,
+                                        feature.minPosition,
+                                        feature.maxPosition,
+                                        coding._1,
+                                        coding._2,
+                                        exonBuffer.remove(geneId, transcriptId).getOrElse(Nil))
             if (genesBuffer.contains(geneId)) {
               val oldGene = genesBuffer(geneId)
               genesBuffer(geneId) = oldGene.copy(transcripts = transcript :: oldGene.transcripts)
-            } else transcriptsBuffer(geneId) = transcript :: transcriptsBuffer.getOrElse(geneId, Nil)
+            } else
+              transcriptsBuffer(geneId) = transcript :: transcriptsBuffer.getOrElse(geneId, Nil)
           case "exon" =>
             val exon = Exon(feature.minPosition, feature.maxPosition)
             genesBuffer.get(geneId).flatMap(_.transcripts.find(_.name == transcriptId)) match {
               case Some(transcriptOld) =>
                 val geneOld = genesBuffer(geneId)
-                genesBuffer(geneId) = geneOld.copy(transcripts = transcriptOld.copy(exons = exon :: transcriptOld.exons) :: geneOld.transcripts.filter(_.name != transcriptOld.name))
+                genesBuffer(geneId) = geneOld.copy(
+                  transcripts = transcriptOld
+                    .copy(exons = exon :: transcriptOld.exons) :: geneOld.transcripts.filter(
+                    _.name != transcriptOld.name))
               case _ =>
                 transcriptsBuffer.get(geneId).flatMap(_.find(_.name == transcriptId)) match {
                   case Some(transcriptOld) =>
-                    transcriptsBuffer(geneId) = transcriptOld.copy(exons = exon :: transcriptOld.exons) ::
+                    transcriptsBuffer(geneId) = transcriptOld.copy(
+                      exons = exon :: transcriptOld.exons) ::
                       transcriptsBuffer(geneId).filter(_.name != transcriptId)
-                  case _ => exonBuffer((geneId, transcriptId)) = exon :: exonBuffer.getOrElse((geneId, transcriptId), Nil)
+                  case _ =>
+                    exonBuffer((geneId, transcriptId)) = exon :: exonBuffer.getOrElse(
+                      (geneId, transcriptId),
+                      Nil)
                 }
             }
+          case "stop_codon" if !feature.strand.contains(false) =>
+            updateCodingRegion(geneId, transcriptId, end = Some(feature.end))
           case "stop_codon" =>
-          case "start_codon" =>
+            updateCodingRegion(geneId, transcriptId, start = Some(feature.start - 1))
+          case "start_codon" if !feature.strand.contains(false) =>
+            updateCodingRegion(geneId, transcriptId, start = Some(feature.start - 1))
+          case "start_codon" => updateCodingRegion(geneId, transcriptId, end = Some(feature.end))
           case "CDS" =>
+            updateCodingRegion(geneId,
+                               transcriptId,
+                               start = Some(feature.start - 1),
+                               end = Some(feature.end))
           case _ =>
         }
       }
@@ -109,8 +185,12 @@ object GtfToRefflat extends ToolCommand {
         if (gene.strand) "+" else "-",
         (transcript.transcriptionStart - 1).toString, //TODO: check if this is correct
         transcript.transcriptionEnd.toString,
-        transcript.codingStart.getOrElse(transcript.transcriptionEnd).toString, //TODO: check if this is correct
-        transcript.codingEnd.getOrElse(transcript.transcriptionEnd).toString, //TODO: check if this is correct
+        transcript.codingStart
+          .getOrElse(transcript.transcriptionEnd)
+          .toString, //TODO: check if this is correct
+        transcript.codingEnd
+          .getOrElse(transcript.transcriptionEnd)
+          .toString, //TODO: check if this is correct
         transcript.exons.length.toString,
         exons.map(_.start - 1).mkString("", ",", ","), //TODO: check if this is correct
         exons.map(_.end).mkString("", ",", ",")
@@ -120,98 +200,4 @@ object GtfToRefflat extends ToolCommand {
 
     writer.close()
   }
-
-
-  def gtfToRefflat_old(gtfFile: File, refflatFile: File, referenceFasta: Option[File] = None): Unit = {
-    val reader = Source.fromFile(gtfFile)
-
-    val featureBuffer: mutable.Map[String, Int] = mutable.Map()
-
-    val referenceDict = referenceFasta.map(file => FastaUtils.getCachedDict(file))
-
-    val genesFeatures: mutable.Map[Option[String], List[Feature]] = mutable.Map()
-    logger.info("Reading gtf file")
-    reader
-      .getLines()
-      .filter(!_.startsWith("#"))
-      .foreach { line =>
-        val feature = Feature.fromLine(line)
-        referenceDict.foreach(dict =>
-          require(dict.getSequence(feature.contig) != null,
-                  s"Contig '${feature.contig}' does not exist on reference"))
-        featureBuffer += feature.feature -> (featureBuffer.getOrElse(feature.feature, 0) + 1)
-        val geneId = feature.attributes.get("gene_id")
-        genesFeatures(geneId) = feature :: genesFeatures.getOrElse(geneId, Nil)
-      }
-
-      val genes = genesFeatures.map {
-        case (geneId, gtfFeatures) =>
-          val gtfGene = gtfFeatures.find(_.feature == "gene").get
-          val gtfTranscripts = gtfFeatures.groupBy(_.attributes.get("transcript_id"))
-          val transcripts =
-            for ((transcriptId, features) <- gtfTranscripts if transcriptId.isDefined) yield {
-              val groupedFeatures = features.groupBy(_.feature)
-              val exons = groupedFeatures
-                .getOrElse("exon", Nil)
-                .sortBy(_.start)
-                .map(x => Exon(x.start, x.end))
-              val gtfTranscript = groupedFeatures("transcript").head
-              val cdsFeatures =
-                groupedFeatures.get("CDS").map(_.flatMap(x => List(x.start, x.end)))
-              val startFeatures =
-                groupedFeatures.get("start_codon").map(_.flatMap(x => List(x.start, x.end)))
-              val stopFeatures =
-                groupedFeatures.get("stop_codon").map(_.flatMap(x => List(x.start, x.end)))
-              val codingLocations = startFeatures
-                .getOrElse(cdsFeatures.getOrElse(Nil)) ::: stopFeatures.getOrElse(
-                cdsFeatures.getOrElse(Nil))
-              val codingStart =
-                if (codingLocations.isEmpty) None
-                else Some(codingLocations.min - 1)
-              val codingEnd =
-                if (codingLocations.isEmpty) None
-                else Some(codingLocations.max)
-              Transcript(transcriptId.get,
-                         gtfTranscript.start,
-                         gtfTranscript.end,
-                         Some(codingStart.getOrElse(gtfTranscript.end)),
-                         Some(codingEnd.getOrElse(gtfTranscript.end)),
-                         exons)
-            }
-          Gene(geneId.get,
-               gtfGene.contig,
-               gtfGene.start,
-               gtfGene.end,
-               gtfGene.strand.getOrElse(true),
-               transcripts.toList)
-      }
-
-    featureBuffer.foreach { case (k, c) => logger.info(s"$k\t$c") }
-
-    val writer = new PrintWriter(refflatFile)
-
-    for {
-      gene <- genes
-      transcript <- gene.transcripts
-    } {
-      val exons = transcript.exons.sortBy(_.start)
-      val values = List(
-        gene.name,
-        transcript.name,
-        gene.contig,
-        if (gene.strand) "+" else "-",
-        (transcript.transcriptionStart - 1).toString, //TODO: check if this is correct
-        transcript.transcriptionEnd.toString,
-        transcript.codingStart.toString, //TODO: check if this is correct
-        transcript.codingEnd.toString, //TODO: check if this is correct
-        transcript.exons.length.toString,
-        exons.map(_.start - 1).mkString("", ",", ","), //TODO: check if this is correct
-        exons.map(_.end).mkString("", ",", ",")
-      )
-      writer.println(values.mkString("\t"))
-    }
-
-    writer.close()
-  }
-
 }
