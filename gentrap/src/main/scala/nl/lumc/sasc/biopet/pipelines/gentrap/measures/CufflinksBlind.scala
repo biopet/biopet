@@ -24,4 +24,6 @@ import org.broadinstitute.gatk.queue.QScript
 class CufflinksBlind(val parent: Configurable)
     extends QScript
     with CufflinksMeasurement
-    with AnnotationGtf {}
+    with AnnotationGtf {
+  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_blind_gtf" -> annotationGtf)
+}

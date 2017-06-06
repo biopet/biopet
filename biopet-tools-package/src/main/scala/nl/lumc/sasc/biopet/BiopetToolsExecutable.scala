@@ -49,6 +49,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
       nl.lumc.sasc.biopet.tools.SummaryToTsv,
       nl.lumc.sasc.biopet.tools.ValidateFastq,
       nl.lumc.sasc.biopet.tools.ValidateVcf,
+      nl.lumc.sasc.biopet.tools.ValidateAnnotation,
       nl.lumc.sasc.biopet.tools.VcfFilter,
       nl.lumc.sasc.biopet.tools.vcfstats.VcfStats,
       nl.lumc.sasc.biopet.tools.VcfToTsv,
