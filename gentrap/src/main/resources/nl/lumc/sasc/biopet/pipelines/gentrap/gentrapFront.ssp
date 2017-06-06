@@ -12,8 +12,11 @@
 <%@ var pipeline: String %>
 #{
     val annotationRefflat = Await.result(summary.getFile(run.id, pipeline, key = "annotation_refflat"), Duration.Inf)
-    val annotationGtf = Await.result(summary.getFile(run.id, "fragmentspergene", key = "annotation_gtf"), Duration.Inf)
+    val fragmentsPerGeneGtf = Await.result(summary.getFile(run.id, "fragmentspergene", key = "annotation_gtf"), Duration.Inf)
     val ribosomalRefflat = Await.result(summary.getFile(run.id, pipeline, key = "ribosome_refflat"), Duration.Inf)
+    val cufflinksBlindGtf = Await.result(summary.getFile(run.id, "cufflinksblind", key= "cufflinks_blind_gtf"), Duration.Inf)
+    val cufflinksGuidedGtf = Await.result(summary.getFile(run.id, "cufflinksguided", key= "cufflinks_guided_gtf"), Duration.Inf)
+    val cufflinksStrictGtf = Await.result(summary.getFile(run.id, "cufflinksstrict", key= "cufflinks_strict_gtf"), Duration.Inf)
 }#
 <table class="table">
 <tbody>
@@ -23,8 +26,11 @@
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
     <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
     <tr><th>Annotation refflat</th><td>${annotationRefflat.map(_.path)}</td></tr>
-    <tr><th>Annotation GTF</th><td>${annotationGtf.map(_.path).getOrElse("Not available")}</td></tr>
     <tr><th>Annotation ribosomal refflat</th><td>${ribosomalRefflat.map(_.path).getOrElse("Not available")}</td></tr>
+    <tr><th>Fragments per gene Annotation GTF</th><td>${fragmentsPerGeneGtf.map(_.path).getOrElse("Not available")}</td></tr>
+    <tr><th>Cufflinks Blind Annotation GTF</th><td>${cufflinksBlindGtf.map(_.path).getOrElse("Not available")}</td></tr>
+    <tr><th>Cufflinks Guided Annotation GTF</th><td>${cufflinksGuidedGtf.map(_.path).getOrElse("Not available")}</td></tr>
+    <tr><th>Cufflinks Strict Annotation GTF</th><td>${cufflinksStrictGtf.map(_.path).getOrElse("Not available")}</td></tr>
     </tbody>
 </table>
 <br/>

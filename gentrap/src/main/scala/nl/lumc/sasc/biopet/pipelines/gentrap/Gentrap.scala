@@ -148,6 +148,7 @@ class Gentrap(val parent: Configurable)
 
     val check = new CheckValidateAnnotation(this)
     check.inputLogFile = validate.jobOutputFile
+    check.jobOutputFile = new File(outputDir, ".check.validate.out")
     add(check)
 
     super.biopetScript()
