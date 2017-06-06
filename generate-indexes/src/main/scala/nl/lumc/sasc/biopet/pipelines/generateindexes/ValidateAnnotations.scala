@@ -86,6 +86,7 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
           validateGtf.gtfFile = List(gtfFile)
           validateGtf.refflatFile = Some(refflatFile)
           validateGtf.reference = referenceFile
+          validateGtf.disableFail = true
           validateGtf.jobOutputFile =
             new File(outputDir, s"$species-$genomeName.$source.gtf.ValidateAnnotation.out")
           add(validateGtf)
@@ -100,6 +101,7 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
             val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
             validateGff3.gtfFile = List(gff3File)
             validateGff3.reference = referenceFile
+            validateGff3.disableFail = true
             validateGff3.jobOutputFile =
               new File(outputDir, s"$species-$genomeName.$source.gff3.ValidateAnnotation.out")
             add(validateGff3)
