@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix, gatk}
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
-import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.Variantcaller
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, IoUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -87,7 +87,8 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
       for (pair <- tnPairs) {
         val pairLabel = s"${pair.tumorSample}-${pair.normalSample}"
         val out: File = new File(samplesDir, s"$pairLabel.$name.vcf")
-        renameSamples ++= List(s"TUMOR.$pairLabel ${pair.tumorSample}", s"NORMAL.$pairLabel ${pair.normalSample}")
+        renameSamples ++= List(s"TUMOR.$pairLabel ${pair.tumorSample}",
+                               s"NORMAL.$pairLabel ${pair.normalSample}")
         outputPerSample :+= TaggedFile(out, pairLabel)
         addMuTect2(pair, out)
       }
@@ -99,11 +100,15 @@ class MuTect2(val parent: Configurable) extends Variantcaller {
       add(combineVariants)
     }
 
-    add(BcftoolsReheader(this, intermResult, IoUtils.writeLinesToFile(renameSamples), outputFile))
+    add(BcftoolsReheader(this, intermResult, IoUtils.writeLinesToFile(renameSamples)) | new Bgzip(this) > outputFile)
+
+    add(Tabix(this, outputFile))
+
   }
 
   def addMuTect2(pair: TumorNormalPair, outFile: File): Unit = {
-    val muTect2 = gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
+    val muTect2 =
+      gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
     // TODO add also BQSR file?
     add(muTect2)
   }

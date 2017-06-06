@@ -27,22 +27,22 @@ class BcftoolsReheader(val parent: Configurable) extends Bcftools {
   @Input(doc = "File specifying how sample names should be renamed", required = true)
   var renameSamples: File = _
 
-  @Output(doc = "Output vcf file", required = true)
+  @Output(doc = "Output vcf file", required = false)
   var output: File = _
 
-  def cmdLine = required(executable) +
+  def cmdLine =
+    required(executable) +
       required("reheader") +
-      required("--samples", renameSamples)
-      required("--output", output)
+      required("--samples", renameSamples) +
+      optional("--output", output) +
       required(input)
 }
 
 object BcftoolsReheader {
-  def apply(parent: Configurable, input: File, renameSamples: File, output: File): BcftoolsReheader = {
+  def apply(parent: Configurable, input: File, renameSamples: File): BcftoolsReheader = {
     val reheader = new BcftoolsReheader(parent)
     reheader.input = input
     reheader.renameSamples = renameSamples
-    reheader.output = output
     reheader
   }
 }

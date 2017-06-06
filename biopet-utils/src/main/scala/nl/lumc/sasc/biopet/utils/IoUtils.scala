@@ -86,7 +86,7 @@ object IoUtils {
   }
 
   def writeLinesToFile(lines: List[String]): File = {
-    val file = File.createTempFile("", "")
+    val file = File.createTempFile("tmp", ".tmp")
     val writer = new PrintWriter(file)
     lines.foreach(writer.println(_))
     writer.close()
