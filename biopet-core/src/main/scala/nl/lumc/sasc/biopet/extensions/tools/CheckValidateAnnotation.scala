@@ -12,10 +12,11 @@
   * license; For commercial users or users who do not want to follow the AGPL
   * license, please contact us to obtain a separate license.
   */
-package nl.lumc.sasc.biopet.pipelines.shiva
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -26,9 +27,13 @@ import scala.io.Source
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckValidateVcf extends InProcessFunction {
+class CheckValidateAnnotation(val parent: Configurable)
+    extends InProcessFunction
+    with Configurable {
   @Input(required = true)
   var inputLogFile: File = _
+
+  val abortOnError: Boolean = config("abort_on_error", default = true)
 
   /** Exits whenever the input md5sum is not the same as the output md5sum */
   def run: Unit = {
@@ -36,10 +41,16 @@ class CheckValidateVcf extends InProcessFunction {
     val reader = Source.fromFile(inputLogFile)
     reader.getLines().foreach { line =>
       if (line.startsWith("ERROR")) {
-        logger.error("Corrupt vcf file found, aborting pipeline")
 
         // 130 Simulates a ctr-C
-        Runtime.getRuntime.halt(130)
+        if (abortOnError) {
+          logger.error("Corrupt annotations files found, aborting pipeline")
+          Runtime.getRuntime.halt(130)
+        } else {
+          logger.warn("Corrupt annotations files found")
+          logger.warn(
+            "**** You enabled a unsafe method by letting the pipeline continue with incorrect annotations files ****")
+        }
       }
     }
     reader.close()

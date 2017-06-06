@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.extensions.CheckValidateVcf
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
@@ -353,7 +354,7 @@ object Shiva extends PipelineCommand {
       validateVcf.reference = referenceFile
       validateVcf.jobOutputFile = new File(outputDir, vcfFile.getAbsolutePath + ".validateVcf.out")
 
-      val checkValidateVcf = new CheckValidateVcf
+      val checkValidateVcf = new CheckValidateVcf(root)
       checkValidateVcf.inputLogFile = validateVcf.jobOutputFile
       checkValidateVcf.jobOutputFile =
         new File(outputDir, vcfFile.getAbsolutePath + ".checkValidateVcf.out")
