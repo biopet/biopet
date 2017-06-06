@@ -64,11 +64,11 @@ object ValidateAnnotation extends ToolCommand {
       }
 
       cmdArgs.gtfFiles.distinct.foreach { file =>
-        val tempRefflat = File.createTempFile("temp.", ".refflat")
-        tempRefflat.deleteOnExit()
-        GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))
-
         refflatLines.foreach { lines =>
+          val tempRefflat = File.createTempFile("temp.", ".refflat")
+          tempRefflat.deleteOnExit()
+          GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))
+
           val tempRefflatLines = Source.fromFile(tempRefflat).getLines().toList.sorted
           for ((line1, line2) <- lines.zip(tempRefflatLines)) {
             require(line1 == line2, "Refflat and gtf contain different information")
