@@ -27,9 +27,13 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    val genomes: Map[String, List[String]] = speciesDir.list().filter(!_.startsWith(".")).map { species =>
-      species -> new File(speciesDir, species).list().filter(!_.startsWith(".")).toList
-    }.toMap
+    val genomes: Map[String, List[String]] = speciesDir
+      .list()
+      .filter(!_.startsWith("."))
+      .map { species =>
+        species -> new File(speciesDir, species).list().filter(!_.startsWith(".")).toList
+      }
+      .toMap
 
     for ((species, g) <- genomes; genome <- g) validateGenome(species, genome)
   }
@@ -49,12 +53,14 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
         vv.reference = referenceFile
         vv.inputVcf = new File(dbsnpDir, vcfFile)
         vv.disableFail = true
-        vv.jobOutputFile = new File(outputDir, s"$species-$genomeName.${vcfFile.getName}.ValidateVcf.out")
+        vv.jobOutputFile =
+          new File(outputDir, s"$species-$genomeName.${vcfFile.getName}.ValidateVcf.out")
         add(vv)
 
         val cvv = new CheckValidateVcf(this)
         cvv.inputLogFile = vv.jobOutputFile
-        cvv.jobOutputFile = new File(outputDir, s"$species-$genomeName.${vcfFile.getName}.CheckValidateVcf.out")
+        cvv.jobOutputFile =
+          new File(outputDir, s"$species-$genomeName.${vcfFile.getName}.CheckValidateVcf.out")
         add(cvv)
       }
     } else logger.warn(s"Genome '$species-$genomeName is missing dbsnp files'")
@@ -64,7 +70,8 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
     if (featuresDir.exists()) {
       for (source <- featuresDir.list().filter(!_.startsWith("."))) {
         val sourceDir = new File(featuresDir, source)
-        val prefixes = sourceDir.list()
+        val prefixes = sourceDir
+          .list()
           .filter(x => x.endsWith(".gtf") || x.endsWith(".gff3") || x.endsWith(".refflat"))
           .map(_.stripSuffix(".gtf"))
           .map(_.stripSuffix(".gff3"))
@@ -79,24 +86,28 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
           validateGtf.gtfFile = List(gtfFile)
           validateGtf.refflatFile = Some(refflatFile)
           validateGtf.reference = referenceFile
-          validateGtf.jobOutputFile = new File(outputDir, s"$species-$genomeName.$source.gtf.ValidateAnnotation.out")
+          validateGtf.jobOutputFile =
+            new File(outputDir, s"$species-$genomeName.$source.gtf.ValidateAnnotation.out")
           add(validateGtf)
 
           val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
           ca.inputLogFile = validateGtf.jobOutputFile
-          ca.jobOutputFile = new File(outputDir, s"$species-$genomeName.$source.gtf.CheckValidateAnnotation.out")
+          ca.jobOutputFile =
+            new File(outputDir, s"$species-$genomeName.$source.gtf.CheckValidateAnnotation.out")
           add(ca)
 
           if (gff3File.exists()) {
             val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
             validateGff3.gtfFile = List(gff3File)
             validateGff3.reference = referenceFile
-            validateGff3.jobOutputFile = new File(outputDir, s"$species-$genomeName.$source.gff3.ValidateAnnotation.out")
+            validateGff3.jobOutputFile =
+              new File(outputDir, s"$species-$genomeName.$source.gff3.ValidateAnnotation.out")
             add(validateGff3)
 
             val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
             ca.inputLogFile = validateGff3.jobOutputFile
-            ca.jobOutputFile = new File(outputDir, s"$species-$genomeName.$source.gff3.CheckValidateAnnotation.out")
+            ca.jobOutputFile =
+              new File(outputDir, s"$species-$genomeName.$source.gff3.CheckValidateAnnotation.out")
             add(ca)
           }
         }

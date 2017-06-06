@@ -27,9 +27,7 @@ import scala.io.Source
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckValidateVcf(val parent: Configurable)
-  extends InProcessFunction
-    with Configurable {
+class CheckValidateVcf(val parent: Configurable) extends InProcessFunction with Configurable {
 
   @Input(required = true)
   var inputLogFile: File = _

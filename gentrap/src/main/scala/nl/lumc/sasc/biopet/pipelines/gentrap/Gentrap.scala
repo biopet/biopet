@@ -17,7 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.extensions.tools.{CheckValidateAnnotation, RefflatStats, ValidateAnnotation, WipeReads}
+import nl.lumc.sasc.biopet.extensions.tools.{
+  CheckValidateAnnotation,
+  RefflatStats,
+  ValidateAnnotation,
+  WipeReads
+}
 import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ExpMeasures, StrandProtocol}
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
