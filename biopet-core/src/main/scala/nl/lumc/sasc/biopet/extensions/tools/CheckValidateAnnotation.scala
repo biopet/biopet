@@ -35,6 +35,10 @@ class CheckValidateAnnotation(val parent: Configurable)
 
   val abortOnError: Boolean = config("abort_on_error", default = true)
 
+  var species: String = ""
+
+  var genomeName: String = ""
+
   /** Exits whenever the input md5sum is not the same as the output md5sum */
   def run: Unit = {
 
@@ -47,7 +51,7 @@ class CheckValidateAnnotation(val parent: Configurable)
           logger.error("Corrupt annotations files found, aborting pipeline")
           Runtime.getRuntime.halt(130)
         } else {
-          logger.warn("Corrupt annotations files found")
+          logger.warn(s"Corrupt annotations files found for $species-$genomeName")
           logger.warn(
             "**** You enabled a unsafe method by letting the pipeline continue with incorrect annotations files ****")
         }

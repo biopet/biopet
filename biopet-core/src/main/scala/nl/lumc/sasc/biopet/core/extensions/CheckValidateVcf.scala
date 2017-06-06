@@ -34,6 +34,10 @@ class CheckValidateVcf(val parent: Configurable) extends InProcessFunction with 
 
   val abortOnError: Boolean = config("abort_on_error", default = true)
 
+  var species: String = ""
+
+  var genomeName: String = ""
+
   /** Exits whenever the input md5sum is not the same as the output md5sum */
   def run(): Unit = {
 
@@ -46,7 +50,7 @@ class CheckValidateVcf(val parent: Configurable) extends InProcessFunction with 
           // 130 Simulates a ctr-C
           Runtime.getRuntime.halt(130)
         } else {
-          logger.warn(s"Corrupt vcf file found, for details see $inputLogFile")
+          logger.warn(s"Corrupt vcf file found for $species-$genomeName, for details see $inputLogFile")
         }
       }
     }

@@ -59,6 +59,8 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
 
         val cvv = new CheckValidateVcf(this)
         cvv.inputLogFile = vv.jobOutputFile
+        cvv.species = species
+        cvv.genomeName = genomeName
         cvv.jobOutputFile =
           new File(outputDir, s"$species-$genomeName.${vcfFile.getName}.CheckValidateVcf.out")
         add(cvv)
@@ -93,6 +95,8 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
 
           val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
           ca.inputLogFile = validateGtf.jobOutputFile
+          ca.species = species
+          ca.genomeName = genomeName
           ca.jobOutputFile =
             new File(outputDir, s"$species-$genomeName.$source.gtf.CheckValidateAnnotation.out")
           add(ca)
@@ -108,6 +112,8 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
 
             val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
             ca.inputLogFile = validateGff3.jobOutputFile
+            ca.species = species
+            ca.genomeName = genomeName
             ca.jobOutputFile =
               new File(outputDir, s"$species-$genomeName.$source.gff3.CheckValidateAnnotation.out")
             add(ca)
