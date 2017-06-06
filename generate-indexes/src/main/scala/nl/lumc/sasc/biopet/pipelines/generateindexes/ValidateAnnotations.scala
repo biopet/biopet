@@ -70,61 +70,66 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
     val featuresDir = new File(annotationDir, "features")
 
     if (featuresDir.exists()) {
-      for (source <- featuresDir.list().filter(!_.startsWith("."))) {
-        val sourceDir = new File(featuresDir, source)
-        val prefixes = sourceDir
-          .list()
-          .filter(x => x.endsWith(".gtf") || x.endsWith(".gff3") || x.endsWith(".refflat"))
-          .map(_.stripSuffix(".gtf"))
-          .map(_.stripSuffix(".gff3"))
-          .map(_.stripSuffix(".refflat"))
-          .distinct
-        if (prefixes.isEmpty)
-          logger.warn(s"No features annotations found for $species-$genomeName")
-        logger.info(s"For $source, found prefixes: ${prefixes.mkString(",")}")
-        for (prefix <- prefixes) {
-          val gtfFile = new File(sourceDir, prefix + ".gtf")
-          val gff3File = new File(sourceDir, prefix + ".gff3")
-          val refflatFile = new File(sourceDir, prefix + ".refflat")
-          val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
-          validateGtf.gtfFile = List(gtfFile)
-          validateGtf.refflatFile = Some(refflatFile)
-          validateGtf.reference = referenceFile
-          validateGtf.disableFail = true
-          validateGtf.jobOutputFile =
-            new File(outputDir, s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
-          add(validateGtf)
-
-          val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
-          ca.inputLogFile = validateGtf.jobOutputFile
-          ca.species = species
-          ca.genomeName = genomeName
-          ca.jobOutputFile = new File(
-            outputDir,
-            s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
-          add(ca)
-
-          if (gff3File.exists()) {
-            val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
-            validateGff3.gtfFile = List(gff3File)
-            validateGff3.reference = referenceFile
-            validateGff3.disableFail = true
-            validateGff3.jobOutputFile = new File(
+      if (featuresDir.canRead && featuresDir.canExecute) {
+        for (source <- featuresDir.list().filter(!_.startsWith("."))) {
+          val sourceDir = new File(featuresDir, source)
+          val prefixes = sourceDir
+            .list()
+            .filter(x => x.endsWith(".gtf") || x.endsWith(".gff3") || x.endsWith(".refflat"))
+            .map(_.stripSuffix(".gtf"))
+            .map(_.stripSuffix(".gff3"))
+            .map(_.stripSuffix(".refflat"))
+            .distinct
+          if (prefixes.isEmpty)
+            logger.warn(s"No features annotations found for $species-$genomeName")
+          logger.info(s"For $source, found prefixes: ${prefixes.mkString(",")}")
+          for (prefix <- prefixes) {
+            val gtfFile = new File(sourceDir, prefix + ".gtf")
+            val gff3File = new File(sourceDir, prefix + ".gff3")
+            val refflatFile = new File(sourceDir, prefix + ".refflat")
+            val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
+            validateGtf.gtfFile = List(gtfFile)
+            validateGtf.refflatFile = Some(refflatFile)
+            validateGtf.reference = referenceFile
+            validateGtf.disableFail = true
+            validateGtf.jobOutputFile = new File(
               outputDir,
-              s"$species-$genomeName.$source.$prefix.gff3.ValidateAnnotation.out")
-            add(validateGff3)
+              s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
+            add(validateGtf)
 
             val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
-            ca.inputLogFile = validateGff3.jobOutputFile
+            ca.inputLogFile = validateGtf.jobOutputFile
             ca.species = species
             ca.genomeName = genomeName
             ca.jobOutputFile = new File(
               outputDir,
-              s"$species-$genomeName.$source.$prefix.gff3.CheckValidateAnnotation.out")
+              s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
             add(ca)
+
+            if (gff3File.exists()) {
+              val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
+              validateGff3.gtfFile = List(gff3File)
+              validateGff3.reference = referenceFile
+              validateGff3.disableFail = true
+              validateGff3.jobOutputFile = new File(
+                outputDir,
+                s"$species-$genomeName.$source.$prefix.gff3.ValidateAnnotation.out")
+              add(validateGff3)
+
+              val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
+              ca.inputLogFile = validateGff3.jobOutputFile
+              ca.species = species
+              ca.genomeName = genomeName
+              ca.jobOutputFile = new File(
+                outputDir,
+                s"$species-$genomeName.$source.$prefix.gff3.CheckValidateAnnotation.out")
+              add(ca)
+            }
           }
         }
-      }
+      } else
+        logger.warn(
+          s"For $species-$genomeName the feature dir does exist but is not accessible, permission error? $featuresDir")
     } else logger.warn(s"No features annotations found for $species-$genomeName")
   }
 }
