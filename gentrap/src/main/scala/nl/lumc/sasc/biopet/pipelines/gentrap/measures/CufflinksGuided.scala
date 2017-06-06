@@ -30,4 +30,6 @@ class CufflinksGuided(val parent: Configurable)
     cufflinks.gtfGuide = Some(annotationGtf)
     cufflinks
   }
+
+  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_guided_gtf" -> annotationGtf)
 }
