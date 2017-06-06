@@ -194,13 +194,13 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
 
   def cmdLine = {
 
-    val cmd = (clip, trim) match {
-      case (Some(c), Some(t)) =>
-        new BiopetFifoPipe(parent, seqtk :: c :: t :: outputCommand :: Nil)
-      case (Some(c), _) => new BiopetFifoPipe(parent, seqtk :: c :: outputCommand :: Nil)
-      case (_, Some(t)) => new BiopetFifoPipe(parent, seqtk :: t :: outputCommand :: Nil)
-      case _ => new BiopetFifoPipe(parent, seqtk :: outputCommand :: Nil)
-    }
+    val cmd = new BiopetFifoPipe(parent,
+                                 (Some(seqtk) ::
+                                   seqtkSample ::
+                                   clip ::
+                                   trim ::
+                                   Some(outputCommand) ::
+                                   Nil).flatten)
 
     cmd.beforeGraph()
     cmd.commandLine
