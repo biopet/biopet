@@ -16,7 +16,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.annotation.Feature
 import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+
 import scala.io.Source
 
 /**
@@ -64,15 +66,27 @@ object ValidateAnnotation extends ToolCommand {
       }
 
       cmdArgs.gtfFiles.distinct.foreach { file =>
-        refflatLines.foreach { lines =>
-          val tempRefflat = File.createTempFile("temp.", ".refflat")
-          tempRefflat.deleteOnExit()
-          GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))
+        refflatLines match {
+          case Some(lines) =>
+            val tempRefflat = File.createTempFile("temp.", ".refflat")
+            tempRefflat.deleteOnExit()
+            GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))
 
-          val tempRefflatLines = Source.fromFile(tempRefflat).getLines().toList.sorted
-          for ((line1, line2) <- lines.zip(tempRefflatLines)) {
-            require(line1 == line2, "Refflat and gtf contain different information")
-          }
+            val tempRefflatLines = Source.fromFile(tempRefflat).getLines().toList.sorted
+            for ((line1, line2) <- lines.zip(tempRefflatLines)) {
+              require(line1 == line2, "Refflat and gtf contain different information")
+            }
+          case _ =>
+            Source
+              .fromFile(file)
+              .getLines()
+              .filter(!_.startsWith("#"))
+              .map(Feature.fromLine)
+              .foreach { feature =>
+                require(
+                  dict.getSequence(feature.contig) != null,
+                  s"Contig '${feature.contig}' found in gtf/gff but not found on reference: $file")
+              }
         }
       }
     } catch {
