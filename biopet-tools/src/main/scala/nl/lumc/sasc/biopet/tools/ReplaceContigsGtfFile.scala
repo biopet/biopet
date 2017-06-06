@@ -11,7 +11,10 @@ import scala.io.Source
   * Created by pjvan_thof on 30-5-17.
   */
 object ReplaceContigsGtfFile extends ToolCommand {
-  case class Args(input: File = null, output: File = null, contigs: Map[String, String] = Map())
+  case class Args(input: File = null,
+                  output: File = null,
+                  contigs: Map[String, String] = Map(),
+                  writeAsGff: Boolean = false)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -23,6 +26,9 @@ object ReplaceContigsGtfFile extends ToolCommand {
     } text "Output gtf file"
     opt[Map[String, String]]("contig") unbounded () action { (x, c) =>
       c.copy(contigs = c.contigs ++ x)
+    }
+    opt[Unit]("writeAsGff") unbounded () action { (_, c) =>
+      c.copy(writeAsGff = true)
     }
     opt[File]("contigMappingFile") unbounded () action { (x, c) =>
       val reader = Source.fromFile(x)
@@ -56,13 +62,19 @@ object ReplaceContigsGtfFile extends ToolCommand {
 
     val reader = Source.fromFile(cmdArgs.input)
     val writer = new PrintWriter(cmdArgs.output)
+
+    def writeLine(feature: Feature): Unit = {
+      if (cmdArgs.writeAsGff) writer.println(feature.asGff3Line)
+      else writer.println(feature.asGtfLine)
+    }
+
     reader.getLines().foreach { line =>
       if (line.startsWith("#")) writer.println(line)
       else {
         val feature = Feature.fromLine(line)
         if (cmdArgs.contigs.contains(feature.contig))
-          writer.println(feature.copy(contig = cmdArgs.contigs(feature.contig)).asGtfLine)
-        else writer.println(feature.asGtfLine)
+          writeLine(feature.copy(contig = cmdArgs.contigs(feature.contig)))
+        else writeLine(feature)
       }
     }
     reader.close()
