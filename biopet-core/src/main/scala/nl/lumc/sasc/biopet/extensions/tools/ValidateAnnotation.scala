@@ -23,8 +23,8 @@ import org.broadinstitute.gatk.utils.commandline.Input
 class ValidateAnnotation(val parent: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.ValidateAnnotation
 
-  @Input(required = true)
-  var refflatFile: File = _
+  @Input(required = false)
+  var refflatFile: Option[File] = _
 
   @Input(required = false)
   var gtfFile: List[File] = Nil
@@ -43,7 +43,7 @@ class ValidateAnnotation(val parent: Configurable) extends ToolCommandFunction w
 
   override def cmdLine =
     super.cmdLine +
-      required("-r", refflatFile) +
+      optional("-r", refflatFile) +
       repeat("-g", gtfFile) +
       required("-R", reference) +
       conditional(disableFail, "--disableFail")
