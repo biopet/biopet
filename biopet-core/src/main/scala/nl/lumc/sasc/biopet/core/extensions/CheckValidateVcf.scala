@@ -50,7 +50,8 @@ class CheckValidateVcf(val parent: Configurable) extends InProcessFunction with 
           // 130 Simulates a ctr-C
           Runtime.getRuntime.halt(130)
         } else {
-          logger.warn(s"Corrupt vcf file found for $species-$genomeName, for details see $inputLogFile")
+          logger.warn(
+            s"Corrupt vcf file found for $species-$genomeName, for details see $inputLogFile")
         }
       }
     }
