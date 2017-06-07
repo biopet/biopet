@@ -3,11 +3,15 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.variant.variantcontext.VariantContextBuilder
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.writer.{
+  AsyncVariantContextWriter,
+  VariantContextWriterBuilder
+}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
+
 /**
   * Created by pjvan_thof on 30-5-17.
   */
@@ -65,7 +69,8 @@ object ReplaceContigsVcfFile extends ToolCommand {
     for (record <- reader) {
       val builder = new VariantContextBuilder(record)
 
-      val newRecord = builder.chr(cmdArgs.contigs.getOrElse(record.getContig, record.getContig)).make()
+      val newRecord =
+        builder.chr(cmdArgs.contigs.getOrElse(record.getContig, record.getContig)).make()
       writer.write(newRecord)
     }
 
