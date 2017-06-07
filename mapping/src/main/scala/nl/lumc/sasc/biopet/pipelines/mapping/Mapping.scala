@@ -44,6 +44,8 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
 
 import scala.math._
+import Mapping.DuplicatesMethod
+import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
 
 /**
   * This pipeline doing a alignment to a given reference genome
@@ -66,13 +68,35 @@ class Mapping(val parent: Configurable)
   var outputName: String = _
 
   /** Skip flexiprep */
-  protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
+  protected val skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
-  /** Skip mark duplicates */
-  protected var skipMarkduplicates: Boolean = config("skip_markduplicates", default = false)
+  /**
+    * Skip mark duplicates
+    *
+    * @deprecated
+    */
+  protected val skipMarkduplicates: Boolean = config("skip_markduplicates", default = false)
 
   /** Skip metrics */
-  protected var skipMetrics: Boolean = config("skip_metrics", default = false)
+  protected val skipMetrics: Boolean = config("skip_metrics", default = false)
+
+  protected val duplicatesMethod: DuplicatesMethod.Value = {
+    val value: Option[String] = config("duplicates_method")
+    value.map(_.toLowerCase) match {
+      case None if skipMarkduplicates =>
+        logger.warn(
+          "Using skip_markduplicates in the config is deprecated, please use duplicates_method")
+        DuplicatesMethod.None
+      case Some("picard") | None => DuplicatesMethod.Picard
+      case Some("sambamba") => DuplicatesMethod.Sambamba
+      case Some("none") => DuplicatesMethod.None
+      case Some(x) =>
+        Logging.addError(
+          s"Value '$x' not correct for 'duplicates_method', please choos from ${DuplicatesMethod.values
+            .mkString(", ")}")
+        DuplicatesMethod.None
+    }
+  }
 
   /** Aligner */
   protected var aligner: String = config("aligner", default = "bwa-mem")
@@ -129,7 +153,7 @@ class Mapping(val parent: Configurable)
 
   def mergedBamFile = new File(outputDir, outputName + ".bam")
   def finalBamFile: File =
-    if (skipMarkduplicates) mergedBamFile
+    if (duplicatesMethod == DuplicatesMethod.None) mergedBamFile
     else new File(outputDir, outputName + ".dedup.bam")
 
   override def defaults: Map[String, Any] = Map(
@@ -159,7 +183,7 @@ class Mapping(val parent: Configurable)
     Map(
       "skip_metrics" -> skipMetrics,
       "skip_flexiprep" -> skipFlexiprep,
-      "skip_markduplicates" -> skipMarkduplicates,
+      "duplicate_method" -> duplicatesMethod.toString,
       "paired" -> inputR2.isDefined,
       "aligner" -> aligner,
       "chunking" -> chunking,
@@ -319,17 +343,22 @@ class Mapping(val parent: Configurable)
     if (!chunking) require(bamFile == mergedBamFile)
     else {
       val mergeSamFile = MergeSamFiles(this, bamFiles, mergedBamFile)
-      mergeSamFile.isIntermediate = !keepFinalBamFile || !skipMarkduplicates
+      mergeSamFile.isIntermediate = !keepFinalBamFile || duplicatesMethod != DuplicatesMethod.None
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMarkduplicates) {
-      bamFile = new File(outputDir, outputName + ".dedup.bam")
-      val md = MarkDuplicates(this, mergedBamFile :: Nil, finalBamFile)
-      md.isIntermediate = !keepFinalBamFile
-      add(md)
-      addSummarizable(md, "mark_duplicates")
+    duplicatesMethod match {
+      case DuplicatesMethod.Picard =>
+        bamFile = new File(outputDir, outputName + ".dedup.bam")
+        val md = MarkDuplicates(this, mergedBamFile :: Nil, finalBamFile)
+        md.isIntermediate = !keepFinalBamFile
+        add(md)
+        addSummarizable(md, "mark_duplicates")
+      case DuplicatesMethod.Sambamba =>
+        bamFile = new File(outputDir, outputName + ".dedup.bam")
+        add(SambambaMarkdup(this, mergedBamFile, finalBamFile, !keepFinalBamFile))
+      case DuplicatesMethod.None =>
     }
 
     if (!skipMetrics) {
@@ -398,7 +427,7 @@ class Mapping(val parent: Configurable)
     }
 
     val sortSam = SortSam(this, samFile, output)
-    sortSam.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    sortSam.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(sortSam)
     sortSam.output
   }
@@ -412,7 +441,7 @@ class Mapping(val parent: Configurable)
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = bwaCommand | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     pipe.threadsCorrection = -1
     add(pipe)
     output
@@ -430,7 +459,7 @@ class Mapping(val parent: Configurable)
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
     val pipe = new BiopetFifoPipe(this, gsnapCommand :: ar._1 :: reorderSam :: Nil)
     pipe.threadsCorrection = -2
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(pipe)
     ar._2
   }
@@ -454,7 +483,7 @@ class Mapping(val parent: Configurable)
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = hisat2 | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     pipe.threadsCorrection = 1
     add(pipe)
 
@@ -505,7 +534,7 @@ class Mapping(val parent: Configurable)
     add(reorderSam)
 
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
-    ar._1.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    ar._1.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(ar._1)
     ar._2
   }
@@ -532,7 +561,7 @@ class Mapping(val parent: Configurable)
     stampyCmd.isIntermediate = true
     add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
-    sortSam.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    sortSam.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(sortSam)
     sortSam.output
   }
@@ -551,7 +580,7 @@ class Mapping(val parent: Configurable)
     val ar = addAddOrReplaceReadGroups(bowtie.output, output)
     val pipe = new BiopetFifoPipe(this, (Some(bowtie) :: Some(ar._1) :: Nil).flatten)
     pipe.threadsCorrection = -1
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(pipe)
     ar._2
   }
@@ -569,7 +598,7 @@ class Mapping(val parent: Configurable)
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = bowtie2 | sortSam
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     pipe.threadsCorrection = -1
     add(pipe)
     output
@@ -595,7 +624,7 @@ class Mapping(val parent: Configurable)
     pipe.threadsCorrection = -3
     zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
     zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
-    pipe.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(pipe)
     reorderSam.output
   }
@@ -611,7 +640,7 @@ class Mapping(val parent: Configurable)
       Star._2pass(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
     addAll(starCommand._2)
     val ar = addAddOrReplaceReadGroups(starCommand._1, output)
-    ar._1.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    ar._1.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(ar._1)
     ar._2
   }
@@ -629,7 +658,7 @@ class Mapping(val parent: Configurable)
     if (readgroupSequencingCenter.isDefined)
       addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
-    addOrReplaceReadGroups.isIntermediate = chunking || !skipMarkduplicates || !keepFinalBamFile
+    addOrReplaceReadGroups.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
 
     (addOrReplaceReadGroups, addOrReplaceReadGroups.output)
   }
@@ -672,4 +701,8 @@ class Mapping(val parent: Configurable)
 
 }
 
-object Mapping extends PipelineCommand
+object Mapping extends PipelineCommand {
+  object DuplicatesMethod extends Enumeration {
+    val None, Picard, Sambamba = Value
+  }
+}
