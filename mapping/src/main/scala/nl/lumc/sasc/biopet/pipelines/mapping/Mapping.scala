@@ -305,7 +305,7 @@ class Mapping(val parent: Configurable)
       }
       if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
         addAll(
-          BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
+          BamMetrics(this, outputBam, new File(chunkDir, "metrics"), paired, sampleId, libId).functions)
     }
 
     if (!skipFlexiprep) {
@@ -334,7 +334,7 @@ class Mapping(val parent: Configurable)
 
     if (!skipMetrics) {
       val bamMetrics =
-        BamMetrics(this, finalBamFile, new File(outputDir, "metrics"), sampleId, libId)
+        BamMetrics(this, finalBamFile, new File(outputDir, "metrics"), paired, sampleId, libId)
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
     }
