@@ -46,7 +46,7 @@ class CollectMultipleMetrics(val parent: Configurable)
 
   @Argument(doc = "Base name of output files", required = true)
   var program: List[Programs.Value] = {
-    val value: List[String] = config("metrics_programs")
+    val value: List[String] = config("metrics_programs", default = Nil)
     value match {
       case Nil => Programs.values.toList
       case list => list.flatMap(x => Programs.values.find(_.toString.toLowerCase == x.toLowerCase))
@@ -107,17 +107,17 @@ class CollectMultipleMetrics(val parent: Configurable)
             summarizable(
               () =>
                 Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"),
-                  groupBy = Some("CATEGORY"))),
+                                  groupBy = Some("CATEGORY"))),
             Programs.CollectAlignmentSummaryMetrics.toString,
-            forceSingle = true)
+            forceSingle = true
+          )
         case Programs.CollectInsertSizeMetrics =>
           qscript.addSummarizable(
             summarizable(
               () =>
                 if (new File(outputName + ".insert_size_metrics").exists())
                   Map(
-                    "metrics" -> Picard.getMetrics(
-                      new File(outputName + ".insert_size_metrics")),
+                    "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
                     "histogram" -> Picard.getHistogram(
                       new File(outputName + ".insert_size_metrics"))
                   )
@@ -130,7 +130,8 @@ class CollectMultipleMetrics(val parent: Configurable)
             summarizable(
               () => Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))),
             Programs.QualityScoreDistribution.toString,
-            forceSingle = true)
+            forceSingle = true
+          )
         case Programs.MeanQualityByCycle =>
           qscript.addSummarizable(
             summarizable(
@@ -142,9 +143,10 @@ class CollectMultipleMetrics(val parent: Configurable)
             summarizable(
               () =>
                 Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"),
-                  tag = "METRICS CLASS")),
+                                    tag = "METRICS CLASS")),
             Programs.CollectBaseDistributionByCycle.toString,
-            forceSingle = true)
+            forceSingle = true
+          )
         case _ => None
       }
   }
