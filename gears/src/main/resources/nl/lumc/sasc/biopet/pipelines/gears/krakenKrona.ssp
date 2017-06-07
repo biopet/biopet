@@ -20,6 +20,12 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%-- Present already in summaries and total reads and therefore not necessary
+
+--%>
+<%-- Fix-BIOPET-669 addition. Removing futures from template --%>
+<%@ val summaries: Map[String, Any] %>
+<%@ val totalReads: Map[String, Long] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -27,13 +33,15 @@
     }
 }#
 <%
+    <%-- Contains a future
     val summaries = if (libId.isDefined) summary.getStatsForLibraries(runId, summaryModuleTag, summaryStatsTag, sampleId,
       Map("all" -> Nil)
     ).filter(_._1._2 == libId.get).map(x => x._1._1 -> x._2)
     else summary.getStatsForSamples(runId, summaryModuleTag, summaryStatsTag, sampleId.map(SummaryDb.SampleId),
       Map("all" -> Nil)
     )
-
+    --%>
+    <%-- Contains a future
     val totalReads = centrifugeTag.map { tag =>
     if (libId.isDefined) {
         val stats = summary.getStatsForLibraries(runId, summaryModuleTag, ModuleName(tag), sampleId,
@@ -46,6 +54,7 @@
         Map("total" -> List("metrics", "Read"))
         ).map(x => allSamples.find(_.id == x._1).head.name -> x._2("total").map(_.toString.toLong).getOrElse(0L))
     }
+    --%>
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
