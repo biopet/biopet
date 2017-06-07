@@ -16,17 +16,13 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{
-  MultisampleReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
+import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoLibrary, NoModule, SampleId}
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ModuleName, NoLibrary, NoModule, SampleId}
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Library
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
 
@@ -48,7 +44,7 @@ object GearsReport extends MultisampleReportBuilder {
 
   def reportName = "Gears Report"
 
-  override def extFiles =
+  override def extFiles: List[gears.GearsReport.ExtFile] =
     super.extFiles ++ List("js/gears.js",
                            "js/krona-2.0.js",
                            "img/krona/loading.gif",
@@ -82,7 +78,7 @@ object GearsReport extends MultisampleReportBuilder {
                   ReportPage(List(),
                              List("All mappings" -> ReportSection(
                                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                               Map("summaryStatsTag" -> "centrifuge_report"))),
+                               Map("summaryStatsTag" -> "centrifuge_report")  )),
                              Map()))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -290,14 +286,14 @@ object GearsReport extends MultisampleReportBuilder {
       else Nil
 
     val krakenAnalysisPage =
-      (if (krakenExecuted)
-         List(
-           "Kraken analysis" -> Future.successful(
-             ReportPage(List(),
-                        List("Krona plot" -> ReportSection(
-                          "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
-                        Map())))
-       else Nil)
+      if (krakenExecuted)
+        List(
+          "Kraken analysis" -> Future.successful(
+            ReportPage(List(),
+                       List("Krona plot" -> ReportSection(
+                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
+                       Map())))
+      else Nil
 
     val qiimeClosesOtuTablePage =
       if (qiimeClosesOtuTable.isDefined)
@@ -325,8 +321,8 @@ object GearsReport extends MultisampleReportBuilder {
         List(flexiprepReportPage,
              centrifugeReportPage,
              krakenAnalysisPage,
-             qiimeClosesOtuTable,
-             qiimeOpenOtuTable).flatten,
+             qiimeClosesOtuTablePage,
+             qiimeOpenOtuTablePage).flatten,
         List(
           "QC reads" -> ReportSection(
             "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -341,12 +337,26 @@ object GearsReport extends MultisampleReportBuilder {
 }
 
 object GearsKronaPlot {
+  def map(summary: SummaryDb,
+          runId: Int,
+          sampleId: Option[Int],
+          libId: Option[Int],
+          summaryModuleTag: String,
+          summaryStatsTag: String,
+         centrifugeTag: Option[String],
+         allSamples: Seq[Sample],
+          allLibraries: Seq[Library]
+         ): Map[String, Any] {
+
+  }
+
+
   def summaries(summary: SummaryDb,
                 runId: Int,
                 sampleId: Option[Int],
                 libId: Option[Int],
                 summaryModuleTag: String,
-                summaryStatsTag: String) = {
+                summaryStatsTag: String): Map[Int, Map[String, Option[Any]]] = {
     if (libId.isDefined)
       summary
         .getStatsForLibraries(runId,
@@ -372,7 +382,7 @@ object GearsKronaPlot {
       centrifugeTag: Option[String],
       allSamples: Seq[Sample],
       allLibraries: Seq[Library]
-  ) = {
+  ): Option[Map[String, Long]] = {
     centrifugeTag.map { tag =>
       if (libId.isDefined) {
         val stats = summary

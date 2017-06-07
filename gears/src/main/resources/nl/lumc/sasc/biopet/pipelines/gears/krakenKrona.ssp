@@ -24,8 +24,8 @@
 
 --%>
 <%-- Fix-BIOPET-669 addition. Removing futures from template --%>
-<%@ val summaries: Map[String, Any] %>
-<%@ val totalReads: Map[String, Long] %>
+<%@ val summaries: Map[Int, Map[String, Option[Any]]] %>
+<%@ val totalReads: Option[Map[String, Long]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
