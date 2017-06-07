@@ -23,13 +23,7 @@ import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie, Bowtie2}
 import nl.lumc.sasc.biopet.extensions.bwa.{BwaAln, BwaMem, BwaSampe, BwaSamse}
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.picard.{
-  AddOrReplaceReadGroups,
-  MarkDuplicates,
-  MergeSamFiles,
-  ReorderSam,
-  SortSam
-}
+import nl.lumc.sasc.biopet.extensions.picard.{AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam}
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.taxextract.TaxExtractExtract
@@ -45,7 +39,7 @@ import org.broadinstitute.gatk.utils.commandline
 
 import scala.math._
 import Mapping.DuplicatesMethod
-import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMarkdup
+import nl.lumc.sasc.biopet.extensions.sambamba.{SambambaIndex, SambambaMarkdup}
 
 /**
   * This pipeline doing a alignment to a given reference genome
@@ -358,6 +352,7 @@ class Mapping(val parent: Configurable)
       case DuplicatesMethod.Sambamba =>
         bamFile = new File(outputDir, outputName + ".dedup.bam")
         add(SambambaMarkdup(this, mergedBamFile, finalBamFile, !keepFinalBamFile))
+        add(SambambaIndex(this, finalBamFile))
       case DuplicatesMethod.None =>
     }
 
