@@ -78,6 +78,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
       val bamMetricsFilter = BamMetrics(qscript,
                                         preProcessBam.get,
                                         new File(sampleDir, "metrics-filter"),
+                                        paired,
                                         sampleId = Some(sampleId))
       addAll(bamMetricsFilter.functions)
       bamMetricsFilter.summaryName = "bammetrics-filter"
