@@ -87,25 +87,27 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
             val gtfFile = new File(sourceDir, prefix + ".gtf")
             val gff3File = new File(sourceDir, prefix + ".gff3")
             val refflatFile = new File(sourceDir, prefix + ".refflat")
-            val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
-            validateGtf.gtfFile = List(gtfFile)
-            validateGtf.refflatFile = Some(refflatFile)
-            validateGtf.reference = referenceFile
-            validateGtf.disableFail = true
-            validateGtf.jobOutputFile = new File(
-              outputDir,
-              s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
-            add(validateGtf)
 
-            val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
-            ca.inputLogFile = validateGtf.jobOutputFile
-            ca.species = species
-            ca.genomeName = genomeName
-            ca.jobOutputFile = new File(
-              outputDir,
-              s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
-            add(ca)
+            if (gtfFile.exists() || refflatFile.exists()) {
+              val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
+              validateGtf.gtfFile = if (gtfFile.exists()) List(gtfFile) else Nil
+              validateGtf.refflatFile = if (refflatFile.exists()) Some(refflatFile) else None
+              validateGtf.reference = referenceFile
+              validateGtf.disableFail = true
+              validateGtf.jobOutputFile = new File(
+                outputDir,
+                s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
+              add(validateGtf)
 
+              val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
+              ca.inputLogFile = validateGtf.jobOutputFile
+              ca.species = species
+              ca.genomeName = genomeName
+              ca.jobOutputFile = new File(
+                outputDir,
+                s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
+              add(ca)
+            }
             if (gff3File.exists()) {
               val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
               validateGff3.gtfFile = List(gff3File)
