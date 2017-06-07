@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.picard.NormalizeFasta
-import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
+import nl.lumc.sasc.biopet.extensions.tools.{DownloadNcbiAssembly, NcbiReportToContigMap}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -79,14 +79,30 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
 
                 genomeConfig.get("ncbi_assembly_report") match {
                   case Some(assemblyReport: String) =>
+                    val ncbiAssemblyReport = new File(genomeDir, assemblyReport.getName)
+                    add(Cp(this, new File(assemblyReport), ncbiAssemblyReport))
+                    renderReadme.ncbiAssemblyReport = Some(ncbiAssemblyReport)
+
+                    val ncbiReportToContigMap = new NcbiReportToContigMap(this)
+                    ncbiReportToContigMap.assemblyReport = ncbiAssemblyReport
+                    ncbiReportToContigMap.contigMap =
+                      new File(genomeDir, s"${speciesName}-${genomeName}.contig.map.tsv")
+                    ncbiReportToContigMap.nameHeader = genomeConfig
+                      .get("ncbi_assembly_header_name")
+                      .map(_.toString)
+                      .getOrElse("RefSeq-Accn")
+                    add(ncbiReportToContigMap)
+
                     val downloadAssembly = new DownloadNcbiAssembly(this)
-                    downloadAssembly.assemblyReport = new File(assemblyReport)
-                    renderReadme.ncbiAssemblyReport = Some(downloadAssembly.assemblyReport)
+                    downloadAssembly.assemblyReport = ncbiAssemblyReport
                     downloadAssembly.output = downloadFastaFile
                     downloadAssembly.outputReport =
                       new File(genomeDir, s"$speciesName-$genomeName.assembly.report")
-                    downloadAssembly.nameHeader =
-                      genomeConfig.get("ncbi_assembly_header_name").map(_.toString)
+                    downloadAssembly.nameHeader = Some(
+                      genomeConfig
+                        .get("ncbi_assembly_header_name")
+                        .map(_.toString)
+                        .getOrElse("RefSeq-Accn"))
                     downloadAssembly.mustHaveOne = genomeConfig
                       .get("ncbi_assembly_must_have_one")
                       .map(_.asInstanceOf[util.ArrayList[util.LinkedHashMap[String, String]]])

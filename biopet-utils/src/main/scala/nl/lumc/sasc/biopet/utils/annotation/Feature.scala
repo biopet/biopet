@@ -16,7 +16,45 @@ case class Feature(contig: String,
                    score: Option[Double],
                    strand: Option[Boolean],
                    frame: Option[Char],
-                   attributes: Map[String, String])
+                   attributes: Map[String, String]) {
+
+  def asGtfLine: String =
+    List(
+      contig,
+      source,
+      feature,
+      start,
+      end,
+      score.getOrElse("."),
+      strand match {
+        case Some(true) => "+"
+        case Some(false) => "-"
+        case None => "."
+      },
+      frame.getOrElse("."),
+      attributes.map(x => x._1 + s""" "${x._2}"""").mkString("; ")
+    ).mkString("\t")
+
+  def asGff3Line: String =
+    List(
+      contig,
+      source,
+      feature,
+      start,
+      end,
+      score.getOrElse("."),
+      strand match {
+        case Some(true) => "+"
+        case Some(false) => "-"
+        case None => "."
+      },
+      frame.getOrElse("."),
+      attributes.map(x => x._1 + s"=${x._2}").mkString(";")
+    ).mkString("\t")
+
+  def minPosition = if (start < end) start else end
+  def maxPosition = if (start > end) start else end
+}
 
 object Feature {
   def fromLine(line: String): Feature = {

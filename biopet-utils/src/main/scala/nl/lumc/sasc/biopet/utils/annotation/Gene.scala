@@ -13,8 +13,8 @@ case class Gene(name: String,
 case class Transcript(name: String,
                       transcriptionStart: Int,
                       transcriptionEnd: Int,
-                      codingStart: Int,
-                      codingEnd: Int,
+                      codingStart: Option[Int],
+                      codingEnd: Option[Int],
                       exons: List[Exon])
 
 case class Exon(start: Int, end: Int)

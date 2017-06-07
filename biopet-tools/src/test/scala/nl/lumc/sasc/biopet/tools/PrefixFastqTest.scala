@@ -19,7 +19,6 @@ import java.nio.file.Paths
 
 import htsjdk.samtools.fastq.FastqReader
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
@@ -28,7 +27,7 @@ import scala.collection.JavaConversions._
 /**
   * Created by ahbbollen on 28-8-15.
   */
-class PrefixFastqTest extends TestNGSuite with MockitoSugar with Matchers {
+class PrefixFastqTest extends TestNGSuite with Matchers {
 
   import PrefixFastq._
   private def resourcePath(p: String): String = {
