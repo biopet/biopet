@@ -73,61 +73,66 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
       if (featuresDir.canRead && featuresDir.canExecute) {
         for (source <- featuresDir.list().filter(!_.startsWith("."))) {
           val sourceDir = new File(featuresDir, source)
-          val prefixes = sourceDir
-            .list()
-            .filter(x => x.endsWith(".gtf") || x.endsWith(".gff3") || x.endsWith(".refflat"))
-            .map(_.stripSuffix(".gtf"))
-            .map(_.stripSuffix(".gff3"))
-            .map(_.stripSuffix(".refflat"))
-            .distinct
-          if (prefixes.isEmpty)
-            logger.warn(s"No features annotations found for $species-$genomeName")
-          logger.info(s"For $source, found prefixes: ${prefixes.mkString(",")}")
-          for (prefix <- prefixes) {
-            val gtfFile = new File(sourceDir, prefix + ".gtf")
-            val gff3File = new File(sourceDir, prefix + ".gff3")
-            val refflatFile = new File(sourceDir, prefix + ".refflat")
+          if (sourceDir.canRead && sourceDir.canExecute) {
+            val prefixes = sourceDir
+              .list()
+              .filter(x => x.endsWith(".gtf") || x.endsWith(".gff3") || x.endsWith(".refflat"))
+              .map(_.stripSuffix(".gtf"))
+              .map(_.stripSuffix(".gff3"))
+              .map(_.stripSuffix(".refflat"))
+              .distinct
+            if (prefixes.isEmpty)
+              logger.warn(s"No features annotations found for $species-$genomeName")
+            logger.info(s"For $source, found prefixes: ${prefixes.mkString(",")}")
+            for (prefix <- prefixes) {
+              val gtfFile = new File(sourceDir, prefix + ".gtf")
+              val gff3File = new File(sourceDir, prefix + ".gff3")
+              val refflatFile = new File(sourceDir, prefix + ".refflat")
 
-            if (gtfFile.exists() || refflatFile.exists()) {
-              val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
-              validateGtf.gtfFile = if (gtfFile.exists()) List(gtfFile) else Nil
-              validateGtf.refflatFile = if (refflatFile.exists()) Some(refflatFile) else None
-              validateGtf.reference = referenceFile
-              validateGtf.disableFail = true
-              validateGtf.jobOutputFile = new File(
-                outputDir,
-                s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
-              add(validateGtf)
+              if (gtfFile.exists() || refflatFile.exists()) {
+                val validateGtf = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
+                validateGtf.gtfFile = if (gtfFile.exists()) List(gtfFile) else Nil
+                validateGtf.refflatFile = if (refflatFile.exists()) Some(refflatFile) else None
+                validateGtf.reference = referenceFile
+                validateGtf.disableFail = true
+                validateGtf.jobOutputFile = new File(
+                  outputDir,
+                  s"$species-$genomeName.$source.$prefix.gtf.ValidateAnnotation.out")
+                add(validateGtf)
 
-              val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
-              ca.inputLogFile = validateGtf.jobOutputFile
-              ca.species = species
-              ca.genomeName = genomeName
-              ca.jobOutputFile = new File(
-                outputDir,
-                s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
-              add(ca)
+                val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
+                ca.inputLogFile = validateGtf.jobOutputFile
+                ca.species = species
+                ca.genomeName = genomeName
+                ca.jobOutputFile = new File(
+                  outputDir,
+                  s"$species-$genomeName.$source.$prefix.gtf.CheckValidateAnnotation.out")
+                add(ca)
+              }
+              if (gff3File.exists()) {
+                val validateGff3 =
+                  new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
+                validateGff3.gtfFile = List(gff3File)
+                validateGff3.reference = referenceFile
+                validateGff3.disableFail = true
+                validateGff3.jobOutputFile = new File(
+                  outputDir,
+                  s"$species-$genomeName.$source.$prefix.gff3.ValidateAnnotation.out")
+                add(validateGff3)
+
+                val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
+                ca.inputLogFile = validateGff3.jobOutputFile
+                ca.species = species
+                ca.genomeName = genomeName
+                ca.jobOutputFile = new File(
+                  outputDir,
+                  s"$species-$genomeName.$source.$prefix.gff3.CheckValidateAnnotation.out")
+                add(ca)
+              }
             }
-            if (gff3File.exists()) {
-              val validateGff3 = new nl.lumc.sasc.biopet.extensions.tools.ValidateAnnotation(this)
-              validateGff3.gtfFile = List(gff3File)
-              validateGff3.reference = referenceFile
-              validateGff3.disableFail = true
-              validateGff3.jobOutputFile = new File(
-                outputDir,
-                s"$species-$genomeName.$source.$prefix.gff3.ValidateAnnotation.out")
-              add(validateGff3)
-
-              val ca = new nl.lumc.sasc.biopet.extensions.tools.CheckValidateAnnotation(this)
-              ca.inputLogFile = validateGff3.jobOutputFile
-              ca.species = species
-              ca.genomeName = genomeName
-              ca.jobOutputFile = new File(
-                outputDir,
-                s"$species-$genomeName.$source.$prefix.gff3.CheckValidateAnnotation.out")
-              add(ca)
-            }
-          }
+          } else
+            logger.warn(
+              s"For $species-$genomeName a source dir does exist but is not accessible, permission error? $sourceDir")
         }
       } else
         logger.warn(
