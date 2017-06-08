@@ -86,9 +86,9 @@ class BiopetFifoPipe(val parent: Configurable,
   }
 
   def cmdLine = {
-    this.fifos.filter(_.exists()).map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
-      this.fifos.map(required("mkfifo", _)).mkString("\n\n", "\n", "\n\n") +
-      commands.map(_.commandLine).mkString("\n\n", " & \n", " & \n\n")
+    this.fifos.filter(_.exists()).map(required("rm", _)).mkString(" \n") +
+      this.fifos.map(required("mkfifo", _)).mkString("\n") +
+      commands.map(_.commandLine).mkString("\n", " & \n", " & \n")
   }
 
   override protected def changeScript(file: File): Unit = {
