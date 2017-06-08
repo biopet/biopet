@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{File, PrintWriter}
 
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
 
@@ -86,28 +87,14 @@ class BiopetFifoPipe(val parent: Configurable,
   }
 
   def cmdLine: String = {
-    this.fifos.filter(_.exists()).map(required("rm", _)).mkString(" \n") +
+    this.fifos.filter(_.exists()).map(required("rm", _)).mkString("", "\n", "\n") +
       this.fifos.map(required("mkfifo", _)).mkString("\n") +
       commands.map(_.commandLine).mkString("\n", " & \n", " & \n")
   }
 
   override protected def changeScript(file: File): Unit = {
     super.changeScript(file)
-    val reader = Source.fromFile(file)
-    val lines = reader.getLines().toList
-    reader.close()
-    val writer = new PrintWriter(file)
-    lines.foreach(writer.println)
-
-    writer.println(BiopetFifoPipe.waitScript)
-    writer.println(this.fifos.map(required("rm", _)).mkString(" \n"))
-    writer.println(BiopetFifoPipe.endScript)
-    writer.close()
-    if (logger.isDebugEnabled) {
-      val reader = Source.fromFile(file)
-      logger.debug(s"Content of script $file:\n" + reader.getLines().mkString("\n"))
-      reader.close()
-    }
+    BiopetFifoPipe.changeScript(file, fifos)
   }
 
   override def setResources(): Unit = {
@@ -127,6 +114,25 @@ class BiopetFifoPipe(val parent: Configurable,
 }
 
 object BiopetFifoPipe {
+
+  def changeScript(file: File, fifos: List[File]): Unit = {
+    val reader = Source.fromFile(file)
+    val lines = reader.getLines().toList
+    reader.close()
+    val writer = new PrintWriter(file)
+    lines.foreach(writer.println)
+
+    writer.println(BiopetFifoPipe.waitScript)
+    writer.println(fifos.map("rm " + _).mkString(" \n"))
+    writer.println(BiopetFifoPipe.endScript)
+    writer.close()
+    if (Logging.logger.isDebugEnabled) {
+      val reader = Source.fromFile(file)
+      Logging.logger.debug(s"Content of script $file:\n" + reader.getLines().mkString("\n"))
+      reader.close()
+    }
+  }
+
   val waitScript: String =
     """
       |
