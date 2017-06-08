@@ -360,6 +360,7 @@ class Mapping(val parent: Configurable)
         val index = SambambaIndex(this, finalBamFile)
         index.isIntermediate = !keepFinalBamFile
         add(index)
+      case DuplicatesMethod.None =>
     }
 
     if (!skipMetrics) {
