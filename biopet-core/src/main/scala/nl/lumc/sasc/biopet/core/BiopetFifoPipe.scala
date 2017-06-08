@@ -99,9 +99,9 @@ class BiopetFifoPipe(val parent: Configurable,
     val writer = new PrintWriter(file)
     lines.foreach(writer.println)
 
-    BiopetFifoPipe.waitScript
-    this.fifos.map(required("rm", _)).mkString(" \n")
-    BiopetFifoPipe.endScript
+    writer.println(BiopetFifoPipe.waitScript)
+    writer.println(this.fifos.map(required("rm", _)).mkString(" \n"))
+    writer.println(BiopetFifoPipe.endScript)
     writer.close()
     if (logger.isDebugEnabled) {
       val reader = Source.fromFile(file)
