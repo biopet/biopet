@@ -102,8 +102,11 @@ class BiopetFifoPipe(val parent: Configurable,
     BiopetFifoPipe.waitScript
     this.fifos.map(required("rm", _)).mkString(" \n")
     BiopetFifoPipe.endScript
-
     writer.close()
+    if (logger.isDebugEnabled) {
+      val reader = Source.fromFile(file)
+      logger.debug(s"Content of script $file:\n" + reader.getLines().mkString("\n"))
+    }
   }
 
   override def setResources(): Unit = {
