@@ -32,13 +32,13 @@ class BiopetFifoPipe(val parent: Configurable,
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.outputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val inputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.inputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     for (cmdOutput <- commands;
@@ -54,13 +54,13 @@ class BiopetFifoPipe(val parent: Configurable,
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.outputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val inputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.inputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val fifoFiles = fifos
@@ -85,7 +85,7 @@ class BiopetFifoPipe(val parent: Configurable,
     }
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     this.fifos.filter(_.exists()).map(required("rm", _)).mkString(" \n") +
       this.fifos.map(required("mkfifo", _)).mkString("\n") +
       commands.map(_.commandLine).mkString("\n", " & \n", " & \n")
@@ -100,7 +100,7 @@ class BiopetFifoPipe(val parent: Configurable,
     lines.foreach(writer.println)
 
     BiopetFifoPipe.waitScript
-    this.fifos.map(required("rm", _)).mkString("\n\n", " \n", " \n\n")
+    this.fifos.map(required("rm", _)).mkString(" \n")
     BiopetFifoPipe.endScript
 
     writer.close()
@@ -123,7 +123,7 @@ class BiopetFifoPipe(val parent: Configurable,
 }
 
 object BiopetFifoPipe {
-  val waitScript =
+  val waitScript: String =
     """
       |
       |allJobs=`jobs -p`
@@ -169,7 +169,7 @@ object BiopetFifoPipe {
       |
     """.stripMargin
 
-  val endScript =
+  val endScript: String =
     """
       |
       |if [ "$FAIL" == "0" ];
