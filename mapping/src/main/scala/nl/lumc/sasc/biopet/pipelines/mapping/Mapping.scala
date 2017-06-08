@@ -23,7 +23,13 @@ import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie, Bowtie2}
 import nl.lumc.sasc.biopet.extensions.bwa.{BwaAln, BwaMem, BwaSampe, BwaSamse}
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.picard.{AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam}
+import nl.lumc.sasc.biopet.extensions.picard.{
+  AddOrReplaceReadGroups,
+  MarkDuplicates,
+  MergeSamFiles,
+  ReorderSam,
+  SortSam
+}
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.taxextract.TaxExtractExtract
@@ -35,7 +41,6 @@ import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
 import nl.lumc.sasc.biopet.utils.{Logging, textToSize}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline
 
 import scala.math._
 import Mapping.DuplicatesMethod
@@ -229,7 +234,7 @@ class Mapping(val parent: Configurable)
               inputR1.length * 3
             else inputR1.length
           numberChunks = Some(ceil(filesize.toDouble / textToSize(chunkSize)).toInt)
-          if (numberChunks == Some(0)) numberChunks = Some(1)
+          if (numberChunks.contains(0)) numberChunks = Some(1)
         }
       }
       logger.debug("Chunks: " + numberChunks.getOrElse(1))
@@ -265,14 +270,14 @@ class Mapping(val parent: Configurable)
     if (chunking) {
       val fastSplitterR1 = new FastqSplitter(this)
       fastSplitterR1.input = inputR1
-      for ((chunkDir, fastqfile) <- chunks) fastSplitterR1.output :+= fastqfile._1
+      for ((_, fastqfile) <- chunks) fastSplitterR1.output :+= fastqfile._1
       fastSplitterR1.isIntermediate = true
       add(fastSplitterR1)
 
       if (paired) {
         val fastSplitterR2 = new FastqSplitter(this)
         fastSplitterR2.input = inputR2.get
-        for ((chunkDir, fastqfile) <- chunks) fastSplitterR2.output :+= fastqfile._2.get
+        for ((_, fastqfile) <- chunks) fastSplitterR2.output :+= fastqfile._2.get
         fastSplitterR2.isIntermediate = true
         add(fastSplitterR2)
       }
@@ -352,8 +357,9 @@ class Mapping(val parent: Configurable)
       case DuplicatesMethod.Sambamba =>
         bamFile = new File(outputDir, outputName + ".dedup.bam")
         add(SambambaMarkdup(this, mergedBamFile, finalBamFile, !keepFinalBamFile))
-        add(SambambaIndex(this, finalBamFile))
-      case DuplicatesMethod.None =>
+        val index = SambambaIndex(this, finalBamFile)
+        index.isIntermediate = !keepFinalBamFile
+        add(index)
     }
 
     if (!skipMetrics) {
@@ -617,8 +623,8 @@ class Mapping(val parent: Configurable)
       (zcatR1._1 :: zcatR2.flatMap(_._1) ::
         Some(starCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
     pipe.threadsCorrection = -3
-    zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
-    zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
+    zcatR1._1.foreach(_ => pipe.threadsCorrection -= 1)
+    zcatR2.foreach(_._1.foreach(_ => pipe.threadsCorrection -= 1))
     pipe.isIntermediate = chunking || duplicatesMethod != DuplicatesMethod.None || !keepFinalBamFile
     add(pipe)
     reorderSam.output
