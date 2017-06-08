@@ -14,10 +14,12 @@
   */
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
+
+import scala.io.Source
 
 /**
   * Created by pjvan_thof on 9/29/15.
@@ -84,13 +86,24 @@ class BiopetFifoPipe(val parent: Configurable,
   }
 
   def cmdLine = {
-    val fifosFiles = this.fifos
-    fifosFiles.filter(_.exists()).map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
-      fifosFiles.map(required("mkfifo", _)).mkString("\n\n", "\n", "\n\n") +
-      commands.map(_.commandLine).mkString("\n\n", " & \n", " & \n\n") +
-      BiopetFifoPipe.waitScript +
-      fifosFiles.map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
-      BiopetFifoPipe.endScript
+    this.fifos.filter(_.exists()).map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
+      this.fifos.map(required("mkfifo", _)).mkString("\n\n", "\n", "\n\n") +
+      commands.map(_.commandLine).mkString("\n\n", " & \n", " & \n\n")
+  }
+
+  override protected def changeScript(file: File): Unit = {
+    super.changeScript(file)
+    val reader = Source.fromFile(file)
+    val lines = reader.getLines().toList
+    reader.close()
+    val writer = new PrintWriter(file)
+    lines.foreach(writer.println)
+
+    BiopetFifoPipe.waitScript
+    this.fifos.map(required("rm", _)).mkString("\n\n", " \n", " \n\n")
+    BiopetFifoPipe.endScript
+
+    writer.close()
   }
 
   override def setResources(): Unit = {

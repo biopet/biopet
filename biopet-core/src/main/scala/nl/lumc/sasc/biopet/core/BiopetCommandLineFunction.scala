@@ -44,7 +44,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   val preCommands: List[String] = config("pre_commands", default = Nil, freeVar = false)
 
-  private def changeScript(file: File): Unit = {
+  protected def changeScript(file: File): Unit = {
     val lines = Source.fromFile(file).getLines().toList
     val writer = new PrintWriter(file)
     remoteCommand match {
