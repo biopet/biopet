@@ -106,6 +106,7 @@ class BiopetFifoPipe(val parent: Configurable,
     if (logger.isDebugEnabled) {
       val reader = Source.fromFile(file)
       logger.debug(s"Content of script $file:\n" + reader.getLines().mkString("\n"))
+      reader.close()
     }
   }
 
