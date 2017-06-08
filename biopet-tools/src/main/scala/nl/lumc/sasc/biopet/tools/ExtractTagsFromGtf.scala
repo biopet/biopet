@@ -15,7 +15,7 @@ object ExtractTagsFromGtf extends ToolCommand {
                   gtfFile: File = null,
                   tags: List[String] = Nil,
                   feature: Option[String] = None)
-    extends AbstractArgs
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
@@ -35,7 +35,7 @@ object ExtractTagsFromGtf extends ToolCommand {
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val cmdArgs
-    : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.info("Start")
 
@@ -43,13 +43,14 @@ object ExtractTagsFromGtf extends ToolCommand {
     val writer = new PrintWriter(cmdArgs.outputFile)
     writer.println(cmdArgs.tags.mkString("#", "\t", ""))
 
-    reader.getLines()
+    reader
+      .getLines()
       .filter(!_.startsWith("#"))
       .map(Feature.fromLine)
       .filter(f => cmdArgs.feature.forall(_ == f.feature))
-        .foreach { f =>
-          writer.println(cmdArgs.tags.map(f.attributes.get).map(_.getOrElse("")).mkString("\t"))
-        }
+      .foreach { f =>
+        writer.println(cmdArgs.tags.map(f.attributes.get).map(_.getOrElse("")).mkString("\t"))
+      }
 
     reader.close()
     writer.close()
