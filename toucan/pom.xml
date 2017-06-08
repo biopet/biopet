@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetToolsExtensions</artifactId>
+            <artifactId>BiopetExtensions</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

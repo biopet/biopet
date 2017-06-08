@@ -23,15 +23,15 @@ import scala.io.Source
   * Created by pjvanthof on 10/12/2016.
   */
 object ValidateAnnotation extends ToolCommand {
-  case class Args(refflatFile: File = null,
+  case class Args(refflatFile: Option[File] = None,
                   reference: File = null,
                   failOnError: Boolean = true,
                   gtfFiles: List[File] = Nil)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('r', "refflatFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(refflatFile = x)
+    opt[File]('r', "refflatFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(refflatFile = Some(x))
     } text "Refflat file to check"
     opt[File]('g', "gtfFile") valueName "<file>" action { (x, c) =>
       c.copy(gtfFiles = x :: c.gtfFiles)
@@ -55,9 +55,9 @@ object ValidateAnnotation extends ToolCommand {
 
     try {
 
-      val refflatLines = Source.fromFile(cmdArgs.refflatFile).getLines().toList.sorted
+      val refflatLines = cmdArgs.refflatFile.map(Source.fromFile(_).getLines().toList.sorted)
 
-      for (line <- refflatLines) {
+      for (line <- refflatLines.getOrElse(Nil)) {
         val contig = line.split("\t")(2)
         require(dict.getSequence(contig) != null,
                 s"Contig '$contig' found in refflat but not found on reference")
@@ -68,10 +68,11 @@ object ValidateAnnotation extends ToolCommand {
         tempRefflat.deleteOnExit()
         GtfToRefflat.gtfToRefflat(file, tempRefflat, Some(cmdArgs.reference))
 
-        val tempRefflatLines = Source.fromFile(tempRefflat).getLines().toList.sorted
-
-        for ((line1, line2) <- refflatLines.zip(tempRefflatLines)) {
-          require(line1 == line2, "Refflat and gtf contain different information")
+        refflatLines.foreach { lines =>
+          val tempRefflatLines = Source.fromFile(tempRefflat).getLines().toList.sorted
+          for ((line1, line2) <- lines.zip(tempRefflatLines)) {
+            require(line1 == line2, "Refflat and gtf contain different information")
+          }
         }
       }
     } catch {

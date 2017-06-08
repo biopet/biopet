@@ -155,7 +155,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
-    "bowtie" -> Map("exe" -> "test"),
+    "bowtie" -> Map("exe" -> "test", "maxins" -> 250),
     "bowtie2" -> Map("exe" -> "test"),
     "hisat2" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
