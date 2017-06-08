@@ -42,6 +42,9 @@ class BamMetrics(val parent: Configurable)
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
 
+  @Argument(required = false)
+  var paired: Boolean = true
+
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
   /** returns files to store in summary */
@@ -87,6 +90,9 @@ class BamMetrics(val parent: Configurable)
     val multiMetrics = new CollectMultipleMetrics(this)
     multiMetrics.input = inputBam
     multiMetrics.outputName = new File(outputDir, inputBam.getName.stripSuffix(".bam"))
+    if (!paired)
+      multiMetrics.program = multiMetrics.program
+        .filter(_ != CollectMultipleMetrics.Programs.CollectInsertSizeMetrics)
     add(multiMetrics)
     addSummarizable(multiMetrics, "multi_metrics")
 
@@ -212,6 +218,7 @@ object BamMetrics extends PipelineCommand {
   def apply(root: Configurable,
             bamFile: File,
             outputDir: File,
+            paired: Boolean,
             sampleId: Option[String] = None,
             libId: Option[String] = None): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
@@ -219,6 +226,7 @@ object BamMetrics extends PipelineCommand {
     bamMetrics.libId = libId
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir
+    bamMetrics.paired = paired
 
     bamMetrics.init()
     bamMetrics.biopetScript()
