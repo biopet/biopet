@@ -404,6 +404,9 @@ object ReportBuilder {
   val numWorkers: Int = maxThreads.getOrElse(2)
   val queueCapacity = 100
 
+  implicit lazy val ec = ExecutionContext.global
+
+  /** New queueing execution context
   implicit lazy val ec = ExecutionContext.fromExecutorService(
     new ThreadPoolExecutor(
       numWorkers,
@@ -418,7 +421,7 @@ object ReportBuilder {
       }
     )
   )
-
+    */
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
   engine.allowReload = false
