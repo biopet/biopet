@@ -77,14 +77,23 @@ object GearsReport extends MultisampleReportBuilder {
       if (centrifugeExecuted)
         Some(
           "Centrifuge analysis" -> Future.successful(ReportPage(
-            List(
-              "Non-unique" ->
-                Future.successful(
-                  ReportPage(List(),
-                             List("All mappings" -> ReportSection(
-                               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                               Map("summaryStatsTag" -> "centrifuge_report"))),
-                             Map()))),
+            List("Non-unique" ->
+              Future.successful(ReportPage(
+                List(),
+                List("All mappings" -> ReportSection(
+                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                  GearsKronaPlot.values(summary,
+                                        runId,
+                                        "centrifuge_report",
+                                        "centrifuge_report",
+                                        samples,
+                                        libraries,
+                                        sampleId,
+                                        libId,
+                                        Some("centrifuge"))
+                )),
+                Map()
+              ))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
               Map("summaryStatsTag" -> "centrifuge_unique_report"))),
@@ -342,15 +351,15 @@ object GearsReport extends MultisampleReportBuilder {
 }
 
 object GearsKronaPlot {
-  def map(summary: SummaryDb,
-          runId: Int,
-          sampleId: Option[Int],
-          libId: Option[Int],
-          summaryModuleTag: String,
-          summaryStatsTag: String,
-          centrifugeTag: Option[String],
-          allSamples: Seq[Sample],
-          allLibraries: Seq[Library]): Map[String, Any] = {
+  def values(summary: SummaryDb,
+             runId: Int,
+             summaryModuleTag: String,
+             summaryStatsTag: String,
+             allSamples: Seq[Sample],
+             allLibraries: Seq[Library],
+             sampleId: Option[Int] = None,
+             libId: Option[Int] = None,
+             centrifugeTag: Option[String] = None): Map[String, Any] = {
     Map(
       "summary" -> summary,
       "runId" -> runId,
