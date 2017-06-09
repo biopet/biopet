@@ -22,7 +22,8 @@ class ValidateAnnotations(val parent: Configurable) extends QScript with BiopetQ
   /** Init for pipeline */
   def init(): Unit = {
     require(speciesDir.exists(), s"speciesDir does not exist: ${speciesDir.getAbsolutePath}")
-    require(speciesDir.isDirectory, "speciesDir is not a directory")
+    require(speciesDir.isDirectory,
+            s"speciesDir is not a directory: ${speciesDir.getAbsolutePath}")
   }
 
   /** Pipeline itself */
