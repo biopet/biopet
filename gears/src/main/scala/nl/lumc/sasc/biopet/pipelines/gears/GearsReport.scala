@@ -104,12 +104,22 @@ object GearsReport extends MultisampleReportBuilder {
     val krakenPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(
-            ReportPage(List(),
-                       List("Krona plot" -> Future.successful(
-                         ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
-                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)))),
-                       Map())))
+          "Kraken analysis" -> Future.successful(ReportPage(
+            List(),
+            List(
+              "Krona plot" -> Future.successful(
+                ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                              GearsKronaPlot
+                                .values(summary,
+                                        runId,
+                                        "Krona",
+                                        "krakenkrona",
+                                        samples,
+                                        libraries,
+                                        sampleId,
+                                        libId)))),
+            Map()
+          )))
       else None
 
     val qiimeClosedPage =
@@ -183,21 +193,22 @@ object GearsReport extends MultisampleReportBuilder {
     val gearsCentrifugePage = if (centrifugeExecuted) {
       Some(
         "Centrifuge analysis" -> Future.successful(ReportPage(
-          List(
-            "Non-unique" -> Future.successful(
-              ReportPage(List(),
-                         List("All mappings" -> ReportSection(
-                           "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                           GearsKronaPlot.values(summary,
-                             runId,
-                             "centrifuge_report",
-                             "centrifuge_report",
-                             samples,
-                             libraries,
-                             SampleId,
-                             libId,
-                             Some("centrifuge")))),
-                         Map()))),
+          List("Non-unique" -> Future.successful(ReportPage(
+            List(),
+            List("All mappings" -> ReportSection(
+              "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+              GearsKronaPlot.values(summary,
+                                    runId,
+                                    "centrifuge_report",
+                                    "centrifuge_report",
+                                    samples,
+                                    libraries,
+                                    SampleId,
+                                    libId,
+                                    Some("centrifuge"))
+            )),
+            Map()
+          ))),
           List("Unique mappings" -> ReportSection(
             "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
             Map("summaryStatsTag" -> "centrifuge_unique_report"))),
@@ -208,12 +219,21 @@ object GearsReport extends MultisampleReportBuilder {
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(
-            ReportPage(List(),
-                       List("Krona plot" -> ReportSection(
-                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
-                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId))),
-                       Map())))
+          "Kraken analysis" -> Future.successful(ReportPage(
+            List(),
+            List(
+              "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                                            GearsKronaPlot
+                                              .values(summary,
+                                                      runId,
+                                                      "Krona",
+                                                      "krakenkrona",
+                                                      samples,
+                                                      libraries,
+                                                      sampleId,
+                                                      libId))),
+            Map()
+          )))
       else None
 
     val qiimeClosesOtuTablePage =
@@ -295,21 +315,22 @@ object GearsReport extends MultisampleReportBuilder {
       if (centrifugeExecuted)
         Some(
           "Centrifuge analysis" -> Future.successful(ReportPage(
-            List(
-              "Non-unique" -> Future.successful(
-                ReportPage(List(),
-                           List("All mappings" -> ReportSection(
-                             "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                             GearsKronaPlot.values(summary,
-                               runId,
-                               "centrifuge_report",
-                               "centrifuge_report",
-                               samples,
-                               libraries,
-                               SampleId,
-                               libId,
-                               Some("centrifuge")))),
-                           Map()))),
+            List("Non-unique" -> Future.successful(ReportPage(
+              List(),
+              List("All mappings" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                GearsKronaPlot.values(summary,
+                                      runId,
+                                      "centrifuge_report",
+                                      "centrifuge_report",
+                                      samples,
+                                      libraries,
+                                      SampleId,
+                                      libId,
+                                      Some("centrifuge"))
+              )),
+              Map()
+            ))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
               Map("summaryStatsTag" -> "centrifuge_unique_report"))),
@@ -320,12 +341,21 @@ object GearsReport extends MultisampleReportBuilder {
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(
-            ReportPage(List(),
-                       List("Krona plot" -> ReportSection(
-                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
-                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId))),
-                       Map())))
+          "Kraken analysis" -> Future.successful(ReportPage(
+            List(),
+            List(
+              "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                                            GearsKronaPlot
+                                              .values(summary,
+                                                      runId,
+                                                      "Krona",
+                                                      "krakenkrona",
+                                                      samples,
+                                                      libraries,
+                                                      sampleId,
+                                                      libId))),
+            Map()
+          )))
       else None
 
     val qiimeClosesOtuTablePage =
