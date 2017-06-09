@@ -203,7 +203,7 @@ object GearsReport extends MultisampleReportBuilder {
                                     "centrifuge_report",
                                     samples,
                                     libraries,
-                                    SampleId,
+                                    sampleId,
                                     libId,
                                     Some("centrifuge"))
             )),
@@ -325,7 +325,7 @@ object GearsReport extends MultisampleReportBuilder {
                                       "centrifuge_report",
                                       samples,
                                       libraries,
-                                      SampleId,
+                                      sampleId,
                                       libId,
                                       Some("centrifuge"))
               )),
