@@ -107,7 +107,8 @@ object GearsReport extends MultisampleReportBuilder {
           "Kraken analysis" -> Future.successful(
             ReportPage(List(),
                        List("Krona plot" -> Future.successful(
-                         ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"))),
+                         ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
+                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)))),
                        Map())))
       else None
 
@@ -187,7 +188,15 @@ object GearsReport extends MultisampleReportBuilder {
               ReportPage(List(),
                          List("All mappings" -> ReportSection(
                            "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                           Map("summaryStatsTag" -> "centrifuge_report"))),
+                           GearsKronaPlot.values(summary,
+                             runId,
+                             "centrifuge_report",
+                             "centrifuge_report",
+                             samples,
+                             libraries,
+                             SampleId,
+                             libId,
+                             Some("centrifuge")))),
                          Map()))),
           List("Unique mappings" -> ReportSection(
             "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -202,7 +211,8 @@ object GearsReport extends MultisampleReportBuilder {
           "Kraken analysis" -> Future.successful(
             ReportPage(List(),
                        List("Krona plot" -> ReportSection(
-                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
+                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
+                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId))),
                        Map())))
       else None
 
@@ -233,7 +243,7 @@ object GearsReport extends MultisampleReportBuilder {
     Future {
       ReportPage(
         subPages =
-          List(gearsCentrifugePage.toList,
+          List(gearsCentrifugePage,
                krakenAnalysisPage,
                qiimeClosesOtuTablePage,
                qiimeOpenOtuTablePage).flatten ::: List(
@@ -290,7 +300,15 @@ object GearsReport extends MultisampleReportBuilder {
                 ReportPage(List(),
                            List("All mappings" -> ReportSection(
                              "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                             Map("summaryStatsTag" -> "centrifuge_report"))),
+                             GearsKronaPlot.values(summary,
+                               runId,
+                               "centrifuge_report",
+                               "centrifuge_report",
+                               samples,
+                               libraries,
+                               SampleId,
+                               libId,
+                               Some("centrifuge")))),
                            Map()))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
@@ -301,13 +319,14 @@ object GearsReport extends MultisampleReportBuilder {
 
     val krakenAnalysisPage =
       if (krakenExecuted)
-        List(
+        Some(
           "Kraken analysis" -> Future.successful(
             ReportPage(List(),
                        List("Krona plot" -> ReportSection(
-                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
+                         "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",  GearsKronaPlot
+                           .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId))),
                        Map())))
-      else Nil
+      else None
 
     val qiimeClosesOtuTablePage =
       if (qiimeClosesOtuTable.isDefined)

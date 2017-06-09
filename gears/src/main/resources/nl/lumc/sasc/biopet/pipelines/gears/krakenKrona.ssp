@@ -33,29 +33,6 @@
     }
 }#
 <%
-    <%-- Contains a future
-    val summaries = if (libId.isDefined) summary.getStatsForLibraries(runId, summaryModuleTag, summaryStatsTag, sampleId,
-      Map("all" -> Nil)
-    ).filter(_._1._2 == libId.get).map(x => x._1._1 -> x._2)
-    else summary.getStatsForSamples(runId, summaryModuleTag, summaryStatsTag, sampleId.map(SummaryDb.SampleId),
-      Map("all" -> Nil)
-    )
-    --%>
-    <%-- Contains a future
-    val totalReads = centrifugeTag.map { tag =>
-    if (libId.isDefined) {
-        val stats = summary.getStatsForLibraries(runId, summaryModuleTag, ModuleName(tag), sampleId,
-            Map("total" -> List("metrics", "Read"))
-        ).filter(_._1._2 == libId.get).head
-        val lib = allLibraries.filter(_.id == stats._1._2).head
-        val sample = allSamples.filter(_.id == stats._1._1).head
-        Map(s"${sample.name}" -> stats._2("total").map(_.toString.toLong).getOrElse(0L))
-    } else summary.getStatsForSamples(runId, summaryModuleTag, ModuleName(tag), sampleId.map(SummaryDb.SampleId),
-        Map("total" -> List("metrics", "Read"))
-        ).map(x => allSamples.find(_.id == x._1).head.name -> x._2("total").map(_.toString.toLong).getOrElse(0L))
-    }
-    --%>
-
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
     GearsKraken.convertKrakenSummariesToKronaXml(summaries.map(x => allSamples.find(_.id == x._1).head.name -> x._2("all").map(_.asInstanceOf[Map[String, Any]]).getOrElse(Map())), tempFile, totalReads)
