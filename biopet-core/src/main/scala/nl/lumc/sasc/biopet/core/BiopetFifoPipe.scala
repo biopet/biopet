@@ -92,6 +92,7 @@ class BiopetFifoPipe(val parent: Configurable,
       commands.map(_.commandLine).mkString("\n", " & \n", " & \n")
   }
 
+  /** This will add the control code to the script for fifo pipes */
   override protected def changeScript(file: File): Unit = {
     super.changeScript(file)
     BiopetFifoPipe.changeScript(file, fifos)
@@ -115,6 +116,7 @@ class BiopetFifoPipe(val parent: Configurable,
 
 object BiopetFifoPipe {
 
+  /** This will add the control code to the script for fifo pipes */
   def changeScript(file: File, fifos: List[File]): Unit = {
     val reader = Source.fromFile(file)
     val lines = reader.getLines().toList
