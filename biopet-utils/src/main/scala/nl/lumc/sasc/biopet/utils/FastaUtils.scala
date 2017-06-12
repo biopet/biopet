@@ -19,6 +19,8 @@ import java.io.File
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.{FastaSequenceFile, IndexedFastaSequenceFile}
 
+import scala.io.Source
+
 /**
   * Created by pjvan_thof on 25-10-16.
   */
@@ -72,5 +74,25 @@ object FastaUtils {
     val atCount = sequence.getBaseString.toLowerCase.count(c => c == 'a' || c == 't')
     val gc = gcCount.toDouble / (gcCount + atCount)
     gc
+  }
+
+  def readContigMap(file: File): Map[String, Set[String]] = {
+    val reader = Source.fromFile(file)
+    val map = reader
+      .getLines()
+      .filter(!_.startsWith("#"))
+      .map { line =>
+        val columns = line.split("\t")
+        val refContig = columns(0)
+        val alterniveNames = columns(1).split(";").toSet
+        refContig -> alterniveNames
+      }
+      .toMap
+    reader.close()
+    map
+  }
+
+  def readContigMapReverse(file: File): Map[String, String] = {
+    readContigMap(file).flatMap(x => x._2.map(y => y -> x._1))
   }
 }

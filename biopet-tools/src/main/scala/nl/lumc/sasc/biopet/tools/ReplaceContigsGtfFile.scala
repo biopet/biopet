@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.annotation.Feature
 
 import scala.io.Source
@@ -31,18 +31,7 @@ object ReplaceContigsGtfFile extends ToolCommand {
       c.copy(writeAsGff = true)
     }
     opt[File]("contigMappingFile") unbounded () action { (x, c) =>
-      val reader = Source.fromFile(x)
-      val map = reader
-        .getLines()
-        .filter(!_.startsWith("#"))
-        .flatMap { line =>
-          val columns = line.split("\t")
-          val newContig = columns(0)
-          columns(1).split(";").map(alterniveName => (alterniveName, newContig))
-        }
-        .toMap
-      reader.close()
-      c.copy(contigs = c.contigs ++ map)
+      c.copy(contigs = c.contigs ++ FastaUtils.readContigMapReverse(x))
     } text "File how to map contig names, first column is the new name, second column is semicolon separated list of alternative names"
   }
 

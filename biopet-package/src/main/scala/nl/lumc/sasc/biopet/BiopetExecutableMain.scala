@@ -41,7 +41,8 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
     nl.lumc.sasc.biopet.pipelines.shiva.GenotypeGvcfs,
     nl.lumc.sasc.biopet.pipelines.generateindexes.DownloadGenomes,
-    nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes
+    nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes,
+    nl.lumc.sasc.biopet.pipelines.generateindexes.ValidateAnnotations
   )
 
   def tools: List[MainCommand] = PipelineStatus :: BiopetToolsExecutable.tools
