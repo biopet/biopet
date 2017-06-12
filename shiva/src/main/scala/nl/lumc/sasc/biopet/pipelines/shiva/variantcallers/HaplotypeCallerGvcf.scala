@@ -49,10 +49,10 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
   override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
 
-  override def defaults =
-    Map(
-      "haplotypecaller" -> Map("variant_index_type" -> "LINEAR",
-                               "variant_index_parameter" -> 128000))
+//  override def defaults =
+//    Map(
+//      "haplotypecaller" -> Map("variant_index_type" -> "LINEAR",
+//                               "variant_index_parameter" -> 128000))
 
   override def init(): Unit = {
     super.init()
