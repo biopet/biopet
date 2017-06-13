@@ -202,10 +202,11 @@
             <plugin>
                 <groupId>org.antipathy</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
-                <version>0.1</version>
+                <version>0.6.8</version>
                 <inherited>false</inherited>
                 <configuration>
                     <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
+                    <parameters>--non-interactive</parameters>
                 </configuration>
                 <executions>
                     <execution>
@@ -215,20 +216,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-core_2.11 -->
-                    <dependency>
-                        <groupId>com.geirsson</groupId>
-                        <artifactId>scalafmt-core_2.11</artifactId>
-                        <version>${scalaFMTVersion}</version>
-                    </dependency>
-                    <!-- https://mvnrepository.com/artifact/com.geirsson/scalafmt-cli_2.11 -->
-                    <dependency>
-                        <groupId>com.geirsson</groupId>
-                        <artifactId>scalafmt-cli_2.11</artifactId>
-                        <version>${scalaFMTVersion}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
