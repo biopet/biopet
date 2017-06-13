@@ -10,16 +10,16 @@
 ## Functionality
 
 * [Gears](../pipelines/gears.md): Added `pick_open_reference_otus` reference module of [Qiime](http://qiime.org/)
-* Fixed default aligner in [Gentrap](../pipelines/gentrap.md) to gsnap
+* Fixed default aligner in [Gentrap](../pipelines/multisample/gentrap.md) to gsnap
 * Make `sample` and `library id` required in [Flexiprep](../pipelines/flexiprep.md) when started from the `CLI`
 * [Core] Raised some default memory limits ([#356](https://git.lumc.nl/biopet/biopet/issues/356))
-* [Carp](../pipelines/carp.md): Our MACS2 wrapper now auto-detects whether a sample is single-end or paired-end
+* [Carp](../pipelines/multisample/carp.md): Our MACS2 wrapper now auto-detects whether a sample is single-end or paired-end
 * Added a `sort by name` step when htseq in Gentrap is executed
 * Fixed file name of bam files in Carp
 * VcfWithVcf now checks if chromosomes are in the correct reference
 * Added sync stats to flexiprep report
 * Added check in BamMetrics to check whether contigs a given bed file are defined in the used reference-genome.
-* [TinyCap](../pipelines/tinycap.md) now has validated settings for miRNA runs. Some parameters changed for alignment.
+* [TinyCap](../pipelines/multisample/tinycap.md) now has validated settings for miRNA runs. Some parameters changed for alignment.
 * [Flexiprep](../pipelines/flexiprep.md) now has the option to provide custom adapters sequences and ignoring adapters found by `FastQC`. 
 * Utils - BamUtils is now estimating insert size by sampling the bam-file taking all parts of the available contigs.
 * Fix in VCF filter (#370)[https://git.lumc.nl/biopet/biopet/merge_requests/370]
