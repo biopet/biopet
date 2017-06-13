@@ -164,14 +164,9 @@ The config for these therefore is:
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |
 | shiva | library_variantcalling | Boolean | false | Not-recommended, single sample, per library |
 
-### Additional metagenomics analysis
-
-[Gears](../gears.md) can be ran for the data analysed with `Shiva`. There are two stages at which this metagenomics sub-pipeline can be called 
-and this should be specified in the [config](../../general/config) file. To call Gears, please use the following config values.
-
-*`mapping_to_gears: none` : Disable this functionality. (default)
-*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](../flexiprep).
-*`mapping_to_gears: unmapped` : Only send unmapped reads after alignment to Gears, e.g., a kind of "trash bin" analysis.
+## Running Gears
+[Gears](../gears.md) is run automatically for the data analysed with Gentrap.
+To fine tune this functionality see [here](multisamplemapping.md#Running-Gears)
 
 ### Taxonomy extraction 
 

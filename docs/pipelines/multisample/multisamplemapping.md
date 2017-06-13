@@ -61,6 +61,15 @@ samples:
 As this is an extension of the mapping pipeline a comprehensive list for all the settings affecting the analysis can be found [here](../mapping.md###Config).
 Required settings that should be included in this config file are:
 
+## Running Gears
+
+By default [Gears](../gears.md) is run automatically for the data analysed with MultiSampleMapping. 
+There are two levels on which this can be done and this should be specified in the [config](../../general/config.md) file:
+           
+* `mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](../flexiprep.md) (default)
+* `mapping_to_gears: unmapped` : Only send unmapped reads after alignment to Gears, e.g., a kind of "trash bin" analysis.
+* `mapping_to_gears: none` : Disable this functionality.
+           
 ## Running multisamplemapping
 
 To run the pipeline (it is recommended to first do a dry run, removing the `-run` option)
