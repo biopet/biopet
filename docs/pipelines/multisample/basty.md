@@ -14,13 +14,7 @@ Basty will output phylogenetic trees, which makes it very easy to look at the va
 
 ### Requirements
 
-To run with a specific species, please do not forget to create the proper index files.
-The index files are created from the supplied reference:
-
-* ```.dict``` (can be produced with <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>)
-* ```.fai``` (can be produced with <a href="http://samtools.sourceforge.net/samtools.shtml" target="_blank">Samtools faidx</a> 
-* ```.idxSpecificForAligner``` (depending on which aligner is used one should create a suitable index specific for that aligner. 
-Each aligner has his own way of creating index files. Therefore the options for creating the index files can be found inside the aligner itself)
+To run with a specific species, please do not forget to [create the proper index files](multisamplemapping.md#Setting-up).
 
 ### Configuration
 To run Basty, please create the proper [Config](../../general/config.md) files.
