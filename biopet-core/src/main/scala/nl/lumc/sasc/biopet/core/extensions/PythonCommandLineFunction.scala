@@ -35,11 +35,13 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     */
   def setPythonScript(script: String) {
     pythonScript = new File(script).getAbsoluteFile
-    if (!PythonCommandLineFunction.alreadyCopied.contains(script)) {
+    if (!PythonCommandLineFunction.alreadyCopied.contains((this.getClass, script))) {
       setPythonScript(script, "")
-      PythonCommandLineFunction.alreadyCopied += script
+      this.getClass
+      PythonCommandLineFunction.alreadyCopied += (this.getClass, script) -> pythonScript
     } else {
       pythonScriptName = script
+      pythonScript = PythonCommandLineFunction.alreadyCopied((this.getClass, script))
     }
   }
 
@@ -71,5 +73,5 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
 }
 
 object PythonCommandLineFunction {
-  private val alreadyCopied: mutable.Set[String] = mutable.Set()
+  private val alreadyCopied: mutable.Map[(Class[_], String), File] = mutable.Map()
 }

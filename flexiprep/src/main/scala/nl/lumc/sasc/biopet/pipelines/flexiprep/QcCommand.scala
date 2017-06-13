@@ -31,7 +31,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
     extends BiopetCommandLineFunction
     with Summarizable {
 
-  val flexiprep = parent match {
+  val flexiprep: Flexiprep = parent match {
     case f: Flexiprep => f
     case _ => throw new IllegalArgumentException("This class may only be used inside Flexiprep")
   }
@@ -56,7 +56,7 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
       val sub = new SeqtkSample(parent)
       sub.sample = f
       Some(sub)
-    case Some(f) =>
+    case Some(_) =>
       Logging.addError("downsample_fraction must be a number between 0 and 1")
       None
     case _ => None
@@ -77,13 +77,15 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
     cat
   }
 
-  def jobs = (seqtkSample :: Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
+  def jobs: List[BiopetCommandLineFunction] =
+    (seqtkSample :: Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
 
   def summaryFiles = Map()
 
   def summaryStats = Map()
 
-  override def summaryDeps = trim.map(_.summaryDeps).toList.flatten ::: super.summaryDeps
+  override def summaryDeps: List[File] =
+    trim.map(_.summaryDeps).toList.flatten ::: super.summaryDeps
 
   override def addToQscriptSummary(qscript: SummaryQScript): Unit = {
     clip match {
@@ -192,17 +194,23 @@ class QcCommand(val parent: Configurable, val fastqc: Fastqc, val read: String)
     outputCommand.beforeCmd()
   }
 
-  def cmdLine = {
+  override protected def changeScript(file: File): Unit = {
+    super.changeScript(file)
+    BiopetFifoPipe.changeScript(file, fifoPipe.fifos)
+  }
 
-    val cmd = new BiopetFifoPipe(parent,
-                                 (Some(seqtk) ::
-                                   seqtkSample ::
-                                   clip ::
-                                   trim ::
-                                   Some(outputCommand) ::
-                                   Nil).flatten)
+  private var fifoPipe: BiopetFifoPipe = _
 
-    cmd.beforeGraph()
-    cmd.commandLine
+  def cmdLine: String = {
+    fifoPipe = new BiopetFifoPipe(parent,
+                                  (Some(seqtk) ::
+                                    seqtkSample ::
+                                    clip ::
+                                    trim ::
+                                    Some(outputCommand) ::
+                                    Nil).flatten)
+
+    fifoPipe.beforeGraph()
+    fifoPipe.commandLine
   }
 }

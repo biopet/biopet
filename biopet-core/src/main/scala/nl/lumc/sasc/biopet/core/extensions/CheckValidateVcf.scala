@@ -12,7 +12,7 @@
   * license; For commercial users or users who do not want to follow the AGPL
   * license, please contact us to obtain a separate license.
   */
-package nl.lumc.sasc.biopet.pipelines.gentrap
+package nl.lumc.sasc.biopet.core.extensions
 
 import java.io.File
 
@@ -27,29 +27,31 @@ import scala.io.Source
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckValidateAnnotation(val parent: Configurable)
-    extends InProcessFunction
-    with Configurable {
+class CheckValidateVcf(val parent: Configurable) extends InProcessFunction with Configurable {
+
   @Input(required = true)
   var inputLogFile: File = _
 
   val abortOnError: Boolean = config("abort_on_error", default = true)
 
+  var species: String = ""
+
+  var genomeName: String = ""
+
   /** Exits whenever the input md5sum is not the same as the output md5sum */
-  def run: Unit = {
+  def run(): Unit = {
 
     val reader = Source.fromFile(inputLogFile)
     reader.getLines().foreach { line =>
       if (line.startsWith("ERROR")) {
-
-        // 130 Simulates a ctr-C
         if (abortOnError) {
-          logger.error("Corrupt annotations files found, aborting pipeline")
+          logger.error("Corrupt vcf file found, aborting pipeline")
+
+          // 130 Simulates a ctr-C
           Runtime.getRuntime.halt(130)
         } else {
-          logger.warn("Corrupt annotations files found")
           logger.warn(
-            "**** You enabled a unsafe method by letting the pipeline continue with incorrect annotations files ****")
+            s"Corrupt vcf file found for $species-$genomeName, for details see $inputLogFile")
         }
       }
     }
