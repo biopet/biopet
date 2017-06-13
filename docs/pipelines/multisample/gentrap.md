@@ -25,15 +25,12 @@ You can also provide a `.refFlat` file containing ribosomal sequence coordinates
 Please refer [to our mapping pipeline](../mapping.md) for information about how the input samples should be handled. 
 
 ## Configuration File
-
 As with other biopet pipelines, Gentrap relies on a JSON configuration file to run its analyses. There are two important parts here, the configuration for the samples (to determine the sample layout of your experiment) and the configuration for the pipeline settings (to determine which analyses are run).
 To get help creating the appropriate [configs](../../general/config.md) please refer to the config page in the general section.
 
-[Gears](gears) is run automatically for the data analysed with `Gentrap`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
-
-*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
-*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](../flexiprep).
-*`mapping_to_gears: none` : Disable this functionality.
+## Running Gears
+[Gears](../gears.md) is run automatically for the data analysed with Gentrap.
+To fine tune this functionality see [here](multisamplemapping.md#Running-Gears).
 
 ## Taxonomy extraction 
 
