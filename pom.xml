@@ -206,7 +206,7 @@
                 <inherited>false</inherited>
                 <configuration>
                     <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
-                    <parameters>--non-interactive</parameters>
+                    <parameters>--non-interactive --quiet</parameters>
                 </configuration>
                 <executions>
                     <execution>
