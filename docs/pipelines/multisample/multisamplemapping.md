@@ -14,9 +14,9 @@ this pipeline serves also as a first step for the following analysis pipelines b
 Its aim is to align the input data to the reference of interest with the most commonly used aligners 
 (for a complete list of supported aligners see [here](../mapping.md)). 
 
-#Setting up
+## Setting up
 
-## Reference files
+### Reference files
 
 An important step prior to the analysis is the proper generation of all the required index files for the reference, apart from the 
 reference sequence file itself.
@@ -24,17 +24,17 @@ reference sequence file itself.
 The index files are created from the supplied reference:
 
 * ```.dict``` (can be produced with <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>)
-* ```.fai``` (can be produced with <a href="http://samtools.sourceforge.net/samtools.shtml" target="_blank">Samtools faidx</a> 
+* ```.fai``` (can be produced with <a href="http://samtools.sourceforge.net/samtools.shtml" target="_blank">Samtools faidx</a>) 
 * ```.idxSpecificForAligner``` (depending on which aligner is used one should create a suitable index specific for that aligner. 
 Each aligner has its own way of creating index files. Therefore the options for creating the index files can be found inside the aligner itself)
 
-## Configuration files
+### Configuration files
 
 MultiSampleMapping relies on __YML__ (or __JSON__) configuration files to run its analyses. There are two important parts here, the configuration for the samples
 (to determine the sample layout of the experiment) and the configuration of the pipeline settings (to determine the different parameters for the
 pipeline components).
 
-### Sample config
+#### Sample config
 
 For a detailed explanation of how the samples configuration file should be created please see [here](../../general/config.md).
 As an example for two samples, one with two libraries and one with a single library, a samples config would look like this:
@@ -56,7 +56,7 @@ samples:
          R2: /full/path/to/R2.fastq.gz
 ```
 
-### Settings config
+#### Settings config
 
 As this is an extension of the mapping pipeline a comprehensive list for all the settings affecting the analysis can be found [here](../mapping.md###Config).
 Required settings that should be included in this config file are:
