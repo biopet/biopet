@@ -49,11 +49,6 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
   override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
 
-  override def defaults =
-    Map(
-      "haplotypecaller" -> Map("variant_index_type" -> "LINEAR",
-                               "variant_index_parameter" -> 128000))
-
   override def init(): Unit = {
     super.init()
     if (genderAwareCalling && haploidRegions.isEmpty && haploidRegionsMale.isEmpty && haploidRegionsFemale.isEmpty)
@@ -85,7 +80,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
         val haploidGvcf = if (haploidBedFiles.nonEmpty) {
           val hc = gatk.HaplotypeCaller(this,
                                         List(inputBam),
-                                        new File(outputDir, sample + ".haploid.gvcf.vcf.gz"))
+                                        new File(outputDir, sample + ".haploid.g.vcf.gz"))
           hc.BQSR = inputBqsrFiles.get(sample)
           hc.intervals = haploidBedFiles
           hc.scatterCount = (hc.scatterCount * fraction).toInt
@@ -97,7 +92,7 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
         val hcDiploid = gatk.HaplotypeCaller(this,
                                              List(inputBam),
-                                             new File(outputDir, sample + ".diploid.gvcf.vcf.gz"))
+                                             new File(outputDir, sample + ".diploid.g.vcf.gz"))
         hcDiploid.BQSR = inputBqsrFiles.get(sample)
         hcDiploid.excludeIntervals = haploidBedFiles
         hcDiploid.scatterCount = (hcDiploid.scatterCount * (1 - fraction)).toInt
@@ -108,14 +103,14 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
           case Some(file) =>
             val combine = new gatk.CombineGVCFs(this)
             combine.variant = Seq(hcDiploid.out, file)
-            combine.out = new File(outputDir, sample + ".gvcf.vcf.gz")
+            combine.out = new File(outputDir, sample + ".g.vcf.gz")
             add(combine)
             sample -> combine.out
           case _ => sample -> hcDiploid.out
         }
       } else {
         val hc =
-          gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".gvcf.vcf.gz"))
+          gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".g.vcf.gz"))
         hc.BQSR = inputBqsrFiles.get(sample)
         add(hc)
         genotypeGvcfs.inputGvcfs :+= hc.out
