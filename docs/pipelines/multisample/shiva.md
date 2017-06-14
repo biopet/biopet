@@ -2,8 +2,9 @@
 
 ## Introduction
 
-This pipeline is built for variant calling on NGS data (preferably Illumina data). Part of this pipeline resembles the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of their approach to variant calling.
-The pipeline accepts ```.fastq & .bam``` files as input.
+This pipeline is built for variant calling on NGS data (preferably Illumina data). Part of this pipeline resembles the 
+<a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms 
+of their approach to variant calling. The pipeline accepts `.fastq` & `.bam` files as input.
 
 ----
 
@@ -29,7 +30,7 @@ Note that one should first create the appropriate sample and pipeline setting [c
 
 Shiva pipeline can start from FASTQ or BAM files. This pipeline will include pre-process steps for the BAM files. 
 
-When using BAM files as input, Note that one should alter the sample config field from `R1` into `bam`.
+When using BAM files as input, note that one should alter the sample config field from `R1` into `bam`.
 
 To view the help menu, execute:
 ~~~
@@ -53,6 +54,7 @@ A dry run can be performed by simply removing the `-run` flag from the command l
 
 
 An example of MySettings.yml file is provided here and more detailed config options are explained in [config options](#config-options).
+
 ``` yaml
 samples:
     SampleID:
@@ -137,7 +139,8 @@ For all the options, please see the corresponding documentation for the mapping 
 
 ### Gender aware variantcalling
 
-In Shiva and ShivaVariantcalling while using haplotypecaller_gvcf it is possible to do gender aware variantcalling. In this mode it required to supply bed files to define haploid regions (see config values). 
+In Shiva and ShivaVariantcalling while using haplotypecaller_gvcf it is possible to do gender aware variant calling. 
+In this mode it is required to supply bed files to define haploid regions (see config values). 
 - For males, `hap̦loid_regions` and `hap̦loid_regions_male` is used.
 - For females, `hap̦loid_regions` and `hap̦loid_regions_female` is used.
 
@@ -146,7 +149,7 @@ The pipeline will use a union of those files. At least 1 file is required while 
 ### Reporting modes
 
 Shiva furthermore supports three modes. The default and recommended option is `multisample_variantcalling`.
-During this mode, all bam files will be simultaneously called in one big VCF file. It will work with any number of samples.
+In this mode, all bam files will be simultaneously called in one big VCF file. It will work with any number of samples.
 
 Additionally, Shiva provides two separate modes that only work with a single sample.
 Those are not recommended, but may be useful to those who need to validate replicates.
@@ -210,8 +213,8 @@ taxextract:
 ### Only variant calling
 
 It is possible to run Shiva while only performing its variant calling steps starting from BAM files.
-This has been separated in its own pipeline named `shivavariantcalling`. Different than running shiva which converts BAM files to fastq files first, 
-shivavariantcalling will not perform any pre-processing and mapping steps. But just to call variants based on the input BAM files.
+This has been separated in its own pipeline named `shivavariantcalling`. Different than running shiva, which converts BAM files to fastq files first, 
+shivavariantcalling will not perform any pre-processing and mapping steps. Instead it will just call variants based on the input BAM files.
 
 To view the help menu, execute:
 ~~~
@@ -252,8 +255,8 @@ Arguments for ShivaSvCalling:
  -DSC,--disablescatter                 Disable all scatters
 ~~~ 
  
-To run `ShivaSvCalling`, the user needs to supply the input BAM files from the command line using the `-BAM` flag. It is not possible to provide them in a sample sheet as a config file. 
-No sample ID or library information is necessary.
+To run `ShivaSvCalling`, the user needs to supply the input BAM files from the command line using the `-BAM` flag. 
+It is not possible to provide them in a sample sheet as a config file. No sample ID or library information is necessary.
   
 To run the pipeline, you can type something like:
 ~~~
