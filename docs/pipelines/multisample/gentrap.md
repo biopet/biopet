@@ -161,30 +161,37 @@ If you are unsure of how to use the numerous options of gentrap, please refer to
 
 #### Example configurations
 
-In most cases, it's practical to combine the samples and settings configuration into one file. Here is an [example config file](/examples/gentrap_example.json) where both samples and settings are stored into one file. Note also that there are additional tool configurations in the config file.
+In most cases, it's practical to combine the samples and settings configuration into one file. 
+Here is an [example config file](/examples/gentrap_example.json) where both samples and settings are stored into one file. 
+Note also that there are additional tool configurations in the config file.
 
 ## Running Gentrap
 
-As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
+As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` sub-command:
 
 ~~~ bash
-biopet pipeline gentrap -config </path/to/config.json> -run
+java -jar </path/to/biopet.jar> pipeline gentrap \
+-config </path/to/config.yml> -run
 ~~~
 
 You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
 ~~~ bash
 $ module load biopet/v0.9.0
-$ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+$ biopet pipeline gentrap \
+-config </path/to/config.yml> \
+-qsub -jobParaEnv BWA -run
 ~~~
 
-It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
+It is also a good idea to specify retries (we recommend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
 
 ## Output Files
 
 The numbers and types of output files depend on your run configuration. 
-What you can always expect, however, is that there will be a `sqlite` file of your run called `gentrap.summary.db` and an HTML report in a `report` folder called `index.html`. 
-The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the html report provides a quick overview of your run results.
+What you can always expect, however, is that there will be a `sqlite` file of your run called `gentrap.summary.db` and an HTML report in a `report` folder 
+called `index.html`. 
+The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further 
+processing with your Gentrap run (for example, plotting some figures), while the html report provides a quick overview of your run results.
 
 ## Getting Help
 
