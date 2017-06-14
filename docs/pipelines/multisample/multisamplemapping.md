@@ -11,8 +11,10 @@ this pipeline serves also as a first step for the following analysis pipelines b
  *  [Shiva](shiva.md) - Variant calling
  *  [Tinycap](tinycap.md) - smallRNA analysis
 
+# MultisampleMapping
+
 Its aim is to align the input data to the reference of interest with the most commonly used aligners 
-(for a complete list of supported aligners see [here](../mapping.md)). 
+(for a complete list of supported aligners see [here](../mapping.md)).  
 
 ## Setting up
 
@@ -60,6 +62,31 @@ samples:
 
 As this is an extension of the mapping pipeline a comprehensive list for all the settings affecting the analysis can be found [here](../mapping.md###Config).
 Required settings that should be included in this config file are:
+
+| ConfigNamespace | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| - | output_dir | String | | Path to output directory |
+| mapping | reference_fasta | String | | This must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file. If the `.dict` file does not exist, you can create it using: ```` java -jar <picard jar> CreateSequenceDictionary R=<reference.fasta> O=<outputDict> ```` |
+
+Optional settings
+
+| ConfigNamespace | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| mapping | merge_strategy | String | preprocessmarkduplicates | Determines how the individual bam files from each library are merged into one bam file per sample. Available options: `preprocessmarkduplicates` (add read group information, mark duplicates and then merge), `mergesam` (simple samtools merge), `preprocessmergesam` (add read group information and merge with samtools), `markduplicates` (mark duplicates first and then merge), `preprocesssambambamarkdup` (add read group information, mark duplicates with sambamba and then merge), `none` (do not merge the bam files) |
+| mapping | duplicates_method | String | picard | Determines the method to use for marking duplicates. Available options: `picard`, `sambamba` or `none` to disable duplicate marking |
+| mapping | skip_flexiprep | Boolean| false | Determines whether the input is analysed with [Flexiprep](../flexiprep.md). |
+| mapping | mapping_to_gears | String | all | Determines whether the input is analysed with [Gears](../gears.md) or not. Available options: `all` (all reads), `unmapped` (extract only the unmapped reads and analyse with Gears) and `none` (skip this step) |
+
+An example config.yml
+
+```yaml
+output_dir: /path/to/output/dir
+reference_fasta: /path/to/reference
+mapping_to_gears: unmapped
+bwamem:
+  t: 4
+duplicates_method: sambamba
+ ```
 
 ## Running Gears
 
