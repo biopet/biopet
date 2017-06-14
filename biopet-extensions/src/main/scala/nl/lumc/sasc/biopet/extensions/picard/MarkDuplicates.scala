@@ -78,7 +78,7 @@ class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable 
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +
@@ -108,7 +108,7 @@ class MarkDuplicates(val parent: Configurable) extends Picard with Summarizable 
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getMetrics(outputMetrics).getOrElse(Map())
+  def summaryStats: Any = Picard.getMetrics(outputMetrics).getOrElse(Map())
 }
 object MarkDuplicates {
 
