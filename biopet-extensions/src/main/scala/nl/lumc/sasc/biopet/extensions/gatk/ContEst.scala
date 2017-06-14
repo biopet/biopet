@@ -64,8 +64,35 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "precision", shortName = "pc", required = false)
   var precision: Option[Double] = config("precision")
 
+  /** Default value: 0.01 */
+  @Argument(fullName = "trim_fraction", required = false)
+  var trimFraction: Option[Double] = config("trim_fraction")
+
 /*--sample_name
     -sn 	unknown 	The sample name; used to extract the correct genotypes from mutli-sample truth vcfs
-  --trim_fraction
-    0.01 	at most, what fraction of sites should be trimmed based on BETA_THRESHOLD    */
+  -ja genotype ja verify jms    */
+
+  @Argument(fullName = "fixed_epsilon_qscore", required = false)
+  var fixedEpsilonScore: Option[Int] = config("fixed_epsilon_qscore")
+
+  /** Default value: 50 */
+  @Argument(fullName = "min_genotype_depth", required = false)
+  var minGenotypeDepth: Option[Int] = config("min_genotype_depth")
+
+  /** Default value: 5.0 */
+  @Argument(fullName = "min_genotype_llh", required = false)
+  var minGenotypeLlh: Option[Double] = config("min_genotype_llh")
+
+  /** Default value: 0.8 */
+  @Argument(fullName = "min_genotype_ratio", required = false)
+  var minGenotypeRatio: Option[Double] = config("min_genotype_ratio")
+
+  /** Default value: 0 */
+  @Argument(fullName = "min_site_depth", required = false)
+  var minSiteDepth: Option[Int] = config("min_site_depth")
+
+  /** Default value: 0 */
+  @Argument(fullName = "trim_interval", required = false)
+  var trimInterval: Option[Double] = config("trim_interval")
+
 }
