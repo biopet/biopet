@@ -178,8 +178,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         val libId = tag.libId.flatMap(name =>
           sampleId.flatMap(sampleId =>
             Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
-        if (tag.sampleId.isDefined) require(sampleId.isDefined, s"Sample '${tag.sampleId.get}' is not found in database yet")
-        if (tag.libId.isDefined) require(libId.isDefined, s"Library '${tag.libId.get}' for '${tag.sampleId}' is not found in database yet")
+        if (tag.sampleId.isDefined)
+          require(sampleId.isDefined, s"Sample '${tag.sampleId.get}' is not found in database yet")
+        if (tag.libId.isDefined)
+          require(libId.isDefined,
+                  s"Library '${tag.libId.get}' for '${tag.sampleId}' is not found in database yet")
         for ((key, file) <- qscript.summaryFiles.par)
           Await.result(WriteSummary.createFile(db,
                                                qscript.summaryRunId,
