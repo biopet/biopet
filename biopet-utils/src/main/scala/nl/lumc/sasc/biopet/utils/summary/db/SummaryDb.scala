@@ -265,9 +265,6 @@ trait SummaryDb extends Closeable {
                   library: LibraryQuery = NoLibrary,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
-    if (module == ModuleName("rna")) {
-      ""
-    }
     keyValues.map {
       case (key, path) =>
         stats match {
