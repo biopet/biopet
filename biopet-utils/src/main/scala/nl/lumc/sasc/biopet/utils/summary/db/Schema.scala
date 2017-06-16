@@ -111,7 +111,7 @@ object Schema {
     def * =
       (runId, pipelineId, moduleId, sampleId, libraryId, content) <> (Stat.tupled, Stat.unapply)
 
-    def idx = index("idx_stats", (runId, pipelineId, moduleId, sampleId, libraryId), unique = true)
+    def idx = index("idx_stats", (runId, pipelineId, moduleId, sampleId, libraryId))
   }
   val stats = TableQuery[Stats]
 
@@ -133,7 +133,7 @@ object Schema {
       (runId, pipelineId, moduleId, sampleId, libraryId, content) <> (Setting.tupled, Setting.unapply)
 
     def idx =
-      index("idx_settings", (runId, pipelineId, moduleId, sampleId, libraryId), unique = true)
+      index("idx_settings", (runId, pipelineId, moduleId, sampleId, libraryId))
   }
   val settings = TableQuery[Settings]
 
@@ -163,7 +163,7 @@ object Schema {
       (runId, pipelineId, moduleId, sampleId, libraryId, key, path, md5, link, size) <> (File.tupled, File.unapply)
 
     def idx =
-      index("idx_files", (runId, pipelineId, moduleId, sampleId, libraryId, key), unique = true)
+      index("idx_files", (runId, pipelineId, moduleId, sampleId, libraryId, key))
   }
   val files = TableQuery[Files]
 
