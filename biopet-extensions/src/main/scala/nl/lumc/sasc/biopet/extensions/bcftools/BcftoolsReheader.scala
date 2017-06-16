@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 
 class BcftoolsReheader(val parent: Configurable) extends Bcftools {
 
-  @Input(doc = "Input vcf file", required = true)
+  @Input(doc = "Input vcf file", required = false)
   var input: File = _
 
   @Input(doc = "File specifying how sample names should be renamed", required = true)
@@ -35,13 +35,12 @@ class BcftoolsReheader(val parent: Configurable) extends Bcftools {
       required("reheader") +
       required("--samples", renameSamples) +
       optional("--output", output) +
-      required(input)
+      optional(input)
 }
 
 object BcftoolsReheader {
-  def apply(parent: Configurable, input: File, renameSamples: File): BcftoolsReheader = {
+  def apply(parent: Configurable, renameSamples: File): BcftoolsReheader = {
     val reheader = new BcftoolsReheader(parent)
-    reheader.input = input
     reheader.renameSamples = renameSamples
     reheader
   }

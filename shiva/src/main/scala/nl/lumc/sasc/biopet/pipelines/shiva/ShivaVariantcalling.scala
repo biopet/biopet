@@ -23,11 +23,16 @@ import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.MuTect2
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{MuTect2, SomaticVariantcaller, TumorNormalPair}
+import nl.lumc.sasc.biopet.utils.{BamUtils, ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
+import nl.lumc.sasc.biopet.utils.summary.db.{SummaryDb, SummaryDbWrite}
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
   * Implementation of ShivaVariantcalling
@@ -52,6 +57,8 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
+  var tnPairs: List[TumorNormalPair] = _
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
@@ -64,6 +71,17 @@ class ShivaVariantcalling(val parent: Configurable)
             case "female" => Gender.Female
             case _ => Gender.Unknown
           })
+      }
+    }
+    if (isSomaticVariantCallingConfigured()) {
+      loadTnPairsFromConfig()
+      validateTnPairs()
+      val db = SummaryDb.openSqliteSummary(summaryDbFile)
+      val samples: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
+      for (pair <- tnPairs) {
+        var tags: Map[String, String] = Map("tumor" -> pair.tumorSample, "normal" -> pair.normalSample)
+        addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
+        addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
       }
     }
   }
@@ -82,6 +100,10 @@ class ShivaVariantcalling(val parent: Configurable)
   }
 
   override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
+
+  def isSomaticVariantCallingConfigured(): Boolean = {
+    callers.exists(_.isInstanceOf[SomaticVariantcaller])
+  }
 
   /** Final merged output files of all variantcaller modes */
   def finalFile: Option[File] =
@@ -136,6 +158,9 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
+      if (caller.isInstanceOf[SomaticVariantcaller])
+        caller.asInstanceOf[SomaticVariantcaller].tnPairs = this.tnPairs
+
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean =
@@ -209,11 +234,55 @@ class ShivaVariantcalling(val parent: Configurable)
     }
   }
 
+  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Unit = {
+    var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
+      case s: Sample if s.tags.nonEmpty => pairInfo ++ ConfigUtils.jsonToMap(ConfigUtils.textToJson(s.tags.get))
+      case _ => pairInfo
+    }
+    db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces))
+  }
+
+  private def loadTnPairsFromConfig(): Unit = {
+    var samplePairs: List[Any] = config("tumor_normal_pairs").asList
+    if (samplePairs != null) {
+      try {
+        for (elem <- samplePairs) {
+          val pair: Map[String, Any] = ConfigUtils.any2map(elem).map({
+            case (key, sampleName) => key.toUpperCase() -> sampleName
+          })
+          tnPairs :+= TumorNormalPair(pair("T").toString, pair("N").toString)
+        }
+      } catch {
+        case e: Exception => Logging.addError("Unable to parse the parameter 'tumor_normal_pairs' from configuration.", cause = e)
+      }
+    } else {
+      Logging.addError("Parameter 'tumor_normal_pairs' is missing from configuration. When using MuTect2, samples configuration must give the pairs of matching tumor and normal samples.")
+    }
+  }
+
+  private def validateTnPairs(): Unit = {
+    var samplesWithBams = inputBams.keySet
+    var tnSamples: List[String] = List()
+    tnPairs.foreach(pair => tnSamples ++= List(pair.tumorSample, pair.normalSample))
+    tnSamples.foreach(sample => {
+      if (!samplesWithBams.contains(sample))
+        Logging.addError(
+          s"Parameter 'tumor_normal_pairs' contains a sample for which no input files can be found, sample name: $sample")
+    })
+    if (tnSamples.size != tnSamples.distinct.size)
+      Logging.addError(
+        "Each sample should appear once in the sample pairs given with the parameter 'tumor_normal_pairs'")
+    if (tnSamples.size != samplesWithBams.size)
+      Logging.addError(
+        "The number of samples given with the parameter 'tumor_normal_pairs' has to match the number of samples for which there are input files defined.")
+  }
+
   /** Settings for the summary */
   def summarySettings = Map(
     "variantcallers" -> configCallers.toList,
     "regions_of_interest" -> roiBedFiles.map(_.getName),
-    "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath)
+    "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath),
+    "somatic_variant_calling" -> isSomaticVariantCallingConfigured
   )
 
   /** Files for the summary */
