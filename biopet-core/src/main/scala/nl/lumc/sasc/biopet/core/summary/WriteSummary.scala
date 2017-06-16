@@ -359,7 +359,10 @@ object WriteSummary {
 
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
-    Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
+    val reader = Source.fromFile(checksumFile)
+    val lines = reader.getLines().toList
+    reader.close()
+    lines.head.split(" ")(0)
   }
 
   def createFile(db: SummaryDbWrite,
