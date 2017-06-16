@@ -41,8 +41,8 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       for (pair <- tnPairs) {
         val pairLabel = s"${pair.tumorSample}-${pair.normalSample}"
         val out: File = new File(samplesDir, s"$pairLabel.$name.vcf")
-        renameSamples += s"TUMOR.$pairLabel ${pair.tumorSample}"
-        tumorSamples += s"TUMOR.$pairLabel"
+        renameSamples :+= s"TUMOR.$pairLabel ${pair.tumorSample}"
+        tumorSamples :+= s"TUMOR.$pairLabel"
         outputPerSample :+= TaggedFile(out, pairLabel)
         addMuTect2(pair, out)
       }

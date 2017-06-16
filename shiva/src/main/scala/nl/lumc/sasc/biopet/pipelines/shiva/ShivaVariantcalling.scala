@@ -33,6 +33,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Implementation of ShivaVariantcalling
@@ -236,7 +237,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Unit = {
     var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
-      case s: Sample if s.tags.nonEmpty => pairInfo ++ ConfigUtils.jsonToMap(ConfigUtils.textToJson(s.tags.get))
+      case Some(s) if s.tags.nonEmpty => pairInfo ++ ConfigUtils.jsonToMap(ConfigUtils.textToJson(s.tags.get))
       case _ => pairInfo
     }
     db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces))
