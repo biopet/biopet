@@ -85,13 +85,11 @@ object IoUtils {
     lines
   }
 
-  def writeLinesToFile(lines: List[String]): File = {
-    val file = File.createTempFile("tmp", ".tmp")
-    val writer = new PrintWriter(file)
+  def writeLinesToFile(output: File, lines: List[String]): Unit = {
+    val writer = new PrintWriter(output)
     lines.foreach(writer.println(_))
+    writer.flush()
     writer.close()
-    file.deleteOnExit()
-    file
   }
 
   def executableExist(exe: String): Boolean = {
