@@ -110,8 +110,6 @@ object Schema {
 
     def * =
       (runId, pipelineId, moduleId, sampleId, libraryId, content) <> (Stat.tupled, Stat.unapply)
-
-    def idx = index("idx_stats", (runId, pipelineId, moduleId, sampleId, libraryId))
   }
   val stats = TableQuery[Stats]
 
@@ -131,9 +129,6 @@ object Schema {
 
     def * =
       (runId, pipelineId, moduleId, sampleId, libraryId, content) <> (Setting.tupled, Setting.unapply)
-
-    def idx =
-      index("idx_settings", (runId, pipelineId, moduleId, sampleId, libraryId))
   }
   val settings = TableQuery[Settings]
 
