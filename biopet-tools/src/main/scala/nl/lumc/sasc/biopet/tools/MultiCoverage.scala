@@ -15,7 +15,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * Created by pjvanthof on 17/06/2017.
   */
 object MultiCoverage extends ToolCommand {
-  case class Args(bedFile: File = null, bamFiles: List[File] = Nil, outputFile: File = null)
+  case class Args(bedFile: File = null,
+                  bamFiles: List[File] = Nil,
+                  outputFile: File = null,
+                  mean: Boolean = false)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -30,6 +33,9 @@ object MultiCoverage extends ToolCommand {
       (x, c) =>
         c.copy(outputFile = x)
     } text "output file"
+    opt[Unit]("mean") unbounded () valueName "<file>" action { (x, c) =>
+      c.copy(mean = true)
+    } text "By default total bases is outputed, enable this option make the output relative to region length"
   }
 
   /**
@@ -49,7 +55,7 @@ object MultiCoverage extends ToolCommand {
           val counts = bamFiles.map {
             case (sampleName, bamFile) =>
               val samReader = SamReaderFactory.makeDefault.open(bamFile)
-              val count = sampleName -> samReader
+              val count = samReader
                 .queryOverlapping(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
                 .foldLeft(0L) {
                   case (bases, samRecord) =>
@@ -58,7 +64,8 @@ object MultiCoverage extends ToolCommand {
                     bases + (end - start)
                 }
               samReader.close()
-              count
+              if (cmdargs.mean) sampleName -> (count.toDouble / region.length)
+              else sampleName -> count
           }
           region -> counts
         }

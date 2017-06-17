@@ -18,7 +18,7 @@ class MultiCoverageTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def test(): Unit = {
+  def testDefault(): Unit = {
     val outputFile = File.createTempFile("output.", ".txt")
     outputFile.deleteOnExit()
     MultiCoverage.main(
@@ -37,6 +37,30 @@ class MultiCoverageTest extends TestNGSuite with Matchers {
       "chrQ\t470\t475\t0",
       "chrQ\t1\t200\t40",
       "chrQ\t150\t250\t19"
+    )
+  }
+
+  @Test
+  def testMean(): Unit = {
+    val outputFile = File.createTempFile("output.", ".txt")
+    outputFile.deleteOnExit()
+    MultiCoverage.main(
+      Array("-L",
+            resourcePath("/rrna02.bed"),
+            "-b",
+            resourcePath("/paired01.bam"),
+            "-o",
+            outputFile.getAbsolutePath,
+            "--mean"))
+
+    Source.fromFile(outputFile).getLines().toList shouldBe List(
+      "#contig\tstart\tend\tWipeReadsTestCase",
+      "chrQ\t300\t350\t0.0",
+      "chrQ\t350\t400\t0.0",
+      "chrQ\t450\t480\t0.3",
+      "chrQ\t470\t475\t0.0",
+      "chrQ\t1\t200\t0.20100502512562815",
+      "chrQ\t150\t250\t0.19"
     )
   }
 }
