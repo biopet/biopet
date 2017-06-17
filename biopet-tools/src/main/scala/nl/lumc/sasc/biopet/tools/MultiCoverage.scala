@@ -9,6 +9,7 @@ import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import scala.collection.JavaConversions._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by pjvanthof on 17/06/2017.
@@ -18,7 +19,7 @@ object MultiCoverage extends ToolCommand {
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('b', "bedFile") required () maxOccurs 1 unbounded () valueName "<file>" action {
+    opt[File]('L', "bedFile") required () maxOccurs 1 unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(bedFile = x)
     } text "input bedfile"
@@ -53,7 +54,7 @@ object MultiCoverage extends ToolCommand {
                 .foldLeft(0L) {
                   case (bases, samRecord) =>
                     val start = (samInterval.getStart :: samRecord.getAlignmentStart :: Nil).max
-                    val end = (samInterval.getEnd :: samRecord.getAlignmentEnd :: Nil).min
+                    val end = (samInterval.getEnd :: samRecord.getAlignmentEnd + 1 :: Nil).min
                     bases + (end - start)
                 }
               samReader.close()
