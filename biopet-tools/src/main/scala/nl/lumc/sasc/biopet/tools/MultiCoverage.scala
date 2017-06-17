@@ -21,14 +21,14 @@ object MultiCoverage extends ToolCommand {
     opt[File]('b', "bedFile") required () maxOccurs 1 unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(bedFile = x)
-    } text "refseq ID from NCBI"
+    } text "input bedfile"
     opt[File]('b', "bamFile") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
-    } text "output Fasta file"
+    } text "input bam files"
     opt[File]('o', "output") required () maxOccurs 1 unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(outputFile = x)
-    } text "output Fasta file"
+    } text "output file"
   }
 
   /**
