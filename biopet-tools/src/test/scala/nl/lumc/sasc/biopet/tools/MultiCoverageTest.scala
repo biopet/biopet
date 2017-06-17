@@ -17,12 +17,17 @@ class MultiCoverageTest extends TestNGSuite with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-
   @Test
   def test(): Unit = {
     val outputFile = File.createTempFile("output.", ".txt")
     outputFile.deleteOnExit()
-    MultiCoverage.main(Array("-L", resourcePath("/rrna02.bed"), "-b", resourcePath("/paired01.bam"), "-o", outputFile.getAbsolutePath))
+    MultiCoverage.main(
+      Array("-L",
+            resourcePath("/rrna02.bed"),
+            "-b",
+            resourcePath("/paired01.bam"),
+            "-o",
+            outputFile.getAbsolutePath))
 
     Source.fromFile(outputFile).getLines().toList shouldBe List(
       "#contig\tstart\tend\tWipeReadsTestCase",
