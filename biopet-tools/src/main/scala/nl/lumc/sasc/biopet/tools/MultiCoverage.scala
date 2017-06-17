@@ -14,10 +14,8 @@ import scala.concurrent.{Await, Future}
   * Created by pjvanthof on 17/06/2017.
   */
 object MultiCoverage extends ToolCommand {
-  case class Args(bedFile: File = null,
-                  bamFiles: List[File] = Nil,
-                  outputFile: File = null)
-    extends AbstractArgs
+  case class Args(bedFile: File = null, bamFiles: List[File] = Nil, outputFile: File = null)
+      extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('b', "bedFile") required () maxOccurs 1 unbounded () valueName "<file>" action {
@@ -27,8 +25,9 @@ object MultiCoverage extends ToolCommand {
     opt[File]('b', "bamFile") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
     } text "output Fasta file"
-    opt[File]('o', "output") required () maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
-      c.copy(outputFile = x)
+    opt[File]('o', "output") required () maxOccurs 1 unbounded () valueName "<file>" action {
+      (x, c) =>
+        c.copy(outputFile = x)
     } text "output Fasta file"
   }
 
@@ -42,27 +41,34 @@ object MultiCoverage extends ToolCommand {
 
     val bamFiles = BamUtils.sampleBamMap(cmdargs.bamFiles)
 
-    val futures = for (region <- BedRecordList.fromFile(cmdargs.bedFile).allRecords) yield Future {
-      val samInterval = region.toSamInterval
-      val counts = bamFiles.map { case (sampleName, bamFile) =>
-        val samReader = SamReaderFactory.makeDefault.open(bamFile)
-        val count = sampleName -> samReader.queryOverlapping(samInterval.getContig, samInterval.getStart, samInterval.getEnd).foldLeft(0L) { case (bases, samRecord) =>
-            val start = (samInterval.getStart :: samRecord.getAlignmentStart :: Nil).max
-            val end = (samInterval.getEnd :: samRecord.getAlignmentEnd :: Nil).min
-            bases + (end - start)
+    val futures = for (region <- BedRecordList.fromFile(cmdargs.bedFile).allRecords)
+      yield
+        Future {
+          val samInterval = region.toSamInterval
+          val counts = bamFiles.map {
+            case (sampleName, bamFile) =>
+              val samReader = SamReaderFactory.makeDefault.open(bamFile)
+              val count = sampleName -> samReader
+                .queryOverlapping(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
+                .foldLeft(0L) {
+                  case (bases, samRecord) =>
+                    val start = (samInterval.getStart :: samRecord.getAlignmentStart :: Nil).max
+                    val end = (samInterval.getEnd :: samRecord.getAlignmentEnd :: Nil).min
+                    bases + (end - start)
+                }
+              samReader.close()
+              count
           }
-        samReader.close()
-        count
-      }
-      region -> counts
-    }
+          region -> counts
+        }
 
     val writer = new PrintWriter(cmdargs.outputFile)
     val samples = bamFiles.keys.toList
     writer.println(s"#contig\tstart\tend\t${samples.mkString("\t")}")
     for (future <- futures) {
       val (region, counts) = Await.result(future, Duration.Inf)
-      writer.println(s"${region.chr}\t${region.start}\t${region.end}\t${samples.map(counts).mkString("\t")}")
+      writer.println(
+        s"${region.chr}\t${region.start}\t${region.end}\t${samples.map(counts).mkString("\t")}")
     }
     writer.close()
 
