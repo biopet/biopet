@@ -46,6 +46,8 @@ object MultiCoverage extends ToolCommand {
     val cmdargs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
+    logger.info("Start")
+
     val bamFiles = BamUtils.sampleBamMap(cmdargs.bamFiles)
 
     val futures = for (region <- BedRecordList.fromFile(cmdargs.bedFile).allRecords)
@@ -70,6 +72,9 @@ object MultiCoverage extends ToolCommand {
           region -> counts
         }
 
+    logger.info("Reading bam files")
+
+    var count = 0
     val writer = new PrintWriter(cmdargs.outputFile)
     val samples = bamFiles.keys.toList
     writer.println(s"#contig\tstart\tend\t${samples.mkString("\t")}")
@@ -77,8 +82,12 @@ object MultiCoverage extends ToolCommand {
       val (region, counts) = Await.result(future, Duration.Inf)
       writer.println(
         s"${region.chr}\t${region.start}\t${region.end}\t${samples.map(counts).mkString("\t")}")
+      count += 1
+      if (count % 1000 == 0) logger.info(s"$count regions done")
     }
+    logger.info(s"$count regions done")
     writer.close()
 
+    logger.info("Done")
   }
 }
