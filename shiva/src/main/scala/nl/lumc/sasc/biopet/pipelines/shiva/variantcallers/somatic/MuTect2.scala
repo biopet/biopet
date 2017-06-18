@@ -47,7 +47,8 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
         addMuTect2(pair, out)
       }
 
-      intermResult = new File(outputFile.getAbsolutePath + ".tmp")
+      var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf")
+      intermResult = new File((if (sIndex != -1) outputFile.getAbsolutePath.substring(0, sIndex) else outputFile.getAbsolutePath) + ".all_samples.vcf")
 
       val combineVariants = gatk.CombineVariants(this, outputPerSample, intermResult)
       combineVariants.genotypemergeoption = Some("UNIQUIFY")
@@ -58,7 +59,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
     selectVariants.variant = intermResult
     selectVariants.sample_name = tumorSamples
 
-    val file: File = new File(outputDir.getParent, ".renameSamples.txt")
+    val file: File = new File(outputDir.getParent.getParent, ".renameSamples.txt") //TODO!
     file.deleteOnExit()
     IoUtils.writeLinesToFile(file, renameSamples)
 

@@ -31,7 +31,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.{SummaryDb, SummaryDbWrite}
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -58,7 +58,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
-  var tnPairs: List[TumorNormalPair] = _
+  var tnPairs: List[TumorNormalPair] = List()
 
   /** Executed before script */
   def init(): Unit = {
@@ -79,11 +79,18 @@ class ShivaVariantcalling(val parent: Configurable)
       validateTnPairs()
       val db = SummaryDb.openSqliteSummary(summaryDbFile)
       val samples: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
+
+      var dbUpdate:List[Future[Int]] = List()
       for (pair <- tnPairs) {
         var tags: Map[String, String] = Map("tumor" -> pair.tumorSample, "normal" -> pair.normalSample)
-        addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
-        addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
+        dbUpdate ::= addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
+        dbUpdate ::= addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
       }
+      Await.result(Future.sequence(dbUpdate), Duration.Inf) // TODO consider moving handling Futures to SummaryDbWrite
+
+      val samples2: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
+      println(s"mitu proovi peale lisamist ${samples2.size}")
+      println(samples2)
     }
   }
 
@@ -101,6 +108,10 @@ class ShivaVariantcalling(val parent: Configurable)
   }
 
   override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
+
+  def isGermlineVariantCallingConfigured(): Boolean = {
+    callers.exists(_.mergeVcfResults)
+  }
 
   def isSomaticVariantCallingConfigured(): Boolean = {
     callers.exists(_.isInstanceOf[SomaticVariantcaller])
@@ -235,7 +246,7 @@ class ShivaVariantcalling(val parent: Configurable)
     }
   }
 
-  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Unit = {
+  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Future[Int] = {
     var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
       case Some(s) if s.tags.nonEmpty => pairInfo ++ ConfigUtils.jsonToMap(ConfigUtils.textToJson(s.tags.get))
       case _ => pairInfo
@@ -283,7 +294,8 @@ class ShivaVariantcalling(val parent: Configurable)
     "variantcallers" -> configCallers.toList,
     "regions_of_interest" -> roiBedFiles.map(_.getName),
     "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath),
-    "somatic_variant_calling" -> isSomaticVariantCallingConfigured
+    "somatic_variant_calling" -> isSomaticVariantCallingConfigured,
+    "germline_variant_calling" -> isGermlineVariantCallingConfigured
   )
 
   /** Files for the summary */

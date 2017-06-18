@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoModule, NoSample, SampleId}
@@ -54,6 +55,30 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       case Some(true) => true
       case _ => false
     }
+  def germlineVariantCalling =
+    summary
+      .getSettingKeys(runId,
+        "shivavariantcalling",
+        NoModule,
+        keyValues =
+          Map("germline_variant_calling" -> List("germline_variant_calling")))
+      .get("germline_variant_calling")
+      .flatten match {
+      case Some(true) => true
+      case _ => false
+    }
+  def somaticVariantCalling =
+    summary
+      .getSettingKeys(runId,
+        "shivavariantcalling",
+        NoModule,
+        keyValues =
+          Map("somatic_variant_calling" -> List("somatic_variant_calling")))
+      .get("somatic_variant_calling")
+      .flatten match {
+      case Some(true) => true
+      case _ => false
+    }
 
   def svCallingExecuted =
     summary
@@ -73,19 +98,17 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   override def additionalSections = {
     val params = Map("showPlot" -> true, "showTable" -> false)
-    super.additionalSections ++
-      (if (variantcallingExecuted)
-         List(
-           "SNV Calling" -> ReportSection(
-             "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-             params))
-       else Nil) ++
-      (if (svCallingExecuted)
-         List(
-           "SV Calling" -> ReportSection(
-             "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp",
-             params))
-       else Nil)
+    var sections: List[(String, ReportSection)] = super.additionalSections
+    if (variantcallingExecuted) {
+      if (somaticVariantCalling)
+        sections :+= "Somatic Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params + ("onlySomaticVariants" -> true))
+      if(germlineVariantCalling)
+        sections :+= (if (somaticVariantCalling) "Germline Variants" else "SNV Calling") -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)
+    }
+    if (svCallingExecuted)
+      sections :+=  "SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp", params)
+
+    sections
   }
 
   /** Root page for the shiva report */
@@ -184,7 +207,11 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
                          summary: SummaryDb,
                          sampleId: Option[Int] = None,
                          caller: String = "final",
-                         target: Option[String] = None): Unit = {
+                         target: Option[String] = None,
+                         tumorSamplesOnly: Boolean = false): Unit = {
+    var samples: Seq[Sample] = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
+    if (tumorSamplesOnly) samples = samples.filter(sample => sample.tags.contains("tumor" -> sample.name))
+
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -192,10 +219,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     val field = List("HomVar", "Het", "HomRef", "NoCall")
     tsvWriter.println(s"\t${field.mkString("\t")}")
 
-    val samples =
-      Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
     val statsPaths = {
-      (for (sample <- Await.result(summary.getSamples(runId = runId), Duration.Inf)) yield {
+      (for (sample <- samples) yield {
         field
           .map(f => s"${sample.name};$f" -> List("total", "genotype", "general", sample.name, f))
           .toMap
@@ -208,12 +233,12 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     }
 
     val results = summary.getStatKeys(runId,
-                                      "shivavariantcalling",
-                                      moduleName,
-                                      sampleId.map(SampleId).getOrElse(NoSample),
-                                      keyValues = statsPaths)
+      "shivavariantcalling",
+      moduleName,
+      sampleId.map(SampleId).getOrElse(NoSample),
+      keyValues = statsPaths)
 
-    for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
+    for (sample <- samples) {
       tsvWriter.println(
         sample.name + "\t" + field
           .map(f => results.get(s"${sample.name};$f").getOrElse(Some("0")).get)
@@ -226,7 +251,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("VCF records")
-    plot.width = Some(200 + (samples.count(s => sampleId.getOrElse(s) == s) * 10))
+    plot.width = Some(200 + (samples.size * 10))
     plot.runLocal()
   }
 

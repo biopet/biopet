@@ -259,6 +259,7 @@ class Shiva(val parent: Configurable)
 
   lazy val annotation: Option[Toucan] =
     if (multisampleVariantCalling.isDefined &&
+        multisampleVariantCalling.get.finalFile.isDefined &&
         config("annotation", default = false).asBoolean) {
       Some(new Toucan(this))
     } else None

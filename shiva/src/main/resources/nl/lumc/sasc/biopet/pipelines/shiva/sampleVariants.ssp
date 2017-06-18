@@ -20,6 +20,7 @@
 <%@ var caller: String = "final" %>
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
+<%@ var onlySomaticVariants = false %>
 #{
     val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
 
@@ -59,9 +60,8 @@
     </div>
     </div>
 #end
-
 #if (showPlot)
-    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, target = target) }#
+    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, caller = "final", target = target, onlySomaticVariants) }#
     <div class="panel-body">
         <img src="variantSummary.png" class="img-responsive" />
     </div>
