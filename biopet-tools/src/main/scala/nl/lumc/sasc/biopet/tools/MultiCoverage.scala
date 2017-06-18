@@ -66,7 +66,8 @@ object MultiCoverage extends ToolCommand {
                     bases + (if (start <= end) 0 else end - start)
                 }
               samReader.close()
-              if (cmdargs.mean) sampleName -> (count.toDouble / region.length)
+              if (cmdargs.mean && region.length > 0) sampleName -> (count.toDouble / region.length)
+              else if (cmdargs.mean) sampleName -> 0.0
               else sampleName -> count
           }
           region -> counts
