@@ -20,14 +20,23 @@
 <%@ var caller: String = "final" %>
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
-<%@ var onlySomaticVariants = false %>
+<%@ var onlySomaticVariants: Boolean = false %>
 #{
     val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
 
-    val samples = sampleId match {
+    var samples = sampleId match {
         case Some(id) => allSamples.filter(_.id == id)
         case _ => allSamples
     }
+    if (onlySomaticVariants) {
+        samples = samples.filter({sample =>
+            sample.tagsAsMap() match {
+                case Some(t) =>  t.exists(elem => elem._1 == "tumor" && elem._2 == sample.name)
+                case _ => false
+            }
+        })
+    }
+
     val vcfstatsKey = target match {
         case Some(t) => s"multisample-vcfstats-$caller-$t"
         case _ => s"multisample-vcfstats-$caller"
@@ -61,7 +70,7 @@
     </div>
 #end
 #if (showPlot)
-    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, caller = "final", target = target, onlySomaticVariants) }#
+    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, caller = caller, target = target, onlySomaticVariants) }#
     <div class="panel-body">
         <img src="variantSummary.png" class="img-responsive" />
     </div>
@@ -86,7 +95,6 @@
     #for (sample <- samples.sortBy(_.name))
     <tr><td><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
     #{
-    fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
         val statsPaths = fields.map(x => x -> List("total", "genotype", "general", sample.name, x)).toMap
         val sampleQuery: SampleQuery = if (multisample) NoSample else SampleId(sampleId.get)
         val results = summary.getStatKeys(runId, "shivavariantcalling", vcfstatsKey, sampleQuery, keyValues = statsPaths)

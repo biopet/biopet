@@ -18,6 +18,7 @@ import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
@@ -101,7 +102,8 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     var sections: List[(String, ReportSection)] = super.additionalSections
     if (variantcallingExecuted) {
       if (somaticVariantCalling)
-        sections :+= "Somatic Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params + ("onlySomaticVariants" -> true))
+        sections :+= "Somatic Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+          params ++ Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
       if(germlineVariantCalling)
         sections :+= (if (somaticVariantCalling) "Germline Variants" else "SNV Calling") -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)
     }
@@ -210,7 +212,14 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
                          target: Option[String] = None,
                          tumorSamplesOnly: Boolean = false): Unit = {
     var samples: Seq[Sample] = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
-    if (tumorSamplesOnly) samples = samples.filter(sample => sample.tags.contains("tumor" -> sample.name))
+    if (tumorSamplesOnly) {
+      samples = samples.filter({sample =>
+        sample.tagsAsMap() match {
+          case Some(t) =>  t.exists(elem => elem._1 == "tumor" && elem._2 == sample.name)
+          case _ => false
+        }
+      })
+    }
 
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
