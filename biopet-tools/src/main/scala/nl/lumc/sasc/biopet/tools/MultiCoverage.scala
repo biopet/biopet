@@ -63,7 +63,8 @@ object MultiCoverage extends ToolCommand {
                   case (bases, samRecord) =>
                     val start = (samInterval.getStart :: samRecord.getAlignmentStart :: Nil).max
                     val end = (samInterval.getEnd :: samRecord.getAlignmentEnd + 1 :: Nil).min
-                    bases + (if (start <= end) 0 else end - start)
+                    val length = end - start
+                    bases + (if (length < 0) 0 else length)
                 }
               samReader.close()
               if (cmdargs.mean && region.length > 0) sampleName -> (count.toDouble / region.length)
