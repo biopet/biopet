@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.utils.summary.db
 
 import java.sql.Date
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import slick.driver.H2Driver.api._
 
 /**
@@ -42,7 +43,11 @@ object Schema {
   }
   val runs = TableQuery[Runs]
 
-  case class Sample(id: Int, name: String, runId: Int, tags: Option[String])
+  case class Sample(id: Int, name: String, runId: Int, tags: Option[String]) {
+
+    def tagsAsMap(): Option[Map[String, Any]] = tags.collect({ case tags => ConfigUtils.jsonToMap(ConfigUtils.textToJson(tags))})
+  }
+
   class Samples(tag: Tag) extends Table[Sample](tag, "Samples") {
     def id = column[Int]("id", O.PrimaryKey)
     def name = column[String]("name")
