@@ -16,13 +16,11 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{Summarizable}
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ConfigUtils}
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
-import scala.io.Source
 
 /**
   * This tool will generate statistics from a vcf file
@@ -41,10 +39,10 @@ class VcfStats(val parent: Configurable)
   var input: File = _
 
   @Input
-  protected var index: File = null
+  protected var index: File = _
 
   @Output
-  protected var statsFile: File = null
+  protected var statsFile: File = _
 
   override def defaultCoreMemory = 3.0
   override def defaultThreads = 3
@@ -59,6 +57,8 @@ class VcfStats(val parent: Configurable)
   var intervals: Option[File] = None
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (intervals.isEmpty) intervals = config("intervals")
     reference = referenceFasta()
     index = new File(input.getAbsolutePath + ".tbi")
   }
@@ -71,7 +71,7 @@ class VcfStats(val parent: Configurable)
   }
 
   /** Creates command to execute extension */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", input) +
       required("-o", outputDir) +
