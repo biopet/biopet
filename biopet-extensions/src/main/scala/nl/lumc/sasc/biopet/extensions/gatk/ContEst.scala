@@ -23,23 +23,25 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
 
   /** Output file of the program. */
   @Output(fullName = "out", shortName = "o", required = true)
-  var outputVcf: File = _
+  var output: File = _
 
   /** Where to write a full report about the loci we processed. */
   @Output(fullName = "base_report", shortName = "br", required = false)
-  var baseReportFile: Option[File] = _
-
-  @Output(fullName = "likelihood_file", shortName = "lf", required = false)
-  var likelihoodFile: Option[File] = _
+  var baseReportFile: Option[File] = config("base_report")
 
   @Argument(fullName = "beta_threshold", required = false)
-  var betaThreshold: Option[Double] = _
+  /** Default value: 0.95 */
+  var betaThreshold: Option[Double] = config("beta_threshold")
 
   @Argument(fullName = "genotype_mode", shortName= "gm", required = false)
-  var genotypeMode: Option[String] = _
+  /** Default value: HARD_THRESHOLD*/
+  var genotypeMode: Option[String] = config("genotype_mode")
 
   @Argument(fullName = "lane_level_contamination", shortName= "llc", required = false)
   var laneLevelContamination: String = "SAMPLE"
+
+  @Output(fullName = "likelihood_file", shortName = "lf", required = false)
+  var likelihoodFile: Option[File] = config("likelihood_file")
 
   /** Threshold for minimum mapping quality score.
     * Default value: 20 */
@@ -68,10 +70,6 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "trim_fraction", required = false)
   var trimFraction: Option[Double] = config("trim_fraction")
 
-/*--sample_name
-    -sn 	unknown 	The sample name; used to extract the correct genotypes from mutli-sample truth vcfs
-  -ja genotype ja verify jms    */
-
   @Argument(fullName = "fixed_epsilon_qscore", required = false)
   var fixedEpsilonScore: Option[Int] = config("fixed_epsilon_qscore")
 
@@ -95,4 +93,36 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "trim_interval", required = false)
   var trimInterval: Option[Double] = config("trim_interval")
 
+  override def cmdLine = super.cmdLine +
+    required("-I:eval", tumorSampleBam) +
+    required("-I:genotype", normalSampleBam) +
+    required("--popfile", popFile) +
+    required("--out", output) +
+    optional("--base_report", baseReportFile) +
+    optional("--beta_threshold", betaThreshold) +
+    optional("--genotype_mode", genotypeMode) +
+    optional("--lane_level_contamination", laneLevelContamination) +
+    optional("--likelihood_file", likelihoodFile) +
+    optional("--min_mapq", minMapQ) +
+    optional("--min_qscore", minQScore) +
+    optional("--minimum_base_count", minimumBaseCount) +
+    optional("--population", population) +
+    optional("--precision", precision) +
+    optional("--trim_fraction", trimFraction) +
+    optional("--fixed_epsilon_qscore", fixedEpsilonScore) +
+    optional("--min_genotype_depth", minGenotypeDepth) +
+    optional("--min_genotype_llh", minGenotypeLlh) +
+    optional("--min_genotype_ratio", minGenotypeRatio) +
+    optional("--min_site_depth", minSiteDepth) +
+    optional("--trim_interval", trimInterval)
+}
+
+object ContEst {
+  def apply(parent: Configurable, tumorSampleBam: File, normalSampleBam: File, output: File): ContEst = {
+    val conest = new ContEst(parent)
+    conest.tumorSampleBam = tumorSampleBam
+    conest.normalSampleBam = normalSampleBam
+    conest.output = output
+    conest
+  }
 }
