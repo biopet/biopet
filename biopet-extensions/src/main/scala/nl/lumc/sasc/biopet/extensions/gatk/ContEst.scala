@@ -30,11 +30,9 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   var baseReportFile: Option[File] = config("base_report")
 
   @Argument(fullName = "beta_threshold", required = false)
-  /** Default value: 0.95 */
   var betaThreshold: Option[Double] = config("beta_threshold")
 
   @Argument(fullName = "genotype_mode", shortName= "gm", required = false)
-  /** Default value: HARD_THRESHOLD*/
   var genotypeMode: Option[String] = config("genotype_mode")
 
   @Argument(fullName = "lane_level_contamination", shortName= "llc", required = false)
@@ -53,7 +51,6 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "min_qscore", required = false)
   var minQScore: Option[Int] = config("min_qscore")
 
-  /** Default value: 500 */
   @Argument(fullName = "minimum_base_count", shortName = "mbc", required = false)
   var minimumBaseCount: Option[Int] = config("minimum_base_count")
 
@@ -62,42 +59,19 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "population", shortName = "population", required = false)
   var population: Option[String] = config("population")
 
-  /** Default value: 0.1 */
   @Argument(fullName = "precision", shortName = "pc", required = false)
   var precision: Option[Double] = config("precision")
 
-  /** Default value: 0.01 */
   @Argument(fullName = "trim_fraction", required = false)
   var trimFraction: Option[Double] = config("trim_fraction")
 
-  @Argument(fullName = "fixed_epsilon_qscore", required = false)
-  var fixedEpsilonScore: Option[Int] = config("fixed_epsilon_qscore")
-
-  /** Default value: 50 */
-  @Argument(fullName = "min_genotype_depth", required = false)
-  var minGenotypeDepth: Option[Int] = config("min_genotype_depth")
-
-  /** Default value: 5.0 */
-  @Argument(fullName = "min_genotype_llh", required = false)
-  var minGenotypeLlh: Option[Double] = config("min_genotype_llh")
-
-  /** Default value: 0.8 */
-  @Argument(fullName = "min_genotype_ratio", required = false)
-  var minGenotypeRatio: Option[Double] = config("min_genotype_ratio")
-
-  /** Default value: 0 */
-  @Argument(fullName = "min_site_depth", required = false)
-  var minSiteDepth: Option[Int] = config("min_site_depth")
-
-  /** Default value: 0 */
-  @Argument(fullName = "trim_interval", required = false)
-  var trimInterval: Option[Double] = config("trim_interval")
-
-  override def cmdLine = super.cmdLine +
+  override def cmdLine = {
+    val contEstOutput: File = new File(s"${output.getAbsolutePath}.all_fields")
+    super.cmdLine +
     required("-I:eval", tumorSampleBam) +
     required("-I:genotype", normalSampleBam) +
     required("--popfile", popFile) +
-    required("--out", output) +
+    required("--out", contEstOutput) +
     optional("--base_report", baseReportFile) +
     optional("--beta_threshold", betaThreshold) +
     optional("--genotype_mode", genotypeMode) +
@@ -109,12 +83,9 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
     optional("--population", population) +
     optional("--precision", precision) +
     optional("--trim_fraction", trimFraction) +
-    optional("--fixed_epsilon_qscore", fixedEpsilonScore) +
-    optional("--min_genotype_depth", minGenotypeDepth) +
-    optional("--min_genotype_llh", minGenotypeLlh) +
-    optional("--min_genotype_ratio", minGenotypeRatio) +
-    optional("--min_site_depth", minSiteDepth) +
-    optional("--trim_interval", trimInterval)
+    " && awk 'BEGIN{OFS=\"\\t\"}{if($1 != \"name\") print $1,$4;}' " + required(contEstOutput)+" > "+required(output)
+  }
+
 }
 
 object ContEst {

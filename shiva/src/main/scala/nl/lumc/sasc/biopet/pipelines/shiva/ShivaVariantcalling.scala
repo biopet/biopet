@@ -80,13 +80,11 @@ class ShivaVariantcalling(val parent: Configurable)
       val db = SummaryDb.openSqliteSummary(summaryDbFile)
       val samples: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
 
-      var dbUpdate:List[Future[Int]] = List()
       for (pair <- tnPairs) {
         var tags: Map[String, String] = Map("tumor" -> pair.tumorSample, "normal" -> pair.normalSample)
-        dbUpdate ::= addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
-        dbUpdate ::= addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
+        addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
+        addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
       }
-      Await.result(Future.sequence(dbUpdate), Duration.Inf) // TODO consider moving handling Futures to SummaryDbWrite
     }
   }
 
@@ -241,12 +239,12 @@ class ShivaVariantcalling(val parent: Configurable)
     }
   }
 
-  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Future[Int] = {
+  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Int = {
     var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
       case Some(s) => pairInfo ++ s.tagsAsMap().getOrElse(Map())
       case _ => pairInfo
     }
-    db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces))
+    Await.result(db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces)), Duration.Inf)
   }
 
   private def loadTnPairsFromConfig(): Unit = {

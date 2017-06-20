@@ -65,7 +65,6 @@
             <li><em>Variant</em>: Denotes amount of positions that were variant in the resultant VCF file</li>
             <li><em>Total</em>: Denotes total amount of positions in the resultant VCF file</li>
         </ul>
-        This can be also downloaded as a tab-delimited file.
 
         #elseif(onlySomaticVariants)
             This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">statistics</a> for somatic variants detected only in tumor samples. Samples are represented as a multi-colored bars. Red denotes the fraction of variants that are homozygous, green denotes the fraction of variants that are heterozygous. #if(samples.size > 1) Purple denotes those positions at which no call was made for the given sample, but these positions occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
