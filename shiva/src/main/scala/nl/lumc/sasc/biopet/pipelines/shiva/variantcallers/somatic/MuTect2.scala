@@ -17,9 +17,9 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
   // and results from this won't be merged together with the results from other methods
   def defaultPrio = -1
 
-  var ponFile: Option[File] = config("panel_of_normals")
+  //val buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
 
-  //private var buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
+  val runConEst = config("run_contest", default="false")
 
   def biopetScript(): Unit = {
     val samplesDir: File = new File(outputDir, "samples")
@@ -72,6 +72,15 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
   def addMuTect2(pair: TumorNormalPair, outFile: File): Unit = {
     val muTect2 = gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
     // TODO add also BQSR file?
+
+    if (runConEst) {
+      val contEstOutput: File = new File(outFile.getAbsolutePath.stripSuffix(".vcf") + "contamination.txt")
+      val contEst = gatk.ContEst(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), contEstOutput)
+      add(contEst)
+
+      muTect2.contaminationFile = Some(contEstOutput)
+    }
+
     add(muTect2)
   }
 
