@@ -17,22 +17,22 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Input(fullName = "normal_bam", required = true)
   var normalSampleBam: File = _
 
+  /** TODO  */
+  @Input(fullName = "cosmic", shortName = "cosmic", required = false)
+  var cosmic: Option[File] = config("cosmic")
+
   /** Vcf file of the dbSNP database. When it's provided, then it's possible to use the param 'dbsnpNormalLod', see the
     * description of that parameter for explanation. sIDs from this file are used to populate the ID column of the output.
     * Also, the DB INFO flag will be set when appropriate.
     * */
   @Input(fullName = "dbsnp", shortName = "D", required = false)
-  var dbsnp: Option[File] = dbsnpVcfFile
+  var dbsnp: Option[File] = if(config("use_dbsnp", default = false)) dbsnpVcfFile else None
 
-  /** TODO  */
-  @Input(fullName = "cosmic", shortName = "cosmic", doc = "", required = false)
-  var cosmic: Option[File] = None
+  @Input(fullName = "normal_panel", shortName = "PON", required = false)
+  var ponFile: Option[File] = config("normal_panel")
 
-  @Input(fullName = "normal_panel", shortName = "PON", doc = "", required = false)
-  var ponFile: Option[File] = None
-
-  @Input(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", doc = "", required = false)
-  var contaminationFile: Option[File] = None
+  @Input(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", required = false)
+  var contaminationFile: Option[File] = config("contamination_file")
 
   /** Output file of the program. */
   @Output(fullName = "out", shortName = "o", required = true)
@@ -86,13 +86,11 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "dbsnp_normal_lod", required = false, otherArgumentRequired = "dbsnp")
   var dbsnpNormalLod: Option[Double] = None
 
-  /** Ploidy per sample. For pooled data, this should be set to (Number of samples in each pool x Sample Ploidy).
-    * Default value: 2
-    * */
-  @Argument(fullName = "sample_ploidy", shortName="ploidy", required = false)
-  var ploidy: Option[Int] = config("sample_ploidy")
-
-  /** Default value: 0
+  /** If this fraction is greater is than zero, the caller will aggressively attempt to remove contamination through
+    * biased down-sampling of reads (for all samples). It will ignore the contamination fraction of reads for each
+    * alternate allele. So if the pileup contains N total bases, then we will try to remove (N * contamination fraction)
+    * bases for each alternate allele.
+    * Default value: 0
     * */
   @Argument(fullName = "contamination_fraction_to_filter", shortName="contamination", required = false)
   var contaminationFractionToFilter: Option[Double] = config("contamination_fraction_to_filter")
@@ -101,18 +99,15 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "group", shortName = "G", doc = "One or more classes/groups of annotations to apply to variant calls", required = false)
   var group: List[String] = config("group", default = Nil)
 
-  /** Heterozygosity value used to compute prior likelihoods for any locus.
-    * Default value:  0.001 */
+  /** Heterozygosity value used to compute prior likelihoods for any locus. */
   @Argument(fullName = "heterozygosity", shortName = "hets", doc = "Heterozygosity value used to compute prior likelihoods for any locus", required = false)
   var heterozygosity: Option[Double] = config("heterozygosity")
 
-  /** Heterozygosity for indel calling.
-    * Default value:  0.000125 */
+  /** Heterozygosity for indel calling. */
   @Argument(fullName = "indel_heterozygosity", shortName = "indelHeterozygosity", doc = "Heterozygosity for indel calling", required = false)
   var heterozygosityForIndels: Option[Double] = config("indel_heterozygosity")
 
-  /** Standard deviation of heterozygosity.
-    * Default value:  0.01 */
+  /** Standard deviation of heterozygosity. */
   @Argument(fullName = "heterozygosity_stdev", shortName = "heterozygosityStandardDeviation", doc = "Standard deviation of heterozygosity", required = false)
   var heterozygositySD: Option[Double] = config("heterozygosity_stdev")
 
@@ -131,10 +126,19 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "max_alt_alleles_in_qscore_sum", required = false)
   var maxAltAllelesInNormalQScoreSum: Option[Int] = config("max_alt_alleles_in_qscore_sum")
 
+  /** Maximum reads in an active region. When downsampling, level the coverage of the reads in each sample to no more
+    * than maxReadsInRegionPerSample reads, not reducing coverage at any read start to less than minReadsPerAlignmentStart */
+  @Argument(fullName = "maxReadsInRegionPerSample", shortName = "maxReadsInRegionPerSample", required = false)
+  var maxReadsInRegionPerSample: Option[Int] = config("maxReadsInRegionPerSample")
+
   /** Minimum base quality required to consider a base for calling.
     * Default value:  10 */
   @Argument(fullName = "min_base_quality_score", shortName = "mbq", required = false)
   var minBaseQScore: Option[Int] = config("min_base_quality_score")
+
+  /** Minimum number of reads sharing the same alignment start for each genomic location in an active region */
+  @Argument(fullName = "minReadsPerAlignmentStart", shortName = "minReadsPerAlignStart", required = false)
+  var minReadsPerAlignmentStart: Option[Int] = config("minReadsPerAlignmentStart")
 
   /** Value used for filtering tumor variants to exclude false positives caused by misalignments evidenced by alternate alleles occurring near the start and end of reads. Variants are rejected if their median distance from the start/end of of the reads is lower than this parameter and if the median absolute deviation is lower than the value given with the parameter 'pir_mad_threshold'. Filtering is done only if the parameter 'enableClusteredReadPositionFilter' is set to true.
     * Default value:  10 */
@@ -146,15 +150,72 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "pir_mad_threshold", required = false)
   var pirMadThreshold: Option[Double] = config("pir_mad_threshold")
 
+  /** TODO */
+  @Argument(fullName = "power_constant_qscore", required = false)
+  var powerConstantQScore: Option[Int] = config("power_constant_qscore")
+
+  /** Ploidy per sample. For pooled data, this should be set to (Number of samples in each pool x Sample Ploidy).
+    * Default value: 2
+    * */
+  @Argument(fullName = "sample_ploidy", shortName="ploidy", required = false)
+  var ploidy: Option[Int] = config("sample_ploidy")
+
+  /** The minimum phred-scaled confidence threshold at which variants should be called. */
+  @Argument(fullName = "standard_min_confidence_threshold_for_calling", shortName = "stand_call_conf", required = false)
+  var standardCallConf: Option[Double] = config("stand_call_conf")
+
+  // flags:
+
+  /** TODO */
+  @Argument(fullName = "annotateNDA", shortName = "nda", required = false)
+  var annotateNDA: Boolean = config("annotate_nda", default = false)
+
   /** If this parameter is set to true, then tumor variants are filtered to exclude false positives that are caused by misalignments evidenced by alternate alleles occurring near the start and end of reads. For filtering values of the parameters 'pirMedianThreshold' and 'pirMadThreshold' are used.
     * Default value:  false */
   @Argument(fullName = "enable_clustered_read_position_filter", required = false)
-  var enableClusteredReadPositionFilter: Option[Boolean] = config("enable_clustered_read_position_filter")
+  var enableClusteredReadPositionFilter: Boolean = config("enable_clustered_read_position_filter", default = false)
+
+  /** TODO */
+  @Argument(fullName = "enable_strand_artifact_filter", required = false)
+  var enableStrandArtifactFilter: Boolean = config("enable_strand_artifact_filter", default = false)
+
+  /** TODO */
+  @Argument(fullName = "useNewAFCalculator", shortName = "newQual", required = false)
+  var useNewAFCalculator: Boolean = config("use_new_af_calculator", default = false)
+
 
   override def cmdLine = super.cmdLine +
     required("-I:tumor", tumorSampleBam) +
     required("-I:normal", normalSampleBam) +
-    required("-o", outputVcf)
+    required("--out", outputVcf) +
+    optional("--cosmic", cosmic) +
+    optional("--dbsnp", dbsnp) +
+    optional("--normal_panel", ponFile) +
+    optional("--contamination_fraction_per_sample_file", contaminationFile) +
+    optional("--contamination_fraction_to_filter", contaminationFractionToFilter) +
+    optional("--dbsnp_normal_lod", dbsnpNormalLod) +
+    repeat("--group", group) +
+    optional("--heterozygosity", heterozygosity) +
+    optional("--heterozygosity_stdev", heterozygositySD) +
+    optional("--indel_heterozygosity", heterozygosityForIndels) +
+    optional("--initial_normal_lod", initialNormalLOD) +
+    optional("--initial_tumor_lod", initialTumorLOD) +
+    optional("--max_alt_alleles_in_normal_count", maxAltAllelesInNormalCount) +
+    optional("--max_alt_alleles_in_normal_fraction", maxAltAllelesInNormalFraction) +
+    optional("--max_alt_alleles_in_qscore_sum", maxAltAllelesInNormalQScoreSum) +
+    optional("--maxReadsInRegionPerSample", maxReadsInRegionPerSample) +
+    optional("--min_base_quality_score", minBaseQScore) +
+    optional("--normal_lod", normalLOD) +
+    optional("--pir_mad_threshold", pirMadThreshold) +
+    optional("--pir_median_threshold", pirMedianThreshold) +
+    optional("--power_constant_qscore", powerConstantQScore) +
+    optional("--sample_ploidy", ploidy) +
+    optional("-stand_call_conf", standardCallConf) +
+    optional("--tumor_lod", tumorLOD) +
+    conditional(annotateNDA, "--annotateNDA") +
+    conditional(enableClusteredReadPositionFilter, "--enable_clustered_read_position_filter") +
+    conditional(enableStrandArtifactFilter, "--enable_strand_artifact_filter") +
+    conditional(useNewAFCalculator, "--useNewAFCalculator")
 }
 
 object MuTect2 {
