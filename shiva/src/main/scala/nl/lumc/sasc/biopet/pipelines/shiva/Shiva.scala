@@ -259,14 +259,14 @@ class Shiva(val parent: Configurable)
 
   lazy val annotation: Option[Toucan] =
     if (multisampleVariantCalling.isDefined &&
-        multisampleVariantCalling.get.finalFile.isDefined &&
+        multisampleVariantCalling.get.isGermlineVariantCallingConfigured() &&
         config("annotation", default = false).asBoolean) {
       Some(new Toucan(this))
     } else None
 
   lazy val annotationForSomaticVariants: Option[Toucan] =
     if (multisampleVariantCalling.isDefined &&
-        multisampleVariantCalling.get.finalFileSomaticCallers.isDefined &&
+        multisampleVariantCalling.get.isSomaticVariantCallingConfigured() &&
         config("annotation", default = false).asBoolean) {
       Some(new Toucan(this))
     } else None

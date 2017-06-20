@@ -105,7 +105,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
         sections :+= "Somatic Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
           params ++ Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
       if(germlineVariantCalling)
-        sections :+= (if (somaticVariantCalling) "Germline Variants" else "SNV Calling") -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)
+        sections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)
     }
     if (svCallingExecuted)
       sections :+=  "SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp", params)
@@ -177,20 +177,23 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Single sample page */
   override def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
-    val variantcallingSection =
-      if (variantcallingExecuted)
-        List(
-          "SNV Calling" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"))
-      else Nil
-    val svSection =
-      if (svCallingExecuted)
-        List(
-          "SV Calling" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp"))
-      else Nil
+    var addedSections: List[(String, ReportSection)] = List()
+    if (variantcallingExecuted) {
+      if (somaticVariantCalling) {
+        addedSections :+= "Somatic Variants" ->
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+            Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
+      }
+      if (germlineVariantCalling) {
+        addedSections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") ->
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", (if (somaticVariantCalling) Map("showIntro" -> false) else Map.empty))
+      }
+    }
+    if (svCallingExecuted)
+      addedSections :+= "SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")
+
     val oldPage: ReportPage = super.samplePage(sampleId, args)
-    oldPage.copy(sections = variantcallingSection ++ svSection ++ oldPage.sections)
+    oldPage.copy(sections = addedSections ++ oldPage.sections)
   }
 
   /** Name of the report */
@@ -211,6 +214,16 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
                          caller: String = "final",
                          target: Option[String] = None,
                          tumorSamplesOnly: Boolean = false): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    tsvWriter.print("Sample")
+    var field = List("HomVar", "Het", "HomRef", "NoCall")
+    if (tumorSamplesOnly) field = field.filterNot(_ == "HomRef") // HomRef won't be reported by MuTect2
+
+    tsvWriter.println(s"\t${field.mkString("\t")}")
+
+
     var samples: Seq[Sample] = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
     if (tumorSamplesOnly) {
       samples = samples.filter({sample =>
@@ -220,14 +233,6 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
         }
       })
     }
-
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    tsvWriter.print("Sample")
-    val field = List("HomVar", "Het", "HomRef", "NoCall")
-    tsvWriter.println(s"\t${field.mkString("\t")}")
-
     val statsPaths = {
       (for (sample <- samples) yield {
         field

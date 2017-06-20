@@ -50,7 +50,12 @@
     <div class="col-md-6">
         <p>
         #if(sampleId.isDefined)
-        This table shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for sample ${sampleId}.
+            #if(onlySomaticVariants)
+                This table shows <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">statistics</a> about somatic variants found in sample ${sampleId}.
+            #end
+            #if(!onlySomaticVariants) <!-- parser of ssp-files didn't allow the keyword 'else' here -->
+                This table shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for sample ${sampleId}.
+            #end
         <ul>
             <li><em>Hom</em>: Denotes amount of homozygous positions in the resultant VCF file</li>
             <li><em>HomVar</em>: Denotes amount of homozygous variant positions in the resultant VCF file</li>
@@ -62,29 +67,32 @@
         </ul>
         This can be also downloaded as a tab-delimited file.
 
+        #elseif(onlySomaticVariants)
+            This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">statistics</a> for somatic variants detected only in tumor samples. Samples are represented as a multi-colored bars. Red denotes the fraction of variants that are homozygous, green denotes the fraction of variants that are heterozygous. #if(samples.size > 1) Purple denotes those positions at which no call was made for the given sample, but these positions occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
         #else
-        This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for all of the ${samples.size} samples. Every sample is represent as a multi-colored bar. Red denotes the fraction of variants that are homozygous, whereas green denotes the fraction of variants that are heterozygous. Blue represents the number of variants that were called homozygous reference by the variant caller. #if(samples.size > 1) Purple denotes those <em>positions</em> at which no call was made for the given sample, but these positions <em>do</em> occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
+        This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for all of the ${samples.size} samples. Every sample is represented as a multi-colored bar. Red denotes the fraction of variants that are homozygous, whereas green denotes the fraction of variants that are heterozygous. Blue represents the number of variants that were called homozygous reference by the variant caller. #if(samples.size > 1) Purple denotes those <em>positions</em> at which no call was made for the given sample, but these positions <em>do</em> occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
         #end
         </p>
     </div>
     </div>
 #end
+#{  val prefixForPlotFiles: String = "variantSummary" + (if (onlySomaticVariants) "SomaticOnly" else "") }#
 #if (showPlot)
-    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, caller = caller, target = target, onlySomaticVariants) }#
+    #{  ShivaReport.variantSummaryPlot(outputDir, prefixForPlotFiles, summary, sampleId = sampleId, caller = caller, target = target, onlySomaticVariants) }#
     <div class="panel-body">
-        <img src="variantSummary.png" class="img-responsive" />
+        <img src="${prefixForPlotFiles}.png" class="img-responsive" />
     </div>
     <div class="panel-footer">
         #if (showTable)
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Hide table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#${prefixForPlotFiles}Table">Hide table</button>
         #else
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Show table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#${prefixForPlotFiles}Table">Show table</button>
         #end
-        <i class="glyphicon glyphicon-file"></i> <a href="variantSummary.tsv">tsv file</a>
+        <i class="glyphicon glyphicon-file"></i> <a href="${prefixForPlotFiles}.tsv">tsv file</a>
     </div>
 #end
 
-<div class="panel-body collapse #if (showTable)in#end" id="variantSummaryTable">
+<div class="panel-body collapse #if (showTable)in#end" id="${prefixForPlotFiles}Table">
 
 <!-- Table -->
 <table class="table sortable-theme-bootstrap" data-sortable>

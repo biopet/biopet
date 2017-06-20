@@ -87,10 +87,6 @@ class ShivaVariantcalling(val parent: Configurable)
         dbUpdate ::= addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
       }
       Await.result(Future.sequence(dbUpdate), Duration.Inf) // TODO consider moving handling Futures to SummaryDbWrite
-
-      val samples2: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
-      println(s"mitu proovi peale lisamist ${samples2.size}")
-      println(samples2)
     }
   }
 
@@ -119,7 +115,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   /** Final merged output files of all variantcaller modes */
   def finalFile: Option[File] =
-    if (callers.exists(_.mergeVcfResults)) Some(new File(outputDir, namePrefix + ".final.vcf.gz"))
+    if (isGermlineVariantCallingConfigured) Some(new File(outputDir, namePrefix + ".final.vcf.gz"))
     else None
 
   // TODO if there will be in the future more than one method for somatic variant calling then the outputs from those should be merged
@@ -149,8 +145,7 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    require(
-      finalFile.isDefined || finalFileSomaticCallers.isDefined,
+    require(isGermlineVariantCallingConfigured() || isSomaticVariantCallingConfigured(),
       "Error in configuration, when not using somatic variant caller(s) then for at least one caller the parameter 'merge_vcf_results' must be set to true."
     )
 
@@ -248,7 +243,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Future[Int] = {
     var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
-      case Some(s) if s.tags.nonEmpty => pairInfo ++ ConfigUtils.jsonToMap(ConfigUtils.textToJson(s.tags.get))
+      case Some(s) => pairInfo ++ s.tagsAsMap().getOrElse(Map())
       case _ => pairInfo
     }
     db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces))
