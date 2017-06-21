@@ -58,10 +58,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
   def germlineVariantCalling =
     summary
       .getSettingKeys(runId,
-        "shivavariantcalling",
-        NoModule,
-        keyValues =
-          Map("germline_variant_calling" -> List("germline_variant_calling")))
+                      "shivavariantcalling",
+                      NoModule,
+                      keyValues =
+                        Map("germline_variant_calling" -> List("germline_variant_calling")))
       .get("germline_variant_calling")
       .flatten match {
       case Some(true) => true
@@ -69,11 +69,11 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     }
   def somaticVariantCalling =
     summary
-      .getSettingKeys(runId,
+      .getSettingKeys(
+        runId,
         "shivavariantcalling",
         NoModule,
-        keyValues =
-          Map("somatic_variant_calling" -> List("somatic_variant_calling")))
+        keyValues = Map("somatic_variant_calling" -> List("somatic_variant_calling")))
       .get("somatic_variant_calling")
       .flatten match {
       case Some(true) => true
@@ -101,13 +101,18 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     var sections: List[(String, ReportSection)] = super.additionalSections
     if (variantcallingExecuted) {
       if (somaticVariantCalling)
-        sections :+= "Somatic Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+        sections :+= "Somatic Variants" -> ReportSection(
+          "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
           params ++ Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
-      if(germlineVariantCalling)
-        sections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", params)
+      if (germlineVariantCalling)
+        sections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") -> ReportSection(
+          "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+          params)
     }
     if (svCallingExecuted)
-      sections :+=  "SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp", params)
+      sections :+= "SV Calling" -> ReportSection(
+        "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp",
+        params)
 
     sections
   }
@@ -181,22 +186,28 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       var sectionForSomaticAdded: Boolean = false
       if (somaticVariantCalling) {
         val currSample: Sample = samples.filter(_.id == sampleId).head
-        if (currSample.tagsAsMap().collect({
-          case tags => tags.exists(elem => elem._1 == "tumor" && elem._2 == currSample.name)
-        }).getOrElse(false)) {
+        if (currSample
+              .tagsAsMap()
+              .collect({
+                case tags => tags.exists(elem => elem._1 == "tumor" && elem._2 == currSample.name)
+              })
+              .getOrElse(false)) {
           addedSections :+= "Somatic Variants" ->
-            ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+            ReportSection(
+              "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
               Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
           sectionForSomaticAdded = true
         }
       }
       if (germlineVariantCalling) {
         addedSections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") ->
-          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", (if (sectionForSomaticAdded) Map("showIntro" -> false) else Map.empty))
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+                        (if (sectionForSomaticAdded) Map("showIntro" -> false) else Map.empty))
       }
     }
     if (svCallingExecuted)
-      addedSections :+= "SV Calling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")
+      addedSections :+= "SV Calling" -> ReportSection(
+        "/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariantsSv.ssp")
 
     val oldPage: ReportPage = super.samplePage(sampleId, args)
     oldPage.copy(sections = addedSections ++ oldPage.sections)
@@ -229,14 +240,15 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
     tsvWriter.println(s"\t${field.mkString("\t")}")
 
-    var currSamples:Seq[Sample] = sampleId match {
+    var currSamples: Seq[Sample] = sampleId match {
       case Some(id) => samples.filter(_.id == id)
-      case _ if tumorSamplesOnly => samples.filter({sample =>
-        sample.tagsAsMap() match {
-          case Some(t) =>  t.exists(elem => elem._1 == "tumor" && elem._2 == sample.name)
-          case _ => false
-        }
-      })
+      case _ if tumorSamplesOnly =>
+        samples.filter({ sample =>
+          sample.tagsAsMap() match {
+            case Some(t) => t.exists(elem => elem._1 == "tumor" && elem._2 == sample.name)
+            case _ => false
+          }
+        })
       case _ => samples
     }
 
@@ -254,10 +266,10 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     }
 
     val results = summary.getStatKeys(runId,
-      "shivavariantcalling",
-      moduleName,
-      sampleId.map(SampleId).getOrElse(NoSample),
-      keyValues = statsPaths)
+                                      "shivavariantcalling",
+                                      moduleName,
+                                      sampleId.map(SampleId).getOrElse(NoSample),
+                                      keyValues = statsPaths)
 
     for (sample <- currSamples) {
       tsvWriter.println(

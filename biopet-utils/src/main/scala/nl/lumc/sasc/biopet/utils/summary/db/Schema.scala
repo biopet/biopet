@@ -45,7 +45,8 @@ object Schema {
 
   case class Sample(id: Int, name: String, runId: Int, tags: Option[String]) {
 
-    def tagsAsMap(): Option[Map[String, Any]] = tags.collect({ case tags => ConfigUtils.jsonToMap(ConfigUtils.textToJson(tags))})
+    def tagsAsMap(): Option[Map[String, Any]] =
+      tags.collect({ case tags => ConfigUtils.jsonToMap(ConfigUtils.textToJson(tags)) })
   }
 
   class Samples(tag: Tag) extends Table[Sample](tag, "Samples") {

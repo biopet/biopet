@@ -23,7 +23,11 @@ import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{MuTect2, SomaticVariantcaller, TumorNormalPair}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{
+  MuTect2,
+  SomaticVariantcaller,
+  TumorNormalPair
+}
 import nl.lumc.sasc.biopet.utils.{BamUtils, ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
@@ -81,7 +85,8 @@ class ShivaVariantcalling(val parent: Configurable)
       val samples: Seq[Sample] = Await.result(db.getSamples(runId = summaryRunId), Duration.Inf)
 
       for (pair <- tnPairs) {
-        var tags: Map[String, String] = Map("tumor" -> pair.tumorSample, "normal" -> pair.normalSample)
+        var tags: Map[String, String] =
+          Map("tumor" -> pair.tumorSample, "normal" -> pair.normalSample)
         addPairInfoToDb(db, summaryRunId, samples, pair.tumorSample, tags)
         addPairInfoToDb(db, summaryRunId, samples, pair.normalSample, tags)
       }
@@ -143,7 +148,8 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    require(isGermlineVariantCallingConfigured() || isSomaticVariantCallingConfigured(),
+    require(
+      isGermlineVariantCallingConfigured() || isSomaticVariantCallingConfigured(),
       "Error in configuration, when not using somatic variant caller(s) then for at least one caller the parameter 'merge_vcf_results' must be set to true."
     )
 
@@ -239,12 +245,18 @@ class ShivaVariantcalling(val parent: Configurable)
     }
   }
 
-  private def addPairInfoToDb(db: SummaryDbWrite, runId: Int, existingSamples: Seq[Sample], sampleName: String, pairInfo: Map[String, String]): Int = {
-    var tags : Map[String, Any] = existingSamples.find(_.name == sampleName) match {
+  private def addPairInfoToDb(db: SummaryDbWrite,
+                              runId: Int,
+                              existingSamples: Seq[Sample],
+                              sampleName: String,
+                              pairInfo: Map[String, String]): Int = {
+    var tags: Map[String, Any] = existingSamples.find(_.name == sampleName) match {
       case Some(s) => pairInfo ++ s.tagsAsMap().getOrElse(Map())
       case _ => pairInfo
     }
-    Await.result(db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces)), Duration.Inf)
+    Await.result(
+      db.createOrUpdateSample(sampleName, runId, Some(ConfigUtils.mapToJson(tags).nospaces)),
+      Duration.Inf)
   }
 
   private def loadTnPairsFromConfig(): Unit = {
@@ -252,16 +264,22 @@ class ShivaVariantcalling(val parent: Configurable)
     if (samplePairs != null) {
       try {
         for (elem <- samplePairs) {
-          val pair: Map[String, Any] = ConfigUtils.any2map(elem).map({
-            case (key, sampleName) => key.toUpperCase() -> sampleName
-          })
+          val pair: Map[String, Any] = ConfigUtils
+            .any2map(elem)
+            .map({
+              case (key, sampleName) => key.toUpperCase() -> sampleName
+            })
           tnPairs :+= TumorNormalPair(pair("T").toString, pair("N").toString)
         }
       } catch {
-        case e: Exception => Logging.addError("Unable to parse the parameter 'tumor_normal_pairs' from configuration.", cause = e)
+        case e: Exception =>
+          Logging.addError(
+            "Unable to parse the parameter 'tumor_normal_pairs' from configuration.",
+            cause = e)
       }
     } else {
-      Logging.addError("Parameter 'tumor_normal_pairs' is missing from configuration. When using MuTect2, samples configuration must give the pairs of matching tumor and normal samples.")
+      Logging.addError(
+        "Parameter 'tumor_normal_pairs' is missing from configuration. When using MuTect2, samples configuration must give the pairs of matching tumor and normal samples.")
     }
   }
 

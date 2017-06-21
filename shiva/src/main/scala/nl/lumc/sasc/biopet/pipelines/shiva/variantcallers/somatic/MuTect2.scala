@@ -20,7 +20,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
 
   //val buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
 
-  val runConEst = config("run_contest", default="false")
+  val runConEst = config("run_contest", default = "false")
 
   def biopetScript(): Unit = {
     val samplesDir: File = new File(outputDir, "samples")
@@ -49,7 +49,9 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       }
 
       var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf")
-      intermResult = new File((if (sIndex != -1) outputFile.getAbsolutePath.substring(0, sIndex) else outputFile.getAbsolutePath) + ".all_samples.vcf")
+      intermResult = new File(
+        (if (sIndex != -1) outputFile.getAbsolutePath.substring(0, sIndex)
+         else outputFile.getAbsolutePath) + ".all_samples.vcf")
 
       val combineVariants = gatk.CombineVariants(this, outputPerSample, intermResult)
       combineVariants.genotypemergeoption = Some("UNIQUIFY")
@@ -72,13 +74,17 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
   }
 
   def addJobForPair(pair: TumorNormalPair, outFile: File): Unit = {
-    val muTect2 = gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
+    val muTect2 =
+      gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
     // TODO add also BQSR file?
 
     if (runConEst) {
       val namePrefix = outFile.getAbsolutePath.stripSuffix(".vcf")
       val contEstOutput: File = new File(s"$namePrefix.contamination.txt")
-      val contEst = gatk.ContEst(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), contEstOutput)
+      val contEst = gatk.ContEst(this,
+                                 inputBams(pair.tumorSample),
+                                 inputBams(pair.normalSample),
+                                 contEstOutput)
       add(contEst)
 
       val contaminationPerSample: File = new File(s"$namePrefix.contamination.short.txt")
