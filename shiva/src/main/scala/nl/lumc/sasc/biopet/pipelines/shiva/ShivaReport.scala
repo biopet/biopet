@@ -18,7 +18,6 @@ import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
@@ -179,14 +178,21 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
   override def samplePage(sampleId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
     var addedSections: List[(String, ReportSection)] = List()
     if (variantcallingExecuted) {
+      var sectionForSomaticAdded: Boolean = false
       if (somaticVariantCalling) {
-        addedSections :+= "Somatic Variants" ->
-          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-            Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
+        val currSample: Sample = samples.filter(_.id == sampleId).head
+        if (currSample.tagsAsMap().collect({
+          case tags => tags.exists(elem => elem._1 == "tumor" && elem._2 == currSample.name)
+        }).getOrElse(false)) {
+          addedSections :+= "Somatic Variants" ->
+            ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+              Map("onlySomaticVariants" -> true, "caller" -> "mutect2")) // TODO change when there'll be more than 1 somatic variant caller
+          sectionForSomaticAdded = true
+        }
       }
       if (germlineVariantCalling) {
         addedSections :+= (if (somaticVariantCalling) "All Variants" else "SNV Calling") ->
-          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", (if (somaticVariantCalling) Map("showIntro" -> false) else Map.empty))
+          ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", (if (sectionForSomaticAdded) Map("showIntro" -> false) else Map.empty))
       }
     }
     if (svCallingExecuted)
@@ -223,18 +229,19 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
     tsvWriter.println(s"\t${field.mkString("\t")}")
 
-
-    var samples: Seq[Sample] = Await.result(summary.getSamples(runId = runId, sampleId = sampleId), Duration.Inf)
-    if (tumorSamplesOnly) {
-      samples = samples.filter({sample =>
+    var currSamples:Seq[Sample] = sampleId match {
+      case Some(id) => samples.filter(_.id == id)
+      case _ if tumorSamplesOnly => samples.filter({sample =>
         sample.tagsAsMap() match {
           case Some(t) =>  t.exists(elem => elem._1 == "tumor" && elem._2 == sample.name)
           case _ => false
         }
       })
+      case _ => samples
     }
+
     val statsPaths = {
-      (for (sample <- samples) yield {
+      (for (sample <- currSamples) yield {
         field
           .map(f => s"${sample.name};$f" -> List("total", "genotype", "general", sample.name, f))
           .toMap
@@ -252,7 +259,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
       sampleId.map(SampleId).getOrElse(NoSample),
       keyValues = statsPaths)
 
-    for (sample <- samples) {
+    for (sample <- currSamples) {
       tsvWriter.println(
         sample.name + "\t" + field
           .map(f => results.get(s"${sample.name};$f").getOrElse(Some("0")).get)
