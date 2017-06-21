@@ -14,6 +14,9 @@ class IGVToolsIndex(val parent: Configurable) extends IGVTools {
   @Output
   var output: File = _
 
+  override def defaultResidentFactor = 2.0
+  override def defaultVmemFactor = 3.0
+
   override def cmdLine = super.cmdLine + required("index") + required(input)
 
   override def beforeGraph(): Unit = {
