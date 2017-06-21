@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 import nl.lumc.sasc.biopet.extensions.{Awk, Bgzip, Tabix, gatk}
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
 import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
+import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsIndex
 import nl.lumc.sasc.biopet.utils.IoUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -59,12 +60,13 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
     selectVariants.variant = intermResult
     selectVariants.sample_name = tumorSamples
 
-    val file: File = new File(outputDir.getParent.getParent, ".renameSamples.txt") //TODO!
+    val file: File = new File(config("output_dir").asFile, ".renameSamples.txt")
     file.deleteOnExit()
     IoUtils.writeLinesToFile(file, renameSamples)
 
     add(selectVariants | BcftoolsReheader(this, file) | new Bgzip(this) > outputFile)
 
+    add(IGVToolsIndex(this, intermResult))
     add(Tabix(this, outputFile))
 
   }

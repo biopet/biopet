@@ -272,7 +272,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("VCF records")
-    plot.width = Some(200 + (samples.size * 10))
+    plot.width = Some(200 + (currSamples.size * 10))
     plot.runLocal()
   }
 
