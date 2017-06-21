@@ -202,7 +202,7 @@
             <plugin>
                 <groupId>org.antipathy</groupId>
                 <artifactId>mvn-scalafmt</artifactId>
-                <version>0.6.8</version>
+                <version>0.3_${scalaFMTVersion}</version>
                 <inherited>false</inherited>
                 <configuration>
                     <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
