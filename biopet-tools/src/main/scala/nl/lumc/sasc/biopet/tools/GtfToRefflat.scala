@@ -17,13 +17,13 @@ object GtfToRefflat extends ToolCommand {
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
+    opt[File]('r', "refFlat") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
     } text "Input refFlat file. Mandatory"
-    opt[File]('g', "gtfFile") required () valueName "<file>" action { (x, c) =>
+    opt[File]('g', "gtfFile") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(gtfFile = x)
     } text "Output gtf file. Mandatory"
-    opt[File]('R', "referenceFasta") valueName "<file>" action { (x, c) =>
+    opt[File]('R', "referenceFasta") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(referenceFasta = Some(x))
     } text "Reference file"
   }
