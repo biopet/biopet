@@ -18,7 +18,7 @@ object ReplaceContigsGtfFile extends ToolCommand {
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
+    opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     } text "Input gtf file"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
