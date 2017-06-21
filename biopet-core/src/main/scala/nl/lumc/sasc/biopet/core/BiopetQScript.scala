@@ -139,7 +139,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
           if (f.getClass.isAnonymousClass) f.getClass.getSuperclass.getSimpleName
           else f.getClass.getSimpleName
         BiopetQScript.safeOutputs(f) match {
-          case Some(o) =>
+          case Some(o) if o.nonEmpty =>
             f.jobOutputFile = new File(o.head.getAbsoluteFile.getParent,
                                        "." + f.firstOutput.getName + "." + className + ".out")
           case _ => f.jobOutputFile = new File("./stdout") // Line is here for test backup
