@@ -112,7 +112,7 @@ object Tabix {
       case s if s.endsWith(".sam.gz") => Some("sam")
       case s if s.endsWith(".gff.gz") => Some("gff")
       case s if s.endsWith(".psltbl.gz") => Some("psltbl")
-      case _ => throw new IllegalArgumentException("Unknown file type")
+      case _ => throw new IllegalArgumentException(s"Unknown file type for file: ${input.getAbsolutePath}")
     }
     tabix
   }
