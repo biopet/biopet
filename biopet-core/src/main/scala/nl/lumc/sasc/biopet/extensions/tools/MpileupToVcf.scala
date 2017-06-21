@@ -18,8 +18,6 @@ import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -54,7 +52,6 @@ class MpileupToVcf(val parent: Configurable) extends ToolCommandFunction with Re
     super.beforeGraph()
     if (reference == null) reference = referenceFasta().getAbsolutePath
     if (output.getName.endsWith(".vcf.gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
-    val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
   override def beforeCmd(): Unit = {

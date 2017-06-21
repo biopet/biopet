@@ -41,6 +41,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
       nl.lumc.sasc.biopet.tools.MpileupToVcf,
       nl.lumc.sasc.biopet.tools.PrefixFastq,
       nl.lumc.sasc.biopet.tools.refflatstats.RefflatStats,
+      nl.lumc.sasc.biopet.tools.GtfToRefflat,
       nl.lumc.sasc.biopet.tools.SageCountFastq,
       nl.lumc.sasc.biopet.tools.SamplesTsvToConfig,
       nl.lumc.sasc.biopet.tools.SeqStat,
@@ -48,12 +49,16 @@ object BiopetToolsExecutable extends BiopetExecutable {
       nl.lumc.sasc.biopet.tools.SummaryToTsv,
       nl.lumc.sasc.biopet.tools.ValidateFastq,
       nl.lumc.sasc.biopet.tools.ValidateVcf,
+      nl.lumc.sasc.biopet.tools.ValidateAnnotation,
       nl.lumc.sasc.biopet.tools.VcfFilter,
       nl.lumc.sasc.biopet.tools.vcfstats.VcfStats,
       nl.lumc.sasc.biopet.tools.VcfToTsv,
+      nl.lumc.sasc.biopet.tools.ReplaceContigsGtfFile,
+      nl.lumc.sasc.biopet.tools.ReplaceContigsVcfFile,
       nl.lumc.sasc.biopet.tools.VcfWithVcf,
       nl.lumc.sasc.biopet.tools.VepNormalizer,
       nl.lumc.sasc.biopet.tools.WipeReads,
+      nl.lumc.sasc.biopet.tools.NcbiReportToContigMap,
       nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly
     )
 

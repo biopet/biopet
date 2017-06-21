@@ -56,5 +56,5 @@ object SambambaIndex {
     apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"
+  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bai"
 }

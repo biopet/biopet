@@ -14,11 +14,8 @@
   */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.BuildBamIndex
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -37,7 +34,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
   qscript =>
   def this() = this(null)
 
-  override def defaults = super.defaults ++ Map(
+  override def defaults: Map[String, Any] = super.defaults ++ Map(
     "mapping" -> Map(
       "skip_markduplicates" -> false,
       "aligner" -> "bwa-mem"
@@ -46,7 +43,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     "samtoolsview" -> Map("q" -> 10)
   )
 
-  override def fixedValues = super.fixedValues ++ Map(
+  override def fixedValues: Map[String, Any] = super.fixedValues ++ Map(
     "samtoolsview" -> Map(
       "h" -> true,
       "b" -> true
@@ -63,7 +60,8 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
 
     val controls: List[String] = config("control", default = Nil)
 
-    override def summarySettings = super.summarySettings ++ Map("controls" -> controls)
+    override def summarySettings: Map[String, Any] =
+      super.summarySettings ++ Map("controls" -> controls)
 
     override def addJobs(): Unit = {
       super.addJobs()
@@ -80,6 +78,7 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
       val bamMetricsFilter = BamMetrics(qscript,
                                         preProcessBam.get,
                                         new File(sampleDir, "metrics-filter"),
+                                        paired,
                                         sampleId = Some(sampleId))
       addAll(bamMetricsFilter.functions)
       bamMetricsFilter.summaryName = "bammetrics-filter"
@@ -90,13 +89,6 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
       buildBamIndex.output =
         swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
       add(buildBamIndex)
-
-      val macs2 = new Macs2CallPeak(qscript)
-      macs2.treatment = preProcessBam.get
-      macs2.name = Some(sampleId)
-      macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
-      macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
-      add(macs2)
     }
   }
 
@@ -116,29 +108,22 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     p
   }
 
-  override def init() = {
+  override def init(): Unit = {
     super.init()
     // ensure that no samples are called 'control' since that is our reserved keyword
     require(!sampleIds.contains("control"),
             "No sample should be named 'control' since it is a reserved for the Carp pipeline")
+    peakCalling.controls = samples.map(x => x._1 -> x._2.controls)
+    peakCalling.outputDir = new File(outputDir, "peak_calling")
   }
+
+  lazy val peakCalling = new PeakCalling(this)
 
   override def addMultiSampleJobs(): Unit = {
     super.addMultiSampleJobs()
-    for ((sampleId, sample) <- samples) {
-      for (controlId <- sample.controls) {
-        if (!samples.contains(controlId))
-          throw new IllegalStateException(
-            "For sample: " + sampleId + " this control: " + controlId + " does not exist")
-        val macs2 = new Macs2CallPeak(this)
-        macs2.treatment = sample.preProcessBam.get
-        macs2.control = samples(controlId).preProcessBam.get
-        macs2.name = Some(sampleId + "_VS_" + controlId)
-        macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
-        macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
-        add(macs2)
-      }
-    }
+    peakCalling.inputBams = samples.map(x => x._1 -> x._2.preProcessBam.get)
+    peakCalling.paired = paired
+    add(peakCalling)
   }
 }
 

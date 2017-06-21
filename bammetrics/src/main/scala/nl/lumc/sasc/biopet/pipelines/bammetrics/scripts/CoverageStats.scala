@@ -39,7 +39,7 @@ class CoverageStats(val parent: Configurable) extends PythonCommandLineFunction 
 
   override def defaultCoreMemory = 9.0
 
-  def cmdLine =
+  def cmdLine: String =
     getPythonCommand +
       (if (inputAsStdin) " - " else required(input)) +
       required("--plot", plot) +

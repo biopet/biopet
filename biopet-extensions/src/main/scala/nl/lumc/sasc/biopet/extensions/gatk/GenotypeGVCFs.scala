@@ -116,6 +116,8 @@ class GenotypeGVCFs(val parent: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
+  var useNewAFCalculator: Boolean = config("useNewAFCalculator", default = false)
+
   @Output
   @Gather(enabled = false)
   private var outputIndex: File = _
@@ -134,6 +136,7 @@ class GenotypeGVCFs(val parent: Configurable) extends CommandLineGATK with Scatt
     conditional(includeNonVariantSites, "-allSites", escape = true, format = "%s") +
     conditional(uniquifySamples, "-uniquifySamples", escape = true, format = "%s") +
     conditional(annotateNDA, "-nda", escape = true, format = "%s") +
+    conditional(useNewAFCalculator, "--useNewAFCalculator") +
     optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
     optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
     optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
