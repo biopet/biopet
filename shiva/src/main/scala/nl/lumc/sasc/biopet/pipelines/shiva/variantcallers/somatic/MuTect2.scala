@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
-import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix, gatk}
+import nl.lumc.sasc.biopet.extensions.{Awk, Bgzip, Tabix, gatk}
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
 import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
 import nl.lumc.sasc.biopet.utils.IoUtils
@@ -34,7 +34,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       renameSamples = List(s"TUMOR ${pair.tumorSample}")
       tumorSamples = List("TUMOR")
       intermResult = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
-      addMuTect2(pair, intermResult)
+      addJobForPair(pair, intermResult)
 
     } else {
       var outputPerSample: List[TaggedFile] = List()
@@ -44,7 +44,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
         renameSamples :+= s"TUMOR.$pairLabel ${pair.tumorSample}"
         tumorSamples :+= s"TUMOR.$pairLabel"
         outputPerSample :+= TaggedFile(out, pairLabel)
-        addMuTect2(pair, out)
+        addJobForPair(pair, out)
       }
 
       var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf")
@@ -69,16 +69,22 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
 
   }
 
-  def addMuTect2(pair: TumorNormalPair, outFile: File): Unit = {
+  def addJobForPair(pair: TumorNormalPair, outFile: File): Unit = {
     val muTect2 = gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
     // TODO add also BQSR file?
 
     if (runConEst) {
-      val contEstOutput: File = new File(outFile.getAbsolutePath.stripSuffix(".vcf") + "contamination.txt")
+      val namePrefix = outFile.getAbsolutePath.stripSuffix(".vcf")
+      val contEstOutput: File = new File(s"$namePrefix.contamination.txt")
       val contEst = gatk.ContEst(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), contEstOutput)
       add(contEst)
 
-      muTect2.contaminationFile = Some(contEstOutput)
+      val contaminationPerSample: File = new File(s"$namePrefix.contamination.short.txt")
+      val awk: Awk = Awk(this, "BEGIN{OFS=\"\\t\"}{if($1 != \"name\") print $1,$4;}")
+      awk.input = contEstOutput
+      add(awk > contaminationPerSample)
+
+      muTect2.contaminationFile = Some(contaminationPerSample)
     }
 
     add(muTect2)

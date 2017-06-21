@@ -65,13 +65,11 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "trim_fraction", required = false)
   var trimFraction: Option[Double] = config("trim_fraction")
 
-  override def cmdLine = {
-    val contEstOutput: File = new File(s"${output.getAbsolutePath}.all_fields")
-    super.cmdLine +
+  override def cmdLine = super.cmdLine +
     required("-I:eval", tumorSampleBam) +
     required("-I:genotype", normalSampleBam) +
     required("--popfile", popFile) +
-    required("--out", contEstOutput) +
+    required("--out", output) +
     optional("--base_report", baseReportFile) +
     optional("--beta_threshold", betaThreshold) +
     optional("--genotype_mode", genotypeMode) +
@@ -82,9 +80,7 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
     optional("--minimum_base_count", minimumBaseCount) +
     optional("--population", population) +
     optional("--precision", precision) +
-    optional("--trim_fraction", trimFraction) +
-    " && awk 'BEGIN{OFS=\"\\t\"}{if($1 != \"name\") print $1,$4;}' " + required(contEstOutput)+" > "+required(output)
-  }
+    optional("--trim_fraction", trimFraction)
 
 }
 
