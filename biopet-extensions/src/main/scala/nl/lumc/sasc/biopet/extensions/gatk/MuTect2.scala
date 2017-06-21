@@ -2,10 +2,13 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
-class MuTect2(val parent: Configurable) extends CommandLineGATK {
+class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+  scatterClass = classOf[LocusScatterFunction]
+  setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 
   def analysis_type: String = "MuTect2"
 
@@ -17,13 +20,13 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Input(fullName = "normal_bam", required = true)
   var normalSampleBam: File = _
 
-  /** TODO  */
+  /** vcf file with info from cosmic db TODO desc  */
   @Input(fullName = "cosmic", shortName = "cosmic", required = false)
   var cosmic: Option[File] = config("cosmic")
 
   /** Vcf file of the dbSNP database. When it's provided, then it's possible to use the param 'dbsnpNormalLod', see the
-    * description of that parameter for explanation. sIDs from this file are used to populate the ID column of the output.
-    * Also, the DB INFO flag will be set when appropriate.
+    * description of that parameter for explanation. In addition, sIDs from this file are used to populate the ID column
+    * of the output.
     * */
   @Input(fullName = "dbsnp", shortName = "D", required = false)
   var dbsnp: Option[File] = if(config("use_dbsnp", default = false)) dbsnpVcfFile else None
@@ -36,6 +39,7 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
 
   /** Output file of the program. */
   @Output(fullName = "out", shortName = "o", required = true)
+  @Gather(classOf[CatVariantsGatherer])
   var outputVcf: File = _
 
   /**
@@ -86,7 +90,7 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "dbsnp_normal_lod", required = false, otherArgumentRequired = "dbsnp")
   var dbsnpNormalLod: Option[Double] = None
 
-  /** If this fraction is greater is than zero, the caller will aggressively attempt to remove contamination through
+  /** If this fraction is greater than zero, the caller will aggressively attempt to remove contamination through
     * biased down-sampling of reads (for all samples). It will ignore the contamination fraction of reads for each
     * alternate allele. So if the pileup contains N total bases, then we will try to remove (N * contamination fraction)
     * bases for each alternate allele.
