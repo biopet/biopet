@@ -22,7 +22,7 @@ You can also provide a `.refFlat` file containing ribosomal sequence coordinates
 
 ## Sample input extensions
 
-Please refer [to our mapping pipeline](../mapping.md) for information about how the input samples should be handled. 
+Please refer [to our mapping pipeline](multisamplemapping.md) for information about how the input samples should be handled. 
 
 ## Configuration File
 As with other biopet pipelines, Gentrap relies on a JSON configuration file to run its analyses. There are two important parts here, the configuration for the samples (to determine the sample layout of your experiment) and the configuration for the pipeline settings (to determine which analyses are run).

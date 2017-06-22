@@ -75,7 +75,7 @@ Optional settings
 | mapping | merge_strategy | String | preprocessmarkduplicates | Determines how the individual bam files from each library are merged into one bam file per sample. Available options: `preprocessmarkduplicates` (add read group information, mark duplicates and then merge), `mergesam` (simple samtools merge), `preprocessmergesam` (add read group information and merge with samtools), `markduplicates` (mark duplicates first and then merge), `preprocesssambambamarkdup` (add read group information, mark duplicates with sambamba and then merge), `none` (do not merge the bam files) |
 | mapping | duplicates_method | String | picard | Determines the method to use for marking duplicates. Available options: `picard`, `sambamba` or `none` to disable duplicate marking |
 | mapping | skip_flexiprep | Boolean| false | Determines whether the input is analysed with [Flexiprep](../flexiprep.md). |
-| mapping | mapping_to_gears | String | all | Determines whether the input is analysed with [Gears](../gears.md) or not. Available options: `all` (all reads), `unmapped` (extract only the unmapped reads and analyse with Gears) and `none` (skip this step) |
+| mapping | mapping_to_gears | String | none | Determines whether the input is analysed with [Gears](../gears.md) or not. Available options: `all` (all reads), `unmapped` (extract only the unmapped reads and analyse with Gears) and `none` (skip this step) |
 
 An example config.yml
 

@@ -7,7 +7,7 @@ by default to align ChIP-seq data and call the peaks and allows you to run all y
 
 ### Sample input extensions
 
-Please refer [to our mapping pipeline](../mapping.md#Sample-input-extensions) for information about how the input samples should be handled. 
+Please refer to our [config documentation page](../../general/config.md) for information about how the input samples should be handled. 
 
 ## Configuration File
 
@@ -202,9 +202,6 @@ $ module load biopet/v0.9.0
 $ biopet pipeline carp -config </path/to/config.yml> \
 -qsub -jobParaEnv BWA -run
 ~~~
-
-It is also a good idea to specify retries (we recommend `-retry 4` up to `-retry 8`) so that cluster glitches do not interfere 
-with your pipeline runs.
 
 ## Example output
 
