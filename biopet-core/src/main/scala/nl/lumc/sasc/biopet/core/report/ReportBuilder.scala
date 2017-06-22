@@ -406,7 +406,7 @@ object ReportBuilder {
 
   implicit lazy val ec = ExecutionContext.global
 
-  /** New queueing execution context
+  /* TODO enable new queueing execution context when restructuring of report section is complete.
   implicit lazy val ec = ExecutionContext.fromExecutorService(
     new ThreadPoolExecutor(
       numWorkers,
