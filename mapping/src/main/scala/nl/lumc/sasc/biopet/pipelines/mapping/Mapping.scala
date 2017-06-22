@@ -204,6 +204,7 @@ class Mapping(val parent: Configurable)
     require(inputR1 != null, "Missing inputR1 on mapping module")
     require(sampleId.isDefined, "Missing sample ID on mapping module")
     require(libId.isDefined, "Missing library ID on mapping module")
+    if (readgroupLibrary.isEmpty) readgroupLibrary = libId
     if (inputR1.exists() && inputR1.length() == 0)
       logger.warn(s"Input R1 is a empty file: $inputR1")
     inputR2.foreach(r =>
