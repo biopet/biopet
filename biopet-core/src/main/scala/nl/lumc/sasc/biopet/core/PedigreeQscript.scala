@@ -62,6 +62,14 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
   }
 
   /**
+    * Get all samples for which mother and father are defined
+    * @return
+    */
+  def getChildren: List[PedSample] = {
+    pedSamples.filter(x => x.maternalId.isDefined && x.paternalId.isDefined)
+  }
+
+  /**
     * Get pedSamples from sample tags in config
     * May return empty list if no pedigree can be constructed
     * PedSamples can only be constructed for those samples where family is defined
