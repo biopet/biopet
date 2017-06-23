@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.util.matching.Regex
 
 /**
- * Created by pjvanthof on 16/12/15.
- */
-class Flash(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  * Created by pjvanthof on 16/12/15.
+  */
+class Flash(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "flash", freeVar = false)
 
   /** Command to get version of executable */
@@ -92,28 +92,29 @@ class Flash(val root: Configurable) extends BiopetCommandLineFunction with Versi
     _outputHistogram = outputHistogram
   }
 
-  def cmdLine = executable +
-    optional("-m", minOverlap) +
-    optional("-M", maxOverlap) +
-    optional("-x", maxMismatchDensity) +
-    conditional(allowOuties, "--allow-outies") +
-    optional("--phred-offset", phredOffset) +
-    optional("--read-len", readLen) +
-    optional("--fragment-len", fragmentLen) +
-    optional("--fragment-len-stddev", fragmentLenStddev) +
-    conditional(capMismatchQuals, "--cap-mismatch-quals") +
-    conditional(interleavedInput, "--interleaved-input") +
-    conditional(interleavedOutput, "--interleaved-output") +
-    conditional(interleaved, "--interleaved") +
-    conditional(tabDelimitedInput, "--tab-delimited-input") +
-    conditional(tabDelimitedOutput, "--tab-delimited-output") +
-    optional("--output-prefix", outputPrefix) +
-    required("--output-directory", outputDirectory) +
-    conditional(compress, "--compress") +
-    optional("--compress-prog", compressProg) +
-    optional("--compress-prog-args", compressProgArgs) +
-    optional("--output-suffix", outputSuffix) +
-    optional("--threads", threads) +
-    required(fastqR1) +
-    required(fastqR2)
+  def cmdLine =
+    executable +
+      optional("-m", minOverlap) +
+      optional("-M", maxOverlap) +
+      optional("-x", maxMismatchDensity) +
+      conditional(allowOuties, "--allow-outies") +
+      optional("--phred-offset", phredOffset) +
+      optional("--read-len", readLen) +
+      optional("--fragment-len", fragmentLen) +
+      optional("--fragment-len-stddev", fragmentLenStddev) +
+      conditional(capMismatchQuals, "--cap-mismatch-quals") +
+      conditional(interleavedInput, "--interleaved-input") +
+      conditional(interleavedOutput, "--interleaved-output") +
+      conditional(interleaved, "--interleaved") +
+      conditional(tabDelimitedInput, "--tab-delimited-input") +
+      conditional(tabDelimitedOutput, "--tab-delimited-output") +
+      optional("--output-prefix", outputPrefix) +
+      required("--output-directory", outputDirectory) +
+      conditional(compress, "--compress") +
+      optional("--compress-prog", compressProg) +
+      optional("--compress-prog-args", compressProgArgs) +
+      optional("--output-suffix", outputSuffix) +
+      optional("--threads", threads) +
+      required(fastqR1) +
+      required(fastqR2)
 }

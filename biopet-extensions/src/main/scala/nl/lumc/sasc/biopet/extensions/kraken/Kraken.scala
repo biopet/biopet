@@ -1,27 +1,27 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** Extension for Kraken */
-class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input: FastQ or FastA")
   var input: List[File] = _
@@ -62,16 +62,17 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
   }
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
-    required("--db", db) +
-    optional("--threads", nCoresRequest) +
-    conditional(quick, "--quick") +
-    optional("--min_hits", minHits) +
-    optional("--unclassified-out ", unclassifiedOut) +
-    optional("--classified-out ", classifiedOut) +
-    required("--output", output) +
-    conditional(preLoad, "--preload") +
-    conditional(paired, "--paired") +
-    conditional(paired, "--check-names") +
-    repeat(input)
+  def cmdLine =
+    required(executable) +
+      required("--db", db) +
+      optional("--threads", nCoresRequest) +
+      conditional(quick, "--quick") +
+      optional("--min_hits", minHits) +
+      optional("--unclassified-out ", unclassifiedOut) +
+      optional("--classified-out ", classifiedOut) +
+      required("--output", output) +
+      conditional(preLoad, "--preload") +
+      conditional(paired, "--paired") +
+      conditional(paired, "--check-names") +
+      repeat(input)
 }

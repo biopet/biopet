@@ -1,36 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 /**
- * Created by wyleung on 11-2-16.
- */
-
+  * Created by wyleung on 11-2-16.
+  */
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project that are
+  * not part of GATK Queue is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
 import java.io.File
@@ -43,9 +42,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{AfterClass, DataProvider, Test}
 
 class TinyCapTest extends TestNGSuite with Matchers {
+
+  private var dirs: List[File] = Nil
 
   def initPipeline(map: Map[String, Any]): TinyCap = {
     new TinyCap() {
@@ -62,15 +63,15 @@ class TinyCapTest extends TestNGSuite with Matchers {
   def tinyCapOptions = {
     val bool = Array(true)
 
-    for (
-      s1 <- bool
-    ) yield Array("", s1)
+    for (s1 <- bool) yield Array("", s1)
   }
 
   @Test(dataProvider = "tinyCapOptions")
   def testTinyCap(dummy: String, sample1: Boolean): Unit = {
+    val outputDir = TinyCapTest.outputDir
+    dirs :+= outputDir
     val map = {
-      var m: Map[String, Any] = TinyCapTest.config
+      var m: Map[String, Any] = TinyCapTest.config(outputDir)
       if (sample1) m = ConfigUtils.mergeMaps(TinyCapTest.sample1, m)
       m
     }
@@ -90,44 +91,41 @@ class TinyCapTest extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(TinyCapTest.outputDir)
+    dirs.foreach(FileUtils.deleteDirectory)
   }
-
 }
 
 object TinyCapTest {
-  val outputDir = Files.createTempDir()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
+  val inputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  val r1 = new File(inputDir, "R1.fq.gz")
   Files.touch(r1)
-  val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
 
-  val referenceFasta = new File(outputDir, "ref.fa")
+  val referenceFasta = new File(inputDir, "ref.fa")
   Files.touch(referenceFasta)
-  val referenceFastaDict = new File(outputDir, "ref.dict")
+  val referenceFastaDict = new File(inputDir, "ref.dict")
   Files.touch(referenceFastaDict)
-  val bowtieIndex = new File(outputDir, "ref.1.ebwt")
+  val bowtieIndex = new File(inputDir, "ref.1.ebwt")
   Files.touch(bowtieIndex)
 
-  val annotationGFF = new File(outputDir, "annot.gff")
-  val annotationGTF = new File(outputDir, "annot.gtf")
-  val annotationRefflat = new File(outputDir, "annot.refflat")
+  val annotationGFF = new File(inputDir, "annot.gff")
+  val annotationGTF = new File(inputDir, "annot.gtf")
+  val annotationRefflat = new File(inputDir, "annot.refflat")
   Files.touch(annotationGFF)
   Files.touch(annotationGTF)
   Files.touch(annotationRefflat)
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
     "reference_fasta" -> (referenceFasta.getAbsolutePath),
     "bowtie_index" -> (bowtieIndex.getAbsolutePath),
-
     "annotation_gff" -> annotationGFF,
     "annotation_gtf" -> annotationGTF,
     "annotation_refflat" -> annotationRefflat,
-
     "md5sum" -> Map("exe" -> "test"),
     "rscript" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
@@ -141,11 +139,12 @@ object TinyCapTest {
   )
 
   val sample1 = Map(
-    "samples" -> Map("sample1" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> r1.getAbsolutePath
-      )
-    )
-    )))
+    "samples" -> Map(
+      "sample1" -> Map(
+        "libraries" -> Map(
+          "lib1" -> Map(
+            "R1" -> r1.getAbsolutePath
+          )
+        ))))
 
 }

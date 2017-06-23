@@ -1,31 +1,36 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+
+import scala.util.matching.Regex
 
 /**
- * Extension for STAR
- */
-class Star(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for STAR
+  */
+class Star(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
   @Input(doc = "The reference file for the bam files.", required = false)
-  var reference: File = null
+  var reference: File = _
 
   @Input(doc = "Fastq file R1", required = false)
   var R1: File = _
@@ -53,13 +58,13 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   executable = config("exe", "STAR")
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """(.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """(.*)""".r
 
   @Argument(doc = "Output Directory")
   var outputDir: File = _
 
-  var genomeDir: File = null
+  var genomeDir: File = _
   var runmode: String = _
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runthreadn")
@@ -69,9 +74,10 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var genomeLoad: Option[String] = config("genomeload")
 
   var genomeFastaFiles: Option[String] = config("genomefastafiles")
+
   /** can be a list of strings **/
   var genomeChrBinNbits: Option[Int] = config("genomechrbinnbits")
-  var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
+  var genomeSAindexNbases: Option[Long] = config("genomesaindexnbases")
   var genomeSAsparseD: Option[Int] = config("genomesasparsed")
 
   @Input(required = false)
@@ -93,12 +99,12 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var clip3pAdapterSeq: Option[String] = config("clip3adapterseq")
   var clip3pAdapterMMp: Option[String] = config("clip3adaptermmp")
   var clip3pAfterAdapterNbases: Option[Int] = config("clip3afteradapternbases")
-  var limitGenomeGenerateRAM: Option[Int] = config("limitgenomegenerateram")
-  var limitIObufferSize: Option[Int] = config("limitiobuffersize")
-  var limitOutSAMoneReadBytes: Option[Int] = config("limitoutsamonereadbytes")
+  var limitGenomeGenerateRAM: Option[Long] = config("limitgenomegenerateram")
+  var limitIObufferSize: Option[Long] = config("limitiobuffersize")
+  var limitOutSAMoneReadBytes: Option[Long] = config("limitoutsamonereadbytes")
   var limitOutSJoneRead: Option[Int] = config("limitoutsjoneread")
   var limitOutSJcollapsed: Option[Int] = config("limitoutsjcollapsed")
-  var limitBAMsortRAM: Option[Int] = config("limitbamsortram")
+  var limitBAMsortRAM: Option[Long] = config("limitbamsortram")
   var limitSjdbInsertNsj: Option[Int] = config("limitsjdbinsertnsj")
 
   var outTmpDir: Option[String] = config("outtmpdir")
@@ -149,8 +155,10 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outSJfilterOverhangMin: List[String] = config("outsjfilteroverhandmin", default = Nil)
   var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin", default = Nil)
   var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin", default = Nil)
-  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin", default = Nil)
-  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn", default = Nil)
+  var outSJfilterDistToOtherSJmin: List[String] =
+    config("outsjfilterdisttoothersjmin", default = Nil)
+  var outSJfilterIntronMaxVsReadN: List[String] =
+    config("outsjfilterintronmaxvsreadn", default = Nil)
 
   var scoreGap: Option[Int] = config("scoregap")
   var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
@@ -213,7 +221,9 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir + File.separator
+    val prefix =
+      if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix
+      else outputDir + File.separator
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
@@ -228,7 +238,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   }
 
   /** Returns command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     var cmd: String = required("cd", outputDir) + " && " + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
@@ -273,10 +283,22 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--outTmpDir", outTmpDir) +
       optional("--outStd", outStd) +
       multiArg("--outSJfilterOverhangMin", outSJfilterOverhangMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterCountUniqueMin", outSJfilterCountUniqueMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterCountTotalMin", outSJfilterCountTotalMin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterDistToOtherSJmin", outSJfilterDistToOtherSJmin, groupSize = 4, maxGroups = 1) +
-      multiArg("--outSJfilterIntronMaxVsReadN", outSJfilterIntronMaxVsReadN, groupSize = 3, maxGroups = 1)
+      multiArg("--outSJfilterCountUniqueMin",
+               outSJfilterCountUniqueMin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterCountTotalMin",
+               outSJfilterCountTotalMin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterDistToOtherSJmin",
+               outSJfilterDistToOtherSJmin,
+               groupSize = 4,
+               maxGroups = 1) +
+      multiArg("--outSJfilterIntronMaxVsReadN",
+               outSJfilterIntronMaxVsReadN,
+               groupSize = 3,
+               maxGroups = 1)
 
     // Break as workaround for a stackoverflow error for the compiler
     cmd += optional("--outReadsUnmapped", outReadsUnmapped) +
@@ -376,18 +398,24 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 }
 
 object Star {
+
   /**
-   * Create default star
-   * @param configurable root object
-   * @param R1 R1 fastq file
-   * @param R2 R2 fastq file
-   * @param outputDir Outputdir for Star
-   * @param isIntermediate When set true jobs are flaged as intermediate
-   * @param deps Deps to add to wait on run
-   * @return Return Star
-   *
-   */
-  def apply(configurable: Configurable, R1: File, R2: Option[File], outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
+    * Create default star
+    * @param configurable root object
+    * @param R1 R1 fastq file
+    * @param R2 R2 fastq file
+    * @param outputDir Outputdir for Star
+    * @param isIntermediate When set true jobs are flaged as intermediate
+    * @param deps Deps to add to wait on run
+    * @return Return Star
+    *
+    */
+  def apply(configurable: Configurable,
+            R1: File,
+            R2: Option[File],
+            outputDir: File,
+            isIntermediate: Boolean = false,
+            deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
     R2.foreach(R2 => star.R2 = R2)
@@ -399,15 +427,15 @@ object Star {
   }
 
   /**
-   * returns Star with 2pass star method
-   * @param configurable root object
-   * @param R1 R1 fastq file
-   * @param R2 R2 fastq file
-   * @param outputDir Outputdir for Star
-   * @param isIntermediate When set true jobs are flaged as intermediate
-   * @param deps Deps to add to wait on run
-   * @return Return Star
-   */
+    * returns Star with 2pass star method
+    * @param configurable root object
+    * @param R1 R1 fastq file
+    * @param R2 R2 fastq file
+    * @param outputDir Outputdir for Star
+    * @param isIntermediate When set true jobs are flaged as intermediate
+    * @param deps Deps to add to wait on run
+    * @return Return Star
+    */
   def _2pass(configurable: Configurable,
              R1: File,
              R2: Option[File],

@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
@@ -19,18 +19,20 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * Extension for piacrd's CollectTargetedPcrMetrics
- *
- * Created by pjvan_thof on 4/16/15.
- */
-class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+  * Extension for piacrd's CollectTargetedPcrMetrics
+  *
+  * Created by pjvan_thof on 4/16/15.
+  */
+class CollectTargetedPcrMetrics(val parent: Configurable)
+    extends Picard
+    with Summarizable
+    with Reference {
 
-  javaMainClass = new picard.analysis.directed.CollectTargetedPcrMetrics().getClass.getName
-
-  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
+  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
+         required = true)
   var input: File = _
 
   @Input(doc = "Reference", required = true)
@@ -59,15 +61,16 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine = super.cmdLine +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false) +
-    required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
-    required("AMPLICON_INTERVALS=", ampliconIntervals, spaceSeparated = false) +
-    repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
-    optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
-    optional("CUSTOM_AMPLICON_SET_NAME=", customAmpliconSetName, spaceSeparated = false)
+  override def cmdLine =
+    super.cmdLine +
+      required("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", output, spaceSeparated = false) +
+      required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
+      repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+      required("AMPLICON_INTERVALS=", ampliconIntervals, spaceSeparated = false) +
+      repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
+      optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
+      optional("CUSTOM_AMPLICON_SET_NAME=", customAmpliconSetName, spaceSeparated = false)
 
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map()
@@ -86,8 +89,11 @@ object CollectTargetedPcrMetrics {
     pcrMetrics.input = input
     pcrMetrics.ampliconIntervals = ampliconIntervals
     pcrMetrics.targetIntervals = targetIntervals
-    pcrMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".TargetedPcrMetrics")
-    pcrMetrics.perTargetCoverage = new File(outputDir, input.getName.stripSuffix(".bam") + ".TargetedPcrMetrics.per_target_coverage")
+    pcrMetrics.output =
+      new File(outputDir, input.getName.stripSuffix(".bam") + ".TargetedPcrMetrics")
+    pcrMetrics.perTargetCoverage = new File(
+      outputDir,
+      input.getName.stripSuffix(".bam") + ".TargetedPcrMetrics.per_target_coverage")
     pcrMetrics
   }
 }

@@ -1,41 +1,41 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.extensions.centrifuge.{Centrifuge, CentrifugeKreport}
+import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations._
 
 /**
- * Test class for [[GearsSingle]]
- *
- * Created by wyleung on 10/22/15.
- */
-
+  * Test class for [[GearsSingle]]
+  *
+  * Created by wyleung on 10/22/15.
+  */
 abstract class TestGearsSingle extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GearsSingle = {
     new GearsSingle {
@@ -60,19 +60,25 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
   def inputMode: Option[String] = Some("fastq")
 
+  private var dirs: List[File] = Nil
+
   @Test
   def testGears(): Unit = {
-    val map = ConfigUtils.mergeMaps(Map(
-      "gears_use_qiime_rtax" -> qiimeRtax,
-      "gears_use_centrifuge" -> centrifuge,
-      "gears_use_qiime_closed" -> qiimeClosed,
-      "gears_use_qiime_open" -> qiimeOpen,
-      "gears_use_seq_count" -> seqCount,
-      "output_dir" -> TestGearsSingle.outputDir
-    ) ++
-      kraken.map("gears_use_kraken" -> _) ++
-      downsample.map("downsample" -> _),
-      Map(TestGearsSingle.executables.toSeq: _*))
+    val outputDir = TestGearsSingle.outputDir
+    dirs :+= outputDir
+    val map = ConfigUtils.mergeMaps(
+      Map(
+        "gears_use_qiime_rtax" -> qiimeRtax,
+        "gears_use_centrifuge" -> centrifuge,
+        "gears_use_qiime_closed" -> qiimeClosed,
+        "gears_use_qiime_open" -> qiimeOpen,
+        "gears_use_seq_count" -> seqCount,
+        "output_dir" -> outputDir
+      ) ++
+        kraken.map("gears_use_kraken" -> _) ++
+        downsample.map("downsample" -> _),
+      Map(TestGearsSingle.executables.toSeq: _*)
+    )
 
     val gears: GearsSingle = initPipeline(map)
     gears.sampleId = Some("sampleName")
@@ -83,8 +89,8 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.fastqR1 = List(TestGearsSingle.r1)
         gears.fastqR2 = if (paired) List(TestGearsSingle.r2) else Nil
       case Some("bam") => gears.bamFile = Some(TestGearsSingle.bam)
-      case None        =>
-      case _           => new IllegalStateException(s"$inputMode not allowed as inputMode")
+      case None =>
+      case _ => new IllegalStateException(s"$inputMode not allowed as inputMode")
     }
 
     if (hasOutputName)
@@ -103,10 +109,11 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
         gears.outputName shouldBe "test"
       } else {
         // in the following cases the filename should have been determined by the filename
-        gears.outputName shouldBe (if (inputMode == Some("bam")) "bamfile" else "R1")
+        gears.outputName shouldBe "sampleName-libName"
       }
 
-      val pipesJobs = gears.functions.filter(_.isInstanceOf[BiopetCommandLineFunction])
+      val pipesJobs = gears.functions
+        .filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
       gears.summarySettings("gears_use_kraken") shouldBe kraken.getOrElse(false)
@@ -122,17 +129,26 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.seqCount.isDefined shouldBe seqCount
 
       // SamToFastq should have started if it was started from bam
-      gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
-      gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1 else 0)
+      gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1
+                                                                    else 0)
+      gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1
+                                                                  else 0)
 
-      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(false)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1
+                                                              else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(false)) 1
+                                                                    else 0)
       gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
         ((if (kraken.getOrElse(false)) 1 else 0) + (if (centrifuge) 2 else 0))
 
       pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
       pipesJobs.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 2 else 0)
     }
+  }
+
+  @AfterClass
+  def removeDirs: Unit = {
+    dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
@@ -219,17 +235,17 @@ class GearsSingleQiimeOpenDownsampleTest extends TestGearsSingle {
 }
 
 object TestGearsSingle {
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
-  new File(outputDir, "input").mkdirs()
+  def outputDir = Files.createTempDir()
 
-  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  val inputDir = Files.createTempDir()
+
+  val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)
   r1.deleteOnExit()
-  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  val r2 = new File(inputDir, "R2.fq")
   Files.touch(r2)
   r2.deleteOnExit()
-  val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
+  val bam = new File(inputDir, "bamfile.bam")
   Files.touch(bam)
   bam.deleteOnExit()
 

@@ -1,80 +1,79 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{ AnnotationRefFlat, RibosomalRefFlat }
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort}
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.extensions.tools.{ BamStats, BiopetFlagstat }
+import nl.lumc.sasc.biopet.extensions.tools.{BamStats, BiopetFlagstat}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
 import org.broadinstitute.gatk.queue.QScript
 
-class BamMetrics(val root: Configurable) extends QScript
-  with SummaryQScript
-  with SampleLibraryTag
-  with Reference
-  with TargetRegions
-  with AnnotationRefFlat
-  with RibosomalRefFlat {
+class BamMetrics(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag
+    with Reference
+    with TargetRegions
+    with AnnotationRefFlat
+    with RibosomalRefFlat {
 
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
 
+  @Argument(required = false)
+  var paired: Boolean = true
+
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
-  /** return location of summary file */
-  def summaryFile = (sampleId, libId) match {
-    case (Some(s), Some(l)) => new File(outputDir, s + "-" + l + ".BamMetrics.summary.json")
-    case (Some(s), _)       => new File(outputDir, s + ".BamMetrics.summary.json")
-    case _                  => new File(outputDir, "BamMetrics.summary.json")
-  }
-
   /** returns files to store in summary */
-  def summaryFiles = Map("reference" -> referenceFasta(),
-    "input_bam" -> inputBam) ++
-    ampliconBedFile.map("amplicon" -> _).toMap ++
-    ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
+  def summaryFiles =
+    Map("reference" -> referenceFasta(), "input_bam" -> inputBam) ++
+      ampliconBedFile.map("amplicon" -> _).toMap ++
+      ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
 
   /** return settings */
-  def summarySettings = Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
-    "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
+  def summarySettings =
+    Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
+        "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
 
   override def reportClass = {
     val bammetricsReport = new BammetricsReport(this)
     bammetricsReport.outputDir = new File(outputDir, "report")
-    bammetricsReport.summaryFile = summaryFile
-    bammetricsReport.args = if (libId.isDefined) Map(
-      "sampleId" -> sampleId.getOrElse("."),
-      "libId" -> libId.getOrElse("."))
-    else Map("sampleId" -> sampleId.getOrElse("."))
+    bammetricsReport.summaryDbFile = summaryDbFile
+    bammetricsReport.args =
+      if (libId.isDefined)
+        Map("sampleId" -> sampleId.getOrElse("."), "libId" -> libId.getOrElse("."))
+      else Map("sampleId" -> sampleId.getOrElse("."))
     Some(bammetricsReport)
   }
 
   /** executed before script */
   def init(): Unit = {
     inputFiles :+= new InputFile(inputBam)
-    ampliconBedFile.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
+    ampliconBedFile.foreach(
+      BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
     roiBedFiles.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
   }
 
@@ -91,6 +90,9 @@ class BamMetrics(val root: Configurable) extends QScript
     val multiMetrics = new CollectMultipleMetrics(this)
     multiMetrics.input = inputBam
     multiMetrics.outputName = new File(outputDir, inputBam.getName.stripSuffix(".bam"))
+    if (!paired)
+      multiMetrics.program = multiMetrics.program
+        .filter(_ != CollectMultipleMetrics.Programs.CollectInsertSizeMetrics)
     add(multiMetrics)
     addSummarizable(multiMetrics, "multi_metrics")
 
@@ -136,13 +138,19 @@ class BamMetrics(val root: Configurable) extends QScript
         ampBedToInterval.isIntermediate = true
         add(ampBedToInterval)
 
-        val chsMetrics = CollectHsMetrics(this, inputBam,
-          List(ampIntervals), ampIntervals :: roiIntervals.map(_.intervals), outputDir)
+        val chsMetrics = CollectHsMetrics(this,
+                                          inputBam,
+                                          List(ampIntervals),
+                                          ampIntervals :: roiIntervals.map(_.intervals),
+                                          outputDir)
         add(chsMetrics)
         addSummarizable(chsMetrics, "hs_metrics")
 
-        val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
-          ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
+        val pcrMetrics = CollectTargetedPcrMetrics(this,
+                                                   inputBam,
+                                                   ampIntervals,
+                                                   ampIntervals :: roiIntervals.map(_.intervals),
+                                                   outputDir)
         add(pcrMetrics)
         addSummarizable(pcrMetrics, "targeted_pcr_metrics")
 
@@ -152,36 +160,48 @@ class BamMetrics(val root: Configurable) extends QScript
     // Create stats and coverage plot for each bed/interval file
     val allIntervalNames = (roiIntervals ++ ampIntervals).map(_.bed.getName)
     if (allIntervalNames.size != allIntervalNames.toSet.size) {
-      logger.warn("There are multiple region files with the same name. Metric values might get overwritten")
+      logger.warn(
+        "There are multiple region files with the same name. Metric values might get overwritten")
     }
     for (intervals <- roiIntervals ++ ampIntervals) {
       val targetName = intervals.bed.getName.stripSuffix(".bed")
       val targetDir = new File(outputDir, targetName)
 
-      val biStrict = BedtoolsIntersect(this, inputBam, intervals.bed,
+      val biStrict = BedtoolsIntersect(
+        this,
+        inputBam,
+        intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.sam"),
-        minOverlap = config("strict_intersect_overlap", default = 1.0))
+        minOverlap = config("strict_intersect_overlap", default = 1.0)
+      )
       val biopetFlagstatStrict = BiopetFlagstat(this, biStrict.output, targetDir)
       addSummarizable(biopetFlagstatStrict, targetName + "_flagstats_strict")
       add(new BiopetFifoPipe(this, List(biStrict, biopetFlagstatStrict)))
 
-      val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
+      val biLoose = BedtoolsIntersect(
+        this,
+        inputBam,
+        intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.sam"),
-        minOverlap = config("loose_intersect_overlap", default = 0.01))
+        minOverlap = config("loose_intersect_overlap", default = 0.01)
+      )
       val biopetFlagstatLoose = BiopetFlagstat(this, biLoose.output, targetDir)
       addSummarizable(biopetFlagstatLoose, targetName + "_flagstats_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val sortedBed = BamMetrics.sortedbedCache.getOrElse(intervals.bed, {
-        val sorter = new BedtoolsSort(this)
-        sorter.input = intervals.bed
-        sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
-        add(sorter)
-        BamMetrics.sortedbedCache += intervals.bed -> sorter.output
-        sorter.output
-      })
+      val sortedBed = BamMetrics.sortedbedCache.getOrElse(
+        intervals.bed, {
+          val sorter = new BedtoolsSort(this)
+          sorter.input = intervals.bed
+          sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
+          add(sorter)
+          BamMetrics.sortedbedCache += intervals.bed -> sorter.output
+          sorter.output
+        }
+      )
       val bedCov = BedtoolsCoverage(this, sortedBed, inputBam, depth = true)
-      val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
+      val covStats =
+        CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       covStats.title = Some("Coverage Plot")
       covStats.subTitle = Some(s"for file '$targetName.bed'")
       add(bedCov | covStats)
@@ -193,9 +213,12 @@ class BamMetrics(val root: Configurable) extends QScript
 }
 
 object BamMetrics extends PipelineCommand {
+
   /** Make default implementation of BamMetrics and runs script already */
   def apply(root: Configurable,
-            bamFile: File, outputDir: File,
+            bamFile: File,
+            outputDir: File,
+            paired: Boolean,
             sampleId: Option[String] = None,
             libId: Option[String] = None): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
@@ -203,6 +226,7 @@ object BamMetrics extends PipelineCommand {
     bamMetrics.libId = libId
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir
+    bamMetrics.paired = paired
 
     bamMetrics.init()
     bamMetrics.biopetScript()

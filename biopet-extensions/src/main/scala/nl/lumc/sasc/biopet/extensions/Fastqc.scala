@@ -1,30 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.utils.SemanticVersion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Extension for fastqc
- * Based on version 0.10.1 and 0.11.2
- */
-class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  * Extension for fastqc
+  * Based on version 0.10.1 and 0.11.2
+  */
+class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Contaminants", required = false)
   var contaminants: Option[File] = None
@@ -52,7 +53,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   /** Sets contaminants and adapters when not yet set */
   override def beforeGraph() {
-    this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
+    this.jobOutputFile = new File(output.getParentFile, s".${fastqfile.getName}.fastqc.out")
     this.preProcessExecutable()
 
     val fastqcDir = new File(executable).getParent
@@ -62,9 +63,10 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Vers
       case userDefinedValue @ Some(_) => userDefinedValue
       // otherwise, use default contaminants file (depending on FastQC version)
       case None =>
-        val defaultContams = getVersion match {
-          case Some("v0.11.2") => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-          case _               => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+        val defaultContams = getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
+          case Some(v) if v >= SemanticVersion(0, 11, 0) =>
+            new File(fastqcDir + "/Configuration/contaminant_list.txt")
+          case _ => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
         }
         config("contaminants", default = defaultContams)
     }
@@ -74,25 +76,27 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Vers
       case userDefinedValue @ Some(_) => userDefinedValue
       // otherwise, check if adapters are already present (depending on FastQC version)
       case None =>
-        val defaultAdapters = getVersion match {
-          case Some(v) if v.contains("v0.11") => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
-          case _                              => None
+        val defaultAdapters = getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
+          case Some(v) if v >= SemanticVersion(0, 11, 0) =>
+            Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
+          case _ => None
         }
         defaultAdapters.collect { case adp => config("adapters", default = adp) }
     }
   }
 
   /** return commandline to execute */
-  def cmdLine = required(executable) +
-    optional("--java", javaExe) +
-    optional("--threads", threads) +
-    optional("--contaminants", contaminants) +
-    optional("--adapters", adapters) +
-    optional("--kmers", kmers) +
-    conditional(nogroup, "--nogroup") +
-    conditional(noextract, "--noextract") +
-    conditional(extract, "--extract") +
-    conditional(quiet, "--quiet") +
-    required("-o", output.getParent) +
-    required(fastqfile)
+  def cmdLine =
+    required(executable) +
+      optional("--java", javaExe) +
+      optional("--threads", threads) +
+      optional("--contaminants", contaminants) +
+      optional("--adapters", adapters) +
+      optional("--kmers", kmers) +
+      conditional(nogroup, "--nogroup") +
+      conditional(noextract, "--noextract") +
+      conditional(extract, "--extract") +
+      conditional(quiet, "--quiet") +
+      required("-o", output.getParent) +
+      required(fastqfile)
 }

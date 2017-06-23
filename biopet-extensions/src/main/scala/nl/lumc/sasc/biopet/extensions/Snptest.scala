@@ -1,31 +1,34 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, Reference, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{Version, Reference, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 
 import scala.util.matching.Regex
 
 /**
- * Created by pjvan_thof on 3/25/16.
- */
-class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Created by pjvan_thof on 3/25/16.
+  */
+class Snptest(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
   @Input(required = true)
   var inputGenotypes: List[File] = Nil
 
@@ -100,7 +103,8 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var lowerSampleLimit: Option[Int] = config("lower_sample_limit")
   var overlap: Boolean = config("overlap", default = false)
   var printids: Boolean = config("printids", default = false)
-  var quantileNormalisePhenotypes: Boolean = config("quantile_normalise_phenotypes", default = false)
+  var quantileNormalisePhenotypes: Boolean =
+    config("quantile_normalise_phenotypes", default = false)
   var range: List[String] = config("range", default = Nil)
   var renorm: Boolean = config("renorm", default = false)
   var snpid: List[String] = config("snpid", default = Nil)

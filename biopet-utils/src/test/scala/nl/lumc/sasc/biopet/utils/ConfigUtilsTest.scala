@@ -1,33 +1,33 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import argonaut.Argonaut._
 import argonaut.Json
-import nl.lumc.sasc.biopet.utils.config.{ ConfigValue, ConfigValueIndex }
+import nl.lumc.sasc.biopet.utils.config.{ConfigValue, ConfigValueIndex}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
- * Test class for [[ConfigUtils]]
- *
- * Created by pjvan_thof on 1/5/15.
- */
+  * Test class for [[ConfigUtils]]
+  *
+  * Created by pjvan_thof on 1/5/15.
+  */
 class ConfigUtilsTest extends TestNGSuite with Matchers {
   import ConfigUtils._
   import ConfigUtilsTest._
@@ -38,6 +38,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     getValueFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
     getValueFromPath(map1, List("notexist", "dummy")) shouldBe None
     getValueFromPath(map1, List("dummy", "notexist")) shouldBe None
+    getValueFromPath(map1, List()) shouldBe Some(map1)
   }
 
   @Test def testGetMapFromPath(): Unit = {
@@ -218,24 +219,32 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     val map1 = Map("c" -> Map("x" -> "1"))
     val map2 = Map("c" -> Map("x" -> "2"))
     mergeMaps(map1, map2) shouldBe Map("c" -> Map("x" -> "1"))
-    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "12"))
-    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "21"))
-    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "22"))
+    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map(
+      "c" -> Map("x" -> "12"))
+    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map(
+      "c" -> Map("x" -> "21"))
+    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map(
+      "c" -> Map("x" -> "22"))
   }
 
   @Test def testFilterEmtpyMapValues: Unit = {
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> "bla")) shouldBe Map("bla" -> "bla")
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map())) shouldBe Map()
-    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
-    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> Map()))) shouldBe Map("bla" -> Map("bla" -> Map()))
-    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")) shouldBe Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map(
+      "bla" -> Map("bla" -> "bla"))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> Map()))) shouldBe Map(
+      "bla" -> Map("bla" -> Map()))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")) shouldBe Map(
+      "bla" -> Map("bla" -> "bla"),
+      "bla2" -> "bla")
   }
 
   @Test def testUniqeKeys: Unit = {
     ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
     ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
     ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
-    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map(
+      "bla" -> Map("bla" -> "bla"))
   }
 }
 
@@ -278,13 +287,15 @@ object ConfigUtilsTest {
       jEmptyObject
   }
 
-  val map1 = Map("int" -> 1337,
+  val map1 = Map(
+    "int" -> 1337,
     "double" -> 13.37,
     "string" -> "bla",
     "nested" -> Map("1" -> 1, "2" -> 1),
     "list" -> List("a", "b", "c"),
     "dummy" -> Map("dummy" -> 1),
-    "nested3" -> Map("nested2" -> Map("nested1" -> Map("dummy" -> 1))))
+    "nested3" -> Map("nested2" -> Map("nested1" -> Map("dummy" -> 1)))
+  )
 
   val jsonText2 =
     """
@@ -307,9 +318,8 @@ object ConfigUtilsTest {
       jEmptyObject
   }
 
-  val map2: Map[String, Any] = Map("int" -> 7331,
-    "nested" -> Map("2" -> 2, "3" -> 2),
-    "dummy" -> 1)
+  val map2: Map[String, Any] =
+    Map("int" -> 7331, "nested" -> Map("2" -> 2, "3" -> 2), "dummy" -> 1)
 
   val corruptJson =
     """

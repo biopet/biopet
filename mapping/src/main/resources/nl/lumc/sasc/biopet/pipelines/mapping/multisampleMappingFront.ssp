@@ -1,17 +1,34 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
 <%@ var rootPath: String %>
 <%@ var pipeline: String %>
-
+<%@ var runId: Int %>
+<%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
+#{
+    val samples = allSamples
+    val settings = summary.getSettingKeys(runId, pipeline,
+    keyValues = Map(
+        "contigs" -> List("reference", "contigs"),
+        "species" -> List("reference", "species"),
+        "name" -> List("reference", "name")
+    ))
+}#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>${pipeline}</td></tr>
-    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
-    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
-    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
-    <tr><th>Reference</th><td>${summary.getValue(pipeline, "settings", "reference", "species")} - ${summary.getValue(pipeline, "settings", "reference", "name")}</td></tr>
-    <tr><th>Number of samples</th><td>${summary.samples.size}</td></tr>
+    <tr><th>Version</th><td>${run.version}</td></tr>
+    <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
+    <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
+    <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
+    <tr><th>Number of samples</th><td>${samples.size}</td></tr>
 </tbody>
 </table>
 <br/>

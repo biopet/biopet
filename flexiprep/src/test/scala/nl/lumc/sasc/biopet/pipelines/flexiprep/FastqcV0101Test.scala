@@ -1,20 +1,21 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
+import java.nio.charset.CoderMalfunctionError
 import java.nio.file.Paths
 
 import org.scalatest.Matchers
@@ -24,7 +25,8 @@ import org.testng.annotations.Test
 class FastqcV0101Test extends TestNGSuite with Matchers {
 
   /** Returns the absolute path to test resource directory as a File object */
-  private[flexiprep] val resourceDir: File = new File(Paths.get(getClass.getResource("/").toURI).toString)
+  private[flexiprep] val resourceDir: File = new File(
+    Paths.get(getClass.getResource("/").toURI).toString)
 
   /** Given a resource file name, returns the the absolute path to it as a File object */
   private[flexiprep] def resourceFile(p: String): File = new File(resourceDir, p)
@@ -37,6 +39,19 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.outputDir shouldBe new File(resourceDir, "v0101.fq_fastqc")
+  }
+
+  @Test
+  def testGcDistro: Unit = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+    val x = fqc.gcDistribution.get
+    x(0) shouldBe 0.0
+    x(35) shouldBe 6.0
+    x(51) shouldBe 29.5
+    x(74) shouldBe 5.5
+    x(100) shouldBe 0.0
+
   }
 
   @Test def testQcModules() = {
@@ -103,6 +118,20 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val perBaseSequenceContent: Map[String, Map[String, Double]] = fqc.perBaseSequenceContent
     perBaseSequenceContent.size shouldBe 55
     perBaseSequenceContent.keys should contain("1")
+  }
+
+  @Test def testSummaryStats() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+    val summary = fqc.summaryStats
+    val testKeys = List(
+      "per_base_sequence_quality",
+      "per_base_sequence_content",
+      "adapters",
+      "gc_distribution"
+    )
+
+    summary.keys.toList.sorted shouldBe testKeys.sorted
   }
 
 }

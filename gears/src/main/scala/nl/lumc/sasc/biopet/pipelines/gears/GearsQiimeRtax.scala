@@ -1,28 +1,36 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript }
-import nl.lumc.sasc.biopet.extensions.qiime.{ SplitLibrariesFastq, AssignTaxonomy, PickRepSet, PickOtus }
+import nl.lumc.sasc.biopet.core.{SampleLibraryTag, BiopetQScript}
+import nl.lumc.sasc.biopet.extensions.qiime.{
+  SplitLibrariesFastq,
+  AssignTaxonomy,
+  PickRepSet,
+  PickOtus
+}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvan_thof on 12/4/15.
- */
-class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
+  * Created by pjvan_thof on 12/4/15.
+  */
+class GearsQiimeRtax(val parent: Configurable)
+    extends QScript
+    with BiopetQScript
+    with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -81,8 +89,12 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     pickRepSet.inputFile = pickOtus.otusTxt
     pickRepSet.fastaInput = Some(slfR1.outputSeqs)
     pickRepSet.outputFasta = Some(new File(repSetOutputDir, slfR1.outputSeqs.getName))
-    pickRepSet.logFile = Some(new File(repSetOutputDir, slfR1.outputSeqs.getName
-      .stripSuffix(".fasta").stripSuffix(".fa").stripSuffix(".fna") + ".log"))
+    pickRepSet.logFile = Some(
+      new File(repSetOutputDir,
+               slfR1.outputSeqs.getName
+                 .stripSuffix(".fasta")
+                 .stripSuffix(".fa")
+                 .stripSuffix(".fna") + ".log"))
     add(pickRepSet)
 
     val assignTaxonomy = new AssignTaxonomy(this)

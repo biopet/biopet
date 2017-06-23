@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
@@ -22,9 +22,12 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvan_thof on 12/4/15.
- */
-class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+  * Created by pjvan_thof on 12/4/15.
+  */
+class GearsQiimeOpen(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag {
 
   var fastqInput: File = _
 
@@ -55,7 +58,9 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
     add(splitLib)
 
     val openReference = new PickOpenReferenceOtus(this)
-    openReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
+    openReference.inputFasta = addDownsample(
+      splitLib.outputSeqs,
+      new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
     openReference.outputDir = new File(outputDir, "pick_open_reference_otus")
     add(openReference)
     _otuMap = openReference.otuMap
@@ -69,9 +74,6 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "summary.open_reference.json")
 
   val downSample: Option[Double] = config("downsample")
 
@@ -88,4 +90,3 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
     }
   }
 }
-

@@ -1,20 +1,20 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
@@ -26,12 +26,15 @@ import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.{ Elem, PrettyPrinter }
+import scala.xml.{Elem, PrettyPrinter}
 
 /**
- * Created by pjvan_thof on 12/4/15.
- */
-class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+  * Created by pjvan_thof on 12/4/15.
+  */
+class GearsQiimeClosed(val parent: Configurable)
+    extends QScript
+    with SummaryQScript
+    with SampleLibraryTag {
 
   var fastqInput: File = _
 
@@ -62,7 +65,9 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
+    closedReference.inputFasta = addDownsample(
+      splitLib.outputSeqs,
+      new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
@@ -76,9 +81,6 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
 
   val downSample: Option[Double] = config("downsample")
 
@@ -108,10 +110,13 @@ object GearsQiimeClosed {
       val childs: ListBuffer[TaxNode] = ListBuffer()
 
       val counts: mutable.Map[String, Long] = mutable.Map()
-      def totalCount(sample: String): Long = counts.getOrElse(sample, 0L) + childs.map(_.totalCount(sample)).sum
+      def totalCount(sample: String): Long =
+        counts.getOrElse(sample, 0L) + childs.map(_.totalCount(sample)).sum
 
       def node: Elem = {
-        val sizes = sortedSamples.map { sample => <val>{ totalCount(sample) }</val> }
+        val sizes = sortedSamples.map { sample =>
+          <val>{ totalCount(sample) }</val>
+        }
         val size = <size>{ sizes }</size>
 
         val node = <node name={ name }>{ size }</node>
@@ -123,8 +128,10 @@ object GearsQiimeClosed {
     val root = TaxNode("root", "-")
 
     val taxs = biom("rows").asInstanceOf[List[Map[String, Any]]].toArray.map { row =>
-      val taxonomy = row("metadata").asInstanceOf[Map[String, Any]]("taxonomy")
-        .asInstanceOf[List[String]].filter(!_.endsWith("__"))
+      val taxonomy = row("metadata")
+        .asInstanceOf[Map[String, Any]]("taxonomy")
+        .asInstanceOf[List[String]]
+        .filter(!_.endsWith("__"))
       taxonomy.foldLeft(root) { (a, b) =>
         val n = b.split("__", 2)
         val level = n(0)
@@ -139,14 +146,17 @@ object GearsQiimeClosed {
       }
     }
 
-    biom("data").asInstanceOf[List[List[Any]]].map { data =>
-      val row = data(0).asInstanceOf[Long]
-      val column = data(1).asInstanceOf[Long]
-      val value = data(2).asInstanceOf[Long]
-      val sample = samples(column.toInt).toString
-      taxs(row.toInt).counts += sample -> (value + taxs(row.toInt).counts.getOrElse(sample, 0L))
-      value
-    }.sum
+    biom("data")
+      .asInstanceOf[List[List[Any]]]
+      .map { data =>
+        val row = data(0).asInstanceOf[Long]
+        val column = data(1).asInstanceOf[Long]
+        val value = data(2).asInstanceOf[Long]
+        val sample = samples(column.toInt).toString
+        taxs(row.toInt).counts += sample -> (value + taxs(row.toInt).counts.getOrElse(sample, 0L))
+        value
+      }
+      .sum
 
     val xml = <krona>
                 <attributes magnitude="size">

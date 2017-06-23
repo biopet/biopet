@@ -1,49 +1,51 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
 
+import scala.io.Source
+
 /**
- * Created by pjvan_thof on 9/29/15.
- */
-class BiopetFifoPipe(val root: Configurable,
-                     protected var commands: List[BiopetCommandLineFunction]) extends BiopetCommandLineFunction {
+  * Created by pjvan_thof on 9/29/15.
+  */
+class BiopetFifoPipe(val parent: Configurable,
+                     protected var commands: List[BiopetCommandLineFunction])
+    extends BiopetCommandLineFunction {
 
   def fifos: List[File] = {
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.outputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val inputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.inputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
-    for (
-      cmdOutput <- commands;
-      cmdInput <- commands if cmdOutput != cmdInput && outputs.contains(cmdOutput);
-      outputFile <- outputs(cmdOutput) if inputs.contains(cmdInput);
-      inputFile <- inputs(cmdInput) if outputFile == inputFile
-    ) yield outputFile
+    for (cmdOutput <- commands;
+         cmdInput <- commands if cmdOutput != cmdInput && outputs.contains(cmdOutput);
+         outputFile <- outputs(cmdOutput) if inputs.contains(cmdInput);
+         inputFile <- inputs(cmdInput) if outputFile == inputFile) yield outputFile
   }
 
   @Output
@@ -53,13 +55,13 @@ class BiopetFifoPipe(val root: Configurable,
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.outputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val inputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.inputs).toMap
     } catch {
-      case e: NullPointerException => Map()
+      case _: NullPointerException => Map()
     }
 
     val fifoFiles = fifos
@@ -84,14 +86,16 @@ class BiopetFifoPipe(val root: Configurable,
     }
   }
 
-  def cmdLine = {
-    val fifosFiles = this.fifos
-    fifosFiles.filter(_.exists()).map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
-      fifosFiles.map(required("mkfifo", _)).mkString("\n\n", "\n", "\n\n") +
-      commands.map(_.commandLine).mkString("\n\n", " & \n", " & \n\n") +
-      BiopetFifoPipe.waitScript +
-      fifosFiles.map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
-      BiopetFifoPipe.endScript
+  def cmdLine: String = {
+    this.fifos.filter(_.exists()).map(required("rm", _)).mkString("", "\n", "\n") +
+      this.fifos.map(required("mkfifo", _)).mkString("\n") +
+      commands.map(_.commandLine).mkString("\n", " & \n", " & \n")
+  }
+
+  /** This will add the control code to the script for fifo pipes */
+  override protected def changeScript(file: File): Unit = {
+    super.changeScript(file)
+    BiopetFifoPipe.changeScript(file, fifos)
   }
 
   override def setResources(): Unit = {
@@ -111,7 +115,27 @@ class BiopetFifoPipe(val root: Configurable,
 }
 
 object BiopetFifoPipe {
-  val waitScript =
+
+  /** This will add the control code to the script for fifo pipes */
+  def changeScript(file: File, fifos: List[File]): Unit = {
+    val reader = Source.fromFile(file)
+    val lines = reader.getLines().toList
+    reader.close()
+    val writer = new PrintWriter(file)
+    lines.foreach(writer.println)
+
+    writer.println(BiopetFifoPipe.waitScript)
+    writer.println(fifos.map("rm " + _).mkString(" \n"))
+    writer.println(BiopetFifoPipe.endScript)
+    writer.close()
+    if (Logging.logger.isDebugEnabled) {
+      val reader = Source.fromFile(file)
+      Logging.logger.debug(s"Content of script $file:\n" + reader.getLines().mkString("\n"))
+      reader.close()
+    }
+  }
+
+  val waitScript: String =
     """
       |
       |allJobs=`jobs -p`
@@ -157,7 +181,7 @@ object BiopetFifoPipe {
       |
     """.stripMargin
 
-  val endScript =
+  val endScript: String =
     """
       |
       |if [ "$FAIL" == "0" ];

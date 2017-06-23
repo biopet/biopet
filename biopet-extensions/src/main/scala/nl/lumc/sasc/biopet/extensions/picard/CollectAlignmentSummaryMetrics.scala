@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
@@ -19,13 +19,16 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /** Extension for picard CollectAlignmentSummaryMetrics */
-class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
-  javaMainClass = new picard.analysis.CollectAlignmentSummaryMetrics().getClass.getName
+class CollectAlignmentSummaryMetrics(val parent: Configurable)
+    extends Picard
+    with Summarizable
+    with Reference {
 
-  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
+  @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
+         required = true)
   var input: File = _
 
   @Argument(doc = "MAX_INSERT_SIZE", required = false)
@@ -58,16 +61,17 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
   }
 
   /** Returns command to execute */
-  override def cmdLine = super.cmdLine +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false) +
-    optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
-    optional("MAX_INSERT_SIZE=", maxInstertSize, spaceSeparated = false) +
-    optional("IS_BISULFITE_SEQUENCED=", isBisulfiteSequenced, spaceSeparated = false) +
-    optional("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
-    optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
-    repeat("ADAPTER_SEQUENCE=", adapterSequence, spaceSeparated = false)
+  override def cmdLine =
+    super.cmdLine +
+      required("INPUT=", input, spaceSeparated = false) +
+      required("OUTPUT=", output, spaceSeparated = false) +
+      optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
+      repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+      optional("MAX_INSERT_SIZE=", maxInstertSize, spaceSeparated = false) +
+      optional("IS_BISULFITE_SEQUENCED=", isBisulfiteSequenced, spaceSeparated = false) +
+      optional("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
+      optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
+      repeat("ADAPTER_SEQUENCE=", adapterSequence, spaceSeparated = false)
 
   def summaryFiles: Map[String, File] = Map()
 
@@ -76,11 +80,13 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
 }
 
 object CollectAlignmentSummaryMetrics {
+
   /** Returns default CollectAlignmentSummaryMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectAlignmentSummaryMetrics = {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input
-    collectAlignmentSummaryMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")
+    collectAlignmentSummaryMetrics.output =
+      new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")
     collectAlignmentSummaryMetrics
   }
 }

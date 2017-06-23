@@ -1,28 +1,30 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-#import(org.apache.commons.io.FileUtils)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
-<%@ var rootPath: String %>
-<%@ var metricsTag: String = "bammetrics" %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var sampleLevel: Boolean = false %>
+<%@ var rootPath: String %>
 <%@ var outputDir: File %>
-<%@ var fields: List[String] = List("mean_coverage", "pct_5x", "pct_10x", "pct_15x", "pct_20x", "pct_25x", "pct_30x", "pct_40x", "pct_50x", "pct_60x", "pct_70x", "pct_80x", "pct_90x", "pct_100x")%>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
+<%@ var runId: Int %>
+<%@ var fields: List[String] = List("mean_coverage", "pct_5x", "pct_10x", "pct_15x", "pct_20x", "pct_25x", "pct_30x", "pct_40x", "pct_50x", "pct_60x", "pct_70x", "pct_80x", "pct_90x", "pct_100x")%>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
     val samples = sampleId match {
-    case Some(sample) => {
-    List(sample.toString)
-    }
-    case _ => summary.samples.toList
+    case Some(id) => allSamples.filter(_.id == id).toList
+    case _ => allSamples.toList
     }
 }#
-
 #if (showIntro)
     <br/>
     <div class="row">
@@ -36,7 +38,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.wgsHistogramPlot(outputDir, "wgs", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
+    #{ BammetricsReport.wgsHistogramPlot(outputDir, "wgs", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
 
     <div class="panel-body">
     <img src="wgs.png" class="img-responsive" />
@@ -47,7 +49,7 @@
         #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#wgsTable">Show table</button>
         #end
-        <a href="wgs.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
+        <a href="wgs.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> Data points</button></a>
     </div>
 #end
 
@@ -62,27 +64,25 @@
         #end
     </tr></thead>
     <tbody>
-        #for (sample <- samples.toList.sorted)
+        #for (sample <- samples.sortBy(_.name))
             #{
-                val libs = (libId, sampleLevel) match {
-                case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                val libs: List[Option[Int]] = (libId, sampleLevel) match {
+                case (_, true) => List(None)
+                case (Some(_), _) => List(libId)
+                case _ => allLibraries.filter(_.sampleId == sample.id).map(x => Some(x.id)).toList
                 }
             }#
-            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
             #for (libId <- libs)
+                #{ val libName = libId.map(l => allLibraries.find(_.id == l).get.name) }#
                 #if (libs.head != libId) <tr> #end
-                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
+                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
-
-                        val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("wgs", "metrics", field.toUpperCase)):_*).getOrElse(prefixPath ::: metricsTag :: Nil)
-                        }
+                        val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+                        val results = summary.getStatKeys(runId, "bammetrics", "wgs", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
                     }#
-                    #for (value <- fieldValues)
-                        <td>${value}</td>
+                    #for (field <- fields)
+                        <td>${results(field)}</td>
                     #end
                 </tr>
             #end

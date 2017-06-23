@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import java.io.PrintWriter
 
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.extensions.varscan.{ FixMpileup, VarscanMpileup2cns }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
+import nl.lumc.sasc.biopet.extensions.varscan.{FixMpileup, VarscanMpileup2cns}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
- * Created by sajvanderzeeuw on 15-1-16.
- */
-class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
+  * Created by sajvanderzeeuw on 15-1-16.
+  */
+class VarscanCnsSingleSample(val parent: Configurable) extends Variantcaller {
   val name = "varscan_cns_singlesample"
   protected def defaultPrio = 25
 

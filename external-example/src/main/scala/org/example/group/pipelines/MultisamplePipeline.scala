@@ -1,33 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package org.example.group.pipelines
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, MultiSampleQScript}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvanthof on 30/08/15.
- */
-class MultisamplePipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+  * Created by pjvanthof on 30/08/15.
+  */
+class MultisamplePipeline(val parent: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
-  def init: Unit = {
-  }
+  def init: Unit = {}
 
   def biopetScript: Unit = {
     addSamplesJobs() // This executes jobs for all samples
@@ -36,8 +35,6 @@ class MultisamplePipeline(val root: Configurable) extends QScript with MultiSamp
   def addMultiSampleJobs: Unit = {
     // this code will be executed after all code of all samples is executed
   }
-
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 
   //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()

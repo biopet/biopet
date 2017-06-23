@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.bcftools
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** This extension is based on bcftools 1.1-134 */
-class BcftoolsCall(val root: Configurable) extends Bcftools {
+class BcftoolsCall(val parent: Configurable) extends Bcftools {
   @Input(doc = "Input File", required = false)
   var input: File = _
 
@@ -57,30 +57,31 @@ class BcftoolsCall(val root: Configurable) extends Bcftools {
     require(c != m)
   }
 
-  def cmdLine = required(executable) +
-    required("call") +
-    optional("-O", O) +
-    conditional(v, "-v") +
-    conditional(c, "-c") +
-    conditional(m, "-m") +
-    optional("-r", r) +
-    optional("-R", R) +
-    optional("-s", s) +
-    optional("-S", S) +
-    optional("-t", t) +
-    optional("-T", T) +
-    conditional(A, "-A") +
-    repeat("-f", f) +
-    optional("-g", g) +
-    conditional(i, "-i") +
-    conditional(M, "-M") +
-    optional("-V", V) +
-    optional("-C", C) +
-    optional("-n", n) +
-    optional("-p", p) +
-    optional("-P", P) +
-    conditional(X, "-X") +
-    conditional(Y, "-Y") +
-    (if (outputAsStsout) "" else required("-o", output)) +
-    (if (inputAsStdin) "-" else required(input))
+  def cmdLine =
+    required(executable) +
+      required("call") +
+      optional("-O", O) +
+      conditional(v, "-v") +
+      conditional(c, "-c") +
+      conditional(m, "-m") +
+      optional("-r", r) +
+      optional("-R", R) +
+      optional("-s", s) +
+      optional("-S", S) +
+      optional("-t", t) +
+      optional("-T", T) +
+      conditional(A, "-A") +
+      repeat("-f", f) +
+      optional("-g", g) +
+      conditional(i, "-i") +
+      conditional(M, "-M") +
+      optional("-V", V) +
+      optional("-C", C) +
+      optional("-n", n) +
+      optional("-p", p) +
+      optional("-P", P) +
+      conditional(X, "-X") +
+      conditional(Y, "-Y") +
+      (if (outputAsStdout) "" else required("-o", output)) +
+      (if (inputAsStdin) "-" else required(input))
 }

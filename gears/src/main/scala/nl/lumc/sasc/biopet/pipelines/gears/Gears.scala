@@ -1,23 +1,23 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln, Zcat }
+import nl.lumc.sasc.biopet.extensions.{Gzip, Ln, Zcat}
 import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -25,15 +25,15 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by pjvanthof on 03/12/15.
- */
-class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qscript =>
+  * Created by pjvanthof on 03/12/15.
+  */
+class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { qscript =>
   def this() = this(null)
 
   override def reportClass = {
     val gearsReport = new GearsReport(this)
     gearsReport.outputDir = new File(outputDir, "report")
-    gearsReport.summaryFile = summaryFile
+    gearsReport.summaryDbFile = summaryDbFile
     Some(gearsReport)
   }
 
@@ -42,11 +42,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
   /** Init for pipeline */
-  def init(): Unit = {
-  }
-
-  /** Name of summary output file */
-  def summaryFile: File = new File(outputDir, "gears.summary.json")
+  def init(): Unit = {}
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
@@ -73,8 +69,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   def qiimeOpenOtuMap: Option[File] = qiimeOpenDir.map(new File(_, "otu_map.txt"))
 
   /**
-   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
-   */
+    * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+    */
   def addMultiSampleJobs(): Unit = {
     val qiimeCloseds = samples.values.flatMap(_.gearsSingle.qiimeClosed).toList
     val closedOtuTables = qiimeCloseds.map(_.otuTable)
@@ -123,20 +119,21 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   }
 
   /**
-   * Factory method for Sample class
-   *
-   * @param id SampleId
-   * @return Sample class
-   */
+    * Factory method for Sample class
+    *
+    * @param id SampleId
+    * @return Sample class
+    */
   def makeSample(id: String): Sample = new Sample(id)
 
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
     /**
-     * Factory method for Library class
-     *
-     * @param id SampleId
-     * @return Sample class
-     */
+      * Factory method for Library class
+      *
+      * @param id SampleId
+      * @return Sample class
+      */
     def makeLibrary(id: String): Library = new Library(id)
 
     class Library(libId: String) extends AbstractLibrary(libId) {
@@ -197,7 +194,10 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
       add(Zcat(qscript, libraries.values.map(_.qcR1).toList) | new Gzip(qscript) > mergeR1)
 
-      val mergeR2 = if (libraries.values.exists(_.inputR2.isDefined)) Some(new File(sampleDir, s"$sampleId.R2.fq.gz")) else None
+      val mergeR2 =
+        if (libraries.values.exists(_.inputR2.isDefined))
+          Some(new File(sampleDir, s"$sampleId.R2.fq.gz"))
+        else None
       mergeR2.foreach { file =>
         add(Zcat(qscript, libraries.values.flatMap(_.qcR2).toList) | new Gzip(qscript) > file)
       }
@@ -233,12 +233,13 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   def summarySettings: Map[String, Any] = Map("gears_downsample" -> downSample)
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = (
-    qiimeOpenOtuTable.map("qiime_open_otu_table" -> _) ++
-    qiimeOpenOtuMap.map("qiime_open_otu_map" -> _) ++
-    qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
-    qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
-  ).toMap
+  def summaryFiles: Map[String, File] =
+    (
+      qiimeOpenOtuTable.map("qiime_open_otu_table" -> _) ++
+        qiimeOpenOtuMap.map("qiime_open_otu_map" -> _) ++
+        qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
+        qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
+    ).toMap
 }
 
 object Gears extends PipelineCommand

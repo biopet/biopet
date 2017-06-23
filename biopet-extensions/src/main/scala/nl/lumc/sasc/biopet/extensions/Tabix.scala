@@ -1,32 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * Wrapper for the tabix command
- *
- * Note that tabix can either index a file (no stdout stream) or retrieve regions from an indexed file (stdout stream)
- *
- */
-class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  * Wrapper for the tabix command
+  *
+  * Note that tabix can either index a file (no stdout stream) or retrieve regions from an indexed file (stdout stream)
+  *
+  */
+class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input bgzipped file", required = true)
   var input: File = null
@@ -71,7 +71,8 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
     super.beforeGraph()
     p match {
       case Some(fmt) =>
-        require(validFormats.contains(fmt), "-p flag must be one of " + validFormats.mkString(", "))
+        require(validFormats.contains(fmt),
+                "-p flag must be one of " + validFormats.mkString(", "))
         outputFiles :+= outputIndex
       case None =>
     }
@@ -94,7 +95,8 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
       required(input)
 
     // query mode ~ we want to output to a file
-    if (regions.nonEmpty) baseCommand + required("", repeat(regions), escape = false) + " > " + required(outputQuery)
+    if (regions.nonEmpty)
+      baseCommand + required("", repeat(regions), escape = false) + " > " + required(outputQuery)
     // indexing mode
     else baseCommand
   }
@@ -105,12 +107,12 @@ object Tabix {
     val tabix = new Tabix(root)
     tabix.input = input
     tabix.p = tabix.input.getName match {
-      case s if s.endsWith(".vcf.gz")    => Some("vcf")
-      case s if s.endsWith(".bed.gz")    => Some("bed")
-      case s if s.endsWith(".sam.gz")    => Some("sam")
-      case s if s.endsWith(".gff.gz")    => Some("gff")
+      case s if s.endsWith(".vcf.gz") => Some("vcf")
+      case s if s.endsWith(".bed.gz") => Some("bed")
+      case s if s.endsWith(".sam.gz") => Some("sam")
+      case s if s.endsWith(".gff.gz") => Some("gff")
       case s if s.endsWith(".psltbl.gz") => Some("psltbl")
-      case _                             => throw new IllegalArgumentException("Unknown file type")
+      case _ => throw new IllegalArgumentException("Unknown file type")
     }
     tabix
   }

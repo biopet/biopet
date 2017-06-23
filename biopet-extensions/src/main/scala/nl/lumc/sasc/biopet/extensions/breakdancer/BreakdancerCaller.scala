@@ -1,26 +1,26 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
-class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
+class BreakdancerCaller(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
   override def defaultThreads = 1 // breakdancer can only work on 1 single thread
@@ -72,27 +72,27 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   var h: Boolean = config("h", default = false)
   var y: Option[Int] = config("y")
 
-  override def beforeCmd() {
-  }
+  override def beforeCmd() {}
 
-  def cmdLine = required(executable) +
-    optional("-s", s) +
-    optional("-c", c) +
-    optional("-m", m) +
-    optional("-q", q) +
-    optional("-r", r) +
-    optional("-x", x) +
-    optional("-b", b) +
-    conditional(t, "-t") +
-    optional("-d", d) +
-    optional("-g", g) +
-    conditional(l, "-l") +
-    conditional(a, "-a") +
-    conditional(h, "-h") +
-    optional("-y", y) +
-    required(input) +
-    ">" +
-    required(output)
+  def cmdLine =
+    required(executable) +
+      optional("-s", s) +
+      optional("-c", c) +
+      optional("-m", m) +
+      optional("-q", q) +
+      optional("-r", r) +
+      optional("-x", x) +
+      optional("-b", b) +
+      conditional(t, "-t") +
+      optional("-d", d) +
+      optional("-g", g) +
+      conditional(l, "-l") +
+      conditional(a, "-a") +
+      conditional(h, "-h") +
+      optional("-y", y) +
+      required(input) +
+      ">" +
+      required(output)
 }
 
 object BreakdancerCaller {

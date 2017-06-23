@@ -49,7 +49,7 @@ All other values should be provided in the config. Specific config values toward
 | ---- | ---- | -------- |
 | output_dir | Path (**required**) | directory for output files |
 | reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
-| aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`, `hisat2`] |
+| aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa-mem`, `bwa-aln`, `bowtie`, `bowtie2`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`, `hisat2`] |
 | skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
 | skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |
@@ -62,6 +62,47 @@ All other values should be provided in the config. Specific config values toward
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
+
+## Taxonomy extraction 
+
+It is possible to only align reads matching a certain taxonomy.  
+This is useful in situations where known contaminants exist in the sequencing files.
+ 
+For this purpose, it is assumed you have run [Gears](gears.md) with centrifuge
+prior to this pipeline. 
+
+To enable taxonomy extraction, specify the following additional flags in your
+config file:
+
+| Name | Namespace | Type | Function |
+| ---- | --------- | ---- | -------- |
+| taxonomy_extract | mapping | Boolean (must be **true** for this purpose) | enable taxonomy extraction |
+| taxonomy | taxextract | string | The name of the taxonomy you wish to extract | 
+
+Furthermore, you must specify the following command line flags for
+taxonomy extraction to work:
+ 
+| Name | Type | Function |
+| ---- | ---- | -------- |
+| centrifugeOutputFile | File | Output file of centrifuge containing read ids |
+| centrifugeKreport | File | KReport file of centrifuge run | 
+
+The extraction can be fine-tuned with two additional optional config values:
+ 
+ | Name | Namespace | Type | Function |
+ | ---- | --------- | ---- | -------- |
+ | reverse | taxextract | Boolean | Set to true to select those reads _not_ matching the taxonomy. |
+ | no_children | taxextract | Boolean | Set to true to put an exact match on the taxonomy, rather than the specific node and its children |
+ 
+
+### Example config 
+
+```yaml
+extract_taxonomies: true
+taxextract:
+  exe: /path/to/taxextract
+  taxonomy: H.sapiens
+```
 
 ## Example
 

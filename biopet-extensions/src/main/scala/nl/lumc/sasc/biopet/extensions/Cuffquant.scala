@@ -1,30 +1,32 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
- * Wrapper for the cuffquant command line tool.
- * Written based on cuffquant version v2.2.1 (md5: 0765b82b11db9256f5be341a7da884d6)
- */
-class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  * Wrapper for the cuffquant command line tool.
+  * Written based on cuffquant version v2.2.1 (md5: 0765b82b11db9256f5be341a7da884d6)
+  */
+class Cuffquant(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cuffquant")
@@ -44,7 +46,8 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
   /** output file, computed automatically from output directory */
   @Output(doc = "Output CXB file")
   lazy val outputCxb: File = {
-    require(outputDir != null,
+    require(
+      outputDir != null,
       "Can not set Cuffquant CXB output while input file and/or output directory is not defined")
     // cufflinks always outputs a transcripts.gtf file in the output directory
     new File(outputDir, "abundances.cxb")
@@ -99,7 +102,8 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
   var maxFragMultihits: Option[Int] = config("max_frag_multihits")
 
   /** No effective length correction [FALSE] */
-  var noEffectiveLengthCorrection: Boolean = config("no_effective_length_correction", default = false)
+  var noEffectiveLengthCorrection: Boolean =
+    config("no_effective_length_correction", default = false)
 
   /** No length correction [FALSE] */
   var noLengthCorrection: Boolean = config("no_length_correction", default = false)
@@ -116,11 +120,11 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
   /** Disable SCV correction */
   var noScvCorrection: Boolean = config("no_scv_correction", default = false)
 
-  def versionRegex = """cuffquant v(.*)""".r
-  def versionCommand = executable
+  def versionRegex: Regex = """cuffquant v(.*)""".r
+  def versionCommand: String = executable
   override def versionExitcode = List(0, 1)
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--output-dir", outputDir) +
       optional("--mask-file", maskFile) +

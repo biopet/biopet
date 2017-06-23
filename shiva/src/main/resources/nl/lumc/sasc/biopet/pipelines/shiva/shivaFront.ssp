@@ -1,23 +1,46 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Run)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
-<%@ var rootPath: String %>
-
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
+<%@ var summary: SummaryDb %>
+<%@ var runId: Int %>
+<%@ var run: Run %>
+<%@ var allSamples: Seq[Sample] %>
+#{
+    val settings = summary.getSettingKeys(runId, run.name,
+    keyValues = Map(
+        "contigs" -> List("reference", "contigs"),
+        "species" -> List("reference", "species"),
+        "name" -> List("reference", "name"),
+        "annotation" -> List("annotation"),
+        "multisample_variantcalling" -> List("multisample_variantcalling"),
+        "sv_calling" -> List("sv_calling"),
+        "variantcallers" -> List("variantcallers")
+    ))
+    val variantcallingSettings = summary.getSettingKeys(runId, "shivavariantcalling",
+    keyValues = Map(
+        "variantcallers" -> List("variantcallers")
+    ))
+}#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Shiva</td></tr>
-    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
-    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
-    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
+    <tr><th>Version</th><td>${run.version}</td></tr>
+    <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
+    <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
     <tr>
         <th>Variantcallers</th>
-        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").getOrElse(List("None")).asInstanceOf[List[String]].mkString(", ")}</td>
+        <td>${variantcallingSettings.get("variantcallers")}</td>
     </tr>
-    <tr><th>Reference</th><td>${summary.getValue("shiva", "settings", "reference", "species")} - ${summary.getValue("shiva", "settings", "reference", "name")}</td></tr>
-    <tr><th>Number of samples</th><td>${summary.samples.size}</td></tr>
-    <tr><th>Annotation</th><td>${summary.getValue("shiva", "settings", "annotation")}</td></tr>
-    <tr><th>Multisample variantcalling</th><td>${summary.getValue("shiva", "settings", "multisample_variantcalling")}</td></tr>
-    <tr><th>Sv calling</th><td>${summary.getValue("shiva", "settings", "sv_calling")}</td></tr>
+    <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
+    <tr><th>Number of samples</th><td>${allSamples.size}</td></tr>
+    <tr><th>Annotation</th><td>${settings.get("annotation")}</td></tr>
+    <tr><th>Multisample variantcalling</th><td>${settings.get("multisample_variantcalling")}</td></tr>
+    <tr><th>Sv calling</th><td>${settings.get("sv_calling")}</td></tr>
 </tbody>
 </table>
 <br/>

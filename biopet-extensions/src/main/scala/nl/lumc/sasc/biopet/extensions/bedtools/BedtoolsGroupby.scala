@@ -1,31 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
- * Wrapper for the bedtools groupby tool
- * Written based on bedtools v2.21.0 (md5: b5a9a64bad721d96f6cbf2b3805b0fbe)
- *
- * @param root [[Configurable]] object
- */
-class BedtoolsGroupby(val root: Configurable) extends Bedtools {
+  * Wrapper for the bedtools groupby tool
+  * Written based on bedtools v2.21.0 (md5: b5a9a64bad721d96f6cbf2b3805b0fbe)
+  *
+  * @param parent [[Configurable]] object
+  */
+class BedtoolsGroupby(val parent: Configurable) extends Bedtools {
 
   // input can be from stdin or a file
   @Input(doc = "Input file", required = false)
@@ -72,16 +72,17 @@ class BedtoolsGroupby(val root: Configurable) extends Bedtools {
     if (output.nonEmpty) " > "
     else ""
 
-  def cmdLine = required(executable) + required("groupby") +
-    optional(inputFlag, input) +
-    optional("-g", grp) +
-    required("-c", opCols) +
-    required("-o", ops) +
-    conditional(full, "-full") +
-    conditional(inheader, "-inheader") +
-    conditional(outheader, "-outheader") +
-    conditional(header, "-header") +
-    conditional(ignorecase, "-ignorecase") +
-    optional("-prec", prec) +
-    optional(outputFlag, output)
+  def cmdLine =
+    required(executable) + required("groupby") +
+      optional(inputFlag, input) +
+      optional("-g", grp) +
+      required("-c", opCols) +
+      required("-o", ops) +
+      conditional(full, "-full") +
+      conditional(inheader, "-inheader") +
+      conditional(outheader, "-outheader") +
+      conditional(header, "-header") +
+      conditional(ignorecase, "-ignorecase") +
+      optional("-prec", prec) +
+      optional(outputFlag, output)
 }

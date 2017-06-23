@@ -1,34 +1,38 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.{ LazyCheck, Logging, VcfUtils, tryToParseNumber }
+import nl.lumc.sasc.biopet.utils.{LazyCheck, Logging, VcfUtils, tryToParseNumber}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.io.Source
 
 /**
- * Extension for VariantEffectPredictor
- * Created by ahbbollen on 15-1-15.
- */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
+  * Extension for VariantEffectPredictor
+  * Created by ahbbollen on 15-1-15.
+  */
+class VariantEffectPredictor(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version
+    with Summarizable {
 
   lazy val vepVersion = new LazyCheck({
     val s: Option[String] = config("vep_version")
@@ -148,7 +152,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var cacheRegionSize: Option[String] = config("cache_region_size")
 
   // Numeric args
-  override def defaultThreads: Int = config("fork", default = 2)
+  override def defaultThreads: Int = config("fork", default = 4)
   var cacheVersion: Option[Int] = config("cache_version")
   var freqFreq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")
@@ -177,105 +181,106 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     if (input.exists() && VcfUtils.vcfFileIsEmpty(input)) {
       val zcat = Zcat(this, input, output)
       zcat.cmdLine
-    } else required(executable) +
-      required(vepScript) +
-      required("-i", input) +
-      required("-o", output) +
-      conditional(v, "-v") +
-      conditional(q, "-q") +
-      conditional(offline, "--offline") +
-      conditional(noProgress, "--no_progress") +
-      conditional(everything, "--everything") +
-      conditional(force, "--force_overwrite") +
-      conditional(noStats, "--no_stats") +
-      conditional(statsText, "--stats_text") +
-      conditional(html, "--html") +
-      conditional(cache, "--cache") +
-      conditional(humdiv, "--humdiv") +
-      conditional(regulatory, "--regulatory") +
-      conditional(cellType, "--cel_type") +
-      conditional(phased, "--phased") +
-      conditional(alleleNumber, "--allele_number") +
-      conditional(numbers, "--numbers") +
-      conditional(domains, "--domains") +
-      conditional(noEscape, "--no_escape") +
-      conditional(hgvs, "--hgvs") +
-      conditional(protein, "--protein") +
-      conditional(symbol, "--symbol") +
-      conditional(ccds, "--ccds") +
-      conditional(uniprot, "--uniprot") +
-      conditional(tsl, "--tsl") +
-      conditional(canonical, "--canonical") +
-      conditional(biotype, "--biotype") +
-      conditional(xrefRefseq, "--xref_refseq") +
-      conditional(checkExisting, "--check_existing") +
-      conditional(checkAlleles, "--check_alleles") +
-      conditional(checkSvs, "--check_svs") +
-      conditional(gmaf, "--gmaf") +
-      conditional(maf1kg, "--maf_1kg") +
-      conditional(mafEsp, "--maf_esp") +
-      conditional(pubmed, "--pubmed") +
-      conditional(vcf, "--vcf") +
-      conditional(json, "--json") +
-      conditional(gvf, "--gvf") +
-      conditional(checkRef, "--check_ref") +
-      conditional(codingOnly, "--coding_only") +
-      conditional(noIntergenic, "--no_intergenic") +
-      conditional(pick, "--pick") +
-      conditional(pickAllele, "--pick_allele") +
-      conditional(flagPick, "--flag_pick") +
-      conditional(flagPickAllele, "--flag_pick_allele") +
-      conditional(perGene, "--per_gene") +
-      conditional(mostSevere, "--most_severe") +
-      conditional(summary, "--summary") +
-      conditional(filterCommon, "--filter_common") +
-      conditional(checkFrequency, "--check_frequency") +
-      conditional(allowNonVariant, "--allow_non_variant") +
-      conditional(database, "--database") +
-      conditional(genomes, "--genomes") +
-      conditional(gencodeBasic, "--gencode_basic") +
-      conditional(refseq, "--refseq") +
-      conditional(merged, "--merged") +
-      conditional(allRefseq, "--all_refseq") +
-      conditional(lrg, "--lrg") +
-      conditional(noWholeGenome, "--no_whole_genome") +
-      conditional(skibDbCheck, "--skip_db_check") +
-      optional("--config", vepConfigArg) +
-      optional("--species", species) +
-      optional("--assembly", assembly) +
-      optional("--format", format) +
-      optional("--dir", dir) +
-      optional("--dir_cache", dirCache) +
-      optional("--dir_plugins", dirPlugins) +
-      optional("--fasta", fasta) +
-      optional("--sift", sift) +
-      optional("--polyphen", polyphen) +
-      repeat("--custom", custom) +
-      repeat("--plugin", plugin) +
-      optional("--individual", individual) +
-      optional("--fields", fields) +
-      optional("--convert", convert) +
-      optional("--terms", terms) +
-      optional("--chr", chr) +
-      optional("--pick_order", pickOrder) +
-      optional("--freq_pop", freqPop) +
-      optional("--freq_gt_lt", freqGtLt) +
-      optional("--freq_filter", freqFilter) +
-      optional("--filter", filter) +
-      optional("--host", host) +
-      optional("--user", user) +
-      optional("--password", password) +
-      optional("--registry", registry) +
-      optional("--build", build) +
-      optional("--compress", compress) +
-      optional("--cache_region_size", cacheRegionSize) +
-      optional("--fork", threads) +
-      optional("--cache_version", cacheVersion) +
-      optional("--freq_freq", freqFreq) +
-      optional("--port", port) +
-      optional("--db_version", dbVersion) +
-      optional("--buffer_size", bufferSize) +
-      optional("--failed", failed)
+    } else
+      required(executable) +
+        required(vepScript) +
+        required("-i", input) +
+        required("-o", output) +
+        conditional(v, "-v") +
+        conditional(q, "-q") +
+        conditional(offline, "--offline") +
+        conditional(noProgress, "--no_progress") +
+        conditional(everything, "--everything") +
+        conditional(force, "--force_overwrite") +
+        conditional(noStats, "--no_stats") +
+        conditional(statsText, "--stats_text") +
+        conditional(html, "--html") +
+        conditional(cache, "--cache") +
+        conditional(humdiv, "--humdiv") +
+        conditional(regulatory, "--regulatory") +
+        conditional(cellType, "--cel_type") +
+        conditional(phased, "--phased") +
+        conditional(alleleNumber, "--allele_number") +
+        conditional(numbers, "--numbers") +
+        conditional(domains, "--domains") +
+        conditional(noEscape, "--no_escape") +
+        conditional(hgvs, "--hgvs") +
+        conditional(protein, "--protein") +
+        conditional(symbol, "--symbol") +
+        conditional(ccds, "--ccds") +
+        conditional(uniprot, "--uniprot") +
+        conditional(tsl, "--tsl") +
+        conditional(canonical, "--canonical") +
+        conditional(biotype, "--biotype") +
+        conditional(xrefRefseq, "--xref_refseq") +
+        conditional(checkExisting, "--check_existing") +
+        conditional(checkAlleles, "--check_alleles") +
+        conditional(checkSvs, "--check_svs") +
+        conditional(gmaf, "--gmaf") +
+        conditional(maf1kg, "--maf_1kg") +
+        conditional(mafEsp, "--maf_esp") +
+        conditional(pubmed, "--pubmed") +
+        conditional(vcf, "--vcf") +
+        conditional(json, "--json") +
+        conditional(gvf, "--gvf") +
+        conditional(checkRef, "--check_ref") +
+        conditional(codingOnly, "--coding_only") +
+        conditional(noIntergenic, "--no_intergenic") +
+        conditional(pick, "--pick") +
+        conditional(pickAllele, "--pick_allele") +
+        conditional(flagPick, "--flag_pick") +
+        conditional(flagPickAllele, "--flag_pick_allele") +
+        conditional(perGene, "--per_gene") +
+        conditional(mostSevere, "--most_severe") +
+        conditional(summary, "--summary") +
+        conditional(filterCommon, "--filter_common") +
+        conditional(checkFrequency, "--check_frequency") +
+        conditional(allowNonVariant, "--allow_non_variant") +
+        conditional(database, "--database") +
+        conditional(genomes, "--genomes") +
+        conditional(gencodeBasic, "--gencode_basic") +
+        conditional(refseq, "--refseq") +
+        conditional(merged, "--merged") +
+        conditional(allRefseq, "--all_refseq") +
+        conditional(lrg, "--lrg") +
+        conditional(noWholeGenome, "--no_whole_genome") +
+        conditional(skibDbCheck, "--skip_db_check") +
+        optional("--config", vepConfigArg) +
+        optional("--species", species) +
+        optional("--assembly", assembly) +
+        optional("--format", format) +
+        optional("--dir", dir) +
+        optional("--dir_cache", dirCache) +
+        optional("--dir_plugins", dirPlugins) +
+        optional("--fasta", fasta) +
+        optional("--sift", sift) +
+        optional("--polyphen", polyphen) +
+        repeat("--custom", custom) +
+        repeat("--plugin", plugin) +
+        optional("--individual", individual) +
+        optional("--fields", fields) +
+        optional("--convert", convert) +
+        optional("--terms", terms) +
+        optional("--chr", chr) +
+        optional("--pick_order", pickOrder) +
+        optional("--freq_pop", freqPop) +
+        optional("--freq_gt_lt", freqGtLt) +
+        optional("--freq_filter", freqFilter) +
+        optional("--filter", filter) +
+        optional("--host", host) +
+        optional("--user", user) +
+        optional("--password", password) +
+        optional("--registry", registry) +
+        optional("--build", build) +
+        optional("--compress", compress) +
+        optional("--cache_region_size", cacheRegionSize) +
+        optional("--fork", threads) +
+        optional("--cache_version", cacheVersion) +
+        optional("--freq_freq", freqFreq) +
+        optional("--port", port) +
+        optional("--db_version", dbVersion) +
+        optional("--buffer_size", bufferSize) +
+        optional("--failed", failed)
   }
 
   def summaryFiles: Map[String, File] = Map()
@@ -286,8 +291,14 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else Map()
   }
 
-  protected val removeOnConflict = Set("Output_file", "Run_time", "Start_time", "End_time", "Novel_/_existing_variants", "Input_file_(format)")
-  protected val nonNumber = Set("VEP_version_(API)", "Cache/Database", "Species", "Command_line_options")
+  protected val removeOnConflict = Set("Output_file",
+                                       "Run_time",
+                                       "Start_time",
+                                       "End_time",
+                                       "Novel_/_existing_variants",
+                                       "Input_file_(format)")
+  protected val nonNumber =
+    Set("VEP_version_(API)", "Cache/Database", "Species", "Command_line_options")
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     if (removeOnConflict.contains(key)) None
@@ -295,7 +306,9 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else {
       (v1, v2) match {
         case (x1: Int, x2: Int) => x1 + x2
-        case _                  => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
+        case _ =>
+          throw new IllegalStateException(
+            s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
       }
     }
   }
@@ -312,11 +325,18 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
     (for ((header, headerIndex) <- headers) yield {
       val name = header.stripPrefix("[").stripSuffix("]")
-      name.replaceAll(" ", "_") -> contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).flatMap { line =>
-        val values = line.split("\t", 2)
-        if (values.last.isEmpty || values.last == "-") None
-        else Some(values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(values.last))
-      }.toMap
+      name.replaceAll(" ", "_") -> contents
+        .drop(headerIndex + 1)
+        .takeWhile(!isHeader(_))
+        .flatMap { line =>
+          val values = line.split("\t", 2)
+          if (values.last.isEmpty || values.last == "-") None
+          else
+            Some(
+              values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(
+                values.last))
+        }
+        .toMap
     }).toMap
   }
 }

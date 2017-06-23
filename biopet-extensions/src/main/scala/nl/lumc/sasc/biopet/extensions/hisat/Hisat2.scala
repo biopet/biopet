@@ -1,32 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.hisat
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Extension for hisat2
- *
- * Based on version 2.0.4
- */
-class Hisat2(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for hisat2
+  *
+  * Based on version 2.0.4
+  */
+class Hisat2(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
 
   // TODO: handle --sra-acc flag. This is currently unsupported by the wrapper.
 
@@ -155,105 +158,107 @@ class Hisat2(val root: Configurable) extends BiopetCommandLineFunction with Refe
     val indexDir = new File(hisat2Index).getParentFile
     val basename = hisat2Index.stripPrefix(indexDir.getPath + File.separator)
     if (indexDir.exists()) {
-      if (!indexDir.list()
-        .toList
-        .filter(_.startsWith(basename))
-        .exists(_.endsWith(".ht2")))
+      if (!indexDir
+            .list()
+            .toList
+            .filter(_.startsWith(basename))
+            .exists(_.endsWith(".ht2")))
         Logging.addError(s"No index files found for hisat2 in: $indexDir with basename: $basename")
     }
   }
 
   /** return commandline to execute */
-  def cmdLine = required(executable) +
-    conditional(q, "-q") +
-    conditional(qseq, "--qseq") +
-    conditional(f, "-f") +
-    conditional(r, "-r") +
-    conditional(c, "-c") +
-    optional("--skip", skip) +
-    optional("--upto", upto) +
-    optional("--trim3", trim3) +
-    optional("--trim5", trim5) +
-    conditional(phred33, "--phred33") +
-    conditional(phred64, "--phred64") +
-    conditional(intQuals, "--int-quals") +
-    /* Alignment options */
-    optional("--n-ceil", nCeil) +
-    conditional(ignoreQuals, "--ignore-quals") +
-    conditional(nofw, "--nofw") +
-    conditional(norc, "--norc") +
-    /* Spliced alignment */
-    optional("--pen-cansplice", penCansplice) +
-    optional("--pen-noncansplice", penNoncansplice) +
-    optional("--pen-canintronlen", penCanintronlen) +
-    optional("--pen-noncanintronlen", penNoncanintronlen) +
-    optional("--min-intronlen", minIntronlen) +
-    optional("--max-intronlen", maxIntronlen) +
-    optional("--known-splicesite-infile", knownSplicesiteInfile) +
-    optional("--novel-splicesite-outfile", novelSplicesiteOutfile) +
-    optional("--novel-splicesite-infile", novelSplicesiteInfile) +
-    conditional(noTempSplicesite, "--no-temp-splicesite") +
-    conditional(noSplicedAlignment, "--no-spliced-alignment") +
-    optional("--rna-strandness", rnaStrandness) +
-    conditional(tmo, "--tmo") +
-    conditional(dta, "--dta") +
-    conditional(dtaCufflinks, "--dta-cufflinks") +
-    /* Scoring */
-    optional("--ma", ma) +
-    optional("--mp", mp) +
-    optional("--np", np) +
-    optional("--sp", sp) +
-    optional("--rdg", rdg) +
-    optional("--rfg", rfg) +
-    optional("--score-min", scoreMin) +
-    /* Reporting */
-    optional("-k", k) +
-    optional("--all", all) +
-    /* Paired End */
-    conditional(fr, "--fr") +
-    conditional(rf, "--rf") +
-    conditional(ff, "--ff") +
-    conditional(noMixed, "--no-mixed") +
-    conditional(noDiscordant, "--no-discordant") +
-    /* Output */
-    conditional(time, "--time") +
-    optional("--un", un) +
-    optional("--al", al) +
-    optional("--un-conc", unConc) +
-    optional("--al-conc", alConc) +
-    optional("--un-gz", unGz) +
-    optional("--al-gz", alGz) +
-    optional("--un-conc-gz", unConcGz) +
-    optional("--al-conc-gz", alConcGz) +
-    optional("--un-bz2", unBz2) +
-    optional("--al-bz2", alBz2) +
-    optional("--un-conc-bz2", unConcBz2) +
-    optional("--al-conc-bz2", alConcBz2) +
-    conditional(quiet, "--quiet") +
-    optional("--met-file", metFile) +
-    conditional(metStderr, "--met-stderr") +
-    optional("--met", met) +
-    conditional(noHead, "--no-head") +
-    conditional(noSq, "--no-sq") +
-    optional("--rg-id", rgId) +
-    repeat("--rg", rg) +
-    conditional(omitSecSeq, "--omit-sec-seq") +
-    /* Performance */
-    optional("--offrate", offrate) +
-    optional("--threads", threads) +
-    conditional(reorder, "--reorder") +
-    conditional(mm, "--mm") +
-    /* Other */
-    conditional(qcFilter, "--qc-filter") +
-    optional("--seed", seed) +
-    conditional(nonDeterministic, "--non-deterministic") +
-    conditional(removeChrName, "--remove-chrname") +
-    conditional(addChrName, "--add-chrname") +
-    /* Required */
-    required("-x", hisat2Index) +
-    (R2 match {
-      case Some(r2)  => required("-1", R1) + optional("-2", r2)
-      case otherwise => required("-U", R1)
-    }) +
-    (if (outputAsStsout) "" else required("-S", output))
+  def cmdLine =
+    required(executable) +
+      conditional(q, "-q") +
+      conditional(qseq, "--qseq") +
+      conditional(f, "-f") +
+      conditional(r, "-r") +
+      conditional(c, "-c") +
+      optional("--skip", skip) +
+      optional("--upto", upto) +
+      optional("--trim3", trim3) +
+      optional("--trim5", trim5) +
+      conditional(phred33, "--phred33") +
+      conditional(phred64, "--phred64") +
+      conditional(intQuals, "--int-quals") +
+      /* Alignment options */
+      optional("--n-ceil", nCeil) +
+      conditional(ignoreQuals, "--ignore-quals") +
+      conditional(nofw, "--nofw") +
+      conditional(norc, "--norc") +
+      /* Spliced alignment */
+      optional("--pen-cansplice", penCansplice) +
+      optional("--pen-noncansplice", penNoncansplice) +
+      optional("--pen-canintronlen", penCanintronlen) +
+      optional("--pen-noncanintronlen", penNoncanintronlen) +
+      optional("--min-intronlen", minIntronlen) +
+      optional("--max-intronlen", maxIntronlen) +
+      optional("--known-splicesite-infile", knownSplicesiteInfile) +
+      optional("--novel-splicesite-outfile", novelSplicesiteOutfile) +
+      optional("--novel-splicesite-infile", novelSplicesiteInfile) +
+      conditional(noTempSplicesite, "--no-temp-splicesite") +
+      conditional(noSplicedAlignment, "--no-spliced-alignment") +
+      optional("--rna-strandness", rnaStrandness) +
+      conditional(tmo, "--tmo") +
+      conditional(dta, "--dta") +
+      conditional(dtaCufflinks, "--dta-cufflinks") +
+      /* Scoring */
+      optional("--ma", ma) +
+      optional("--mp", mp) +
+      optional("--np", np) +
+      optional("--sp", sp) +
+      optional("--rdg", rdg) +
+      optional("--rfg", rfg) +
+      optional("--score-min", scoreMin) +
+      /* Reporting */
+      optional("-k", k) +
+      optional("--all", all) +
+      /* Paired End */
+      conditional(fr, "--fr") +
+      conditional(rf, "--rf") +
+      conditional(ff, "--ff") +
+      conditional(noMixed, "--no-mixed") +
+      conditional(noDiscordant, "--no-discordant") +
+      /* Output */
+      conditional(time, "--time") +
+      optional("--un", un) +
+      optional("--al", al) +
+      optional("--un-conc", unConc) +
+      optional("--al-conc", alConc) +
+      optional("--un-gz", unGz) +
+      optional("--al-gz", alGz) +
+      optional("--un-conc-gz", unConcGz) +
+      optional("--al-conc-gz", alConcGz) +
+      optional("--un-bz2", unBz2) +
+      optional("--al-bz2", alBz2) +
+      optional("--un-conc-bz2", unConcBz2) +
+      optional("--al-conc-bz2", alConcBz2) +
+      conditional(quiet, "--quiet") +
+      optional("--met-file", metFile) +
+      conditional(metStderr, "--met-stderr") +
+      optional("--met", met) +
+      conditional(noHead, "--no-head") +
+      conditional(noSq, "--no-sq") +
+      optional("--rg-id", rgId) +
+      repeat("--rg", rg) +
+      conditional(omitSecSeq, "--omit-sec-seq") +
+      /* Performance */
+      optional("--offrate", offrate) +
+      optional("--threads", threads) +
+      conditional(reorder, "--reorder") +
+      conditional(mm, "--mm") +
+      /* Other */
+      conditional(qcFilter, "--qc-filter") +
+      optional("--seed", seed) +
+      conditional(nonDeterministic, "--non-deterministic") +
+      conditional(removeChrName, "--remove-chrname") +
+      conditional(addChrName, "--add-chrname") +
+      /* Required */
+      required("-x", hisat2Index) +
+      (R2 match {
+        case Some(r2) => required("-1", R1) + optional("-2", r2)
+        case otherwise => required("-U", R1)
+      }) +
+      (if (outputAsStdout) "" else required("-S", output))
 }

@@ -1,29 +1,29 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.config
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ConfigUtilsTest }
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, ConfigUtilsTest}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 /**
- * Test class for [[Config]]
- *
- * Created by pjvan_thof on 1/8/15.
- */
+  * Test class for [[Config]]
+  *
+  * Created by pjvan_thof on 1/8/15.
+  */
 class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConversions {
   @Test def testLoadConfigFile(): Unit = {
     val config = new Config
@@ -49,7 +49,9 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   @Test def testMergeConfigs(): Unit = {
     val map1 = Map("1" -> 1)
     val map2 = Map("2" -> 2)
-    Config.mergeConfigs(new Config(map1), new Config(map2)).map shouldBe ConfigUtils.mergeMaps(map1, map2)
+    Config.mergeConfigs(new Config(map1), new Config(map2)).map shouldBe ConfigUtils.mergeMaps(
+      map1,
+      map2)
   }
 
   @Test def testToString(): Unit = {
@@ -59,9 +61,20 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
 
   @Test def testSkipNested(): Unit = {
     val map = Map("1" -> Map("2" -> Map("4" -> Map("5" -> Map("k1" -> "v1")))))
-    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1")).get.asString shouldBe "v1"
-    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1")).get.asString shouldBe "v1"
-    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
+    Config
+      .getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1"))
+      .get
+      .asString shouldBe "v1"
+    Config
+      .getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1"))
+      .get
+      .asString shouldBe "v1"
+    Config
+      .getValueFromMap(
+        map,
+        new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1"))
+      .get
+      .asString shouldBe "v1"
   }
 
   @DataProvider(name = "testGetValueFromMapProvider")
@@ -73,7 +86,6 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
       Array("m2", List("m1"), "k1", true, "v4"),
       Array("m2", Nil, "k1", true, "v3"),
       Array("notexist", Nil, "k1", true, "v1"),
-
       // With Freevar
       Array("notexist", Nil, "notexist", true, None),
       Array("m1", Nil, "notexist", true, None),
@@ -89,7 +101,6 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
       Array("m5", List("m3", "m4"), "k2", true, "v7"),
       Array("m6", List("m3", "m4"), "k2", true, "v6"),
       Array("m6", List("m3", "m4", "m5"), "k2", true, "v8"),
-
       // Without freeVar
       Array("m3", Nil, "k2", false, "v5"),
       Array("m4", Nil, "k2", false, None),
@@ -105,13 +116,17 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   }
 
   @Test(dataProvider = "testGetValueFromMapProvider")
-  def testGetValueFromMap(module: String, path: List[String], key: String, freeVar: Boolean, expected: Any): Unit = {
+  def testGetValueFromMap(module: String,
+                          path: List[String],
+                          key: String,
+                          freeVar: Boolean,
+                          expected: Any): Unit = {
     val map = ConfigTest.map
     val index = new ConfigValueIndex(module, path, key, freeVar)
     val value = Config.getValueFromMap(map, index)
     value match {
       case Some(x) => x.value shouldBe expected
-      case None    => value shouldBe expected
+      case None => value shouldBe expected
     }
   }
 }

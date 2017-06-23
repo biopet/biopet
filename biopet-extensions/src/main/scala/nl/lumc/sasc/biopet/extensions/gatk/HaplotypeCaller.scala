@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
-class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "HaplotypeCaller"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
@@ -55,6 +55,8 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   /** the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode */
   @Argument(fullName = "maxGGAARExtension", shortName = "maxGGAARExtension", doc = "the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode", required = false, exclusiveOf = "", validation = "")
   var maxGGAARExtension: Option[Int] = config("maxGGAARExtension")
+
+  var useNewAFCalculator: Boolean = config("useNewAFCalculator", default = false)
 
   /** Include at least this many bases around an event for calling indels */
   @Argument(fullName = "paddingAroundIndels", shortName = "paddingAroundIndels", doc = "Include at least this many bases around an event for calling indels", required = false, exclusiveOf = "", validation = "")
@@ -94,7 +96,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** File to which assembled haplotypes should be written */
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[BamGatherFunction])
+  @Gather(classOf[MergeSamFiles])
   var bamOutput: File = _
 
   /** Automatically generated md5 for bamOutput */
@@ -441,6 +443,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     optional("-paddingAroundSNPs", paddingAroundSNPs, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(useNewAFCalculator, "--useNewAFCalculator") +
     repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
     conditional(debug, "-debug", escape = true, format = "%s") +

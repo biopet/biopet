@@ -1,32 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.bowtie
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Extension for bowtie 1
- *
- * Based on version 1.1.1
- */
-class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+  * Extension for bowtie 1
+  *
+  * Based on version 1.1.1
+  */
+class Bowtie(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
 
@@ -67,32 +70,38 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
         largeIndex = config("large-index", default = true)
       else {
         if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwt")))
-          Logging.addError(s"No index files found for bowtie in: $indexDir with basename: $basename")
+          Logging.addError(
+            s"No index files found for bowtie in: $indexDir with basename: $basename")
       }
+    }
+    if (R2.nonEmpty && maxins.isEmpty) {
+      Logging.addError(
+        "The parameter 'maxins' that specifies the maximum allowed insert size, is missing in the configuration. Please note that Bowtie won't align reads coming from inserts longer than this value.")
     }
   }
 
   /** return commandline to execute */
-  def cmdLine = required(executable) +
-    optional("--threads", threads) +
-    conditional(sam, "--sam") +
-    conditional(largeIndex, "--large-index") +
-    conditional(best, "--best") +
-    conditional(strata, "--strata") +
-    optional("--sam-RG", samRg) +
-    optional("--seedlen", seedlen) +
-    optional("--seedmms", seedmms) +
-    optional("-k", k) +
-    optional("-m", m) +
-    optional("--maxbts", maxbts) +
-    optional("--maqerr", maqerr) +
-    optional("--maxins", maxins) +
-    required(bowtieIndex) +
-    (R2 match {
-      case Some(r2) =>
-        required("-1", R1) +
-          optional("-2", r2)
-      case _ => required(R1)
-    }) +
-    " > " + required(output)
+  def cmdLine =
+    required(executable) +
+      optional("--threads", threads) +
+      conditional(sam, "--sam") +
+      conditional(largeIndex, "--large-index") +
+      conditional(best, "--best") +
+      conditional(strata, "--strata") +
+      optional("--sam-RG", samRg) +
+      optional("--seedlen", seedlen) +
+      optional("--seedmms", seedmms) +
+      optional("-k", k) +
+      optional("-m", m) +
+      optional("--maxbts", maxbts) +
+      optional("--maqerr", maqerr) +
+      optional("--maxins", maxins) +
+      required(bowtieIndex) +
+      (R2 match {
+        case Some(r2) =>
+          required("-1", R1) +
+            optional("-2", r2)
+        case _ => required(R1)
+      }) +
+      " > " + required(output)
 }

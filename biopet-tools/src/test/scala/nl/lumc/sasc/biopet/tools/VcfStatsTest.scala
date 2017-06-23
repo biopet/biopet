@@ -1,37 +1,38 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import java.nio.file.{ Files, Paths }
+import java.nio.file.{Files, Paths}
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.{ SampleStats, SampleToSampleStats, Stats, VcfStats }
+import nl.lumc.sasc.biopet.tools.vcfstats.{SampleStats, SampleToSampleStats, Stats, VcfStats}
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 import nl.lumc.sasc.biopet.utils.sortAnyAny
+import org.apache.commons.io.FileUtils
 
 import scala.collection.mutable
 
 /**
- * Test class for [[VcfStats]]
- *
- * Created by pjvan_thof on 2/5/15.
- */
+  * Test class for [[VcfStats]]
+  *
+  * Created by pjvan_thof on 2/5/15.
+  */
 class VcfStatsTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
@@ -81,25 +82,36 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     s1.sampleToSample("s1").alleleOverlap = 1
     s2.sampleToSample("s2").alleleOverlap = 2
 
-    val bla1 = s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "1" -> mutable.Map(1 -> 1)
+    val bla1 = s1.genotypeStats
+      .getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "1" -> mutable.Map(1 -> 1)
     s1.genotypeStats += "chr" -> bla1
-    val bla2 = s2.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "2" -> mutable.Map(2 -> 2)
+    val bla2 = s2.genotypeStats
+      .getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "2" -> mutable.Map(2 -> 2)
     s2.genotypeStats += "chr" -> bla2
 
     val ss1 = SampleToSampleStats()
     val ss2 = SampleToSampleStats()
 
     s1 += s2
-    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 2))
+    s1.genotypeStats
+      .getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map(
+      "1" -> mutable.Map(1 -> 1),
+      "2" -> mutable.Map(2 -> 2))
     ss1.alleleOverlap = 1
     ss2.alleleOverlap = 2
     s1.sampleToSample shouldBe mutable.Map("s1" -> ss1, "s2" -> ss2)
 
     s1 += s2
-    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 4))
+    s1.genotypeStats
+      .getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map(
+      "1" -> mutable.Map(1 -> 1),
+      "2" -> mutable.Map(2 -> 4))
 
     s1 += s1
-    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
+    s1.genotypeStats
+      .getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map(
+      "1" -> mutable.Map(1 -> 2),
+      "2" -> mutable.Map(2 -> 8))
   }
 
   @Test
@@ -125,30 +137,37 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testMergeNestedStatsMap() = {
-    val m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
-      mutable.Map("nested" -> mutable.Map("a" -> 1)))
-    val m2: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
-      Map("nested" -> Map("b" -> 2)))
+    val m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(
+      "test" ->
+        mutable.Map("nested" -> mutable.Map("a" -> 1)))
+    val m2: Map[String, Map[String, Map[Any, Int]]] = Map(
+      "test" ->
+        Map("nested" -> Map("b" -> 2)))
 
     Stats.mergeNestedStatsMap(m1, m2)
 
-    m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2))))
+    m1 should equal(
+      mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2))))
 
-    val m3: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
-      mutable.Map("nestedd" -> mutable.Map(1 -> 500)))
-    val m4: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
-      Map("nestedd" -> Map(6 -> 125)))
+    val m3: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(
+      "test" ->
+        mutable.Map("nestedd" -> mutable.Map(1 -> 500)))
+    val m4: Map[String, Map[String, Map[Any, Int]]] = Map(
+      "test" ->
+        Map("nestedd" -> Map(6 -> 125)))
 
     Stats.mergeNestedStatsMap(m3, m4)
 
-    m3 should equal(mutable.Map("test" -> mutable.Map("nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
+    m3 should equal(
+      mutable.Map("test" -> mutable.Map("nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
 
     val m5 = m3.toMap.map(x => x._1 -> x._2.toMap.map(y => y._1 -> y._2.toMap))
 
     Stats.mergeNestedStatsMap(m1, m5)
 
-    m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2),
-      "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
+    m1 should equal(
+      mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2),
+                                        "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
   }
 
   @Test
@@ -163,42 +182,134 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testNoExistOutputDir: Unit = {
+    val tmp = Files.createTempDirectory("vcfStats")
+    FileUtils.deleteDirectory(new File(tmp.toAbsolutePath.toString))
+    val vcf = resourcePath("/chrQ.vcf.gz")
+    val ref = resourcePath("/fake_chrQ.fa")
+
+    an[IllegalArgumentException] should be thrownBy main(
+      Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
+  }
+
+  @Test
   def testMain() = {
     val tmp = Files.createTempDirectory("vcfStats")
     val vcf = resourcePath("/chrQ.vcf.gz")
     val ref = resourcePath("/fake_chrQ.fa")
 
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString, "--allInfoTags"))
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--allInfoTags", "--allGenotypeTags"))
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats"))
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-      "--generalWiggle", "Total"))
-    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-      "--genotypeWiggle", "Total"))
+    noException should be thrownBy main(
+      Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
+    noException should be thrownBy main(
+      Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString, "--allInfoTags"))
+    noException should be thrownBy main(
+      Array("-I",
+            vcf,
+            "-R",
+            ref,
+            "-o",
+            tmp.toAbsolutePath.toString,
+            "--allInfoTags",
+            "--allGenotypeTags"))
+    noException should be thrownBy main(
+      Array("-I",
+            vcf,
+            "-R",
+            ref,
+            "-o",
+            tmp.toAbsolutePath.toString,
+            "--binSize",
+            "50",
+            "--writeBinStats"))
+    noException should be thrownBy main(
+      Array("-I",
+            vcf,
+            "-R",
+            ref,
+            "-o",
+            tmp.toAbsolutePath.toString,
+            "--binSize",
+            "50",
+            "--writeBinStats",
+            "--generalWiggle",
+            "Total"))
+    noException should be thrownBy main(
+      Array("-I",
+            vcf,
+            "-R",
+            ref,
+            "-o",
+            tmp.toAbsolutePath.toString,
+            "--binSize",
+            "50",
+            "--writeBinStats",
+            "--genotypeWiggle",
+            "Total"))
 
-    val genotypes = List("Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall", "NonInformative",
-      "Available", "Called", "Filtered", "Variant")
+    val genotypes = List("Het",
+                         "HetNonRef",
+                         "Hom",
+                         "HomRef",
+                         "HomVar",
+                         "Mixed",
+                         "NoCall",
+                         "NonInformative",
+                         "Available",
+                         "Called",
+                         "Filtered",
+                         "Variant")
 
     genotypes.foreach(
-      x => noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-        "--genotypeWiggle", x))
+      x =>
+        noException should be thrownBy main(
+          Array("-I",
+                vcf,
+                "-R",
+                ref,
+                "-o",
+                tmp.toAbsolutePath.toString,
+                "--binSize",
+                "50",
+                "--writeBinStats",
+                "--genotypeWiggle",
+                x))
     )
 
-    val general = List("Biallelic", "ComplexIndel", "Filtered", "FullyDecoded", "Indel", "Mixed",
-      "MNP", "MonomorphicInSamples", "NotFiltered", "PointEvent", "PolymorphicInSamples",
-      "SimpleDeletion", "SimpleInsertion", "SNP", "StructuralIndel", "Symbolic",
-      "SymbolicOrSV", "Variant")
+    val general = List(
+      "Biallelic",
+      "ComplexIndel",
+      "Filtered",
+      "FullyDecoded",
+      "Indel",
+      "Mixed",
+      "MNP",
+      "MonomorphicInSamples",
+      "NotFiltered",
+      "PointEvent",
+      "PolymorphicInSamples",
+      "SimpleDeletion",
+      "SimpleInsertion",
+      "SNP",
+      "StructuralIndel",
+      "Symbolic",
+      "SymbolicOrSV",
+      "Variant"
+    )
 
     general.foreach(
-      x => noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
-        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-        "--generalWiggle", x))
+      x =>
+        noException should be thrownBy main(
+          Array("-I",
+                vcf,
+                "-R",
+                ref,
+                "-o",
+                tmp.toAbsolutePath.toString,
+                "--binSize",
+                "50",
+                "--writeBinStats",
+                "--generalWiggle",
+                x))
     )
 
     // returns null when validation fails
@@ -209,22 +320,39 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
     val stderr1 = new java.io.ByteArrayOutputStream
     Console.withErr(stderr1) {
-      validateArgs(Array("-I", vcf, "-R", ref, "-o",
-        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-        "--genotypeWiggle", "NonexistentThing")) shouldBe empty
+      validateArgs(
+        Array("-I",
+              vcf,
+              "-R",
+              ref,
+              "-o",
+              tmp.toAbsolutePath.toString,
+              "--binSize",
+              "50",
+              "--writeBinStats",
+              "--genotypeWiggle",
+              "NonexistentThing")) shouldBe empty
     }
 
     val stderr2 = new java.io.ByteArrayOutputStream
     Console.withErr(stderr2) {
-      validateArgs(Array("-I", vcf, "-R", ref, "-o",
-        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-        "--generalWiggle", "NonexistentThing")) shouldBe empty
+      validateArgs(
+        Array("-I",
+              vcf,
+              "-R",
+              ref,
+              "-o",
+              tmp.toAbsolutePath.toString,
+              "--binSize",
+              "50",
+              "--writeBinStats",
+              "--generalWiggle",
+              "NonexistentThing")) shouldBe empty
     }
 
     val stderr3 = new java.io.ByteArrayOutputStream
     Console.withErr(stderr3) {
-      validateArgs(Array("-R", ref, "-o",
-        tmp.toAbsolutePath.toString)) shouldBe empty
+      validateArgs(Array("-R", ref, "-o", tmp.toAbsolutePath.toString)) shouldBe empty
     }
   }
 

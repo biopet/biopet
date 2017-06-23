@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.utils.intervals
 
 import htsjdk.samtools.util.Interval
@@ -20,26 +20,51 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
- * Created by pjvanthof on 24/08/15.
- */
+  * Created by pjvanthof on 24/08/15.
+  */
 class BedRecordTest extends TestNGSuite with Matchers {
   @Test def testLineParse: Unit = {
     BedRecord("chrQ", 0, 4) shouldBe BedRecord("chrQ", 0, 4)
     BedRecord.fromLine("chrQ\t0\t4") shouldBe BedRecord("chrQ", 0, 4)
-    BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+") shouldBe BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true))
+    BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+") shouldBe BedRecord("chrQ",
+                                                                    0,
+                                                                    4,
+                                                                    Some("name"),
+                                                                    Some(3.0),
+                                                                    Some(true))
     BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+\t1\t3") shouldBe
       BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true), Some(1), Some(3))
     BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+\t1\t3\t255,0,0") shouldBe
-      BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255, 0, 0)))
+      BedRecord("chrQ",
+                0,
+                4,
+                Some("name"),
+                Some(3.0),
+                Some(true),
+                Some(1),
+                Some(3),
+                Some((255, 0, 0)))
     BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t20,50") shouldBe
-      BedRecord("chrQ", 0, 100, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255, 0, 0)),
-        Some(2), IndexedSeq(10, 20), IndexedSeq(20, 50))
+      BedRecord("chrQ",
+                0,
+                100,
+                Some("name"),
+                Some(3.0),
+                Some(true),
+                Some(1),
+                Some(3),
+                Some((255, 0, 0)),
+                Some(2),
+                IndexedSeq(10, 20),
+                IndexedSeq(20, 50))
   }
 
   @Test def testLineOutput: Unit = {
     BedRecord("chrQ", 0, 4).toString shouldBe "chrQ\t0\t4"
     BedRecord.fromLine("chrQ\t0\t4").toString shouldBe "chrQ\t0\t4"
-    BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t20,50").toString shouldBe "chrQ\t0\t100\tname\t3.0\t+\t1\t3\t255,0,0\t2\t10,20\t20,50"
+    BedRecord
+      .fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t20,50")
+      .toString shouldBe "chrQ\t0\t100\tname\t3.0\t+\t1\t3\t255,0,0\t2\t10,20\t20,50"
   }
 
   @Test def testOverlap: Unit = {
@@ -60,7 +85,12 @@ class BedRecordTest extends TestNGSuite with Matchers {
 
   @Test def testToSamInterval: Unit = {
     BedRecord("chrQ", 0, 4).toSamInterval shouldBe new Interval("chrQ", 1, 4)
-    BedRecord("chrQ", 0, 4, Some("name"), Some(0.0), Some(true)).toSamInterval shouldBe new Interval("chrQ", 1, 4, false, "name")
+    BedRecord("chrQ", 0, 4, Some("name"), Some(0.0), Some(true)).toSamInterval shouldBe new Interval(
+      "chrQ",
+      1,
+      4,
+      false,
+      "name")
   }
 
   @Test def testExons: Unit = {

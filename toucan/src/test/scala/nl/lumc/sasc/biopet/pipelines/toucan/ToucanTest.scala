@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
@@ -21,14 +21,15 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.extensions.tools.VcfWithVcf
 import nl.lumc.sasc.biopet.utils.config.Config
+import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{AfterClass, Test}
 
 /**
- * Created by pjvan_thof on 4/11/16.
- */
+  * Created by pjvan_thof on 4/11/16.
+  */
 class ToucanTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Toucan = {
     new Toucan {
@@ -39,9 +40,13 @@ class ToucanTest extends TestNGSuite with Matchers {
     }
   }
 
+  private var dirs: List[File] = Nil
+
   @Test
   def testDefault(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config)
+    val outputDir = ToucanTest.outputDir
+    dirs :+= outputDir
+    val pipeline = initPipeline(ToucanTest.config(outputDir))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
 
@@ -51,7 +56,11 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testBinning(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config ++ Map("bin_size" -> 4000, "min_scatter_genome_size" -> 1000))
+    val outputDir = ToucanTest.outputDir
+    dirs :+= outputDir
+
+    val pipeline = initPipeline(
+      ToucanTest.config(outputDir) ++ Map("bin_size" -> 4000, "min_scatter_genome_size" -> 1000))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
 
@@ -61,7 +70,11 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testGonl(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config ++ Map("gonl_vcf" -> ToucanTest.gonlVcfFile))
+    val outputDir = ToucanTest.outputDir
+    dirs :+= outputDir
+
+    val pipeline = initPipeline(
+      ToucanTest.config(outputDir) ++ Map("gonl_vcf" -> ToucanTest.gonlVcfFile))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
 
@@ -71,7 +84,11 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testExac(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config ++ Map("exac_vcf" -> ToucanTest.exacVcfFile))
+    val outputDir = ToucanTest.outputDir
+    dirs :+= outputDir
+
+    val pipeline = initPipeline(
+      ToucanTest.config(outputDir) ++ Map("exac_vcf" -> ToucanTest.exacVcfFile))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
 
@@ -81,7 +98,10 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testVarda(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config ++ Map("use_varda" -> true))
+    val outputDir = ToucanTest.outputDir
+    dirs :+= outputDir
+
+    val pipeline = initPipeline(ToucanTest.config(outputDir) ++ Map("use_varda" -> true))
     val gvcfFile = File.createTempFile("bla.", ".g.vcf")
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.inputGvcf = Some(gvcfFile)
@@ -91,6 +111,10 @@ class ToucanTest extends TestNGSuite with Matchers {
     pipeline.functions.count(_.isInstanceOf[VcfWithVcf]) shouldBe 0
   }
 
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    dirs.foreach(FileUtils.deleteDirectory)
+  }
 }
 
 object ToucanTest {
@@ -98,15 +122,14 @@ object ToucanTest {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val outputDir = Files.createTempDir()
-  outputDir.deleteOnExit()
+  def outputDir = Files.createTempDir()
 
   val gonlVcfFile: File = File.createTempFile("gonl.", ".vcf.gz")
   gonlVcfFile.deleteOnExit()
   val exacVcfFile: File = File.createTempFile("exac.", ".vcf.gz")
   exacVcfFile.deleteOnExit()
 
-  val config = Map(
+  def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "reference_fasta" -> resourcePath("/fake_chrQ.fa"),
     "output_dir" -> outputDir,

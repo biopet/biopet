@@ -1,12 +1,11 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
-#import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
 <%@ var rootPath: String %>
+<%@ var allSamples: Seq[Sample] %>
 <table class="table sortable-theme-bootstrap" data-sortable>
     <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th></tr></thead>
     <tbody>
-        #for (sample <- summary.samples.toList.sorted)
-            <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
+        #for (sample <- allSamples)
+            <tr><td><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td></tr>
         #end
     </tbody>
 </table>

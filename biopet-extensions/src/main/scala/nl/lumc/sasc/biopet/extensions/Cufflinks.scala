@@ -1,30 +1,30 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * Wrapper for the cufflinks command line tool.
- * Written based on cufflinks version v2.2.1 (md5: 07c831c4f8b4e161882731ea5694ff80)
- */
-class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with Version {
+  * Wrapper for the cufflinks command line tool.
+  * Written based on cufflinks version v2.2.1 (md5: 07c831c4f8b4e161882731ea5694ff80)
+  */
+class Cufflinks(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cufflinks")
@@ -40,10 +40,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with V
   var input: File = null
 
   /** output files, computed automatically from output directory */
-
   @Output(doc = "Output GTF file")
   lazy val outputGtf: File = {
-    require(input != null && outputDir != null,
+    require(
+      input != null && outputDir != null,
       "Can not set Cufflinks GTF output while input file and/or output directory is not defined")
     // cufflinks always outputs a transcripts.gtf file in the output directory
     new File(outputDir, "transcripts.gtf")
@@ -51,14 +51,16 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with V
 
   @Output(doc = "Output isoform FPKM file")
   lazy val outputIsoformsFpkm: File = {
-    require(input != null && outputDir != null,
+    require(
+      input != null && outputDir != null,
       "Can not set Cufflinks isoforms.fpkm_tracking output while input file and/or output directory is not defined")
     new File(outputDir, "isoforms.fpkm_tracking")
   }
 
   @Output(doc = "Output GTF file")
   lazy val outputGenesFpkm: File = {
-    require(input != null && outputDir != null,
+    require(
+      input != null && outputDir != null,
       "Can not set Cufflinks genes.fpkm_tracking output while input file and/or output directory is not defined")
     // cufflinks always outputs a genes.fpkm_tracking file in the output directory
     new File(outputDir, "genes.fpkm_tracking")
@@ -116,7 +118,8 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with V
   var maxFragMultihits: Option[Int] = config("max_frag_multihits")
 
   /** No effective length correction [FALSE] */
-  var noEffectiveLengthCorrection: Boolean = config("no_effective_length_correction", default = false)
+  var noEffectiveLengthCorrection: Boolean =
+    config("no_effective_length_correction", default = false)
 
   /** No length correction [FALSE] */
   var noLengthCorrection: Boolean = config("no_length_correction", default = false)

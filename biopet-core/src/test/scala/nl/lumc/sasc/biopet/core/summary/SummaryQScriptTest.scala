@@ -1,24 +1,24 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 import org.broadinstitute.gatk.queue.QScript
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -26,8 +26,8 @@ import org.testng.annotations.Test
 import SummaryQScriptTest._
 
 /**
- * Created by pjvanthof on 14/01/16.
- */
+  * Created by pjvanthof on 14/01/16.
+  */
 class SummaryQScriptTest extends TestNGSuite with Matchers {
   @Test
   def testNoJobs: Unit = {
@@ -47,10 +47,11 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
-    assert(script.functions
-      .filter(_.isInstanceOf[Md5sum])
-      .map(_.asInstanceOf[Md5sum])
-      .exists(_.cmdLine.contains(" || ")))
+    assert(
+      script.functions
+        .filter(_.isInstanceOf[Md5sum])
+        .map(_.asInstanceOf[Md5sum])
+        .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -63,10 +64,11 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
-    assert(script.functions
-      .filter(_.isInstanceOf[Md5sum])
-      .map(_.asInstanceOf[Md5sum])
-      .exists(_.cmdLine.contains(" || ")))
+    assert(
+      script.functions
+        .filter(_.isInstanceOf[Md5sum])
+        .map(_.asInstanceOf[Md5sum])
+        .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -81,10 +83,11 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
-    assert(script.functions
-      .filter(_.isInstanceOf[Md5sum])
-      .map(_.asInstanceOf[Md5sum])
-      .exists(_.cmdLine.contains(" || ")))
+    assert(
+      script.functions
+        .filter(_.isInstanceOf[Md5sum])
+        .map(_.asInstanceOf[Md5sum])
+        .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -101,10 +104,11 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 3
-    assert(script.functions
-      .filter(_.isInstanceOf[Md5sum])
-      .map(_.asInstanceOf[Md5sum])
-      .exists(_.cmdLine.contains(" || ")))
+    assert(
+      script.functions
+        .filter(_.isInstanceOf[Md5sum])
+        .map(_.asInstanceOf[Md5sum])
+        .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -130,11 +134,12 @@ object SummaryQScriptTest {
       def summaryFile: File = tempFile
       def init(): Unit = ???
       def biopetScript(): Unit = ???
-      def root: Configurable = null
+      def parent: Configurable = null
     }
 
-  def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) = new Summarizable {
-    def summaryFiles: Map[String, File] = files
-    def summaryStats: Any = stats
-  }
+  def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) =
+    new Summarizable {
+      def summaryFiles: Map[String, File] = files
+      def summaryStats: Any = stats
+    }
 }

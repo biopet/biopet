@@ -21,7 +21,7 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
     
     <modules>
         <module>gatk</module>
@@ -43,7 +43,6 @@
         <module>biopet-core</module>
         <module>biopet-utils</module>
         <module>biopet-tools</module>
-        <module>biopet-tools-extensions</module>
         <module>biopet-extensions</module>
         <module>biopet-tools-package</module>
         <module>gwas-test</module>
@@ -53,10 +52,37 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
-        <scalaVersion>2.10.4</scalaVersion>
+        <scalaVersion>2.11.4</scalaVersion>
         <scoverage.aggregate>true</scoverage.aggregate>
+        <scalaFMTVersion>0.6.8</scalaFMTVersion>
     </properties>
-    
+
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+            <version>2.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatra.scalate</groupId>
+            <artifactId>scalate-core_2.11</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
         <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
@@ -122,10 +148,27 @@
                                 <arg>-deprecation</arg>
                                 <arg>-feature</arg>
                             </args>
+                            <scalaVersion>${scalaVersion}</scalaVersion>
                         </configuration>
                     </execution>
                 </executions>
                 <!-- ... (see other usage or goals for details) ... -->
+            </plugin>
+            <plugin>
+                <groupId>org.scalatra.scalate</groupId>
+                <artifactId>maven-scalate-plugin_2.11</artifactId>
+                <version>1.7.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>precompile</goal>
+                        </goals>
+                        <configuration>
+                            <contextClass>org.fusesource.scalate.DefaultRenderContext</contextClass>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -155,40 +198,22 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <!-- https://github.com/SimonJPegg/mvn_scalafmt -->
             <plugin>
-                <groupId>org.scalariform</groupId>
-                <artifactId>scalariform-maven-plugin</artifactId>
-                <version>0.1.4</version>
+                <groupId>org.antipathy</groupId>
+                <artifactId>mvn-scalafmt</artifactId>
+                <version>0.3_${scalaFMTVersion}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <configLocation>${project.basedir}/.scalafmt.conf</configLocation>
+                    <parameters>--non-interactive --quiet</parameters>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>process-sources</phase>
+                        <phase>validate</phase>
                         <goals>
                             <goal>format</goal>
                         </goals>
-                        <configuration>
-                            <baseDir>${basedir}/src</baseDir>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <alignParameters>true</alignParameters>
-                            <alignSingleLineCaseStatements_maxArrowIndent>40
-                            </alignSingleLineCaseStatements_maxArrowIndent>
-                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
-                            <compactStringConcatenation>false</compactStringConcatenation>
-                            <compactControlReadability>false</compactControlReadability>
-                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
-                            <formatXml>true</formatXml>
-                            <indentLocalDefs>false</indentLocalDefs>
-                            <indentPackageBlocks>true</indentPackageBlocks>
-                            <indentSpaces>2</indentSpaces>
-                            <placeScaladocAsterisksBeneathSecondAsterisk>false
-                            </placeScaladocAsterisksBeneathSecondAsterisk>
-                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
-                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <spaceBeforeColon>false</spaceBeforeColon>
-                            <spaceInsideBrackets>false</spaceInsideBrackets>
-                            <spaceInsideParentheses>false</spaceInsideParentheses>
-                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

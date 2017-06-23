@@ -1,28 +1,28 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.{ QueryInterval, SamReaderFactory, ValidationStringency }
-import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import htsjdk.samtools.{QueryInterval, SamReaderFactory, ValidationStringency}
+import htsjdk.samtools.fastq.{BasicFastqWriter, FastqReader, FastqRecord}
 import htsjdk.samtools.util.Interval
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.{ Set => MSet }
+import scala.collection.mutable.{Set => MSet}
 
 object ExtractAlignedFastq extends ToolCommand {
 
@@ -33,23 +33,23 @@ object ExtractAlignedFastq extends ToolCommand {
   def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
 
   /**
-   * Function to create iterator over Interval given input interval string
-   *
-   * Valid interval strings are either of these:
-   *    - chr5:10000-11000
-   *    - chr5:10,000-11,000
-   *    - chr5:10.000-11.000
-   *    - chr5:10000-11,000
-   * In all cases above, the region span base #10,000 to base number #11,000 in chromosome 5
-   * (first base is numbered 1)
-   *
-   * An interval string with a single base is also allowed:
-   *    - chr5:10000
-   *    - chr5:10,000
-   *    - chr5:10.000
-   *
-   * @param inStrings iterable yielding input interval string
-   */
+    * Function to create iterator over Interval given input interval string
+    *
+    * Valid interval strings are either of these:
+    *    - chr5:10000-11000
+    *    - chr5:10,000-11,000
+    *    - chr5:10.000-11.000
+    *    - chr5:10000-11,000
+    * In all cases above, the region span base #10,000 to base number #11,000 in chromosome 5
+    * (first base is numbered 1)
+    *
+    * An interval string with a single base is also allowed:
+    *    - chr5:10000
+    *    - chr5:10,000
+    *    - chr5:10.000
+    *
+    * @param inStrings iterable yielding input interval string
+    */
   def makeIntervalFromString(inStrings: Iterable[String]): Iterator[Interval] = {
 
     // FIXME: can we combine these two patterns into one regex?
@@ -63,7 +63,8 @@ object ExtractAlignedFastq extends ToolCommand {
     def intFromCoord(s: String): Int = s.replaceAll(",", "").replaceAll("\\.", "").toInt
 
     inStrings.map {
-      case ptn1(chr, start, end) if intFromCoord(end) >= intFromCoord(start) => new Interval(chr, intFromCoord(start), intFromCoord(end))
+      case ptn1(chr, start, end) if intFromCoord(end) >= intFromCoord(start) =>
+        new Interval(chr, intFromCoord(start), intFromCoord(end))
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
@@ -72,15 +73,15 @@ object ExtractAlignedFastq extends ToolCommand {
   }
 
   /**
-   * Function to create object that checks whether a given FASTQ record is mapped
-   * to the given interval or not
-   *
-   * @param iv iterable yielding features to check
-   * @param inAln input SAM/BAM file
-   * @param minMapQ minimum mapping quality of read to include
-   * @param commonSuffixLength length of suffix common to all read pairs
-   * @return
-   */
+    * Function to create object that checks whether a given FASTQ record is mapped
+    * to the given interval or not
+    *
+    * @param iv iterable yielding features to check
+    * @param inAln input SAM/BAM file
+    * @param minMapQ minimum mapping quality of read to include
+    * @param commonSuffixLength length of suffix common to all read pairs
+    * @return
+    */
   def makeMembershipFunction(iv: Iterator[Interval],
                              inAln: File,
                              minMapQ: Int = 0,
@@ -92,15 +93,17 @@ object ExtractAlignedFastq extends ToolCommand {
       .open(inAln)
     require(inAlnReader.hasIndex)
 
-    def getSequenceIndex(name: String): Int = inAlnReader.getFileHeader.getSequenceIndex(name) match {
-      case x if x >= 0 =>
-        x
-      case otherwise =>
-        throw new IllegalArgumentException("Chromosome " + name + " is not found in the alignment file")
-    }
+    def getSequenceIndex(name: String): Int =
+      inAlnReader.getFileHeader.getSequenceIndex(name) match {
+        case x if x >= 0 =>
+          x
+        case otherwise =>
+          throw new IllegalArgumentException(
+            "Chromosome " + name + " is not found in the alignment file")
+      }
 
     val queries: Array[QueryInterval] = iv.toList
-      // transform to QueryInterval
+    // transform to QueryInterval
       .map(x => new QueryInterval(getSequenceIndex(x.getContig), x.getStart, x.getEnd))
       // sort Interval
       .sortBy(x => (x.referenceIndex, x.start, x.end))
@@ -108,7 +111,7 @@ object ExtractAlignedFastq extends ToolCommand {
       .toArray
 
     lazy val selected: MSet[String] = inAlnReader
-      // query BAM file for overlapping reads
+    // query BAM file for overlapping reads
       .queryOverlapping(queries)
       // for Scala compatibility
       .asScala
@@ -122,41 +125,45 @@ object ExtractAlignedFastq extends ToolCommand {
         }
       )
 
-    (pair: FastqInput) => pair._2 match {
-      case None => selected.contains(fastqId(pair._1))
-      case Some(x) =>
-        val rec1Id = fastqId(pair._1)
-        require(commonSuffixLength < rec1Id.length)
-        require(commonSuffixLength < fastqId(x).length)
-        selected.contains(rec1Id.dropRight(commonSuffixLength))
-    }
+    (pair: FastqInput) =>
+      pair._2 match {
+        case None => selected.contains(fastqId(pair._1))
+        case Some(x) =>
+          val rec1Id = fastqId(pair._1)
+          require(commonSuffixLength < rec1Id.length)
+          require(commonSuffixLength < fastqId(x).length)
+          selected.contains(rec1Id.dropRight(commonSuffixLength))
+      }
   }
 
   /**
-   * Extracts reads from the given input Fastq file and writes to a new output Fastq file
-   *
-   * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
-   * @param inputFastq1 Input [[FastqReader]] object.
-   * @param outputFastq1 Output [[BasicFastqWriter]] object.
-   */
+    * Extracts reads from the given input Fastq file and writes to a new output Fastq file
+    *
+    * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
+    * @param inputFastq1 Input [[FastqReader]] object.
+    * @param outputFastq1 Output [[BasicFastqWriter]] object.
+    */
   def extractReads(memFunc: FastqInput => Boolean,
-                   inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
+                   inputFastq1: FastqReader,
+                   outputFastq1: BasicFastqWriter): Unit =
     inputFastq1.iterator.asScala
       .filter(rec => memFunc((rec, None)))
       .foreach(rec => outputFastq1.write(rec))
 
   /**
-   * Extracts reads from the given input Fastq pairs and writes to new output Fastq pair files
-   *
-   * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
-   * @param inputFastq1 Input [[FastqReader]] object for pair 1.
-   * @param outputFastq1 Input [[FastqReader]] object for pair 2.
-   * @param inputFastq2 Output [[BasicFastqWriter]] object for pair 1.
-   * @param outputFastq2 Output [[BasicFastqWriter]] object for pair 2.
-   */
+    * Extracts reads from the given input Fastq pairs and writes to new output Fastq pair files
+    *
+    * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
+    * @param inputFastq1 Input [[FastqReader]] object for pair 1.
+    * @param outputFastq1 Input [[FastqReader]] object for pair 2.
+    * @param inputFastq2 Output [[BasicFastqWriter]] object for pair 1.
+    * @param outputFastq2 Output [[BasicFastqWriter]] object for pair 2.
+    */
   def extractReads(memFunc: FastqInput => Boolean,
-                   inputFastq1: FastqReader, outputFastq1: BasicFastqWriter,
-                   inputFastq2: FastqReader, outputFastq2: BasicFastqWriter): Unit =
+                   inputFastq1: FastqReader,
+                   outputFastq1: BasicFastqWriter,
+                   inputFastq2: FastqReader,
+                   outputFastq2: BasicFastqWriter): Unit =
     inputFastq1.iterator.asScala
       .zip(inputFastq2.iterator.asScala)
       .filter(rec => memFunc(rec._1, Some(rec._2)))
@@ -173,20 +180,20 @@ object ExtractAlignedFastq extends ToolCommand {
                   outputFastq1: File = new File(""),
                   outputFastq2: Option[File] = None,
                   minMapQ: Int = 0,
-                  commonSuffixLength: Int = 0) extends AbstractArgs
+                  commonSuffixLength: Int = 0)
+      extends AbstractArgs
 
   /** Command line argument parser */
   class OptParser extends AbstractOptParser {
 
-    head(
-      s"""
+    head(s"""
         |$commandName - Select aligned FASTQ records
       """.stripMargin)
 
     opt[File]('I', "input_file") required () valueName "<bam>" action { (x, c) =>
       c.copy(inputBam = x)
-    } validate {
-      x => if (x.exists) success else failure("Input BAM file not found")
+    } validate { x =>
+      if (x.exists) success else failure("Input BAM file not found")
     } text "Input BAM file"
 
     opt[String]('r', "interval") required () unbounded () valueName "<interval>" action { (x, c) =>
@@ -196,14 +203,14 @@ object ExtractAlignedFastq extends ToolCommand {
 
     opt[File]('i', "in1") required () valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq1 = x)
-    } validate {
-      x => if (x.exists) success else failure("Input FASTQ file 1 not found")
+    } validate { x =>
+      if (x.exists) success else failure("Input FASTQ file 1 not found")
     } text "Input FASTQ file 1"
 
     opt[File]('j', "in2") optional () valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq2 = Option(x))
-    } validate {
-      x => if (x.exists) success else failure("Input FASTQ file 2 not found")
+    } validate { x =>
+      if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2 (default: none)"
 
     opt[File]('o', "out1") required () valueName "<fastq>" action { (x, c) =>
@@ -226,8 +233,7 @@ object ExtractAlignedFastq extends ToolCommand {
          second pair, the value of `read_suffix_length` should be 2."
       """.stripMargin
 
-    note(
-      """
+    note("""
         |This tool creates FASTQ file(s) containing reads mapped to the given alignment intervals.
       """.stripMargin)
 
@@ -255,7 +261,8 @@ object ExtractAlignedFastq extends ToolCommand {
       iv = makeIntervalFromString(commandArgs.intervals),
       inAln = commandArgs.inputBam,
       minMapQ = commandArgs.minMapQ,
-      commonSuffixLength = commandArgs.commonSuffixLength)
+      commonSuffixLength = commandArgs.commonSuffixLength
+    )
 
     logger.info("Writing to output file(s) ...")
     (commandArgs.inputFastq2, commandArgs.outputFastq2) match {

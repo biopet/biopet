@@ -1,13 +1,18 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
-#import(nl.lumc.sasc.biopet.core.report.ReportPage)
-<%@ var summary: Summary %>
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
 <%@ var rootPath: String %>
-<%@ var sampleId: Option[String] = None %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var allLibraries: Seq[Library] %>
+<%@ var allSamples: Seq[Sample] %>
 <table class="table">
 <thead><tr><th>Libraries</th></tr></thead>
 <tbody>
-#for (lib <- summary.libraries(sampleId.get).toList.sorted)
-    <tr><td><a href="${rootPath}Samples/${sampleId}/Libraries/${lib}/index.html">${lib}</a></td></tr>
+#{ val libs = sampleId match {
+    case Some(id) => allLibraries.filter(_.sampleId == id)
+    case _ => allLibraries
+} }#
+#for (lib <- libs)
+    #{ val sampleName: String = allSamples.find(_.id == lib.sampleId).get.name }#
+    <tr><td><a href="${rootPath}Samples/${sampleName}/Libraries/${lib.name}/index.html">${lib}</a></td></tr>
 #end
 </tbody>
 </table>

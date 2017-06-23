@@ -1,22 +1,28 @@
-#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(scala.concurrent.Await)
+#import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
 #import(java.io.File)
-<%@ var summary: Summary %>
-<%@ var sampleId: Option[String] = None %>
-<%@ var libId: Option[String] = None %>
+<%@ var summary: SummaryDb %>
+<%@ var sampleId: Option[Int] = None %>
+<%@ var libId: Option[Int] = None %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
+<%@ var runId: Int %>
+<%@ var allSamples: Seq[Sample] %>
+<%@ var allLibraries: Seq[Library] %>
 #{
     val samples = sampleId match {
-        case Some(sample) => {
-            List(sample.toString)
-        }
-        case _ => summary.samples.toList
+    case Some(id) => allSamples.filter(_.id == id).toList
+    case _ => allSamples.toList
     }
 }#
 #if (showIntro)
@@ -52,7 +58,7 @@
                 <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">
                 <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
             #end
-            <a href="alignmentSummary.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> TSV file</button></a>
+            <a href="alignmentSummary.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> Data points</button></a>
         </div>
 #end
 <div class="panel-body collapse #if (showTable)in#end" id="alignmentSummaryTable">
@@ -69,24 +75,31 @@
         <th>(%)</th>
     </tr></thead>
     <tbody>
-        #for (sample <- samples.toList.sorted)
+        #for (sample <- samples.sortBy(_.name))
             #{
-                val libs = (libId, sampleLevel) match {
-                case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString).sorted
-                case _ => summary.libraries(sample).toList.sorted
+                val libs: List[Option[Int]] = (libId, sampleLevel) match {
+                case (_, true) => List(None)
+                case (Some(_), _) => List(libId)
+                case _ => allLibraries.filter(_.sampleId == sample.id).map(x => Some(x.id)).toList
                 }
             }#
-            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample.name}/index.html">${sample.name}</a></td>
             #for (libId <- libs)
+                #{ val libName = libId.map(l => allLibraries.find(_.id == l).get.name) }#
                 #if (libs.head != libId) <tr> #end
-                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
+                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
-                        val total = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "All")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val mapped = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val duplicates = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
-                        val secondary = summary.getValue((prefixPath ::: List("bamstats", "flagstats", "NotPrimaryAlignment")):_*).getOrElse(0L).asInstanceOf[Long]
+                        val statsPaths = Map(
+                        "All" -> List("flagstats", "All"),
+                        "Mapped" -> List("flagstats", "Mapped"),
+                        "Duplicates" -> List("flagstats", "Duplicates"),
+                        "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
+                        )
+                        val results = summary.getStatKeys(runId, "bammetrics", "bamstats", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                        val total = results("All").getOrElse(0L).asInstanceOf[Long]
+                        val mapped = results("Mapped").getOrElse(0L).asInstanceOf[Long]
+                        val duplicates = results("Duplicates").getOrElse(0L).asInstanceOf[Long]
+                        val secondary = results("NotPrimaryAlignment").getOrElse(0L).asInstanceOf[Long]
                     }#
                     <td>${total}</td>
                     <td>${mapped}</td>
