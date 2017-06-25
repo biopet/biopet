@@ -21,6 +21,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 import PipelineStatusTest.Status
+import nl.lumc.sasc.biopet.core.pipelinestatus.{Deps, PipelineStatus}
 import nl.lumc.sasc.biopet.utils.IoUtils._
 import org.apache.commons.io.FileUtils
 
@@ -103,7 +104,7 @@ class PipelineStatusTest extends TestNGSuite with Matchers {
     val depsFile = File.createTempFile("deps.", ".json")
     depsFile.deleteOnExit()
     PipelineStatusTest.writeDeps(depsFile, new File("/tmp"))
-    val deps = PipelineStatus.readDepsFile(depsFile)
+    val deps = Deps.readDepsFile(depsFile)
 
     deps.jobs.size shouldBe 3
     deps.files.length shouldBe 5

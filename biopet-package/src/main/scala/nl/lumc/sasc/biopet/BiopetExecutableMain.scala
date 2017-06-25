@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.core.PipelineStatus
+import nl.lumc.sasc.biopet.core.pipelinestatus.PipelineStatus
 import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
 
 object BiopetExecutableMain extends BiopetExecutable {

@@ -32,8 +32,8 @@
     <dependencies>
         <dependency>
             <groupId>com.typesafe.play</groupId>
-            <artifactId>play-ws_2.10</artifactId>
-            <version>2.4.11</version>
+            <artifactId>play-ws_2.11</artifactId>
+            <version>2.5.15</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

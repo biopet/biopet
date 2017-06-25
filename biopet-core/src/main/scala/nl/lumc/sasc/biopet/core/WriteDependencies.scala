@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{File, PrintWriter}
 
+import nl.lumc.sasc.biopet.core.pipelinestatus.{Deps, PipelineStatus}
 import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
@@ -161,7 +162,7 @@ object WriteDependencies extends Logging with Configurable {
         .spaces2)
     writer.close()
 
-    PipelineStatus.writePipelineStatus(PipelineStatus.readDepsFile(outputFile), outputDir)
+    PipelineStatus.writePipelineStatus(Deps.readDepsFile(outputFile), outputDir)
     logger.info("done calculating dependencies")
   }
 
