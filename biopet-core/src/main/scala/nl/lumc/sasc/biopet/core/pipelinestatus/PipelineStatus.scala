@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.core.pipelinestatus
 
 import java.io.{File, PrintWriter}
+import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -39,7 +40,8 @@ object PipelineStatus extends ToolCommand {
                   refreshTime: Int = 30,
                   complatePlots: Boolean = false,
                   compressPlots: Boolean = true,
-                  pimHost: Option[String] = None)
+                  pimHost: Option[String] = None,
+                  pimRunId: Option[String] = None)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -68,6 +70,9 @@ object PipelineStatus extends ToolCommand {
     opt[String]("pimHost") maxOccurs 1 action { (x, c) =>
       c.copy(pimHost = Some(x))
     } text "Pim host to publish status to"
+    opt[String]("pimRunId") maxOccurs 1 action { (x, c) =>
+      c.copy(pimRunId = Some(x))
+    } text "Pim run Id to publish status to"
   }
 
   implicit lazy val system = ActorSystem()
@@ -83,13 +88,25 @@ object PipelineStatus extends ToolCommand {
 
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
     val deps = Deps.readDepsFile(depsFile)
-    writePipelineStatus(deps,
-                        cmdArgs.outputDir,
-                        follow = cmdArgs.follow,
-                        refreshTime = cmdArgs.refreshTime,
-                        plots = cmdArgs.complatePlots,
-                        compressPlots = cmdArgs.compressPlots,
-                        pimHost = cmdArgs.pimHost)
+
+    val pimRunId =
+      if (cmdArgs.pimHost.isDefined) Some(cmdArgs.pimRunId.getOrElse {
+        val graphDir = depsFile.getAbsoluteFile.getParentFile
+        if (graphDir.getName == "graph") "biopet_" + graphDir.getParentFile.getName
+        else "biopet_" + depsFile.getAbsolutePath.replaceAll("/", "_")
+      })
+      else None
+
+    writePipelineStatus(
+      deps,
+      cmdArgs.outputDir,
+      follow = cmdArgs.follow,
+      refreshTime = cmdArgs.refreshTime,
+      plots = cmdArgs.complatePlots,
+      compressPlots = cmdArgs.compressPlots,
+      pimHost = cmdArgs.pimHost,
+      pimRunId = pimRunId
+    )
     logger.info("Done")
     sys.exit()
   }
@@ -112,7 +129,8 @@ object PipelineStatus extends ToolCommand {
                           refreshTime: Int = 30,
                           plots: Boolean = false,
                           compressPlots: Boolean = true,
-                          pimHost: Option[String] = None): Unit = {
+                          pimHost: Option[String] = None,
+                          pimRunId: Option[String] = None): Unit = {
 
     val jobDone = jobsDone(deps)
     val jobFailed = jobsFailed(deps, jobDone)
@@ -178,13 +196,31 @@ object PipelineStatus extends ToolCommand {
 
     futures.foreach(x => Await.ready(x, Duration.Inf))
 
+    val runId = if (pimHost.isDefined) Some(pimRunId.getOrElse("biopet_" + new Date())) else None
     pimHost.foreach { host =>
-      val links: List[Link] = deps.compressOnType.flatMap(x => x._2.map(y => Link("test", y, "output", x._1, "input", "test"))).toList
-      val run = Run("test", Network(
-        "test", Nil, deps.compressOnType.map(x => Node(x._1, "root", List(Port("input", "test")), List(Port("output", "test")), "test")).toList,
-        links), "test", "biopet")
+      val links: List[Link] = deps.compressOnType
+        .flatMap(x => x._2.map(y => Link("link", y, "output", x._1, "input", "test")))
+        .toList
+      val run = Run(
+        runId.get,
+        Network("graph",
+                Nil,
+                deps.compressOnType
+                  .map(
+                    x =>
+                      Node(x._1,
+                           "root",
+                           List(Port("input", "input")),
+                           List(Port("output", "output")),
+                           "test"))
+                  .toList,
+                links),
+        "Biopet pipeline",
+        "biopet"
+      )
       println(run.toString)
-      val request = ws.url(s"$host/api/runs/")
+      val request = ws
+        .url(s"$host/api/runs/")
         .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
         .put(run.toString)
 
@@ -211,7 +247,16 @@ object PipelineStatus extends ToolCommand {
 
     if (follow) {
       Thread.sleep(refreshTime * 1000)
-      writePipelineStatus(deps, outputDir, jobDone, jobFailed, follow, refreshTime, plots, compressPlots, pimHost)
+      writePipelineStatus(deps,
+                          outputDir,
+                          jobDone,
+                          jobFailed,
+                          follow,
+                          refreshTime,
+                          plots,
+                          compressPlots,
+                          pimHost,
+                          runId)
     }
   }
 
@@ -241,11 +286,13 @@ object PipelineStatus extends ToolCommand {
           if (compress) Some(jobsStart.filter(Job.compressedName(_)._1 == job)) else None
         val compressIntermediate =
           if (compress)
-            Some(deps.jobs.filter(x => Job.compressedName(x._1)._1 == job).forall(_._2.intermediate))
+            Some(
+              deps.jobs.filter(x => Job.compressedName(x._1)._1 == job).forall(_._2.intermediate))
           else None
 
         if (compress) {
-          val pend = compressTotal.get.size - compressFailed.get.diff(compressStart.get)
+          val pend = compressTotal.get.size - compressFailed.get
+            .diff(compressStart.get)
             .size - compressStart.get.size - compressDone.get.size
           writer.println(s"""  $job [label = "$job
         |Total: ${compressTotal.get.size}
