@@ -157,27 +157,30 @@ class Tarmac(val parent: Configurable)
             syncer.inputFile = x.output
             syncer.databases = remainder.map(_.output)
             syncer.output =
-              Some(swapExt(x.output.getParentFile, x.output, ".bed", ".recessive.bed"))
+              Some(swapExt(x.output.getParentFile, x.output, ".bed", ".family_common.bed"))
             syncer
           }
-          val verticalsAndThresholds = syncJobs map { s =>
-            stouffWindowSizes map { size =>
-              val windowDir = new File(sample.sampleDir, s"window_$size")
-              val vertical = new StouffbedVertical(this)
-              vertical.inputFiles = List(s.output.get)
-              vertical.output =
-                new File(windowDir, s"${sample.sampleId}.window_$size.recessive.z.bed")
-              val threshold = new BedThreshold(this)
-              threshold.input = vertical.output
-              threshold.threshold = size
-              threshold.output =
-                Some(new File(windowDir, s"${sample.sampleId}.recessive.treshold.bed"))
-              vertical :: threshold :: Nil
-            }
+
+          val horizontalJob = new StouffbedHorizontal(this)
+          horizontalJob.inputFiles = syncJobs.flatMap(_.output)
+          horizontalJob.output = new File(sample.sampleDir, s"${sample.sampleId}.recessives.bed")
+
+          val verticalsAndThresholds = stouffWindowSizes map { size =>
+            val windowDir = new File(sample.sampleDir, s"window_$size")
+            val vertical = new StouffbedVertical(this)
+            vertical.inputFiles = List(horizontalJob.output)
+            vertical.output =
+              new File(windowDir, s"${sample.sampleId}.window_$size.recessive.z.bed")
+            val threshold = new BedThreshold(this)
+            threshold.input = vertical.output
+            threshold.threshold = size
+            threshold.output =
+              Some(new File(windowDir, s"${sample.sampleId}.recessive.treshold.bed"))
+            vertical :: threshold :: Nil
           }
           val verticalAndThresholdJobs: List[BiopetCommandLineFunction] =
-            verticalsAndThresholds.flatten.flatten
-          verticalAndThresholdJobs ::: syncJobs
+            verticalsAndThresholds.flatten
+          horizontalJob :: verticalAndThresholdJobs ::: syncJobs
       }
 
     val windowStouffJobs = zScoreMergeJobs map {
