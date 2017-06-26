@@ -156,8 +156,11 @@ class Tarmac(val parent: Configurable)
             val remainder = (parentsAndKid.toSet - x).toList
             syncer.inputFile = x.output
             syncer.databases = remainder.map(_.output)
-            syncer.output =
-              Some(swapExt(x.output.getParentFile, x.output, ".bed", ".family_common.bed"))
+            syncer.output = Some(
+              swapExt(x.output.getParentFile,
+                      x.output,
+                      ".bed",
+                      s"${sample.family.getOrElse("unknown")}.family_common.bed"))
             syncer
           }
 
@@ -171,6 +174,7 @@ class Tarmac(val parent: Configurable)
             vertical.inputFiles = List(horizontalJob.output)
             vertical.output =
               new File(windowDir, s"${sample.sampleId}.window_$size.recessive.z.bed")
+            vertical.windowSize = size
             val threshold = new BedThreshold(this)
             threshold.input = vertical.output
             threshold.threshold = size
