@@ -88,7 +88,6 @@ object IoUtils {
   def writeLinesToFile(output: File, lines: List[String]): Unit = {
     val writer = new PrintWriter(output)
     lines.foreach(writer.println(_))
-    writer.flush()
     writer.close()
   }
 
