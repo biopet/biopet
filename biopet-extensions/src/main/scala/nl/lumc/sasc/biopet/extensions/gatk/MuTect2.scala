@@ -14,13 +14,13 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
   def analysis_type: String = "MuTect2"
 
   /** Getter and setter for tumor sample bam file. */
-  def tumorSampleBam_= (value:File):Unit = super.input_file :+= TaggedFile(value, "tumor")
-  def tumorSampleBam = super.input_file.find(
+  def tumorSampleBam_= (value:File):Unit = input_file :+= TaggedFile(value, "tumor")
+  def tumorSampleBam = input_file.find(
     file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "tumor").getOrElse(null)
 
   /** Getter and setter for normal sample bam file. */
-  def normalSampleBam_= (value:File):Unit = super.input_file :+= TaggedFile(value, "normal")
-  def normalSampleBam = super.input_file.find(
+  def normalSampleBam_= (value:File):Unit = input_file :+= TaggedFile(value, "normal")
+  def normalSampleBam = input_file.find(
     file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "normal").getOrElse(null)
 
   /** vcf file with info from cosmic db TODO desc  */
