@@ -88,6 +88,10 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
   def init() {
     shiva.outputDir = outputDir
     shiva.init()
+    require(
+      shiva.multisampleVariantCalling.get.isGermlineVariantCallingConfigured(),
+      "Problems with configuration for Shiva, no germline variant callers have been configured or for all variant callers the parameter 'merge_vcf_results' has been set to false"
+    )
   }
 
   def biopetScript() {
@@ -210,7 +214,7 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
-    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile.get // appropriate checks have already been done when initializing Shiva
+    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile.get
     if (shiva.samples.contains(sampleName)) {
       bastyGenerateFasta.bamFile = shiva.samples(sampleName).preProcessBam.get
     }
