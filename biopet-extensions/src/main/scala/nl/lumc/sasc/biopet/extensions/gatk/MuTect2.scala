@@ -4,6 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
 class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
@@ -12,13 +13,15 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
 
   def analysis_type: String = "MuTect2"
 
-  /** Bam file for the tumor sample. */
-  @Input(fullName = "tumor_bam", required = true)
-  var tumorSampleBam: File = _
+  /** Getter and setter for tumor sample bam file. */
+  def tumorSampleBam_= (value:File):Unit = super.input_file :+= TaggedFile(value, "tumor")
+  def tumorSampleBam = super.input_file.find(
+    file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "tumor").getOrElse(null)
 
-  /** Bam file for the normal sample. */
-  @Input(fullName = "normal_bam", required = true)
-  var normalSampleBam: File = _
+  /** Getter and setter for normal sample bam file. */
+  def normalSampleBam_= (value:File):Unit = super.input_file :+= TaggedFile(value, "normal")
+  def normalSampleBam = super.input_file.find(
+    file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "normal").getOrElse(null)
 
   /** vcf file with info from cosmic db TODO desc  */
   @Input(fullName = "cosmic", shortName = "cosmic", required = false)
@@ -189,8 +192,6 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
 
 
   override def cmdLine = super.cmdLine +
-    required("-I:tumor", tumorSampleBam) +
-    required("-I:normal", normalSampleBam) +
     required("--out", outputVcf) +
     optional("--cosmic", cosmic) +
     optional("--dbsnp", dbsnp) +
