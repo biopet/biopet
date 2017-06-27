@@ -2,20 +2,28 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK.isFileWithTag
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 class ContEst(val parent: Configurable) extends CommandLineGATK {
 
   def analysis_type: String = "ContEst"
 
-  /** Bam file for the tumor sample. */
-  @Input(fullName = "tumor_bam", required = true)
-  var tumorSampleBam: File = _
+  /** Getter and setter for tumor sample bam file. */
+  def tumorSampleBam = input_file.find(file => isFileWithTag(file, "eval")).getOrElse(null)
+  def tumorSampleBam_= (value:File):Unit = {
+    input_file = input_file.filterNot(file => isFileWithTag(file, "eval"))
+    input_file :+= TaggedFile(value, "eval")
+  }
 
-  /** Bam file for the normal sample. */
-  @Input(fullName = "normal_bam", required = true)
-  var normalSampleBam: File = _
+  /** Getter and setter for normal sample bam file. */
+  def normalSampleBam = input_file.find(file => isFileWithTag(file, "genotype")).getOrElse(null)
+  def normalSampleBam_= (value:File):Unit = {
+    input_file = input_file.filterNot(file => isFileWithTag(file, "genotype"))
+    input_file :+= TaggedFile(value, "genotype")
+  }
 
   /** Variant file containing information about the population allele frequencies. */
   @Input(fullName = "popfile", shortName="pf", required = true)
@@ -66,8 +74,6 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   var trimFraction: Option[Double] = config("trim_fraction")
 
   override def cmdLine = super.cmdLine +
-    required("-I:eval", tumorSampleBam) +
-    required("-I:genotype", normalSampleBam) +
     required("--popfile", popFile) +
     required("--out", output) +
     optional("--base_report", baseReportFile) +

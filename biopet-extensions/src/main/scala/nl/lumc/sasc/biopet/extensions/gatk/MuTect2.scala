@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK.isFileWithTag
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
@@ -14,14 +15,18 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
   def analysis_type: String = "MuTect2"
 
   /** Getter and setter for tumor sample bam file. */
-  def tumorSampleBam_= (value:File):Unit = input_file :+= TaggedFile(value, "tumor")
-  def tumorSampleBam = input_file.find(
-    file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "tumor").getOrElse(null)
+  def tumorSampleBam = input_file.find(file => isFileWithTag(file, "tumor")).getOrElse(null)
+  def tumorSampleBam_= (value:File):Unit = {
+    input_file = input_file.filterNot(file => isFileWithTag(file, "tumor"))
+    input_file :+= TaggedFile(value, "tumor")
+  }
 
   /** Getter and setter for normal sample bam file. */
-  def normalSampleBam_= (value:File):Unit = input_file :+= TaggedFile(value, "normal")
-  def normalSampleBam = input_file.find(
-    file => file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == "normal").getOrElse(null)
+  def normalSampleBam = input_file.find(file => isFileWithTag(file, "normal")).getOrElse(null)
+  def normalSampleBam_= (value:File):Unit = {
+    input_file = input_file.filterNot(file => isFileWithTag(file, "normal"))
+    input_file :+= TaggedFile(value, "normal")
+  }
 
   /** vcf file with info from cosmic db TODO desc  */
   @Input(fullName = "cosmic", shortName = "cosmic", required = false)
