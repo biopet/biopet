@@ -20,7 +20,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
 
   //val buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
 
-  val runConEst = config("run_contest", default = "false")
+  val runConEst = config("run_contest", default = false)
 
   def biopetScript(): Unit = {
     val samplesDir: File = new File(outputDir, "samples")

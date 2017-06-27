@@ -29,7 +29,7 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
     * of the output.
     * */
   @Input(fullName = "dbsnp", shortName = "D", required = false)
-  var dbsnp: Option[File] = if(config("use_dbsnp", default = false)) dbsnpVcfFile else None
+  var dbsnp: Option[File] = dbsnpVcfFile
 
   @Input(fullName = "normal_panel", shortName = "PON", required = false)
   var ponFile: Option[File] = config("normal_panel")
