@@ -18,8 +18,6 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
   // and results from this won't be merged together with the results from other methods
   def defaultPrio = -1
 
-  //val buildPONFromNormals: Boolean = config("build_PON_from_normals", default = false)
-
   val runConEst = config("run_contest", default = false)
 
   def biopetScript(): Unit = {
@@ -34,28 +32,29 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       val pair = tnPairs.head
       renameSamples = List(s"TUMOR ${pair.tumorSample}")
       tumorSamples = List("TUMOR")
-      intermResult = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf")
-      addJobForPair(pair, intermResult)
+      intermResult = new File(samplesDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf.gz")
+      addJobsForPair(pair, intermResult)
 
     } else {
       var outputPerSample: List[TaggedFile] = List()
       for (pair <- tnPairs) {
         val pairLabel = s"${pair.tumorSample}-${pair.normalSample}"
-        val out: File = new File(samplesDir, s"$pairLabel.$name.vcf")
+        val out: File = new File(samplesDir, s"$pairLabel.$name.vcf.gz")
         renameSamples :+= s"TUMOR.$pairLabel ${pair.tumorSample}"
         tumorSamples :+= s"TUMOR.$pairLabel"
         outputPerSample :+= TaggedFile(out, pairLabel)
-        addJobForPair(pair, out)
+        addJobsForPair(pair, out)
       }
 
-      var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf")
+      var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf.gz")
       intermResult = new File(
         (if (sIndex != -1) outputFile.getAbsolutePath.substring(0, sIndex)
-         else outputFile.getAbsolutePath) + ".all_samples.vcf")
+         else outputFile.getAbsolutePath) + ".all_samples.vcf.gz")
 
       val combineVariants = gatk.CombineVariants(this, outputPerSample, intermResult)
       combineVariants.genotypemergeoption = Some("UNIQUIFY")
       add(combineVariants)
+      add(Tabix(this, intermResult))
     }
 
     val selectVariants = new SelectVariants(this)
@@ -68,18 +67,16 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
 
     add(selectVariants | BcftoolsReheader(this, file) | new Bgzip(this) > outputFile)
 
-    add(IGVToolsIndex(this, intermResult))
     add(Tabix(this, outputFile))
-
   }
 
-  def addJobForPair(pair: TumorNormalPair, outFile: File): Unit = {
+  def addJobsForPair(pair: TumorNormalPair, outFile: File): Unit = {
     val muTect2 =
       gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outFile)
     // TODO add also BQSR file?
 
     if (runConEst) {
-      val namePrefix = outFile.getAbsolutePath.stripSuffix(".vcf")
+      val namePrefix = outFile.getAbsolutePath.stripSuffix(".vcf.gz")
       val contEstOutput: File = new File(s"$namePrefix.contamination.txt")
       val contEst = gatk.ContEst(this,
                                  inputBams(pair.tumorSample),
@@ -96,6 +93,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
     }
 
     add(muTect2)
+    add(Tabix(this, outFile))
   }
 
 }
