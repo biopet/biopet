@@ -36,14 +36,14 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       addJobsForPair(pair, intermResult)
 
     } else {
-      var outputPerSample: List[TaggedFile] = List()
-      for (pair <- tnPairs) {
+      val outputPerSample: List[TaggedFile] = for (pair <- tnPairs) yield {
+
         val pairLabel = s"${pair.tumorSample}-${pair.normalSample}"
         val out: File = new File(samplesDir, s"$pairLabel.$name.vcf.gz")
         renameSamples :+= s"TUMOR.$pairLabel ${pair.tumorSample}"
         tumorSamples :+= s"TUMOR.$pairLabel"
-        outputPerSample :+= TaggedFile(out, pairLabel)
         addJobsForPair(pair, out)
+        TaggedFile(out, pairLabel)
       }
 
       var sIndex = outputFile.getAbsolutePath.lastIndexOf(".vcf.gz")
@@ -54,7 +54,6 @@ class MuTect2(val parent: Configurable) extends SomaticVariantcaller {
       val combineVariants = gatk.CombineVariants(this, outputPerSample, intermResult)
       combineVariants.genotypemergeoption = Some("UNIQUIFY")
       add(combineVariants)
-      add(Tabix(this, intermResult))
     }
 
     val selectVariants = new SelectVariants(this)
