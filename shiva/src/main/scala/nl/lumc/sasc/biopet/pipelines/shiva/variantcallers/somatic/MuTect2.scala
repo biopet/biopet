@@ -3,7 +3,6 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 import nl.lumc.sasc.biopet.extensions.{Awk, Bgzip, Tabix, gatk}
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
 import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
-import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsIndex
 import nl.lumc.sasc.biopet.utils.IoUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
