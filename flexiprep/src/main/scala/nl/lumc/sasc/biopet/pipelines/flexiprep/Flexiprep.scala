@@ -50,7 +50,7 @@ class Flexiprep(val parent: Configurable)
   /** Make a final fastq files, by default only when flexiprep is the main pipeline */
   var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = parent == null)
 
-  override def defaults = super.defaults ++ Map("max_threads" -> 4)
+  override def defaults: Map[String, Any] = super.defaults ++ Map("max_threads" -> 4)
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
@@ -208,7 +208,8 @@ class Flexiprep(val parent: Configurable)
       qcCmdR2.compress = false
 
       val fqSync = new FastqSync(this)
-      fqSync.refFastq = R1_in
+      fqSync.refFastq1 = R1_in
+      fqSync.refFastq2 = R2_in.get
       fqSync.inputFastq1 = qcCmdR1.output
       fqSync.inputFastq2 = qcCmdR2.output
       fqSync.outputFastq1 = new File(outDir, fastqR1Qc.getName)
