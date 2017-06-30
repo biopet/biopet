@@ -238,7 +238,7 @@ object PipelineStatus extends ToolCommand {
         }
         ws.url(s"$host/api/runs/test/jobs/" + job._1)
           .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
-          .put(PimJob(job._1, Job.compressedName(job._1)._1, "test", "test", status).toString)
+          .put(PimJob(job._1, Job.compressedName(job._1)._1, runId.get, "none", status).toString)
       }
       Await.result(Future.sequence(futures), Duration.Inf).foreach(println)
     }
