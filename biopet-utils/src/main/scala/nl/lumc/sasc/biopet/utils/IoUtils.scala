@@ -85,12 +85,4 @@ object IoUtils {
     lines
   }
 
-  def executableExist(exe: String): Boolean = {
-    try {
-      val process = Process(Seq(exe)).run()
-      true
-    } catch {
-      case e: IOException => false
-    }
-  }
 }
