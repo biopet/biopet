@@ -8,28 +8,22 @@ Basty will output phylogenetic trees, which makes it very easy to look at the va
 
 ### Tools for this pipeline
 * [Shiva](shiva.md)
-* [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
+* [BastyGenerateFasta](../../tools/BastyGenerateFasta.md)
 * <a href="http://sco.h-its.org/exelixis/software.html" target="_blank">RAxml</a>
 * <a href="https://github.com/sanger-pathogens/Gubbins" target="_blank">Gubbins</a>
 
 ### Requirements
 
-To run with a specific species, please do not forget to create the proper index files.
-The index files are created from the supplied reference:
-
-* ```.dict``` (can be produced with <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>)
-* ```.fai``` (can be produced with <a href="http://samtools.sourceforge.net/samtools.shtml" target="_blank">Samtools faidx</a> 
-* ```.idxSpecificForAligner``` (depending on which aligner is used one should create a suitable index specific for that aligner. 
-Each aligner has his own way of creating index files. Therefore the options for creating the index files can be found inside the aligner itself)
+To run with a specific species, please do not forget to [create the proper index files](multisamplemapping.md#Setting-up).
 
 ### Configuration
-To run Basty, please create the proper [Config](../general/config.md) files.
+To run Basty, please create the proper [Config](../../general/config.md) files.
 
 Batsy uses the [Shiva](shiva.md) pipeline internally. Please check the documentation for this pipeline for the options.
 
 #### Sample input extensions
 
-Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+Please refer [to our mapping pipeline](../mapping.md) for information about how the input samples should be handled. 
 
 
 #### Required configuration values
@@ -76,7 +70,7 @@ biopet pipeline basty -h
 ~~~
 
 #### Run the pipeline:
-Note that one should first create the appropriate [configs](../general/config.md).
+Note that one should first create the appropriate [configs](../../general/config.md).
 
 ~~~
 biopet pipeline basty -run -config MySamples.json -config MySettings.json
@@ -85,13 +79,13 @@ biopet pipeline basty -run -config MySamples.json -config MySettings.json
 ### Result files
 The output files this pipeline produces are:
 
-* A complete output from [Flexiprep](flexiprep.md)
+* A complete output from [Flexiprep](../flexiprep.md)
 * BAM files, produced with the mapping pipeline. (either BWA, Bowtie, Stampy, Star and Star 2-pass. default: BWA)
 * VCF file from all samples together 
-* The output from the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
+* The output from the tool [BastyGenerateFasta](../../tools/BastyGenerateFasta.md)
     * FASTA containing variants only
     * FASTA containing all the consensus sequences based on min. coverage (default:8) but can be modified in the config
-* A phylogenetic tree based on the variants called with the Shiva pipeline generated with the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
+* A phylogenetic tree based on the variants called with the Shiva pipeline generated with the tool [BastyGenerateFasta](../../tools/BastyGenerateFasta.md)
 
 
 ~~~

@@ -2,18 +2,21 @@
 
 ## Introduction
 
-Carp is a pipeline for analyzing ChIP-seq NGS data. It uses the BWA MEM aligner and the MACS2 peak caller by default to align ChIP-seq data and call the peaks and allows you to run all your samples (control or otherwise) in one go.
+Carp is a pipeline for analyzing ChIP-seq NGS data. It uses the `bwa mem` aligner and the [MACS2](https://github.com/taoliu/MACS/wiki) peak caller 
+by default to align ChIP-seq data and call the peaks and allows you to run all your samples (control or otherwise) in one go.
 
 ### Sample input extensions
 
-Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+Please refer to our [config documentation page](../../general/config.md) for information about how the input samples should be handled. 
 
 ## Configuration File
 
 ### Sample Configuration
 
-The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines it may be either ```json``` or ```yaml``` formatted.
-Below we show two examples for ```json``` and ```yaml```. One should appreciate that multiple libraries can be used if a sample is sequenced on multiple lanes. This is noted with library id in the config file.
+The layout of the sample configuration for Carp is basically the same as with our other multisample pipelines. 
+It may be either `json` or `yaml` formatted.
+Below we show two examples for `json` and `yaml`. One should appreciate that multiple libraries can be used if a sample is sequenced on multiple lanes. 
+This is noted with library id in the config file.
 
 
 ~~~ json
@@ -64,9 +67,12 @@ samples:
 ~~~
 
 What's important here is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually 
-ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
-**Please notice** that the control is given in the form of a ```list```. This is because sometimes one wants to use multiple control samples, this can be achieved to pass the sampleNames of the control samples in a list to the field **control** in the config file.
-In ```json``` this will become: 
+ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. 
+In the example above, we are specifying `sample_Y` as the control for `sample_X`.
+**Please notice** that the control is given in the form of a ```list```. This is because sometimes one wants to use multiple control samples, 
+this can be achieved to pass the sampleNames of the control samples in a list to the field **control** in the config file.
+
+In `json` this will become: 
 
 ~~~ json
 {
@@ -93,39 +99,50 @@ samples:
 
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
 
-1. `output_dir`: path to output directory (if it does not exist, Carp will create it for you).
-2. `reference`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
+| ConfigNamespace | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| - | output_dir | String | - | Path to output directory (if it does not exist, Gentrap will create it for you) |
+| mapping | reference_fasta | String | This must point to a reference `FASTA` file and in the same directory, there must be a `.dict` file of the FASTA file.| 
 
 While optional settings are:
 
-1. `aligner`: which aligner to use (`bwa` or `bowtie`)
-2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: `macs2_callpeak`
+| ConfigNamespace | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| mapping | aligner | String | bwa-mem | Aligner of choice. Options: `bowtie` |
 
-[Gears](gears) is run automatically for the data analysed with `Carp`. There are two levels on which this can be done and this should be specified in the [config](../general/config) file:
+Here only the `callpeak` function of macs2 is implemented. 
+In order to pass parameters specific to macs2 callpeak the `macs2callpeak` namespace should be used. 
+For example, including the following in your config file, will set the effective genome size:
+ 
+ ```yaml
+ macs2callpeak:
+   gsize: 2.7e9
+ ```
 
-*`mapping_to_gears: unmapped` : Unmapped reads after alignment. (default)
-*`mapping_to_gears: all` : Trimmed and clipped reads from [Flexiprep](flexiprep).
-*`mapping_to_gears: none` : Disable this functionality.
+A comprehensive list of all available options for `masc2 callpeak` can be found [here](https://github.com/taoliu/MACS/#call-peaks).  
+
+## Running Gears
+[Gears](../gears.md) is run automatically for the data analysed with Carp.
+To fine tune this functionality see [here](multisamplemapping.md#Running-Gears)
 
 ## Configuration for detection of broad peaks (ATAC-seq)
 
 Carp can do broad peak-calling by using the following config: 
 
-``` json
-  "bowtie2": {
-    "maxins": 2000,
-    "m": 1
-  },
-  
-  "macs2callpeak":{
-    "gsize": 1.87e9,
-    "bdg": true,
-    "nomodel": true,
-    "broad": true,
-    "extsize": 200,
-    "shift": 100,
-    "qvalue": 0.001
-  }
+```yaml
+mapping:
+  bowtie2: 
+    maxins: 2000
+    m: 1
+carp:
+  macs2callpeak:
+    gsize: 1.87e9 #This is specific to the mouse genome
+    bdg: true
+    nomodel: true
+    broad: true
+    extsize: 200
+    shift: 100
+    qvalue: 0.001
 ```
 
 These settings are optimized to call peaks on samples prepared using the ATAC protocol.
@@ -138,7 +155,7 @@ This is useful in situations where known contaminants exist in the sequencing fi
 By default this option is **disabled**. 
 Due to technical reasons, we **cannot** recover reads that do not match to any known taxonomy.
 
-Taxonomies are determined using [Gears](gears.md) as a sub-pipeline. 
+Taxonomies are determined using [Gears](../gears.md) as a sub-pipeline. 
 
 To enable taxonomy extraction, specify the following additional flags in your
 config file:
@@ -170,26 +187,27 @@ taxextract:
 
 ## Running Carp
 
-As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:
+As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` sub-command:
 
 ~~~ bash
-biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+java -jar </path/to/biopet.jar> pipeline carp \
+-config </path/to/config.yml> \
+-config </path/to/samples.yml>
 ~~~
 
-If you already have the `biopet` environment module loaded, you can also simply call `biopet`:
+You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
 ~~~ bash
-biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+$ module load biopet/v0.9.0
+$ biopet pipeline carp -config </path/to/config.yml> \
+-qsub -jobParaEnv BWA -run
 ~~~
-
-It is also a good idea to specify retries (we recommend `-retry 4` up to `-retry 8`) so that cluster glitches do not interfere 
-with your pipeline runs.
 
 ## Example output
 
 ```bash
 .
-├── Carp.summary.json
+├── carp.summary.db
 ├── report
 │   ├── alignmentSummary.png
 │   ├── alignmentSummary.tsv

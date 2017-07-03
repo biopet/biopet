@@ -120,7 +120,8 @@ OutDir
 |           +-- <sample_name>.krkn.json
 ~~~
 
-The `Gears`-specific results are contained in a folder named after each tool that was used (by default `Gears` uses centrifuge). They are stored in the following files:
+The `Gears`-specific results are contained in a folder named after each tool that was used (by default `Gears` uses centrifuge). 
+They are stored in the following files:
 
 
 | File suffix | Application | Content | Description |
@@ -133,12 +134,16 @@ The `Gears`-specific results are contained in a folder named after each tool tha
 
 Kraken specific output
 
+| File suffix | Application | Content | Description |
+| ----------- | ----------- | ------- | ----------- |
 | *.krkn.raw  | kraken      | tsv     | Annotation per sequence |
 | *.krkn.full | kraken-report | tsv | List of all annotation possible with counts filled in for this specific sample|
 | *.krkn.json | krakenReportToJson | json | JSON representation of the taxonomy report, for postprocessing |
 
 QIIME specific output
 
+| File suffix | Application | Content | Description |
+| ----------- | ----------- | ------- | ----------- |
 | *.otu_table.biom | qiime | biom | Biom file containing counts for OTUs identified in the input |
 | *.otu_map.txt | qiime | tsv | Tab-separated file containing information about which samples a taxon has been identified in |
 
