@@ -103,6 +103,10 @@ class BaseCounts(val parent: Configurable)
     addTableAndHeatmap(jobs.values.map(_.strandedAntiSenseMetaExonCounts).toList,
                        "strandedAntiSenseMetaExonCounts")
 
+    jobs.foreach(x => baseCounterStats = baseCounterStats ++ Map(x._1 -> x._2.summaryJson))
+
     addSummaryJobs()
   }
+
+  private var baseCounterStats: Map[String, File] = Map()
 }
