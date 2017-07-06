@@ -58,7 +58,7 @@ All other values should be provided in the config. Specific config values toward
 | readgroup_sequencing_center | String (optional) | Read group sequencing center |
 | readgroup_description | String (optional) | Read group description |
 | predicted_insertsize | Integer (optional) | Read group predicted insert size |
-| keep_final_bam_file | Boolean (default true) | when needed the pipeline can remove the bam file after it's not required anymore for other jobs |
+| keep_mapping_bam_file | Boolean (default true) | when needed the pipeline can remove the bam file after it's not required anymore for other jobs |
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
