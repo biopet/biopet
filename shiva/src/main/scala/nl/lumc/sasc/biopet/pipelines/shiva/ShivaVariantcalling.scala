@@ -52,7 +52,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
-  private var tnPairs: List[TumorNormalPair] = Nil
+  var tnPairs: List[TumorNormalPair] = _
 
   def isGermlineVariantCallingConfigured(): Boolean = {
     callers.exists(_.mergeVcfResults)
@@ -75,6 +75,10 @@ class ShivaVariantcalling(val parent: Configurable)
             case _ => Gender.Unknown
           })
       }
+    }
+    if (isSomaticVariantCallingConfigured()) {
+      val samplePairs: List[Any] = config("tumor_normal_pairs").asList
+
     }
   }
 
@@ -240,7 +244,7 @@ object ShivaVariantcalling extends PipelineCommand {
       new VarscanCnsSingleSample(root) :: Nil
 
   def loadTnPairsFromTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
-    var pairs: List[TumorNormalPair] = parseTnPairTags(sampleTags)
+    val pairs: List[TumorNormalPair] = parseTnPairTags(sampleTags)
     validateTnPairTags(pairs, sampleTags.keySet)
     pairs.distinct
   }
@@ -277,10 +281,7 @@ object ShivaVariantcalling extends PipelineCommand {
   }
 
   private def validateTnPairTags(pairs: List[TumorNormalPair], validSampleNames:Set[String]): Unit = {
-    pairs.flatMap(pair => List(pair.tumorSample, pair.normalSample)).distinct.foreach(sampleName =>
-      if (!validSampleNames.contains(sampleName))
-        Logging.addError(s"Configuration for TN-pairs contains a sample name that is not valid: $sampleName")
-    )
+    validateSampleNames(pairs, validSampleNames)
 
     val samplePairs:Map[(String, String), List[TumorNormalPair]] = pairs.groupBy(pair =>
       if(pair.tumorSample<pair.normalSample)
@@ -292,6 +293,31 @@ object ShivaVariantcalling extends PipelineCommand {
       if (pair._2.size != 2 || pair._2.distinct.size != 1)
         Logging.addError(s"Error in configuration for the sample pair ${pair._1}")
     )
+  }
+
+  private def validateSampleNames(tnPairs: List[TumorNormalPair], validSampleNames:Set[String]): Unit = {
+    tnPairs.flatMap(pair => List(pair.tumorSample, pair.normalSample)).distinct.foreach(sampleName =>
+      if (!validSampleNames.contains(sampleName))
+        Logging.addError(s"Configuration for TN-pairs contains a sample name that is not valid: $sampleName")
+    )
+  }
+
+  private def loadTnPairsFromList(samplePairs: List[Any], validSampleNames:Set[String]): List[TumorNormalPair] = {
+    var result: List[TumorNormalPair] = Nil
+    try {
+      result = for (elem <- samplePairs) yield {
+        val pair: Map[String, Any] =
+          ConfigUtils.any2map(elem).map({
+            case (key, sampleName) => key.toUpperCase() -> sampleName
+          })
+        TumorNormalPair(pair("T").toString, pair("N").toString)
+      }
+    } catch {
+      case e: Exception =>
+        Logging.addError("Unable to parse the parameter 'tumor_normal_pairs' from configuration.", cause = e)
+    }
+    validateSampleNames(result, validSampleNames)
+    result
   }
 
 }
