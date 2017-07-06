@@ -63,11 +63,11 @@ object WriteDependencies extends Logging with Configurable {
 
     case class QueueFile(file: File) {
       private val inputJobs: ListBuffer[QFunction] = ListBuffer()
-      def addInputJob(function: QFunction): inputJobs.type = inputJobs += function
+      def addInputJob(function: QFunction): Unit = inputJobs += function
       def inputJobNames: List[String] = inputJobs.toList.map(functionNames)
 
       private val outputJobs: ListBuffer[QFunction] = ListBuffer()
-      def addOutputJob(function: QFunction): outputJobs.type = {
+      def addOutputJob(function: QFunction): Unit = {
         if (outputJobs.nonEmpty) logger.warn(s"File '$file' is found as output of multiple jobs")
         outputJobs += function
       }
