@@ -15,7 +15,6 @@
 package nl.lumc.sasc.biopet.core.pipelinestatus
 
 import java.io.{File, PrintWriter}
-import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -75,16 +74,16 @@ object PipelineStatus extends ToolCommand {
     } text "Pim run Id to publish status to"
   }
 
-  implicit lazy val system = ActorSystem()
-  implicit lazy val materializer = ActorMaterializer()
-  lazy val ws = AhcWSClient()
-
   def main(args: Array[String]): Unit = {
     logger.info("Start")
 
     val argsParser = new OptParser
     val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+
+    implicit lazy val system = ActorSystem()
+    implicit lazy val materializer = ActorMaterializer()
+    implicit lazy val ws = AhcWSClient()
 
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
     val deps = Deps.readDepsFile(depsFile)
@@ -97,6 +96,11 @@ object PipelineStatus extends ToolCommand {
       })
       else None
 
+    if (cmdArgs.pimHost.isDefined) {
+      require(pimRunId.isDefined, "Could not auto genrate Pim run ID, please supply --pimRunId")
+      logger.info(s"Status will be pushed to ${cmdArgs.pimHost.get}/run/${pimRunId.get}")
+    }
+
     writePipelineStatus(
       deps,
       cmdArgs.outputDir,
@@ -108,7 +112,9 @@ object PipelineStatus extends ToolCommand {
       pimRunId = pimRunId
     )
     logger.info("Done")
-    sys.exit()
+
+    ws.close()
+    system.terminate()
   }
 
   def getDepsFileFromDir(pipelineDir: File): File = {
@@ -130,7 +136,7 @@ object PipelineStatus extends ToolCommand {
                           plots: Boolean = false,
                           compressPlots: Boolean = true,
                           pimHost: Option[String] = None,
-                          pimRunId: Option[String] = None): Unit = {
+                          pimRunId: Option[String] = None)(implicit ws: AhcWSClient): Unit = {
 
     val jobDone = jobsDone(deps)
     val jobFailed = jobsFailed(deps, jobDone)
@@ -196,7 +202,12 @@ object PipelineStatus extends ToolCommand {
 
     futures.foreach(x => Await.ready(x, Duration.Inf))
 
-    val runId = if (pimHost.isDefined) Some(pimRunId.getOrElse("biopet_" + new Date())) else None
+    val runId =
+      if (pimHost.isDefined)
+        Some(
+          pimRunId.getOrElse(throw new IllegalStateException(
+            "Pim requires a run id, please supply this with --pimRunId")))
+      else None
     pimHost.foreach { host =>
       val links: List[Link] = deps.compressOnType
         .flatMap(x => x._2.map(y => Link("link", y, "output", x._1, "input", "test")))
@@ -218,7 +229,7 @@ object PipelineStatus extends ToolCommand {
         "Biopet pipeline",
         "biopet"
       )
-      println(run.toString)
+
       val request = ws
         .url(s"$host/api/runs/")
         .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
@@ -226,8 +237,7 @@ object PipelineStatus extends ToolCommand {
 
       val content = Await.result(request, Duration.Inf)
 
-      println(content.status)
-      println(content.body)
+      println(content)
 
       val futures = for (job <- deps.jobs) yield {
         val status = job._1 match {
@@ -240,7 +250,9 @@ object PipelineStatus extends ToolCommand {
           .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
           .put(PimJob(job._1, Job.compressedName(job._1)._1, runId.get, "none", status).toString)
       }
-      Await.result(Future.sequence(futures), Duration.Inf).foreach(println)
+      if (logger.isDebugEnabled) futures.foreach(_.onComplete(logger.debug(_)))
+      val results = Await.result(Future.sequence(futures), Duration.Inf)
+      results.filter(_.status != 200).foreach(println)
     }
     logger.info(
       s"Total job: $totalJobs, Pending: $totalPending, Ready to run / running: $totalStart, Done: $totalDone, Failed $totalFailed")
