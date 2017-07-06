@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
 import nl.lumc.sasc.biopet.pipelines.mapping.{Mapping, MultisampleMappingTrait}
+import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling.loadTnPairsFromTags
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -60,6 +61,10 @@ class Shiva(val parent: Configurable)
       override def configNamespace: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
       genders = samples.map { case (sampleName, sample) => sampleName -> sample.gender }
+      if (isSomaticVariantCallingConfigured()) {
+        tnPairs = loadTnPairsFromTags(
+          samples.map { case (sampleName, sample) => sampleName -> sample.sampleTags })
+      }
     } else
       new ShivaVariantcalling(qscript) {
         override def configNamespace = "shivavariantcalling"
