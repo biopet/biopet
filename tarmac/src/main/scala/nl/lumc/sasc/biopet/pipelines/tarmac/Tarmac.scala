@@ -18,7 +18,12 @@ import nl.lumc.sasc.biopet.extensions.xhmm.{
   XhmmPca
 }
 import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, Tabix}
-import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{BedThreshold, SampleFromMatrix, TarmacPlot}
+import nl.lumc.sasc.biopet.pipelines.tarmac.scripts.{
+  BedThreshold,
+  FindAllCommon,
+  SampleFromMatrix,
+  TarmacPlot
+}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -140,6 +145,89 @@ class Tarmac(val parent: Configurable)
         sample -> horizontal
     }
 
+    val recessiveJobs = zScoreMergeJobs
+      .filter(x => getChildren.map(_.individualId).contains(x._1.sampleId))
+      .flatMap {
+        case (sample, job) =>
+          val parents = findParentHorizontals(sample, zScoreMergeJobs)
+          val parentsAndKid = job :: parents
+          val syncJobs = parentsAndKid.map { x =>
+            val syncer = new FindAllCommon(this)
+            val remainder = (parentsAndKid.toSet - x).toList
+            syncer.inputFile = x.output
+            syncer.databases = remainder.map(_.output)
+            syncer.output = Some(
+              swapExt(x.output.getParentFile,
+                      x.output,
+                      ".bed",
+                      s"${sample.family.getOrElse("unknown")}.family_common.bed"))
+            syncer
+          }
+
+          val horizontalJob = new StouffbedHorizontal(this)
+          horizontalJob.inputFiles = syncJobs.flatMap(_.output)
+          horizontalJob.output = new File(sample.sampleDir, s"${sample.sampleId}.recessives.bed")
+
+          val verticalsAndThresholds = stouffWindowSizes map { size =>
+            val windowDir = new File(sample.sampleDir, s"window_$size")
+            val vertical = new StouffbedVertical(this)
+            vertical.inputFiles = List(horizontalJob.output)
+            vertical.output =
+              new File(windowDir, s"${sample.sampleId}.window_$size.recessive.z.bed")
+            vertical.windowSize = size
+            val thresholder = new BedThreshold(this)
+            thresholder.input = vertical.output
+            thresholder.threshold = threshold
+            thresholder.output =
+              Some(new File(windowDir, s"${sample.sampleId}.recessive.treshold.bed"))
+            vertical :: thresholder :: Nil
+          }
+          val verticalAndThresholdJobs: List[BiopetCommandLineFunction] =
+            verticalsAndThresholds.flatten
+
+          // single-parent method
+
+          val singleParentJobs = parents.flatMap { x =>
+            val parentName = x.output.getName.split('.').head
+            val parentSync = new FindAllCommon(this)
+            val childSync = new FindAllCommon(this)
+            parentSync.inputFile = x.output
+            parentSync.databases = List(job.output)
+            parentSync.output = Some(
+              swapExt(job.output.getParentFile, x.output, ".bed", ".parent.common.bed")
+            )
+            childSync.inputFile = job.output
+            childSync.databases = List(x.output)
+            childSync.output = Some(
+              swapExt(job.output.getParentFile, x.output, ".bed", ".child.common.bed")
+            )
+
+            val singleParHorizontal = new StouffbedHorizontal(this)
+            singleParHorizontal.inputFiles = (parentSync.output :: childSync.output :: Nil).flatten
+            singleParHorizontal.output =
+              swapExt(job.output.getParentFile, x.output, ".bed", ".single-parent-horizontal.bed")
+
+            val singleParVerticals = stouffWindowSizes flatMap { size =>
+              val windowDir = new File(sample.sampleDir, s"window_$size")
+              val vertical = new StouffbedVertical(this)
+              vertical.inputFiles = List(singleParHorizontal.output)
+              vertical.output =
+                new File(windowDir, s"${sample.sampleId}.shared_with_parent_$parentName.z.bed")
+              vertical.windowSize = size
+              val thresholder = new BedThreshold(this)
+              thresholder.input = vertical.output
+              thresholder.threshold = threshold
+              thresholder.output = Some(
+                new File(windowDir,
+                         s"${sample.sampleId}.shared_with_parent_$parentName.threshold.bed"))
+              vertical :: thresholder :: Nil
+            }
+            parentSync :: childSync :: singleParHorizontal :: singleParVerticals ::: Nil
+          }
+
+          horizontalJob :: verticalAndThresholdJobs ::: syncJobs ::: singleParentJobs
+      }
+
     val windowStouffJobs = zScoreMergeJobs map {
       case (sample, horizontal) =>
         val subMap = stouffWindowSizes map { size =>
@@ -181,6 +269,7 @@ class Tarmac(val parent: Configurable)
     addAll(zScoreMergeJobs.values)
     addAll(windowStouffJobs.values.flatMap(_.values))
     addAll(thresholdJobs.values.flatMap(_.values))
+    addAll(recessiveJobs)
 
     val xhmmZGzip = xhmmZJobs map {
       case (sample, jobAndRefFile) =>
@@ -230,6 +319,20 @@ class Tarmac(val parent: Configurable)
             plotter.deps ++= sort.tabixJob.outputIndex :: xhmmZ.tabixJob.outputIndex :: wiseZ.tabixJob.outputIndex :: stouff.tabixJob.outputIndex :: Nil
             add(plotter)
         }
+    }
+  }
+
+  def findParentHorizontals(
+      sample: Sample,
+      sampleHorizontalMap: Map[Sample, StouffbedHorizontal]): List[StouffbedHorizontal] = {
+    val sampleIdMap = sampleHorizontalMap.map { case (k, v) => k.sampleId -> v }
+    (sample.mother, sample.father) match {
+      case (Some(m), Some(f)) =>
+        (sampleIdMap.get(m), sampleIdMap.get(f)) match {
+          case (Some(one), Some(two)) => List(one, two)
+          case _ => Nil
+        }
+      case _ => Nil
     }
   }
 
