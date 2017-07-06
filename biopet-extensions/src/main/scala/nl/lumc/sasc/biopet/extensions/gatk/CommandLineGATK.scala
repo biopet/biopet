@@ -418,3 +418,8 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
     optional("-l", logging_level, spaceSeparated = true, escape = true, format = "%s") +
     optional("-log", log_to_file, spaceSeparated = true, escape = true, format = "%s")
 }
+
+object CommandLineGATK {
+
+  def isFileWithTag(file: File, tag: String): Boolean = file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == tag
+}
