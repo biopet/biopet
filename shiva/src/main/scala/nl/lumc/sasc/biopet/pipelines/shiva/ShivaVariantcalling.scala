@@ -22,8 +22,9 @@ import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{SomaticVariantCaller, TumorNormalPair}
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{BamUtils, ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -50,6 +51,16 @@ class ShivaVariantcalling(val parent: Configurable)
   var inputBqsrFiles: Map[String, File] = Map()
 
   var genders: Map[String, Gender.Value] = _
+
+  private var tnPairs: List[TumorNormalPair] = Nil
+
+  def isGermlineVariantCallingConfigured(): Boolean = {
+    callers.exists(_.mergeVcfResults)
+  }
+
+  def isSomaticVariantCallingConfigured(): Boolean = {
+    callers.exists(_.isInstanceOf[SomaticVariantCaller])
+  }
 
   /** Executed before script */
   def init(): Unit = {
@@ -227,4 +238,60 @@ object ShivaVariantcalling extends PipelineCommand {
       new Bcftools(root) ::
       new BcftoolsSingleSample(root) ::
       new VarscanCnsSingleSample(root) :: Nil
+
+  def loadTnPairsFromTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
+    var pairs: List[TumorNormalPair] = parseTnPairTags(sampleTags)
+    validateTnPairTags(pairs, sampleTags.keySet)
+    pairs.distinct
+  }
+
+  //parsing the tags will return a list where each tn-pair appears exactly twice, provided there are no errors in the conf
+  private def parseTnPairTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
+    def getPairs(sample1:String, pairedWith:List[String], sample1Type: String): List[TumorNormalPair] = {
+      for(sample2 <- pairedWith) yield {
+        if (sample1Type == "tumor")
+          TumorNormalPair(sample1, sample2)
+        else
+          TumorNormalPair(sample2, sample1)
+      }
+    }
+
+    var result: List[TumorNormalPair] = List()
+    for ((sample, tags) <- sampleTags if tags.contains("type")) {
+      val pairedWith: List[String] = tags.get("paired_with") match {
+        case Some(samples) => ConfigUtils.any2list(samples).map(_.toString)
+        case _ => {
+          Logging.addError(s"Parameter 'paired_with' missing for sample $sample")
+          Nil
+        }
+      }
+
+      tags("type").toString.toLowerCase match {
+        case sampleType if (sampleType == "tumor" || sampleType == "normal") => {
+          result :::= getPairs(sample, pairedWith, sampleType)
+        }
+        case _ => Logging.addError(s"Unknown sample type set for sample $sample, allowed values: 'tumor', 'normal'")
+      }
+    }
+    result
+  }
+
+  private def validateTnPairTags(pairs: List[TumorNormalPair], validSampleNames:Set[String]): Unit = {
+    pairs.flatMap(pair => List(pair.tumorSample, pair.normalSample)).distinct.foreach(sampleName =>
+      if (!validSampleNames.contains(sampleName))
+        Logging.addError(s"Configuration for TN-pairs contains a sample name that is not valid: $sampleName")
+    )
+
+    val samplePairs:Map[(String, String), List[TumorNormalPair]] = pairs.groupBy(pair =>
+      if(pair.tumorSample<pair.normalSample)
+        Tuple2(pair.tumorSample, pair.normalSample)
+      else
+        Tuple2(pair.normalSample, pair.tumorSample)
+    )
+    samplePairs.foreach(pair =>
+      if (pair._2.size != 2 || pair._2.distinct.size != 1)
+        Logging.addError(s"Error in configuration for the sample pair ${pair._1}")
+    )
+  }
+
 }
