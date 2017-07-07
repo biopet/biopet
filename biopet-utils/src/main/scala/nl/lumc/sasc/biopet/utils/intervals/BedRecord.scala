@@ -151,7 +151,7 @@ case class BedRecord(chr: String,
     this
   }
 
-  def toSamInterval = (name, strand) match {
+  def toSamInterval: Interval = (name, strand) match {
     case (Some(name), Some(strand)) => new Interval(chr, start + 1, end, !strand, name)
     case (Some(name), _) => new Interval(chr, start + 1, end, false, name)
     case _ => new Interval(chr, start + 1, end)

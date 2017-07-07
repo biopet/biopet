@@ -22,10 +22,10 @@
 * Added single sample variantcalling with bcftools
 * Added ET + key support for GATK job invocation, disable phone-home feature when key is supplied
 * Added more debug information in the `.log` directory when `-l debug` is enabled
-* [Shiva](../pipelines/shiva.md): added support for `GenotypeConcordance` tool to check against a Golden Standard
-* [Shiva](../pipelines/shiva.md): fixed a lot of small bugs when developing integration tests
-* [Shiva](../pipelines/shiva.md): Workaround: Fixed a dependency on rerun, with this change there can be 2 bam files in the samples folder
-* [Gentrap](../pipelines/gentrap.md): Improved error handling on missing annotation files
+* [Shiva](../pipelines/multisample/shiva.md): added support for `GenotypeConcordance` tool to check against a Golden Standard
+* [Shiva](../pipelines/multisample/shiva.md): fixed a lot of small bugs when developing integration tests
+* [Shiva](../pipelines/multisample/shiva.md): Workaround: Fixed a dependency on rerun, with this change there can be 2 bam files in the samples folder
+* [Gentrap](../pipelines/multisample/gentrap.md): Improved error handling on missing annotation files
 
 ## Infrastructure changes
 

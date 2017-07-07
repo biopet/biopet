@@ -25,7 +25,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
 
   val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
 
-  def finalGvcfFile = new File(outputDir, s"$namePrefix.gvcf.vcf.gz")
+  def finalGvcfFile = new File(outputDir, s"$namePrefix.g.vcf.gz")
   def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
 
   /** Init for pipeline */

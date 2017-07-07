@@ -30,7 +30,7 @@ import scala.collection.JavaConversions._
 /**
   * Created by ahbbollen on 27-8-15.
   */
-class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
+class MpileupToVcfTest extends TestNGSuite with Matchers {
 
   import MpileupToVcf._
   private def resourcePath(p: String): String = {

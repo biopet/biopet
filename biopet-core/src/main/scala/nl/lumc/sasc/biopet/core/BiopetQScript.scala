@@ -127,7 +127,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     logger.info("Checking input files")
     inputFiles.par.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
-      if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
+      else if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
       if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
     }
 

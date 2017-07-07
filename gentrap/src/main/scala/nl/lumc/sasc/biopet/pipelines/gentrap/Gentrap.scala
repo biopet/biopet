@@ -17,7 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.extensions.tools.{RefflatStats, WipeReads}
+import nl.lumc.sasc.biopet.extensions.tools.{
+  CheckValidateAnnotation,
+  RefflatStats,
+  ValidateAnnotation,
+  WipeReads
+}
 import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ExpMeasures, StrandProtocol}
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
@@ -135,6 +140,24 @@ class Gentrap(val parent: Configurable)
       "no_make_index" -> false
     )
   )
+
+  override def biopetScript(): Unit = {
+    val validate = new ValidateAnnotation(this)
+    validate.refflatFile = Some(annotationRefFlat.get)
+    fragmentsPerGene.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksBlind.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksGuided.foreach(validate.gtfFile :+= _.annotationGtf)
+    cufflinksStrict.foreach(validate.gtfFile :+= _.annotationGtf)
+    validate.jobOutputFile = new File(outputDir, ".validate.annotation.out")
+    add(validate)
+
+    val check = new CheckValidateAnnotation(this)
+    check.inputLogFile = validate.jobOutputFile
+    check.jobOutputFile = new File(outputDir, ".check.validate.out")
+    add(check)
+
+    super.biopetScript()
+  }
 
   lazy val fragmentsPerGene: Option[FragmentsPerGene] =
     if (expMeasures().contains(ExpMeasures.FragmentsPerGene))

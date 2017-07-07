@@ -27,14 +27,14 @@ trait Logging {
     *
     * @return Global biopet logger
     */
-  def logger = Logging.logger
+  def logger: Logger = Logging.logger
 }
 
 /**
   * Logger object, has a global logger
   */
 object Logging {
-  val logger = Logger.getRootLogger
+  val logger: Logger = Logger.getRootLogger
 
   private[biopet] val errors: ListBuffer[Exception] = ListBuffer()
 
