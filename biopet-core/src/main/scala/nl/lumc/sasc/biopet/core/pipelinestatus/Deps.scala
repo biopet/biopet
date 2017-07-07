@@ -9,8 +9,16 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
   */
 case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]]) {
 
-  lazy val compressOnType: Map[String, List[String]] = {
-    Deps.compressOnType(jobs.map(x => x._1 -> x._2.dependsOnJobs))
+  def compressOnType(main: Boolean = false): Map[String, List[String]] = {
+    (for ((_, job) <- jobs.toSet if !main || job.mainJob) yield {
+      job.name -> (if (main) getMainDependencies(job.name).map(Job.compressedName(_)._1)
+                   else job.dependsOnJobs.map(Job.compressedName(_)._1))
+    }).groupBy(x => Job.compressedName(x._1)._1)
+      .map(x => x._1 -> x._2.flatMap(_._2).toList.distinct)
+  }
+
+  def getMainDeps: Map[String, List[String]] = {
+    jobs.filter(_._2.mainJob).map(x => x._1 -> getMainDependencies(x._1))
   }
 
   def getMainDependencies(jobName: String): List[String] = {
@@ -38,7 +46,8 @@ object Deps {
     Deps(jobs, files)
   }
 
-  def compressOnType(jobs: Map[String, List[String]]): Map[String, List[String]] = {
+  def compressOnType(jobs: Map[String, List[String]],
+                     main: Boolean = false): Map[String, List[String]] = {
     val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
       (Job.compressedName(job)._1, Job.compressedName(dep)._1)
     }

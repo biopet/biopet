@@ -151,16 +151,14 @@ object PipelineStatus extends ToolCommand {
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    futures :+= writeGraphvizFile(jobsDeps,
-                                  new File(outputDir, s"jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   plots,
                                   plots)
-    futures :+= writeGraphvizFile(jobsDeps,
-                                  new File(outputDir, s"compress.jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"compress.jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
@@ -176,23 +174,23 @@ object PipelineStatus extends ToolCommand {
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    futures :+= writeGraphvizFile(mainJobs,
-                                  new File(outputDir, s"main_jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"main_jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   plots,
-                                  plots)
-    futures :+= writeGraphvizFile(mainJobs,
-                                  new File(outputDir, s"compress.main_jobs.gv"),
+                                  plots,
+                                  main = true)
+    futures :+= writeGraphvizFile(new File(outputDir, s"compress.main_jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   compressPlots,
                                   compressPlots,
-                                  compress = true)
+                                  compress = true,
+                                  main = true)
 
     val totalJobs = deps.jobs.size
     val totalStart = jobsStart.size
@@ -200,7 +198,7 @@ object PipelineStatus extends ToolCommand {
     val totalFailed = jobFailed.size
     val totalPending = totalJobs - jobsStart.size - jobDone.size - jobFailed.size
 
-    futures.foreach(x => Await.ready(x, Duration.Inf))
+    futures.foreach(x => Await.result(x, Duration.Inf))
 
     val runId =
       if (pimHost.isDefined)
@@ -209,14 +207,16 @@ object PipelineStatus extends ToolCommand {
             "Pim requires a run id, please supply this with --pimRunId")))
       else None
     pimHost.foreach { host =>
-      val links: List[Link] = deps.compressOnType
+      val links: List[Link] = deps
+        .compressOnType()
         .flatMap(x => x._2.map(y => Link("link", y, "output", x._1, "input", "test")))
         .toList
       val run = Run(
         runId.get,
         Network("graph",
                 Nil,
-                deps.compressOnType
+                deps
+                  .compressOnType()
                   .map(
                     x =>
                       Node(x._1,
@@ -236,7 +236,7 @@ object PipelineStatus extends ToolCommand {
         .put(run.toString)
 
       Await.result(request, Duration.Inf) match {
-        case r if r.status => logger.debug(r)
+        case r if r.status == 200 => logger.debug(r)
         case r => logger.warn(r)
       }
 
@@ -276,16 +276,21 @@ object PipelineStatus extends ToolCommand {
     }
   }
 
-  def writeGraphvizFile(jobsDeps: Map[String, List[String]],
-                        outputFile: File,
+  def writeGraphvizFile(outputFile: File,
                         jobDone: Set[String],
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
                         png: Boolean = true,
                         svg: Boolean = true,
-                        compress: Boolean = false): Future[Unit] = Future {
-    val graph = if (compress) deps.compressOnType else jobsDeps
+                        compress: Boolean = false,
+                        main: Boolean = false): Future[Unit] = Future {
+    val graph =
+      if (compress && main) deps.compressOnType(main = true)
+      else if (compress) deps.compressOnType()
+      else if (main) deps.getMainDeps
+      else deps.jobs.map(x => x._1 -> x._2.dependsOnJobs)
+
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
 
