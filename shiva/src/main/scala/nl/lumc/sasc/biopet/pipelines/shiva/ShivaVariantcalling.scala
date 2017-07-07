@@ -22,10 +22,13 @@ import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling.loadTnPairsFromList
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{MuTect2, SomaticVariantCaller, TumorNormalPair}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{
+  MuTect2,
+  SomaticVariantCaller,
+  TumorNormalPair
+}
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
-import nl.lumc.sasc.biopet.utils.{BamUtils, ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -53,7 +56,7 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
-  var tnPairs: List[TumorNormalPair] = Nil
+  var tumorSamples: List[TumorNormalPair] = _
 
   def isGermlineVariantCallingConfigured(): Boolean = {
     callers.exists(!_.isInstanceOf[SomaticVariantCaller])
@@ -66,28 +69,31 @@ class ShivaVariantcalling(val parent: Configurable)
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
-    if (Option(genders).isEmpty) genders = {
-      val samples: Map[String, Any] = config("genders", default = Map())
-      samples.map {
-        case (sampleName, gender) =>
-          sampleName -> (gender.toString.toLowerCase match {
-            case "male" => Gender.Male
-            case "female" => Gender.Female
-            case _ => Gender.Unknown
-          })
-      }
-    }
-    if (isSomaticVariantCallingConfigured()) {
-      val samplePairs: List[Any] = config("tumor_normal_pairs").asList
-      if (samplePairs.nonEmpty && tnPairs.nonEmpty)
-        Logging.addError("Error in configuration, TN pairs should be set either with the help of the 'tags' parameter or with 'tumor_normal_pairs', not with both")
-      else if (tnPairs.isEmpty) {
-        tnPairs = loadTnPairsFromList(samplePairs, inputBams.keySet)
 
-        if (tnPairs.isEmpty)
-          Logging.addError("When using a somatic variant caller, TN pairs must be specified in the configuration")
-      }
+    //TODO: this needs changed when the sample/library refactoring is beeing done
+    if (Option(genders).isEmpty) genders = {
+      inputBams.keys.map { sampleName =>
+        val gender: String = config("gender", path = "samples" :: sampleName :: "tags" :: Nil)
+        sampleName -> (gender match {
+          case "male" => Gender.Male
+          case "female" => Gender.Female
+          case _ => Gender.Unknown
+        })
+      }.toMap
     }
+
+    //TODO: this needs changed when the sample/library refactoring is beeing done
+    if (Option(tumorSamples).isEmpty)
+      tumorSamples = inputBams.keys
+        .filter(name =>
+          config("type", path = "samples" :: name :: "tags" :: Nil).asString.toLowerCase == "tumor")
+        .map { tumorSample =>
+          val normal: String = config("normal", path = "samples" :: tumorSample :: "tags" :: Nil)
+          if (!inputBams.keySet.contains(normal))
+            Logging.addError(s"Normal sample '$normal' does not exist")
+          TumorNormalPair(tumorSample, normal)
+        }
+        .toList
   }
 
   var referenceVcf: Option[File] = config("reference_vcf")
@@ -132,7 +138,8 @@ class ShivaVariantcalling(val parent: Configurable)
               .map(_.name)
               .mkString(", "))
     if (!isGermlineVariantCallingConfigured())
-      Logging.addError("For running the pipeline at least one germline variant caller has to be configured")
+      Logging.addError(
+        "For running the pipeline at least one germline variant caller has to be configured")
     else if (!callers.exists(_.mergeVcfResults))
       Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
@@ -154,7 +161,7 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
       if (caller.isInstanceOf[SomaticVariantCaller])
-        caller.asInstanceOf[SomaticVariantCaller].tnPairs = tnPairs
+        caller.asInstanceOf[SomaticVariantCaller].tnPairs = tumorSamples
 
       add(caller)
       addStats(caller.outputFile, caller.name)
@@ -256,82 +263,5 @@ object ShivaVariantcalling extends PipelineCommand {
       new BcftoolsSingleSample(root) ::
       new VarscanCnsSingleSample(root) ::
       new MuTect2(root) :: Nil
-
-  def loadTnPairsFromTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
-    val pairs: List[TumorNormalPair] = parseTnPairTags(sampleTags)
-    validateTnPairTags(pairs, sampleTags.keySet)
-    pairs.distinct
-  }
-
-  //parsing the tags will return a list where each tn-pair appears exactly twice, provided there are no errors in the conf
-  private def parseTnPairTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
-    def getPairs(sample1:String, pairedWith:List[String], sample1Type: String): List[TumorNormalPair] = {
-      for(sample2 <- pairedWith) yield {
-        if (sample1Type == "tumor")
-          TumorNormalPair(sample1, sample2)
-        else
-          TumorNormalPair(sample2, sample1)
-      }
-    }
-
-    var result: List[TumorNormalPair] = List()
-    for ((sample, tags) <- sampleTags if tags.contains("type")) {
-      val pairedWith: List[String] = tags.get("paired_with") match {
-        case Some(samples) => ConfigUtils.any2list(samples).map(_.toString)
-        case _ => {
-          Logging.addError(s"Parameter 'paired_with' missing for sample $sample")
-          Nil
-        }
-      }
-
-      tags("type").toString.toLowerCase match {
-        case sampleType if (sampleType == "tumor" || sampleType == "normal") => {
-          result :::= getPairs(sample, pairedWith, sampleType)
-        }
-        case _ => Logging.addError(s"Unknown sample type set for sample $sample, allowed values: 'tumor', 'normal'")
-      }
-    }
-    result
-  }
-
-  private def validateTnPairTags(pairs: List[TumorNormalPair], validSampleNames:Set[String]): Unit = {
-    validateSampleNames(pairs, validSampleNames)
-
-    val samplePairs:Map[(String, String), List[TumorNormalPair]] = pairs.groupBy(pair =>
-      if(pair.tumorSample<pair.normalSample)
-        Tuple2(pair.tumorSample, pair.normalSample)
-      else
-        Tuple2(pair.normalSample, pair.tumorSample)
-    )
-    samplePairs.foreach(pair =>
-      if (pair._2.size != 2 || pair._2.distinct.size != 1)
-        Logging.addError(s"Error in configuration for the sample pair ${pair._1}")
-    )
-  }
-
-  private def validateSampleNames(tnPairs: List[TumorNormalPair], validSampleNames:Set[String]): Unit = {
-    tnPairs.flatMap(pair => List(pair.tumorSample, pair.normalSample)).distinct.foreach(sampleName =>
-      if (!validSampleNames.contains(sampleName))
-        Logging.addError(s"Configuration for TN-pairs contains a sample name that is not valid: $sampleName")
-    )
-  }
-
-  private def loadTnPairsFromList(samplePairs: List[Any], validSampleNames:Set[String]): List[TumorNormalPair] = {
-    var result: List[TumorNormalPair] = Nil
-    try {
-      result = for (elem <- samplePairs) yield {
-        val pair: Map[String, Any] =
-          ConfigUtils.any2map(elem).map({
-            case (key, sampleName) => key.toUpperCase() -> sampleName
-          })
-        TumorNormalPair(pair("T").toString, pair("N").toString)
-      }
-    } catch {
-      case e: Exception =>
-        Logging.addError("Unable to parse the parameter 'tumor_normal_pairs' from configuration.", cause = e)
-    }
-    validateSampleNames(result, validSampleNames)
-    result
-  }
 
 }

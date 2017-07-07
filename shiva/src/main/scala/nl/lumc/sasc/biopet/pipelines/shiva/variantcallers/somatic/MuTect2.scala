@@ -19,9 +19,9 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
   def biopetScript(): Unit = {
 
     for (pair <- tnPairs)
-      addJobsForPair(pair, new File(outputDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf.gz"))
+      addJobsForPair(pair,
+                     new File(outputDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf.gz"))
   }
-
 
   def addJobsForPair(pair: TumorNormalPair, outFile: File): Unit = {
     val muTect2 = {
@@ -32,9 +32,9 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
       val namePrefix = outFile.getAbsolutePath.stripSuffix(".vcf.gz")
       val contEstOutput: File = new File(s"$namePrefix.contamination.txt")
       val contEst = gatk.ContEst(this,
-        inputBams(pair.tumorSample),
-        inputBams(pair.normalSample),
-        contEstOutput)
+                                 inputBams(pair.tumorSample),
+                                 inputBams(pair.normalSample),
+                                 contEstOutput)
       add(contEst)
 
       val contaminationPerSample: File = new File(s"$namePrefix.contamination.short.txt")
@@ -47,8 +47,9 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
 
     if (inputBqsrFiles.contains(pair.tumorSample) && inputBqsrFiles.contains(pair.normalSample)) {
       val gather = new BqsrGather()
-      gather.inputBqsrFiles = List(inputBqsrFiles(pair.tumorSample), inputBqsrFiles(pair.normalSample))
-      gather.outputBqsrFile =  new File(swapExt(outFile, "vcf.gz","bqsr.merge"))
+      gather.inputBqsrFiles =
+        List(inputBqsrFiles(pair.tumorSample), inputBqsrFiles(pair.normalSample))
+      gather.outputBqsrFile = new File(swapExt(outFile, "vcf.gz", "bqsr.merge"))
       add(gather)
 
       muTect2.BQSR = Some(gather.outputBqsrFile)
