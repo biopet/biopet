@@ -22,7 +22,8 @@ import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{SomaticVariantCaller, TumorNormalPair}
+import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling.loadTnPairsFromList
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{MuTect2, SomaticVariantCaller, TumorNormalPair}
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
 import nl.lumc.sasc.biopet.utils.{BamUtils, ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -52,10 +53,10 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
-  var tnPairs: List[TumorNormalPair] = _
+  var tnPairs: List[TumorNormalPair] = Nil
 
   def isGermlineVariantCallingConfigured(): Boolean = {
-    callers.exists(_.mergeVcfResults)
+    callers.exists(!_.isInstanceOf[SomaticVariantCaller])
   }
 
   def isSomaticVariantCallingConfigured(): Boolean = {
@@ -78,7 +79,14 @@ class ShivaVariantcalling(val parent: Configurable)
     }
     if (isSomaticVariantCallingConfigured()) {
       val samplePairs: List[Any] = config("tumor_normal_pairs").asList
+      if (samplePairs.nonEmpty && tnPairs.nonEmpty)
+        Logging.addError("Error in configuration, TN pairs should be set either with the help of the 'tags' parameter or with 'tumor_normal_pairs', not with both")
+      else if (tnPairs.isEmpty) {
+        tnPairs = loadTnPairsFromList(samplePairs, inputBams.keySet)
 
+        if (tnPairs.isEmpty)
+          Logging.addError("When using a somatic variant caller, TN pairs must be specified in the configuration")
+      }
     }
   }
 
@@ -123,7 +131,9 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    if (!callers.exists(_.mergeVcfResults))
+    if (!isGermlineVariantCallingConfigured())
+      Logging.addError("For running the pipeline at least one germline variant caller has to be configured")
+    else if (!callers.exists(_.mergeVcfResults))
       Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
     addAll(
@@ -143,6 +153,9 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
+      if (caller.isInstanceOf[SomaticVariantCaller])
+        caller.asInstanceOf[SomaticVariantCaller].tnPairs = tnPairs
+
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean =
@@ -241,7 +254,8 @@ object ShivaVariantcalling extends PipelineCommand {
       new RawVcf(root) ::
       new Bcftools(root) ::
       new BcftoolsSingleSample(root) ::
-      new VarscanCnsSingleSample(root) :: Nil
+      new VarscanCnsSingleSample(root) ::
+      new MuTect2(root) :: Nil
 
   def loadTnPairsFromTags(sampleTags: Map[String, Map[String, Any]]): List[TumorNormalPair] = {
     val pairs: List[TumorNormalPair] = parseTnPairTags(sampleTags)
