@@ -235,9 +235,10 @@ object PipelineStatus extends ToolCommand {
         .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
         .put(run.toString)
 
-      val content = Await.result(request, Duration.Inf)
-
-      println(content)
+      Await.result(request, Duration.Inf) match {
+        case r if r.status => logger.debug(r)
+        case r => logger.warn(r)
+      }
 
       val futures = for (job <- deps.jobs) yield {
         val status = job._1 match {
@@ -252,7 +253,10 @@ object PipelineStatus extends ToolCommand {
       }
       if (logger.isDebugEnabled) futures.foreach(_.onComplete(logger.debug(_)))
       val results = Await.result(Future.sequence(futures), Duration.Inf)
-      results.filter(_.status != 200).foreach(println)
+      results.foreach {
+        case s if s.status == 200 => logger.debug(s)
+        case s => logger.warn(s)
+      }
     }
     logger.info(
       s"Total job: $totalJobs, Pending: $totalPending, Ready to run / running: $totalStart, Done: $totalDone, Failed $totalFailed")
