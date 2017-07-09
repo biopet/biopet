@@ -71,7 +71,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
       val groupSize = if (files.size > (maxNumberOfFiles * maxNumberOfFiles)) {
         files.size / maxNumberOfFiles
       } else if (files.size < maxNumberOfFiles) files.size
-      else files.size / (files.size / maxNumberOfFiles)
+      else (files.size.toDouble / (files.size.toDouble / maxNumberOfFiles).ceil).ceil.toInt
       files.grouped(groupSize).toList
     }
 
