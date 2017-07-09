@@ -55,7 +55,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     job.out = outputFile
     job.isIntermediate = group.nonEmpty
     val subJobs: ListBuffer[CombineJob] = ListBuffer()
-    val groupedInput = makeEqualGroups(allInput)
+    val groupedInput: List[List[File]] = makeEqualGroups(allInput)
     if (groupedInput.size == 1) job.variant = groupedInput.head
     else {
       for ((list, i) <- groupedInput.zipWithIndex) {
