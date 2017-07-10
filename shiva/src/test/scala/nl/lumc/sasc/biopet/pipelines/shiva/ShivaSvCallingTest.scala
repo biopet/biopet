@@ -55,7 +55,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @DataProvider(name = "shivaSvCallingOptions")
-  def shivaSvCallingOptions = {
+  def shivaSvCallingOptions: Array[Array[AnyVal]] = {
     val bool = Array(true, false)
     (for (bams <- 0 to 3;
           delly <- bool;
@@ -69,7 +69,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
                          delly: Boolean,
                          clever: Boolean,
                          breakdancer: Boolean,
-                         pindel: Boolean) = {
+                         pindel: Boolean): Unit = {
     val outputDir = ShivaSvCallingTest.outputDir
     dirs :+= outputDir
     val callers: ListBuffer[String] = ListBuffer()
@@ -95,7 +95,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.script()
 
       val summaryCallers =
-        pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+        pipeline.summarySettings("sv_callers").asInstanceOf[List[String]]
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
@@ -123,7 +123,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "dellyOptions")
-  def dellyOptions = {
+  def dellyOptions: Array[Array[AnyVal]] = {
     val bool = Array(true, false)
     for (del <- bool;
          dup <- bool;
@@ -188,21 +188,21 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     pipeline.script()
 
     val summaryCallers: List[String] =
-      pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+      pipeline.summarySettings("sv_callers").asInstanceOf[List[String]]
     assert(summaryCallers.contains("delly"))
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object ShivaSvCallingTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   private def inputTouch(name: String): File = {
     val file = new File(outputDir, name).getAbsoluteFile
