@@ -161,7 +161,7 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
       caller match {
-        case c:SomaticVariantCaller => c.tnPairs = tumorSamples
+        case c: SomaticVariantCaller => c.tnPairs = tumorSamples
         case _ =>
       }
 

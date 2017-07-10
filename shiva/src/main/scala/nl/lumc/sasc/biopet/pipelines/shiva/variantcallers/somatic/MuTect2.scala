@@ -1,8 +1,11 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
-import nl.lumc.sasc.biopet.extensions.gatk.BqsrGather
-import nl.lumc.sasc.biopet.extensions.{Awk, Tabix, gatk}
-import nl.lumc.sasc.biopet.utils.config.{ConfigValue, Configurable}
+import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
+import nl.lumc.sasc.biopet.extensions.gatk.{BqsrGather, CombineVariants}
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.utils.IoUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
 
@@ -10,8 +13,6 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
 
   override val mergeVcfResults: Boolean = false
 
-  // currently not relevant, at the moment only one somatic variant caller exists in Biopet
-  // and results from this won't be merged together with the results from other methods
   def defaultPrio: Int = -1
 
   lazy val runConEst: Boolean = config("run_contest", default = false)
@@ -20,19 +21,35 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
 
     val outputFiles = for (pair <- tnPairs) yield {
 
-      val outputFile = new File(outputDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf.gz")
+      val bqsrFile =
+        if (inputBqsrFiles.contains(pair.tumorSample) &&
+            inputBqsrFiles.contains(pair.normalSample)) {
+          val gather = new BqsrGather()
+          gather.inputBqsrFiles =
+            List(inputBqsrFiles(pair.tumorSample), inputBqsrFiles(pair.normalSample))
+          gather.outputBqsrFile =
+            new File(outputDir, s"${pair.tumorSample}-${pair.normalSample}.bqsr")
+          add(gather)
 
-      val muTect2 = {
-        gatk.MuTect2(this, inputBams(pair.tumorSample), inputBams(pair.normalSample), outputFile)
-      }
+          Some(gather.outputBqsrFile)
+        } else None
+
+      val outputFile =
+        new File(outputDir, s"${pair.tumorSample}-${pair.normalSample}.$name.vcf.gz")
+
+      val muTect2 = new gatk.MuTect2(this)
+      muTect2.input_file :+= TaggedFile(inputBams(pair.tumorSample), "tumor")
+      muTect2.input_file :+= TaggedFile(inputBams(pair.normalSample), "normal")
+      muTect2.BQSR = bqsrFile
 
       if (runConEst) {
         val namePrefix = outputFile.getAbsolutePath.stripSuffix(".vcf.gz")
         val contEstOutput: File = new File(s"$namePrefix.contamination.txt")
         val contEst = gatk.ContEst(this,
-          inputBams(pair.tumorSample),
-          inputBams(pair.normalSample),
-          contEstOutput)
+                                   inputBams(pair.tumorSample),
+                                   inputBams(pair.normalSample),
+                                   contEstOutput)
+        contEst.BQSR = bqsrFile
         add(contEst)
 
         val contaminationPerSample: File = new File(s"$namePrefix.contamination.short.txt")
@@ -43,7 +60,8 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
         muTect2.contaminationFile = Some(contaminationPerSample)
       }
 
-      if (inputBqsrFiles.contains(pair.tumorSample) && inputBqsrFiles.contains(pair.normalSample)) {
+      if (inputBqsrFiles.contains(pair.tumorSample) && inputBqsrFiles
+            .contains(pair.normalSample)) {
         val gather = new BqsrGather()
         gather.inputBqsrFiles =
           List(inputBqsrFiles(pair.tumorSample), inputBqsrFiles(pair.normalSample))
@@ -53,12 +71,26 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
         muTect2.BQSR = Some(gather.outputBqsrFile)
       }
 
-      // TODO: Add name change
+      val renameFile = new File(outputDir, s".rename.${pair.tumorSample}-${pair.normalSample}.txt")
+      IoUtils.writeLinesToFile(renameFile,
+                               List(
+                                 s"TUMOR ${pair.tumorSample}",
+                                 s"NORMAL ${pair.normalSample}"
+                               ))
 
-      add(muTect2)
+      val pipe = muTect2 | BcftoolsReheader(this, renameFile) | new Bgzip(this) > outputFile
+      pipe.threadsCorrection = -2
+      add(pipe)
       add(Tabix(this, outputFile))
 
       outputFile
+    }
+
+    if (outputFiles.size > 1) {
+      add(CombineVariants(this, outputFiles, outputFile))
+    } else if (outputFiles.nonEmpty) {
+      add(Ln(this, outputFiles.head, outputFile))
+      add(Ln(this, outputFiles.head + ".tbi", outputFile + ".tbi"))
     }
   }
 }

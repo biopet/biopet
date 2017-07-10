@@ -38,7 +38,9 @@ object Logging {
 
   private[biopet] val errors: ListBuffer[Exception] = ListBuffer()
 
-  def addError(error: String, debug: Option[String] = None, cause: Option[Exception] = None): Unit = {
+  def addError(error: String,
+               debug: Option[String] = None,
+               cause: Option[Exception] = None): Unit = {
     val msg = error + debug.map("; " + _).getOrElse("")
 
     cause match {
