@@ -416,8 +416,8 @@ object ConfigUtils extends Logging {
         Logging.addError(
           "Value does not exist but is required, key: " + value.requestIndex.key +
             "  namespace: " + value.requestIndex.module,
-          if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->")
-          else null
+          if (value.requestIndex.path != Nil) Some("  path: " + value.requestIndex.path.mkString("->"))
+          else None
         )
       exist
     }

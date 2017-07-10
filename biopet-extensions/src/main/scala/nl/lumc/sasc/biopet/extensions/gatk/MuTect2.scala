@@ -3,9 +3,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK.isFileWithTag
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
 class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
@@ -181,8 +179,7 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
   @Argument(fullName = "useNewAFCalculator", shortName = "newQual", required = false)
   var useNewAFCalculator: Boolean = config("use_new_af_calculator", default = false)
 
-
-  override def cmdLine = super.cmdLine +
+  override def cmdLine: String = super.cmdLine +
     optional("--cosmic", cosmic) +
     optional("--dbsnp", dbsnp) +
     optional("--normal_panel", ponFile) +
@@ -212,14 +209,4 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
     conditional(enableStrandArtifactFilter, "--enable_strand_artifact_filter") +
     conditional(useNewAFCalculator, "--useNewAFCalculator") +
     (if (outputAsStdout) "" else required("--out", outputVcf))
-}
-
-object MuTect2 {
-  def apply(parent: Configurable, tumorSampleBam: File, normalSampleBam: File, output: File): MuTect2 = {
-    val mutect2 = new MuTect2(parent)
-    mutect2.tumorSampleBam = tumorSampleBam
-    mutect2.normalSampleBam = normalSampleBam
-    mutect2.outputVcf = output
-    mutect2
-  }
 }
