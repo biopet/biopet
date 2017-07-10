@@ -120,6 +120,11 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Tarmac</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetToolsPackage</artifactId>
             <version>${project.version}</version>
         </dependency>
