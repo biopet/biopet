@@ -160,8 +160,10 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
-      if (caller.isInstanceOf[SomaticVariantCaller])
-        caller.asInstanceOf[SomaticVariantCaller].tnPairs = tumorSamples
+      caller match {
+        case c:SomaticVariantCaller => c.tnPairs = tumorSamples
+        case _ =>
+      }
 
       add(caller)
       addStats(caller.outputFile, caller.name)

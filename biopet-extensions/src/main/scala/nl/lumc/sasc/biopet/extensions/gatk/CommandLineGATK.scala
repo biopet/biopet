@@ -421,5 +421,8 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
 
 object CommandLineGATK {
 
-  def isFileWithTag(file: File, tag: String): Boolean = file.isInstanceOf[TaggedFile] && file.asInstanceOf[TaggedFile].tag == tag
+  def isFileWithTag(file: File, tag: String): Boolean = file match {
+    case f:TaggedFile => f.tag == tag
+    case _ => false
+  }
 }
