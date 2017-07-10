@@ -73,10 +73,11 @@ class ShivaVariantcalling(val parent: Configurable)
     //TODO: this needs changed when the sample/library refactoring is beeing done
     if (Option(genders).isEmpty) genders = {
       inputBams.keys.map { sampleName =>
-        val gender: String = config("gender", path = "samples" :: sampleName :: "tags" :: Nil)
+        val gender: Option[String] =
+          config("gender", path = "samples" :: sampleName :: "tags" :: Nil)
         sampleName -> (gender match {
-          case "male" => Gender.Male
-          case "female" => Gender.Female
+          case Some("male") => Gender.Male
+          case Some("female") => Gender.Female
           case _ => Gender.Unknown
         })
       }.toMap
@@ -86,7 +87,7 @@ class ShivaVariantcalling(val parent: Configurable)
     if (Option(tumorSamples).isEmpty)
       tumorSamples = inputBams.keys
         .filter(name =>
-          config("type", path = "samples" :: name :: "tags" :: Nil).asString.toLowerCase == "tumor")
+          config("type", path = "samples" :: name :: "tags" :: Nil, default = "normal").asString.toLowerCase == "tumor")
         .map { tumorSample =>
           val normal: String = config("normal", path = "samples" :: tumorSample :: "tags" :: Nil)
           if (!inputBams.keySet.contains(normal))
