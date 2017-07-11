@@ -11,20 +11,6 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
 
   def analysis_type: String = "ContEst"
 
-  /** Getter and setter for tumor sample bam file. */
-  def tumorSampleBam = input_file.find(file => isFileWithTag(file, "eval")).getOrElse(null)
-  def tumorSampleBam_= (value:File):Unit = {
-    input_file = input_file.filterNot(file => isFileWithTag(file, "eval"))
-    input_file :+= TaggedFile(value, "eval")
-  }
-
-  /** Getter and setter for normal sample bam file. */
-  def normalSampleBam = input_file.find(file => isFileWithTag(file, "genotype")).getOrElse(null)
-  def normalSampleBam_= (value:File):Unit = {
-    input_file = input_file.filterNot(file => isFileWithTag(file, "genotype"))
-    input_file :+= TaggedFile(value, "genotype")
-  }
-
   /** Variant file containing information about the population allele frequencies. */
   @Input(fullName = "popfile", shortName="pf", required = true)
   var popFile: File = config("popfile")
@@ -88,14 +74,4 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
     optional("--precision", precision) +
     optional("--trim_fraction", trimFraction)
 
-}
-
-object ContEst {
-  def apply(parent: Configurable, tumorSampleBam: File, normalSampleBam: File, output: File): ContEst = {
-    val conest = new ContEst(parent)
-    conest.tumorSampleBam = tumorSampleBam
-    conest.normalSampleBam = normalSampleBam
-    conest.output = output
-    conest
-  }
 }
