@@ -25,16 +25,12 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
 import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
-import nl.lumc.sasc.biopet.extensions.gatk.{
-  CombineVariants,
-  GenotypeConcordance,
-  HaplotypeCaller,
-  UnifiedGenotyper
-}
+import nl.lumc.sasc.biopet.extensions.gatk._
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.TumorNormalPair
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -60,6 +56,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   }
 
   def raw: Boolean = false
+  def mutect2: Boolean = false
   def bcftools: Boolean = false
   def bcftools_singlesample: Boolean = false
   def haplotypeCallerGvcf: Boolean = false
@@ -72,17 +69,23 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def referenceVcf: Option[File] = None
   def roiBedFiles: List[File] = Nil
   def ampliconBedFile: Option[File] = None
+  def runContest: Option[Boolean] = None
 
   def normalize = false
   def decompose = false
 
+  def bamRange: List[Int] = (0 to 2).toList
+
+  def tumorNormalPairs: List[TumorNormalPair] = Nil
+
   @DataProvider(name = "shivaVariantcallingOptions")
-  def shivaVariantcallingOptions = {
-    (for (bams <- 0 to 2)
+  def shivaVariantcallingOptions: Array[Array[Any]] = {
+    (for (bams <- bamRange)
       yield
         Array[Any](
           bams,
           raw,
+          mutect2,
           bcftools,
           bcftools_singlesample,
           unifiedGenotyper,
@@ -91,7 +94,8 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
           haplotypeCallerAllele,
           unifiedGenotyperAllele,
           freebayes,
-          varscanCnsSinglesample
+          varscanCnsSinglesample,
+          tumorNormalPairs
         )).toArray
   }
 
@@ -100,6 +104,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   @Test(dataProvider = "shivaVariantcallingOptions")
   def testShivaVariantcalling(bams: Int,
                               raw: Boolean,
+                              mutect2: Boolean,
                               bcftools: Boolean,
                               bcftoolsSinglesample: Boolean,
                               unifiedGenotyper: Boolean,
@@ -108,10 +113,13 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
                               haplotypeCallerAllele: Boolean,
                               unifiedGenotyperAllele: Boolean,
                               freebayes: Boolean,
-                              varscanCnsSinglesample: Boolean) = {
+                              varscanCnsSinglesample: Boolean,
+                              tumorNormalPairs: List[TumorNormalPair]): Unit = {
     val outputDir = ShivaVariantcallingTest.outputDir
+    dirs :+= outputDir
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
+    if (mutect2) callers.append("mutect2")
     if (bcftools) callers.append("bcftools")
     if (bcftoolsSinglesample) callers.append("bcftools_singlesample")
     if (unifiedGenotyper) callers.append("unifiedgenotyper")
@@ -121,25 +129,34 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     if (haplotypeCaller) callers.append("haplotypecaller")
     if (freebayes) callers.append("freebayes")
     if (varscanCnsSinglesample) callers.append("varscan_cns_singlesample")
-    val map = Map(
+    val sampleTags: Map[String, Any] = tumorNormalPairs.foldLeft(Map[String, Any]()) {
+      case (m, pair) =>
+        val tag = Map(
+          "samples" -> Map(pair.tumorSample -> Map(
+            "tags" -> Map("type" -> "tumor", "normal" -> pair.normalSample))))
+        ConfigUtils.mergeMaps(m, tag)
+    }
+    val map = sampleTags ++ Map(
       "variantcallers" -> callers.toList,
       "execute_vt_normalize" -> normalize,
       "execute_vt_decompose" -> decompose,
       "regions_of_interest" -> roiBedFiles.map(_.getAbsolutePath)
     ) ++ referenceVcf.map("reference_vcf" -> _) ++ ampliconBedFile.map(
-      "amplicon_bed" -> _.getAbsolutePath)
+      "amplicon_bed" -> _.getAbsolutePath) ++ runContest.map("run_contest" -> _)
     val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = (for (n <- 1 to bams)
-      yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
+      yield
+        s"sample_${n.toString}" -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || callers.isEmpty
+    val illegalStateException = mutect2 && bams == 1
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
-    }
-
-    if (!illegalArgumentException) {
+    } else if (illegalStateException) intercept[IllegalStateException] {
+      pipeline.script()
+    } else {
       pipeline.script()
 
       val pipesJobs = pipeline.functions
@@ -173,6 +190,11 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined)
                                                                                 1 + callers.size
                                                                               else 0)
+      pipesJobs.count(_.isInstanceOf[MuTect2]) shouldBe (if (mutect2) tumorNormalPairs.size else 0)
+      pipeline.functions.count(_.isInstanceOf[ContEst]) shouldBe (if (mutect2 && runContest
+                                                                        .getOrElse(false))
+                                                                    tumorNormalPairs.size
+                                                                  else 0)
 
       pipeline.summarySettings
         .get("variantcallers")
@@ -182,10 +204,11 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.summarySettings.get("regions_of_interest") shouldBe Some(
         roiBedFiles.map(_.getAbsolutePath))
     }
+    Logging.errors.clear()
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
@@ -205,6 +228,19 @@ class ShivaVariantcallingAllTest extends ShivaVariantcallingTestTrait {
 }
 class ShivaVariantcallingRawTest extends ShivaVariantcallingTestTrait {
   override def raw: Boolean = true
+}
+class ShivaVariantcallingMuTect2Test extends ShivaVariantcallingTestTrait {
+  override def mutect2: Boolean = true
+  override def haplotypeCaller: Boolean = true
+  override def tumorNormalPairs: List[TumorNormalPair] =
+    TumorNormalPair("sample_1", "sample_2") :: Nil
+}
+class ShivaVariantcallingMuTect2ContestTest extends ShivaVariantcallingTestTrait {
+  override def mutect2: Boolean = true
+  override def haplotypeCaller: Boolean = true
+  override def runContest = Some(true)
+  override def tumorNormalPairs: List[TumorNormalPair] =
+    TumorNormalPair("sample_1", "sample_2") :: Nil
 }
 class ShivaVariantcallingBcftoolsTest extends ShivaVariantcallingTestTrait {
   override def bcftools: Boolean = true
@@ -256,8 +292,8 @@ class ShivaVariantcallingAmpliconTest extends ShivaVariantcallingTestTrait {
 }
 
 object ShivaVariantcallingTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   def inputTouch(name: String): File = {
     val file = new File(inputDir, name).getAbsoluteFile
@@ -292,6 +328,7 @@ object ShivaVariantcallingTest {
     "tabix" -> Map("exe" -> "test"),
     "input_alleles" -> "test.vcf.gz",
     "varscan_jar" -> "test",
-    "vt" -> Map("exe" -> "test")
+    "vt" -> Map("exe" -> "test"),
+    "popfile" -> "test"
   )
 }

@@ -14,16 +14,18 @@
   */
 package nl.lumc.sasc.biopet.extensions.tools
 
-import java.io.{PrintWriter, File}
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
   *
   */
-class BaseCounter(val parent: Configurable) extends ToolCommandFunction {
+class BaseCounter(val parent: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.BaseCounter
 
   @Input(doc = "Input Bed file", required = true)
@@ -84,6 +86,8 @@ class BaseCounter(val parent: Configurable) extends ToolCommandFunction {
   def strandedAntiSenseMetaExonCounts =
     new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts")
 
+  def summaryJson: File = new File(outputDir, s"$prefix.summary.json")
+
   @Output
   private var outputFiles: List[File] = Nil
 
@@ -122,7 +126,8 @@ class BaseCounter(val parent: Configurable) extends ToolCommandFunction {
       nonStrandedMetaExonCounts,
       strandedMetaExonCounts,
       strandedSenseMetaExonCounts,
-      strandedAntiSenseMetaExonCounts
+      strandedAntiSenseMetaExonCounts,
+      summaryJson
     )
     jobOutputFile = new File(outputDir, s".$prefix.basecounter.out")
     if (bamFile != null) deps :+= new File(bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
@@ -130,10 +135,16 @@ class BaseCounter(val parent: Configurable) extends ToolCommandFunction {
 
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("--refFlat", refFlat) +
       required("-b", bamFile) +
       required("-o", outputDir) +
       optional("--prefix", prefix)
+
+  /** Must return files to store into summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Must returns stats to store into summary */
+  def summaryStats: Any = ConfigUtils.fileToConfigMap(summaryJson)
 }

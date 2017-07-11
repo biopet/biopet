@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.extensions.breakdancer.{
   BreakdancerVCF
 }
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
-import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
+import nl.lumc.sasc.biopet.extensions.delly.DellyCallerCall
 import nl.lumc.sasc.biopet.extensions.pindel.{PindelCaller, PindelConfig, PindelVCF}
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -55,7 +55,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @DataProvider(name = "shivaSvCallingOptions")
-  def shivaSvCallingOptions = {
+  def shivaSvCallingOptions: Array[Array[AnyVal]] = {
     val bool = Array(true, false)
     (for (bams <- 0 to 3;
           delly <- bool;
@@ -69,7 +69,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
                          delly: Boolean,
                          clever: Boolean,
                          breakdancer: Boolean,
-                         pindel: Boolean) = {
+                         pindel: Boolean): Unit = {
     val outputDir = ShivaSvCallingTest.outputDir
     dirs :+= outputDir
     val callers: ListBuffer[String] = ListBuffer()
@@ -95,7 +95,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.script()
 
       val summaryCallers =
-        pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+        pipeline.summarySettings("sv_callers").asInstanceOf[List[String]]
       if (delly) assert(summaryCallers.contains("delly"))
       else assert(!summaryCallers.contains("delly"))
       if (clever) assert(summaryCallers.contains("clever"))
@@ -117,41 +117,49 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[PindelVCF]) shouldBe (if (pindel) bams else 0)
 
       pipeline.functions.count(_.isInstanceOf[CleverCaller]) shouldBe (if (clever) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe (if (delly) bams * 4 else 0)
+      pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe (if (delly) bams * 5
+                                                                          else 0)
 
     }
   }
 
   @DataProvider(name = "dellyOptions")
-  def dellyOptions = {
+  def dellyOptions: Array[Array[AnyVal]] = {
     val bool = Array(true, false)
     for (del <- bool;
          dup <- bool;
          inv <- bool;
-         tra <- bool) yield Array(1, del, dup, inv, tra)
+         bnd <- bool;
+         ins <- bool) yield Array(1, del, dup, inv, bnd, ins)
   }
 
   @Test(dataProvider = "dellyOptions")
-  def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, tra: Boolean): Unit = {
+  def testShivaDelly(bams: Int,
+                     del: Boolean,
+                     dup: Boolean,
+                     inv: Boolean,
+                     bnd: Boolean,
+                     ins: Boolean): Unit = {
     val outputDir = ShivaSvCallingTest.outputDir
     dirs :+= outputDir
 
     val map = Map("sv_callers" -> List("delly"),
                   "delly" ->
-                    Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra))
+                    Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "BND" -> bnd, "INS" -> ins))
     val pipeline = initPipeline(map, outputDir)
 
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
-    if (!del && !dup && !inv && !tra) intercept[IllegalStateException] {
+    if (!del && !dup && !inv && !bnd && !ins) intercept[IllegalStateException] {
       pipeline.init()
       pipeline.script()
     } else {
       pipeline.init()
       pipeline.script()
 
-      pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe
-        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (tra) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[DellyCallerCall]) shouldBe
+        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) +
+          (if (bnd) 1 else 0) + (if (ins) 1 else 0))
     }
   }
 
@@ -188,21 +196,21 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     pipeline.script()
 
     val summaryCallers: List[String] =
-      pipeline.summarySettings.get("sv_callers").get.asInstanceOf[List[String]]
+      pipeline.summarySettings("sv_callers").asInstanceOf[List[String]]
     assert(summaryCallers.contains("delly"))
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object ShivaSvCallingTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   private def inputTouch(name: String): File = {
     val file = new File(outputDir, name).getAbsoluteFile
@@ -221,6 +229,7 @@ object ShivaSvCallingTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
+  // A dummy config file. Tools being used by this test must be included
   def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "name_prefix" -> "test",
@@ -231,6 +240,7 @@ object ShivaSvCallingTest {
     "reference_fasta" -> (inputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
+    "bcftools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
