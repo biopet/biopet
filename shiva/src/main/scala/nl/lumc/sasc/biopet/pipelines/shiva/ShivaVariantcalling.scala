@@ -242,7 +242,9 @@ class ShivaVariantcalling(val parent: Configurable)
   def summarySettings = Map(
     "variantcallers" -> configCallers.toList,
     "regions_of_interest" -> roiBedFiles.map(_.getName),
-    "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath)
+    "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath),
+    "somatic_variant_calling" -> callers.exists(_.isInstanceOf[SomaticVariantCaller]),
+    "germline_variant_calling" -> callers.exists(!_.isInstanceOf[SomaticVariantCaller])
   )
 
   /** Files for the summary */
