@@ -19,7 +19,7 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
 
   def biopetScript(): Unit = {
 
-    if (tnPairs.isEmpty) Logging.addError("No tumor-normal found in conig")
+    if (tnPairs.isEmpty) Logging.addError("No tumor-normal found in config")
     val outputFiles = for (pair <- tnPairs) yield {
 
       val bqsrFile =
