@@ -2,9 +2,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK.isFileWithTag
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 class ContEst(val parent: Configurable) extends CommandLineGATK {
@@ -59,7 +57,7 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "trim_fraction", required = false)
   var trimFraction: Option[Double] = config("trim_fraction")
 
-  override def cmdLine = super.cmdLine +
+  override def cmdLine: String = super.cmdLine +
     required("--popfile", popFile) +
     required("--out", output) +
     optional("--base_report", baseReportFile) +
