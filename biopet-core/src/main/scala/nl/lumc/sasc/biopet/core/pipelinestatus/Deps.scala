@@ -2,7 +2,14 @@ package nl.lumc.sasc.biopet.core.pipelinestatus
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.pipelinestatus.PipelineStatus.logger
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.pim._
+import play.api.libs.ws.WSResponse
+import play.api.libs.ws.ahc.AhcWSClient
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * This class can store the deps.json from a pipeline that stores all jobs and files and the connections
@@ -45,6 +52,45 @@ case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]]) {
     }.distinct
   }
 
+  /** This publish the graph to a pim host */
+  def publishCompressedGraphToPim(host: String, runId: String)(
+      implicit ws: AhcWSClient): Future[WSResponse] = {
+    val links: List[Link] = this
+      .compressOnType()
+      .flatMap(x => x._2.map(y => Link("link", y, "output", x._1, "input", "test")))
+      .toList
+    val run = Run(
+      runId,
+      Network("graph",
+              Nil,
+              this
+                .compressOnType()
+                .map(
+                  x =>
+                    Node(x._1,
+                         "root",
+                         List(Port("input", "input")),
+                         List(Port("output", "output")),
+                         "test"))
+                .toList,
+              links),
+      "Biopet pipeline",
+      "biopet"
+    )
+
+    val request = ws
+      .url(s"$host/api/runs/")
+      .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
+      .put(run.toString)
+
+    request.onFailure { case e => logger.warn("Post workflow did fail", e) }
+    request.onSuccess {
+      case r if r.status == 200 =>
+        logger.debug(r)
+      case r => logger.warn(r)
+    }
+    request
+  }
 }
 
 object Deps {
