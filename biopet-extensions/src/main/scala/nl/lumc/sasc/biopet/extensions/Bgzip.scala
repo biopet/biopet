@@ -28,7 +28,7 @@ class Bgzip(val parent: Configurable) extends BiopetCommandLineFunction {
   var input: List[File] = Nil
 
   @Output(doc = "Compressed output file", required = false)
-  var output: File = null
+  var output: File = _
 
   var f: Boolean = config("f", default = false)
   executable = config("exe", default = "bgzip", freeVar = false)
@@ -39,7 +39,7 @@ class Bgzip(val parent: Configurable) extends BiopetCommandLineFunction {
     if (output == null && !outputAsStdout) Logging.addError("Output is missing for Bgzip")
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       conditional(f, "-f") +
       " -c " + repeat(input) +
