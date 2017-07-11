@@ -85,4 +85,18 @@ object IoUtils {
     lines
   }
 
+  def executableExist(exe: String): Boolean = {
+    try {
+      val process = Process(Seq(exe)).run()
+      true
+    } catch {
+      case e: IOException => false
+    }
+  }
+
+  def writeLinesToFile(output: File, lines: List[String]): Unit = {
+    val writer = new PrintWriter(output)
+    lines.foreach(writer.println(_))
+    writer.close()
+  }
 }

@@ -49,7 +49,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "shivaOptions")
-  def shivaOptions = {
+  def shivaOptions: Array[Array[Any]] = {
     for (s1 <- sample1; s2 <- sample2;
          realign <- realignProvider; baseRecalibration <- baseRecalibrationProvider)
       yield Array("", s1, s2, realign, baseRecalibration)
@@ -121,7 +121,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
                                                                                    numberSamples
                                                                                  else 0)
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration)
-                                                                             (numberLibs * 2)
+                                                                             numberLibs * 2
                                                                            else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration && usePrintReads)
                                                                        numberLibs
@@ -212,9 +212,9 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 }
 
 object ShivaTest {
-  def outputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
 
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   def inputTouch(name: String): String = {
     val file = new File(inputDir, name)

@@ -38,6 +38,7 @@
         <module>mapping</module>
         <module>sage</module>
         <module>shiva</module>
+        <module>tarmac</module>
         <module>tinycap</module>
         <module>toucan</module>
         <module>biopet-core</module>
