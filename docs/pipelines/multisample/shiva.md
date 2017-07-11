@@ -82,6 +82,7 @@ unifiedgenotyper:
 ## Supported variant callers
 At this moment the following variant callers can be used
 
+##### Germline
 | ConfigName | Tool | Description |
 | ---------- | ---- | ----------- |
 | haplotypecaller_gvcf | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running HaplotypeCaller in gvcf mode |
@@ -94,6 +95,28 @@ At this moment the following variant callers can be used
 | bcftools | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
 | bcftools_singlesample | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
 | varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
+
+##### Somatic
+| ConfigName | Tool | Description |
+| ---------- | ---- | ----------- |
+| mutect2 | <a href="https://software.broadinstitute.org/gatk/gatkdocs/3.7-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php">MuTect2</a> | Running mutect2, requires tumor normal pairs |
+| varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
+| raw | [Naive variant caller](../../tools/MpileupToVcf) |  |
+
+###### Config tumor-normal pairs
+
+To define the tumor-normal pairs the config can look like this:
+
+```yaml
+samples:
+  sample1:
+    tags:
+      type: tumor
+      normal: sample2
+  sample2:
+    tags:
+      type: normal
+```
 
 ## Config options
 
