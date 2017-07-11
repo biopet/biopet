@@ -213,7 +213,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
             bamFile.getAbsolutePath,
             "-r",
             refflat.getAbsolutePath))
-    outputDir.list().size shouldBe 34
+    outputDir.list().size shouldBe 35
   }
 }
 
