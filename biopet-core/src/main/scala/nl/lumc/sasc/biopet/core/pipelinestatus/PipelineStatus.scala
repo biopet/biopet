@@ -97,7 +97,7 @@ object PipelineStatus extends ToolCommand {
       else None
 
     if (cmdArgs.pimHost.isDefined) {
-      require(pimRunId.isDefined, "Could not auto genrate Pim run ID, please supply --pimRunId")
+      require(pimRunId.isDefined, "Could not auto-generate Pim run ID, please supply --pimRunId")
       logger.info(s"Status will be pushed to ${cmdArgs.pimHost.get}/run/${pimRunId.get}")
     }
 

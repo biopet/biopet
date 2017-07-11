@@ -5,10 +5,17 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
+  * This class can store the deps.json from a pipeline that stores all jobs and files and the connections
+  *
   * Created by pjvanthof on 24/06/2017.
   */
 case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]]) {
 
+  /**
+    * This method will compress the graph by combining all common job names
+    * @param main When set true the non main jobs will be skipped in the graph
+    * @return List of dependencies
+    */
   def compressOnType(main: Boolean = false): Map[String, List[String]] = {
     (for ((_, job) <- jobs.toSet if !main || job.mainJob) yield {
       job.name -> (if (main) getMainDependencies(job.name).map(Job.compressedName(_)._1)
@@ -17,10 +24,15 @@ case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]]) {
       .map(x => x._1 -> x._2.flatMap(_._2).toList.distinct)
   }
 
+  /** this will return all main dependencies */
   def getMainDeps: Map[String, List[String]] = {
     jobs.filter(_._2.mainJob).map(x => x._1 -> getMainDependencies(x._1))
   }
 
+  /**
+    * This will return for a single job the main dependencies.
+    * When a job depend on a non main job it will take the dependencies from that job till it finds a main dependency
+    */
   def getMainDependencies(jobName: String): List[String] = {
     val job = this.jobs(jobName)
     val dependencies = job.dependsOnJobs match {
@@ -36,6 +48,8 @@ case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]]) {
 }
 
 object Deps {
+
+  /** This will read a deps.json and returns it as a [[Deps]] class */
   def readDepsFile(depsFile: File): Deps = {
     val deps = ConfigUtils.fileToConfigMap(depsFile)
 
@@ -45,16 +59,4 @@ object Deps {
 
     Deps(jobs, files)
   }
-
-  def compressOnType(jobs: Map[String, List[String]],
-                     main: Boolean = false): Map[String, List[String]] = {
-    val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
-      (Job.compressedName(job)._1, Job.compressedName(dep)._1)
-    }
-    // This will collapse a Set[(String, String)] to a Map[String, List[String]]
-    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList) ++ jobs
-      .filter(_._2.isEmpty)
-      .map(job => Job.compressedName(job._1)._1 -> Nil)
-  }
-
 }
