@@ -58,11 +58,11 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var tumorSamples: List[TumorNormalPair] = _
 
-  def isGermlineVariantCallingConfigured(): Boolean = {
+  def isGermlineVariantCallingConfigured: Boolean = {
     callers.exists(!_.isInstanceOf[SomaticVariantCaller])
   }
 
-  def isSomaticVariantCallingConfigured(): Boolean = {
+  def isSomaticVariantCallingConfigured: Boolean = {
     callers.exists(_.isInstanceOf[SomaticVariantCaller])
   }
 
@@ -138,7 +138,7 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    if (!isGermlineVariantCallingConfigured())
+    if (!isGermlineVariantCallingConfigured)
       Logging.addError(
         "For running the pipeline at least one germline variant caller has to be configured")
     else if (!callers.exists(_.mergeVcfResults))
@@ -243,8 +243,8 @@ class ShivaVariantcalling(val parent: Configurable)
     "variantcallers" -> configCallers.toList,
     "regions_of_interest" -> roiBedFiles.map(_.getName),
     "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath),
-    "somatic_variant_calling" -> callers.exists(_.isInstanceOf[SomaticVariantCaller]),
-    "germline_variant_calling" -> callers.exists(!_.isInstanceOf[SomaticVariantCaller])
+    "somatic_variant_calling" -> isSomaticVariantCallingConfigured,
+    "germline_variant_calling" -> isGermlineVariantCallingConfigured)
   )
 
   /** Files for the summary */
