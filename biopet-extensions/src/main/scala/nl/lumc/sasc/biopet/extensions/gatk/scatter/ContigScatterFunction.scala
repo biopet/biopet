@@ -12,30 +12,27 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
-import java.io.File
-import java.util
-
-import org.broadinstitute.gatk.engine.recalibration.BQSRGatherer
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.interval.IntervalUtils
+
+import scala.collection.JavaConversions._
 
 /**
- * Created by pjvanthof on 05/04/2017.
+ * Splits intervals by contig instead of evenly.
  */
-class BqsrGather extends InProcessFunction {
+class ContigScatterFunction extends GATKScatterFunction with InProcessFunction {
 
-  @Input(required = true)
-  var inputBqsrFiles: List[File] = _
+  override def scatterCount = if (intervalFilesExist) super.scatterCount min this.maxIntervals else super.scatterCount
 
-  @Output(required = true)
-  var outputBqsrFile: File = _
+  protected override def maxIntervals = {
+    GATKScatterFunction.getGATKIntervals(this.originalGATK).contigs.size
+  }
 
-  def run(): Unit = {
-    val l = new util.ArrayList[File]()
-    inputBqsrFiles.foreach(l.add(_))
-    val gather = new BQSRGatherer
-    gather.gather(l, outputBqsrFile)
+  def run() {
+    val gi = GATKScatterFunction.getGATKIntervals(this.originalGATK)
+    IntervalUtils.scatterContigIntervals(gi.samFileHeader, gi.locs, this.scatterOutputFiles)
   }
 }
+

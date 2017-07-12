@@ -12,9 +12,10 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.gather
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK
 import nl.lumc.sasc.biopet.extensions.picard
 import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
 

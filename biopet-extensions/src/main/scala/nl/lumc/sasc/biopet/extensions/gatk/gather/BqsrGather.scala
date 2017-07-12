@@ -12,22 +12,30 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.gather
 
+import java.io.File
+import java.util
+
+import org.broadinstitute.gatk.engine.recalibration.BQSRGatherer
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.interval.IntervalUtils
-
-import scala.collection.JavaConversions._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
- * A scatter function that divides down to the locus level.
+ * Created by pjvanthof on 05/04/2017.
  */
-class LocusScatterFunction extends GATKScatterFunction with InProcessFunction {
-  protected override def maxIntervals = scatterCount
+class BqsrGather extends InProcessFunction {
 
-  def run() {
-    val gi = GATKScatterFunction.getGATKIntervals(this.originalGATK)
-    val splits = IntervalUtils.splitLocusIntervals(gi.locs, this.scatterOutputFiles.size)
-    IntervalUtils.scatterFixedIntervals(gi.samFileHeader, splits, this.scatterOutputFiles)
+  @Input(required = true)
+  var inputBqsrFiles: List[File] = _
+
+  @Output(required = true)
+  var outputBqsrFile: File = _
+
+  def run(): Unit = {
+    val l = new util.ArrayList[File]()
+    inputBqsrFiles.foreach(l.add(_))
+    val gather = new BQSRGatherer
+    gather.gather(l, outputBqsrFile)
   }
 }

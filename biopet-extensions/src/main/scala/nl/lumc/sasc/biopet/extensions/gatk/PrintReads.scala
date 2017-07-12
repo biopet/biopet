@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{ContigScatterFunction, GATKScatterFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
