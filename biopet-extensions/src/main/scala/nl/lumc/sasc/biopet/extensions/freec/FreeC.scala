@@ -1,17 +1,17 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.freec
 
 import java.io.{File, PrintWriter}
@@ -22,7 +22,10 @@ import org.broadinstitute.gatk.utils.commandline._
 
 import scala.util.matching.Regex
 
-class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class FreeC(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
 
   override def defaults = Map("max_walltime_limit" -> 7200)
 
@@ -62,7 +65,8 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
 
   executable = config("exe", default = "freec", freeVar = false)
   var bedGraphOutput: Boolean = config("BedGraphOutput", default = false)
-  var bedtools: Option[File] = config("exe", default = "bedtools", namespace = "bedtools", freeVar = false)
+  var bedtools: Option[File] =
+    config("exe", default = "bedtools", namespace = "bedtools", freeVar = false)
   var breakPointThreshold: Option[Double] = config("breakPointThreshold")
   var breakPointType: Option[Int] = config("breakPointType")
 
@@ -162,19 +166,31 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
       optional("breakPointType=", breakPointType, spaceSeparated = false, escape = false) + "\n" +
       required("chrFiles=", chrFiles, spaceSeparated = false, escape = false) + "\n" +
       required("chrLenFile=", chrLenFile, spaceSeparated = false, escape = false) + "\n" +
-      optional("coefficientOfVariation=", coefficientOfVariation, spaceSeparated = false, escape = false) + "\n" +
+      optional("coefficientOfVariation=",
+               coefficientOfVariation,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("contamination=", contamination, spaceSeparated = false, escape = false) + "\n" +
       conditional(contaminationAdjustment, "contaminationAdjustment=TRUE", escape = false) + "\n" +
       optional("degree=", degree, spaceSeparated = false, escape = false) + "\n" +
-      optional("forceGCcontentNormalization=", forceGCcontentNormalization, spaceSeparated = false, escape = false) + "\n" +
+      optional("forceGCcontentNormalization=",
+               forceGCcontentNormalization,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("GCcontentProfile=", gcContentProfile, spaceSeparated = false, escape = false) + "\n" +
       optional("gemMappabilityFile=", gemMappabilityFile, spaceSeparated = false, escape = false) + "\n" +
       optional("intercept=", intercept, spaceSeparated = false, escape = false) + "\n" +
       optional("minCNAlength=", minCNAlength, spaceSeparated = false, escape = false) + "\n" +
-      optional("minMappabilityPerWindow=", minMappabilityPerWindow, spaceSeparated = false, escape = false) + "\n" +
+      optional("minMappabilityPerWindow=",
+               minMappabilityPerWindow,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("minExpectedGC=", minExpectedGC, spaceSeparated = false, escape = false) + "\n" +
       optional("maxExpectedGC=", maxExpectedGC, spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalSubclonePresence=", minimalSubclonePresence, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalSubclonePresence=",
+               minimalSubclonePresence,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("maxThreads=", getThreads, spaceSeparated = false, escape = false) + "\n" +
       conditional(noisyData, "noisyData=TRUE", escape = false) + "\n" +
       required("outputDir=", outputPath, spaceSeparated = false, escape = false) + "\n" +
@@ -196,10 +212,16 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
       required("mateOrientation=", mateOrientation, spaceSeparated = false, escape = false) + "\n" +
       "[BAF]" + "\n" +
       optional("SNPfile=", snpFile, spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalCoveragePerPosition=", minimalCoveragePerPosition, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalCoveragePerPosition=",
+               minimalCoveragePerPosition,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("makePileup=", makePileup, spaceSeparated = false, escape = false) + "\n" +
       optional("fastaFile=", fastaFile, spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalQualityPerPosition=", minimalQualityPerPosition, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalQualityPerPosition=",
+               minimalQualityPerPosition,
+               spaceSeparated = false,
+               escape = false) + "\n" +
       optional("shiftInQuality=", shiftInQuality, spaceSeparated = false, escape = false) + "\n" +
       "[target]" + "\n" +
       optional("captureRegions=", captureRegions, spaceSeparated = false, escape = false) + "\n"
@@ -208,6 +230,7 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
     writer.close()
   }
 
-  def cmdLine: String = required(executable) +
-    required("--conf", configFile)
+  def cmdLine: String =
+    required(executable) +
+      required("--conf", configFile)
 }

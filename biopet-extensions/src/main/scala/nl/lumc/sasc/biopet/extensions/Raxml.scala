@@ -92,10 +92,12 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   }
 
   /** Returns bestTree file */
-  def getBestTreeFile: Option[File] = option(f == "d" && b.isEmpty, new File(w, "RAxML_bestTree." + n))
+  def getBestTreeFile: Option[File] =
+    option(f == "d" && b.isEmpty, new File(w, "RAxML_bestTree." + n))
 
   /** Returns bootstrap file */
-  def getBootstrapFile: Option[File] = option(f == "d" && b.isDefined, new File(w, "RAxML_bootstrap." + n))
+  def getBootstrapFile: Option[File] =
+    option(f == "d" && b.isDefined, new File(w, "RAxML_bootstrap." + n))
 
   /** Returns bipartitions file */
   def getBipartitionsFile: Option[File] = option(f == "b", new File(w, "RAxML_bipartitions." + n))

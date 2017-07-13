@@ -80,7 +80,8 @@ class CollectGcBiasMetrics(val parent: Configurable)
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Option[Map[String, List[Option[Any]]]] = Picard.getHistogram(output, tag = "METRICS CLASS")
+  def summaryStats: Option[Map[String, List[Option[Any]]]] =
+    Picard.getHistogram(output, tag = "METRICS CLASS")
 }
 
 object CollectGcBiasMetrics {

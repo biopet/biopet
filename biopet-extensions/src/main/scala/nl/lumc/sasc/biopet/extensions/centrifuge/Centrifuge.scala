@@ -163,7 +163,8 @@ class Centrifuge(val parent: Configurable)
       .map { file =>
         val reader = Source.fromFile(file)
         val header = reader.getLines().next().split("\t")
-        val values = reader.getLines().next().split("\t").map(tryToParseNumber(_, fallBack = true).get)
+        val values =
+          reader.getLines().next().split("\t").map(tryToParseNumber(_, fallBack = true).get)
         reader.close()
         Map("metrics" -> header.zip(values).toMap)
       }
