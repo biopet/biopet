@@ -65,7 +65,8 @@ class VcfFilterTest extends TestNGSuite with Matchers {
   @Test def testMinQualScore(): Unit = testCommand(minQualScore = Some(50.0))
   @Test def testFilterHetVarToHomVar(): Unit = testCommand(filterHetVarToHomVar = List("dummy"))
   @Test def testId(): Unit = testCommand(id = List("rs01", "rs02"))
-  @Test def testIdFile(): Unit = testCommand(idFile = Some(File.createTempFile("vcfFilter", ".txt")))
+  @Test def testIdFile(): Unit =
+    testCommand(idFile = Some(File.createTempFile("vcfFilter", ".txt")))
 
   protected def testCommand(minSampleDepth: Option[Int] = None,
                             minTotalDepth: Option[Int] = None,

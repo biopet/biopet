@@ -171,7 +171,8 @@ object PedigreeQScriptTest {
 
   val trioPed = Map("ped_file" -> resourcePath("/trio.ped"))
 
-  def apply(configs: List[Map[String, Any]], only: List[String] = Nil): QScript with PedigreeQscript {
+  def apply(configs: List[Map[String, Any]],
+            only: List[String] = Nil): QScript with PedigreeQscript {
     def init(): Unit
 
     def biopetScript(): Unit

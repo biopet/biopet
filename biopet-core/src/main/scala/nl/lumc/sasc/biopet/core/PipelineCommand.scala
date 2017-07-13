@@ -30,7 +30,8 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     * Gets location of compiled class of pipeline
     * @return path from classPath to class file
     */
-  def pipeline: String = "/" + getClass.getName.takeWhile(_ != '$').replaceAll("\\.", "/") + ".class"
+  def pipeline: String =
+    "/" + getClass.getName.takeWhile(_ != '$').replaceAll("\\.", "/") + ".class"
 
   def pipelineName: String = getClass.getName.takeWhile(_ != '$').split("\\.").last.toLowerCase
 

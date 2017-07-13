@@ -33,8 +33,10 @@ class WriteDependenciesTest extends TestNGSuite with Matchers {
   case class Qfunc(in: Seq[File], out: Seq[File]) extends QFunction {
     override def inputs: Seq[File] = in
     override def outputs: Seq[File] = out
-    override def doneOutputs: Seq[File] = out.map(x => new File(x.getParentFile, s".${x.getName}.done"))
-    override def failOutputs: Seq[File] = out.map(x => new File(x.getParentFile, s".${x.getName}.fail"))
+    override def doneOutputs: Seq[File] =
+      out.map(x => new File(x.getParentFile, s".${x.getName}.done"))
+    override def failOutputs: Seq[File] =
+      out.map(x => new File(x.getParentFile, s".${x.getName}.fail"))
     jobOutputFile = new File(out.head + ".out")
   }
 

@@ -210,7 +210,8 @@ object MultiSampleQScriptTest {
     )
   )
 
-  def apply(configs: List[Map[String, Any]], only: List[String] = Nil): QScript with MultiSampleQScript {
+  def apply(configs: List[Map[String, Any]],
+            only: List[String] = Nil): QScript with MultiSampleQScript {
     def init(): Unit
 
     def getLastLogMessage: String

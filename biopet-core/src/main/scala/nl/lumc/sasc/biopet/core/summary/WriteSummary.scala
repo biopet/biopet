@@ -64,27 +64,27 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
       qscript match {
         case s: MultiSampleQScript => s.initSummaryDb()
         case t: SampleLibraryTag =>
-          t.sampleId.foreach {
-            sampleName =>
-              val sampleId = Await
-                .result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId))
-                  .map(_.headOption.map(_.id)),
-                  Duration.Inf)
-                .getOrElse {
-                  Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId),
-                    Duration.Inf)
-                }
-              t.libId.foreach { libName =>
-                Await.result(db.getSamples(name = Some(libName),
-                  runId = Some(qscript.summaryRunId),
-                  sampleId = Some(sampleId))
-                  .map(_.headOption.map(_.id)),
-                  Duration.Inf)
-                  .getOrElse {
-                    Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId),
+          t.sampleId.foreach { sampleName =>
+            val sampleId = Await
+              .result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId))
+                        .map(_.headOption.map(_.id)),
                       Duration.Inf)
-                  }
+              .getOrElse {
+                Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId),
+                             Duration.Inf)
               }
+            t.libId.foreach { libName =>
+              Await
+                .result(db.getSamples(name = Some(libName),
+                                      runId = Some(qscript.summaryRunId),
+                                      sampleId = Some(sampleId))
+                          .map(_.headOption.map(_.id)),
+                        Duration.Inf)
+                .getOrElse {
+                  Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId),
+                               Duration.Inf)
+                }
+            }
           }
         case _ => qscript.summaryRunId
       }
