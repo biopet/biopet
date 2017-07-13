@@ -30,7 +30,7 @@ import org.testng.annotations.Test
   */
 class AnnotationTest extends TestNGSuite with Matchers {
   @Test
-  def testAnnotationGtf: Unit = {
+  def testAnnotationGtf(): Unit = {
     val s1 = new AnnotationTest.Script(AnnotationTest.config) with AnnotationGtf
     s1.annotationGtf shouldBe new File("")
     an[IllegalStateException] shouldBe thrownBy(Logging.checkErrors())
@@ -38,18 +38,18 @@ class AnnotationTest extends TestNGSuite with Matchers {
     val s2 = new AnnotationTest.Script(
       AnnotationTest.config ++ Map("species" -> "s1", "reference_name" -> "g1")) with AnnotationGtf
     s2.annotationGtf shouldBe new File("no_set.gtf")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
 
     val s3 = new AnnotationTest.Script(
       AnnotationTest.config ++ Map("species" -> "s1",
                                    "reference_name" -> "g1",
                                    "gene_annotation_name" -> "set1")) with AnnotationGtf
     s3.annotationGtf shouldBe new File("set1.gtf")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
   }
 
   @Test
-  def testAnnotationGff: Unit = {
+  def testAnnotationGff(): Unit = {
     val s1 = new AnnotationTest.Script(AnnotationTest.config) with AnnotationGff
     s1.annotationGff shouldBe new File("")
     an[IllegalStateException] shouldBe thrownBy(Logging.checkErrors())
@@ -57,18 +57,18 @@ class AnnotationTest extends TestNGSuite with Matchers {
     val s2 = new AnnotationTest.Script(
       AnnotationTest.config ++ Map("species" -> "s1", "reference_name" -> "g1")) with AnnotationGff
     s2.annotationGff shouldBe new File("no_set.gff")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
 
     val s3 = new AnnotationTest.Script(
       AnnotationTest.config ++ Map("species" -> "s1",
                                    "reference_name" -> "g1",
                                    "gene_annotation_name" -> "set1")) with AnnotationGff
     s3.annotationGff shouldBe new File("set1.gff")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
   }
 
   @Test
-  def testAnnotationRefFlat: Unit = {
+  def testAnnotationRefFlat(): Unit = {
     val s1 = new AnnotationTest.Script(AnnotationTest.config) with AnnotationRefFlat
     s1.annotationRefFlat.get shouldBe new File("")
     an[IllegalStateException] shouldBe thrownBy(Logging.checkErrors())
@@ -77,14 +77,14 @@ class AnnotationTest extends TestNGSuite with Matchers {
       AnnotationTest.config ++ Map("species" -> "s1", "reference_name" -> "g1"))
     with AnnotationRefFlat
     s2.annotationRefFlat.get shouldBe new File("no_set.refFlat")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
 
     val s3 = new AnnotationTest.Script(
       AnnotationTest.config ++ Map("species" -> "s1",
                                    "reference_name" -> "g1",
                                    "gene_annotation_name" -> "set1")) with AnnotationRefFlat
     s3.annotationRefFlat.get shouldBe new File("set1.refFlat")
-    noException should be thrownBy (Logging.checkErrors())
+    noException should be thrownBy Logging.checkErrors()
   }
 }
 

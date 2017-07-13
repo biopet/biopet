@@ -24,7 +24,7 @@ import org.testng.annotations.Test
 class BiopetPipeTest extends TestNGSuite with Matchers {
   class Pipe1 extends BiopetCommandLineFunction {
     val parent = null
-    def cmdLine =
+    def cmdLine: String =
       "pipe1" +
         (if (!inputAsStdin) " input1 " else "") +
         (if (!outputAsStdout) " output1 " + "")
@@ -32,13 +32,13 @@ class BiopetPipeTest extends TestNGSuite with Matchers {
 
   class Pipe2 extends BiopetCommandLineFunction {
     val parent = null
-    def cmdLine =
+    def cmdLine: String =
       "pipe2" +
         (if (!inputAsStdin) " input2 " else "") +
         (if (!outputAsStdout) " output2 " + "")
   }
 
-  @Test def testPipeCommands: Unit = {
+  @Test def testPipeCommands(): Unit = {
     val pipe1 = new Pipe1
     val pipe2 = new Pipe2
     pipe1.commandLine.contains("pipe1") shouldBe true
@@ -49,7 +49,7 @@ class BiopetPipeTest extends TestNGSuite with Matchers {
     pipe2.commandLine.contains("output2") shouldBe true
   }
 
-  @Test def testPipe: Unit = {
+  @Test def testPipe(): Unit = {
     val pipe = new Pipe1 | new Pipe2
     pipe.commandLine.contains("pipe1") shouldBe true
     pipe.commandLine.contains("input1") shouldBe true

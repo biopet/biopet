@@ -25,12 +25,12 @@ import org.testng.annotations.Test
   */
 class VcfFilterTest extends TestNGSuite with Matchers {
 
-  def cmd(s: String) = {
+  def cmd(s: String): String = {
     s.replace("'", "").replace("  ", " ").trim
   }
 
   @Test
-  def testBeforeGraph() = {
+  def testBeforeGraph(): Unit = {
     val filterer = new VcfFilter(null)
     val iVcf = File.createTempFile("vcfFilter", ".vcf.gz")
     val oVcf = File.createTempFile("vcfFilter", ".vcf.gz")
@@ -43,29 +43,29 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     filterer.outputVcfIndex.getAbsolutePath shouldBe oVcf.getAbsolutePath + ".tbi"
   }
 
-  @Test def testMinSampleDepth() = testCommand(minSampleDepth = Some(2))
-  @Test def testMinTotalDepth() = testCommand(minTotalDepth = Some(2))
-  @Test def testMinAlternateDepth() = testCommand(minAlternateDepth = Some(2))
-  @Test def testMinSamplesPass() = testCommand(minSamplesPass = Some(2))
-  @Test def testMinGenomeQuality() = testCommand(minGenomeQuality = Some(50))
-  @Test def testFilterRefCalls() = testCommand(filterRefCalls = true)
-  @Test def testInvertedOutputVcf() =
+  @Test def testMinSampleDepth(): Unit = testCommand(minSampleDepth = Some(2))
+  @Test def testMinTotalDepth(): Unit = testCommand(minTotalDepth = Some(2))
+  @Test def testMinAlternateDepth(): Unit = testCommand(minAlternateDepth = Some(2))
+  @Test def testMinSamplesPass(): Unit = testCommand(minSamplesPass = Some(2))
+  @Test def testMinGenomeQuality(): Unit = testCommand(minGenomeQuality = Some(50))
+  @Test def testFilterRefCalls(): Unit = testCommand(filterRefCalls = true)
+  @Test def testInvertedOutputVcf(): Unit =
     testCommand(invertedOutputVcf = Some(File.createTempFile("vcfFilter", ".vcf")))
-  @Test def testResToDom() = testCommand(resToDom = Some("dummy"))
-  @Test def testTrioCompound() = testCommand(trioCompound = Some("dummy"))
-  @Test def testDeNovoInSample() = testCommand(deNovoInSample = Some("dummy"))
-  @Test def testDeNovoTrio() = testCommand(deNovoTrio = Some("dummy"))
-  @Test def testTrioLossOfHet() = testCommand(trioLossOfHet = Some("dummy"))
-  @Test def testMustHaveVariant() = testCommand(mustHaveVariant = List("sample1", "sample2"))
-  @Test def testCalledIn() = testCommand(calledIn = List("sample1", "sample2"))
-  @Test def testMustHaveGenotype() =
+  @Test def testResToDom(): Unit = testCommand(resToDom = Some("dummy"))
+  @Test def testTrioCompound(): Unit = testCommand(trioCompound = Some("dummy"))
+  @Test def testDeNovoInSample(): Unit = testCommand(deNovoInSample = Some("dummy"))
+  @Test def testDeNovoTrio(): Unit = testCommand(deNovoTrio = Some("dummy"))
+  @Test def testTrioLossOfHet(): Unit = testCommand(trioLossOfHet = Some("dummy"))
+  @Test def testMustHaveVariant(): Unit = testCommand(mustHaveVariant = List("sample1", "sample2"))
+  @Test def testCalledIn(): Unit = testCommand(calledIn = List("sample1", "sample2"))
+  @Test def testMustHaveGenotype(): Unit =
     testCommand(mustHaveGenotype = List("sample1:HET", "sample2:HET"))
-  @Test def testDiffGenotype() =
+  @Test def testDiffGenotype(): Unit =
     testCommand(diffGenotype = List("sample1:sample2", "sample2:sample3"))
-  @Test def testMinQualScore() = testCommand(minQualScore = Some(50.0))
-  @Test def testFilterHetVarToHomVar() = testCommand(filterHetVarToHomVar = List("dummy"))
-  @Test def testId() = testCommand(id = List("rs01", "rs02"))
-  @Test def testIdFile() = testCommand(idFile = Some(File.createTempFile("vcfFilter", ".txt")))
+  @Test def testMinQualScore(): Unit = testCommand(minQualScore = Some(50.0))
+  @Test def testFilterHetVarToHomVar(): Unit = testCommand(filterHetVarToHomVar = List("dummy"))
+  @Test def testId(): Unit = testCommand(id = List("rs01", "rs02"))
+  @Test def testIdFile(): Unit = testCommand(idFile = Some(File.createTempFile("vcfFilter", ".txt")))
 
   protected def testCommand(minSampleDepth: Option[Int] = None,
                             minTotalDepth: Option[Int] = None,

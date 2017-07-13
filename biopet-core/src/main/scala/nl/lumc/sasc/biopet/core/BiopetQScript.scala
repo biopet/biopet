@@ -221,7 +221,7 @@ object BiopetQScript {
     try {
       Some(function.inputs)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 
@@ -229,7 +229,7 @@ object BiopetQScript {
     try {
       Some(function.outputs)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 
@@ -237,7 +237,7 @@ object BiopetQScript {
     try {
       Some(function.doneOutputs)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 
@@ -245,7 +245,7 @@ object BiopetQScript {
     try {
       Some(function.failOutputs)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 
@@ -253,7 +253,7 @@ object BiopetQScript {
     try {
       Some(function.isDone)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 
@@ -261,7 +261,7 @@ object BiopetQScript {
     try {
       Some(function.isFail)
     } catch {
-      case e: NullPointerException => None
+      case _: NullPointerException => None
     }
   }
 

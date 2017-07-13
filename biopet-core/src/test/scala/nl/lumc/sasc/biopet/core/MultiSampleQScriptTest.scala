@@ -35,7 +35,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   import MultiSampleQScriptTest._
 
   @Test
-  def testDefault: Unit = {
+  def testDefault(): Unit = {
 
     val script = MultiSampleQScriptTest(sample1 :: sample2 :: sample3 :: Nil)
     script.outputDir = new File("./").getAbsoluteFile
@@ -68,7 +68,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testTrio: Unit = {
+  def testTrio(): Unit = {
     val script = MultiSampleQScriptTest(child :: father :: mother :: Nil)
     script.init()
     script.biopetScript()
@@ -83,7 +83,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGroups: Unit = {
+  def testGroups(): Unit = {
     val script = MultiSampleQScriptTest(sample1 :: sample2 :: sample3 :: Nil)
     script.init()
     script.biopetScript()
@@ -99,7 +99,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testOnlySamples: Unit = {
+  def testOnlySamples(): Unit = {
     val script = MultiSampleQScriptTest(sample1 :: sample2 :: sample3 :: Nil, List("sample1"))
     script.init()
     script.biopetScript()
@@ -108,7 +108,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testInvalidSampleName: Unit = {
+  def testInvalidSampleName(): Unit = {
     val script = MultiSampleQScriptTest(sample4 :: Nil)
     script.init()
     script.biopetScript()
@@ -210,13 +210,20 @@ object MultiSampleQScriptTest {
     )
   )
 
-  def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
+  def apply(configs: List[Map[String, Any]], only: List[String] = Nil): QScript with MultiSampleQScript {
+    def init(): Unit
+
+    def getLastLogMessage: String
+
+    def biopetScript(): Unit
+
+  } = {
     new QScript with MultiSampleQScript { qscript =>
 
       qSettings = new QSettings()
       qSettings.runName = "test"
 
-      override val onlySamples = only
+      override val onlySamples: List[String] = only
 
       var buffer = new ListBuffer[String]()
 

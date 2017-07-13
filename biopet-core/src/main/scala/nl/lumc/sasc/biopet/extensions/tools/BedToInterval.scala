@@ -37,7 +37,7 @@ class BedToInterval(val parent: Configurable) extends ToolCommandFunction {
 
   override def defaultCoreMemory = 1.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 

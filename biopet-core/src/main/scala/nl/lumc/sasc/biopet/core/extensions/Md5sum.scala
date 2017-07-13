@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.core.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /** Extension for md5sum */
 class Md5sum(val parent: Configurable) extends BiopetCommandLineFunction with Version {
@@ -32,11 +34,11 @@ class Md5sum(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   executable = config("exe", default = "md5sum")
 
-  def versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """md5sum \(GNU coreutils\) (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   /** return commandline to execute */
-  def cmdLine = required(executable) + required(input) + " > " + required(output)
+  def cmdLine: String = required(executable) + required(input) + " > " + required(output)
 }
 
 /** Object for constructors for md5sum */

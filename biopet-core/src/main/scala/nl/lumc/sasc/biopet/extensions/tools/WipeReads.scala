@@ -30,35 +30,35 @@ class WipeReads(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.WipeReads
 
   @Input(doc = "Input BAM file (must be indexed)", shortName = "I", required = true)
-  var inputBam: File = null
+  var inputBam: File = _
 
   @Input(doc = "Interval file", shortName = "r", required = true)
-  var intervalFile: File = null
+  var intervalFile: File = _
 
   @Argument(doc = "Minimum MAPQ of reads in target region to remove (default: 0)")
-  var minMapQ: Option[Int] = config("min_mapq")
+  val minMapQ: Option[Int] = config("min_mapq")
 
   @Argument(doc = "Read group IDs to be removed (default: remove reads from all read groups)")
-  var readgroup: Set[String] = config("read_group", default = Nil)
+  val readgroup: Set[String] = config("read_group", default = Nil)
 
   @Argument(
     doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
-  var limitRemoval: Boolean = config("limit_removal", default = false)
+  val limitRemoval: Boolean = config("limit_removal", default = false)
 
   @Argument(doc = "Whether to index output BAM file or not")
-  var noMakeIndex: Boolean = config("no_make_index", default = false)
+  val noMakeIndex: Boolean = config("no_make_index", default = false)
 
   @Argument(doc = "GTF feature containing intervals (default: exon)")
-  var featureType: Option[String] = config("feature_type")
+  val featureType: Option[String] = config("feature_type")
 
   @Argument(doc = "Expected maximum number of reads in target regions (default: 7e7)")
-  var bloomSize: Option[Long] = config("bloom_size")
+  val bloomSize: Option[Long] = config("bloom_size")
 
   @Argument(doc = "False positive rate (default: 4e-7)")
-  var falsePositive: Option[Long] = config("false_positive")
+  val falsePositive: Option[Long] = config("false_positive")
 
   @Output(doc = "Output BAM", shortName = "o", required = true)
-  var outputBam: File = null
+  var outputBam: File = _
 
   @Output(required = false)
   private var outputIndex: Option[File] = None
@@ -71,7 +71,7 @@ class WipeReads(val parent: Configurable) extends ToolCommandFunction {
     if (!noMakeIndex) outputIndex = Some(new File(outputBam.getPath.stripSuffix(".bam") + ".bai"))
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", inputBam) +
       required("-r", intervalFile) +

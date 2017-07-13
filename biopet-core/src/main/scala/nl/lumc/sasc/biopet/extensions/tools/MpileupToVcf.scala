@@ -64,7 +64,7 @@ class MpileupToVcf(val parent: Configurable) extends ToolCommandFunction with Re
     }
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-o", output) +
       optional("--minDP", minDP) +

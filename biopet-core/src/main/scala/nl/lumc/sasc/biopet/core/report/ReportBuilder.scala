@@ -74,7 +74,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  implicit lazy val ec = ReportBuilder.ec
+  implicit lazy val ec: ExecutionContextExecutor = ReportBuilder.ec
   implicit def toOption[T](x: T): Option[T] = Option(x)
   implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
@@ -242,9 +242,8 @@ trait ReportBuilder extends ToolCommand {
       try {
         Await.result(Future.sequence(futures), Duration.fromNanos(30000000000L))
       } catch {
-        case e: TimeoutException =>
+        case _: TimeoutException =>
       }
-      val dones = futures.filter(_.isCompleted)
       val notDone = futures.filter(!_.isCompleted)
       done += futures.size - notDone.size
       if (notDone.nonEmpty) {
@@ -364,8 +363,7 @@ trait ReportBuilder extends ToolCommand {
           dbFiles
             .map(
               x =>
-                x.get(pipelinelineId.get)
-                  .getOrElse(Seq())
+                x.getOrElse(pipelinelineId.get, Seq())
                   .filter(_.moduleId.isEmpty)))
 
     modulePages
@@ -398,7 +396,7 @@ trait ReportBuilder extends ToolCommand {
 
 object ReportBuilder {
 
-  implicit lazy val ec = ExecutionContext.global
+  implicit lazy val ec: ExecutionContextExecutor = ExecutionContext.global
 
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
