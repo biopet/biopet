@@ -41,7 +41,7 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @Test
-  def testFromGens: Unit = {
+  def testFromGens(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(
@@ -51,7 +51,7 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testWrongContig: Unit = {
+  def testWrongContig(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(Impute2VcfTest.config(outputDir) ++
@@ -62,7 +62,7 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testFromSpecs: Unit = {
+  def testFromSpecs(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(
@@ -72,7 +72,7 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testEmpty: Unit = {
+  def testEmpty(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(Impute2VcfTest.config(outputDir))
@@ -82,17 +82,17 @@ class Impute2VcfTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object Impute2VcfTest {
-  val vcfFile = File.createTempFile("gwas.", ".vcf")
+  val vcfFile: File = File.createTempFile("gwas.", ".vcf")
   Files.touch(vcfFile)
   vcfFile.deleteOnExit()
 
-  val phenotypeFile = File.createTempFile("gwas.", ".txt")
+  val phenotypeFile: File = File.createTempFile("gwas.", ".txt")
   phenotypeFile.deleteOnExit()
 
   val reference = new File(resourcePath("/fake_chrQ.fa"))

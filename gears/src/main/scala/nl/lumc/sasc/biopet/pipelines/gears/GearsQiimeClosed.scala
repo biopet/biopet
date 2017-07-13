@@ -44,18 +44,18 @@ class GearsQiimeClosed(val parent: Configurable)
     )
   )
 
-  def init() = {
+  def init(): Unit = {
     require(fastqInput != null)
     require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
-  def otuMap = _otuMap
+  def otuMap: File = _otuMap
 
   private var _otuTable: File = _
-  def otuTable = _otuTable
+  def otuTable: File = _otuTable
 
-  def biopetScript() = {
+  def biopetScript(): Unit = {
 
     val splitLib = new SplitLibrariesFastq(this)
     splitLib.input :+= fastqInput
@@ -149,7 +149,7 @@ object GearsQiimeClosed {
     biom("data")
       .asInstanceOf[List[List[Any]]]
       .map { data =>
-        val row = data(0).asInstanceOf[Long]
+        val row = data.head.asInstanceOf[Long]
         val column = data(1).asInstanceOf[Long]
         val value = data(2).asInstanceOf[Long]
         val sample = samples(column.toInt).toString

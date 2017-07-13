@@ -19,7 +19,7 @@ class RenderReadmeTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def test: Unit = {
+  def test(): Unit = {
     val render = new RenderReadme
     render.outputFile = File.createTempFile("Readme.", ".md")
     render.outputFile.deleteOnExit()

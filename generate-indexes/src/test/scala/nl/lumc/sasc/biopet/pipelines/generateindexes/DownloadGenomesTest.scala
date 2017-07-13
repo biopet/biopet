@@ -120,9 +120,8 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(Map("download_annotations" -> true), outputDir)
-    pipeline.referenceConfig = Map(
-      "s1" -> Map("g1" -> Map("fasta_uri" -> "uri",
-                              "dbsnp" -> Map("version" -> Map(("vcf_uri" -> "uri.vcf"))))))
+    pipeline.referenceConfig = Map("s1" -> Map(
+      "g1" -> Map("fasta_uri" -> "uri", "dbsnp" -> Map("version" -> Map("vcf_uri" -> "uri.vcf")))))
     noException should be thrownBy pipeline.script()
   }
 
@@ -187,7 +186,7 @@ class DownloadGenomesTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }

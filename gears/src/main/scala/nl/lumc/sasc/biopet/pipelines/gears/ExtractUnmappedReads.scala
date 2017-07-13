@@ -43,7 +43,7 @@ class ExtractUnmappedReads(val parent: Configurable) extends QScript with Biopet
   }
 
   def fastqUnmappedR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
-  def fastqUnmappedR2 =
+  def fastqUnmappedR2: Option[File] =
     if (paired) Some(new File(outputDir, s"$outputName.unmapped.R2.fq.gz"))
     else None
   def fastqUnmappedSingletons = new File(outputDir, s"$outputName.unmapped.singletons.fq.gz")

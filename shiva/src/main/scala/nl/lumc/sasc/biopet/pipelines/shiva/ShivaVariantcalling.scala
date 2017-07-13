@@ -58,11 +58,11 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var tumorSamples: List[TumorNormalPair] = _
 
-  def isGermlineVariantCallingConfigured(): Boolean = {
+  def isGermlineVariantCallingConfigured: Boolean = {
     callers.exists(!_.isInstanceOf[SomaticVariantCaller])
   }
 
-  def isSomaticVariantCallingConfigured(): Boolean = {
+  def isSomaticVariantCallingConfigured: Boolean = {
     callers.exists(_.isInstanceOf[SomaticVariantCaller])
   }
 
