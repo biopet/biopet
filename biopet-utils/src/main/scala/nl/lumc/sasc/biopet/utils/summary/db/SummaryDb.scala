@@ -265,9 +265,6 @@ trait SummaryDb extends Closeable {
                   library: LibraryQuery = NoLibrary,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
-    if (module == ModuleName("rna")) {
-      ""
-    }
     keyValues.map {
       case (key, path) =>
         stats match {
@@ -672,7 +669,7 @@ class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extend
     else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
-  /** Creates a file. This method will raise expection if it already exist */
+  /** Creates a file. This method will raise exception if it already exist */
   def createFile(runId: Int,
                  pipelineId: Int,
                  moduleId: Option[Int] = None,

@@ -31,7 +31,7 @@ object VcfUtils {
     * @param vcfRecord record to check
     * @return allele with most nucleotides
     */
-  def getLongestAllele(vcfRecord: VariantContext) = {
+  def getLongestAllele(vcfRecord: VariantContext): Allele = {
     val alleles = vcfRecord.getAlleles
     val longestAlleleId = alleles.map(_.getBases.length).zipWithIndex.maxBy(_._1)._2
     alleles(longestAlleleId)

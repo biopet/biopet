@@ -37,7 +37,7 @@ class IoUtilsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCopyFile: Unit = {
+  def testCopyFile(): Unit = {
     val temp1 = File.createTempFile("test.", ".txt")
     temp1.deleteOnExit()
     val temp2 = File.createTempFile("test.", ".txt")
@@ -50,7 +50,7 @@ class IoUtilsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCopyFileNonExistingDir: Unit = {
+  def testCopyFileNonExistingDir(): Unit = {
     val temp1 = File.createTempFile("test.", ".txt")
     val tempDir = new File(Files.createTempDirectory("test").toFile, "non-exist")
     tempDir.deleteOnExit()
@@ -60,14 +60,14 @@ class IoUtilsTest extends TestNGSuite with Matchers {
     intercept[FileNotFoundException] {
       IoUtils.copyFile(temp1, temp2)
     }
-    IoUtils.copyFile(temp1, temp2, true)
+    IoUtils.copyFile(temp1, temp2, createDirs = true)
     val reader = Source.fromFile(temp2)
     reader.getLines().toList shouldBe List("test")
     reader.close()
   }
 
   @Test
-  def testCopyDir: Unit = {
+  def testCopyDir(): Unit = {
     val tempDir1 = Files.createTempDirectory("test").toFile
     tempDir1.deleteOnExit()
     val tempDir2 = Files.createTempDirectory("test").toFile

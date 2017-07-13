@@ -44,7 +44,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "bammetricsOptions")
-  def bammetricsOptions = {
+  def bammetricsOptions: Array[Array[AnyVal]] = {
     val rois = Array(0, 1, 2, 3)
     val bool = Array(true, false)
 
@@ -57,7 +57,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @Test(dataProvider = "bammetricsOptions")
-  def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean, wgs: Boolean) = {
+  def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean, wgs: Boolean): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
@@ -74,8 +74,6 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     bammetrics.libId = Some("1")
     bammetrics.script()
 
-    var regions: Int = rois + (if (amplicon) 1 else 0)
-
     bammetrics.functions.count(_.isInstanceOf[CollectRnaSeqMetrics]) shouldBe (if (rna) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectWgsMetrics]) shouldBe (if (wgs) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectMultipleMetrics]) shouldBe 1
@@ -86,13 +84,13 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object BamMetricsTest {
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val bam = new File(inputDir, "bla.bam")
   Files.touch(bam)
@@ -100,7 +98,7 @@ object BamMetricsTest {
   Files.touch(ampliconBed)
 
   def roi(i: Int): File = {
-    val roi = new File(inputDir, s"roi${i}.bed")
+    val roi = new File(inputDir, s"roi$i.bed")
     Files.touch(roi)
     roi
   }

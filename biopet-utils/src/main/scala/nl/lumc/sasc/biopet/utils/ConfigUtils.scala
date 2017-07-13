@@ -35,7 +35,7 @@ object ConfigUtils extends Logging {
     *
     * @param map1 input map
     * @param map2 input map
-    * @return Uniqe map1
+    * @return Unique map1
     */
   def uniqueKeys(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
     filterEmtpyMapValues(
@@ -57,32 +57,34 @@ object ConfigUtils extends Logging {
     */
   def filterEmtpyMapValues(map: Map[String, Any]): Map[String, Any] = {
     map.filter {
-      case (key, value: Map[_, _]) => value.nonEmpty
+      case (_, value: Map[_, _]) => value.nonEmpty
       case _ => true
     }
   }
 
   /**
     * Merge 2 maps, when value is in a map in map1 and map2 the value calls recursively this function
+    *
     * @param map1 Prio over map2
     * @param map2 Backup for map1
     * @return merged map
     */
+  //noinspection ScalaUnnecessaryParentheses,ScalaUnnecessaryParentheses,ScalaUnnecessaryParentheses,ScalaUnnecessaryParentheses,ScalaUnnecessaryParentheses
   def mergeMaps(
       map1: Map[String, Any],
       map2: Map[String, Any],
-      resolveConflict: (Any, Any, String) => Any = (m1, m2, key) => m1): Map[String, Any] = {
+      resolveConflict: (Any, Any, String) => Any = (m1, _, _) => m1): Map[String, Any] = {
     (for (key <- map1.keySet.++(map2.keySet)) yield {
-      if (!map2.contains(key)) (key -> map1(key))
-      else if (!map1.contains(key)) (key -> map2(key))
+      if (!map2.contains(key)) key -> map1(key)
+      else if (!map1.contains(key)) key -> map2(key)
       else {
         map1(key) match {
           case m1: Map[_, _] =>
             map2(key) match {
-              case m2: Map[_, _] => (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
-              case _ => (key -> map1(key))
+              case m2: Map[_, _] => key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict)
+              case _ => key -> map1(key)
             }
-          case _ => (key -> resolveConflict(map1(key), map2(key), key))
+          case _ => key -> resolveConflict(map1(key), map2(key), key)
         }
       }
     }).toMap
@@ -122,7 +124,7 @@ object ConfigUtils extends Logging {
     } else Some(map)
   }
 
-  /** Make json aboject from a file */
+  /** Make json object from a file */
   def fileToJson(configFile: File): Json = {
     logger.debug("Jsonfile: " + configFile)
     val jsonText = scala.io.Source.fromFile(configFile).mkString
@@ -172,15 +174,16 @@ object ConfigUtils extends Logging {
 
   lazy val yaml = new Yaml()
 
-  def mapToYaml(map: Map[String, Any]) = yaml.dump(yaml.load(ConfigUtils.mapToJson(map).nospaces))
+  def mapToYaml(map: Map[String, Any]): JsonField =
+    yaml.dump(yaml.load(ConfigUtils.mapToJson(map).nospaces))
 
-  def mapToYamlFile(map: Map[String, Any], outputFile: File) = {
+  def mapToYamlFile(map: Map[String, Any], outputFile: File): Unit = {
     val writer = new PrintWriter(outputFile)
     writer.println(mapToYaml(map))
     writer.close()
   }
 
-  def mapToJsonFile(map: Map[String, Any], outputFile: File) = {
+  def mapToJsonFile(map: Map[String, Any], outputFile: File): Unit = {
     val writer = new PrintWriter(outputFile)
     writer.println(anyToJson(map).toString())
     writer.close()
@@ -531,13 +534,13 @@ object ConfigUtils extends Logging {
 
     /** Convert ConfigValue to List[Double] */
     implicit def configValue2doubleList(value: ConfigValue): List[Double] = {
-      if (requiredValue(value)) any2list(value.value).map(any2double(_))
+      if (requiredValue(value)) any2list(value.value).map(any2double)
       else Nil
     }
 
     /** Convert ConfigValue to List[Int] */
     implicit def configValue2intList(value: ConfigValue): List[Int] = {
-      if (requiredValue(value)) any2list(value.value).map(any2int(_))
+      if (requiredValue(value)) any2list(value.value).map(any2int)
       else Nil
     }
 
