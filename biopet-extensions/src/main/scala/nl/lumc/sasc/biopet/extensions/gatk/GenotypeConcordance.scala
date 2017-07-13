@@ -18,11 +18,12 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
-import org.broadinstitute.gatk.utils.report.{ GATKReport, GATKReportTable }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
+import org.broadinstitute.gatk.utils.report.{GATKReport, GATKReportTable}
 
 class GenotypeConcordance(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction with Summarizable {
   analysisName = "GenotypeConcordance"

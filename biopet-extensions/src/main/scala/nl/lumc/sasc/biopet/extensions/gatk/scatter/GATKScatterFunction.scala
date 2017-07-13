@@ -12,12 +12,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK
 import org.broadinstitute.gatk.queue.extensions.gatk.GATKIntervals
-import org.broadinstitute.gatk.queue.function.scattergather.{ CloneFunction, ScatterFunction }
+import org.broadinstitute.gatk.queue.function.scattergather.{CloneFunction, ScatterFunction}
 import org.broadinstitute.gatk.utils.commandline.Output
 import org.broadinstitute.gatk.utils.interval.IntervalUtils
 import org.broadinstitute.gatk.utils.io.IOUtils

@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class SelectVariants(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "SelectVariants"
@@ -41,7 +43,7 @@ class SelectVariants(val parent: Configurable) extends CommandLineGATK with Scat
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** Include genotypes from this sample */

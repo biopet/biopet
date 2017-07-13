@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
 class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "ApplyRecalibration"
@@ -41,7 +43,7 @@ class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with 
 
   /** The output filtered and recalibrated VCF file in which each variant is annotated with its VQSLOD value */
   @Output(fullName = "out", shortName = "o", doc = "The output filtered and recalibrated VCF file in which each variant is annotated with its VQSLOD value", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** The truth sensitivity level at which to start filtering */
