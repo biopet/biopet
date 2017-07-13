@@ -30,7 +30,7 @@ object ExtractAlignedFastq extends ToolCommand {
   type FastqInput = (FastqRecord, Option[FastqRecord])
 
   /** Get the FastqRecord ID */
-  def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
+  def fastqId(rec: FastqRecord): String = rec.getReadHeader.split(" ")(0)
 
   /**
     * Function to create iterator over Interval given input interval string
@@ -97,7 +97,7 @@ object ExtractAlignedFastq extends ToolCommand {
       inAlnReader.getFileHeader.getSequenceIndex(name) match {
         case x if x >= 0 =>
           x
-        case otherwise =>
+        case _ =>
           throw new IllegalArgumentException(
             "Chromosome " + name + " is not found in the alignment file")
       }

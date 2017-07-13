@@ -101,14 +101,14 @@ object VcfWithVcf extends ToolCommand {
     val header = reader.getFileHeader
     val vcfDict = header.getSequenceDictionary match {
       case r if r != null =>
-        r.assertSameDictionary(referenceDict, true)
+        r.assertSameDictionary(referenceDict, ignoreOrder = true)
         r
       case _ => referenceDict
     }
     val secondHeader = secondaryReader.getFileHeader
 
     secondHeader.getSequenceDictionary match {
-      case r if r != null => r.assertSameDictionary(referenceDict, true)
+      case r if r != null => r.assertSameDictionary(referenceDict, ignoreOrder = true)
       case _ =>
     }
 
@@ -238,9 +238,8 @@ object VcfWithVcf extends ToolCommand {
                     "Type of field " + attribute._1 + " is not numeric")
               }
             case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
-            case _ => {
+            case _ =>
               scalaListToJavaObjectArrayList(attribute._2)
-            }
           }
         )
       })

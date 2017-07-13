@@ -13,7 +13,7 @@ import scala.io.Source
   */
 class ReplaceContigsGtfFileTest extends TestNGSuite with Matchers {
   @Test
-  def testNoReplace: Unit = {
+  def testNoReplace(): Unit = {
     val input = File.createTempFile("input.", ".gtf")
     input.deleteOnExit()
     val output = File.createTempFile("output.", ".gtf")
@@ -31,7 +31,7 @@ class ReplaceContigsGtfFileTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testReplace: Unit = {
+  def testReplace(): Unit = {
     val input = File.createTempFile("input.", ".gtf")
     input.deleteOnExit()
     val output = File.createTempFile("output.", ".gtf")
@@ -51,7 +51,7 @@ class ReplaceContigsGtfFileTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNoInput: Unit = {
+  def testNoInput(): Unit = {
     val input = File.createTempFile("input.", ".gtf")
     input.delete()
     val output = File.createTempFile("output.", ".gtf")

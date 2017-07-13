@@ -41,7 +41,7 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   val vepped = new File(resourcePath("/VEP_oneline.vcf"))
   val unvepped = new File(resourcePath("/unvepped.vcf"))
 
-  val veppedPath = resourcePath("/VEP_oneline.vcf")
+  val veppedPath: String = resourcePath("/VEP_oneline.vcf")
 
   val rand = new Random()
 
@@ -93,20 +93,20 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testVEPHeaderLength() = {
+  @Test def testVEPHeaderLength(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     parseCsq(header).length should be(27)
   }
 
-  @Test def testExplodeVEPLength() = {
+  @Test def testExplodeVEPLength(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val newInfos = parseCsq(header)
     explodeTranscripts(reader.iterator().next(), newInfos, removeCsq = true).length should be(11)
   }
 
-  @Test def testStandardVEPLength() = {
+  @Test def testStandardVEPLength(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val newInfos = parseCsq(header)
@@ -114,7 +114,7 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
       1)
   }
 
-  @Test def testStandardVEPAttributeLength() = {
+  @Test def testStandardVEPAttributeLength(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val newInfos = parseCsq(header)
@@ -164,9 +164,7 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test(expectedExceptions = Array(classOf[TribbleException.MalformedFeatureFile]))
-  def testVCF3TribbleException() = {
-    val reader = new VCFFileReader(vcf3, false)
-  }
+  def testVCF3TribbleException(): Unit = {}
 
   @Test(expectedExceptions = Array(classOf[IllegalArgumentException]))
   def testNoCSQTagException() {

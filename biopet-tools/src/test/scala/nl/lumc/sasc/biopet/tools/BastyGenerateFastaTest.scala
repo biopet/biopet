@@ -34,16 +34,16 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val veppedPath = resourcePath("/VEP_oneline.vcf")
+  val veppedPath: String = resourcePath("/VEP_oneline.vcf")
   val vepped = new File(veppedPath)
-  val bamPath = resourcePath("/paired01.bam")
-  val chrQPath = resourcePath("/chrQ.vcf.gz")
-  val chrQRefPath = resourcePath("/fake_chrQ.fa")
+  val bamPath: String = resourcePath("/paired01.bam")
+  val chrQPath: String = resourcePath("/chrQ.vcf.gz")
+  val chrQRefPath: String = resourcePath("/fake_chrQ.fa")
   val bam = new File(resourcePath("/paired01.bam"))
   val chrQ = new File(resourcePath("/chrQ.vcf.gz"))
   val chrQRef = new File(resourcePath("/fake_chrQ.fa"))
 
-  @Test def testMainVcf = {
+  @Test def testMainVcf(): Unit = {
     val tmp = File.createTempFile("basty_out", ".fa")
     tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
@@ -62,7 +62,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     main(arguments)
   }
 
-  @Test def testMainVcfAndBam = {
+  @Test def testMainVcfAndBam(): Unit = {
     val tmp = File.createTempFile("basty_out", ".fa")
     tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
@@ -83,7 +83,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     main(arguments)
   }
 
-  @Test def testMainVcfAndBamMore = {
+  @Test def testMainVcfAndBamMore(): Unit = {
     val tmp = File.createTempFile("basty_out", ".fa")
     tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
@@ -108,7 +108,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     main(arguments)
   }
 
-  @Test def testGetMaxAllele = {
+  @Test def testGetMaxAllele(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 

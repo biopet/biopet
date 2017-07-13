@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
+import java.util
 
 import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
-import org.mockito.Mockito.{inOrder => inOrd, when}
+import org.mockito.Mockito.{when, inOrder => inOrd}
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -52,12 +54,12 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     )
 
   @Test(dataProvider = "mockReaderProvider", groups = Array("sanger"), singleThreaded = true)
-  def testDefault(fqMock: FastqReader) = {
+  def testDefault(fqMock: FastqReader): OngoingStubbing[util.Iterator[FastqRecord]] = {
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3")
   }
 
   @Test(dataProvider = "mockReaderProvider", groups = Array("read"), singleThreaded = true)
-  def testSeqCountReads(fqMock: FastqReader) = {
+  def testSeqCountReads(fqMock: FastqReader): Unit = {
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
 
     val seqstat = SeqStat
@@ -69,7 +71,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
         groups = Array("phredscore"),
         singleThreaded = true,
         dependsOnGroups = Array("read"))
-  def testEncodingDetectionSanger(fqMock: FastqReader) = {
+  def testEncodingDetectionSanger(fqMock: FastqReader): Unit = {
 
     val seqstat = SeqStat
     seqstat.summarize()
@@ -81,9 +83,8 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
         groups = Array("nucleocount"),
         singleThreaded = true,
         dependsOnGroups = Array("phredscore"))
-  def testEncodingNucleotideCount(fqMock: FastqReader) = {
+  def testEncodingNucleotideCount(fqMock: FastqReader): Unit = {
 
-    val seqstat = SeqStat
     nucleotideHistoMap('N') shouldEqual 5
     nucleotideHistoMap('A') shouldEqual 5
     nucleotideHistoMap('C') shouldEqual 5
@@ -95,9 +96,8 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
         groups = Array("basehistogram"),
         singleThreaded = true,
         dependsOnGroups = Array("nucleocount"))
-  def testEncodingBaseHistogram(fqMock: FastqReader) = {
+  def testEncodingBaseHistogram(fqMock: FastqReader): Unit = {
 
-    val seqstat = SeqStat
     baseQualHistogram(40) shouldEqual 5
     baseQualHistogram(39) shouldEqual 5
     baseQualHistogram(34) shouldEqual 5
@@ -109,7 +109,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
         groups = Array("report"),
         singleThreaded = true,
         dependsOnGroups = Array("basehistogram"))
-  def testReportOutputScheme(fqMock: FastqReader) = {
+  def testReportOutputScheme(fqMock: FastqReader): Unit = {
     when(fqMock.getFile) thenReturn new File("/tmp/test.fq")
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
     val seqstat = SeqStat
@@ -126,7 +126,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
         groups = Array("check_readstats"),
         singleThreaded = true,
         dependsOnGroups = Array("report"))
-  def testReadStatsObject(fqMock: FastqReader) = {
+  def testReadStatsObject(fqMock: FastqReader): Unit = {
     when(fqMock.getFile) thenReturn new File("/tmp/test.fq")
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
     val seqstat = SeqStat
@@ -140,7 +140,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     seqstat.readStats.withN shouldBe 10
   }
 
-  @Test def testArgsMinimum() = {
+  @Test def testArgsMinimum(): Unit = {
     val args = Array("-i", resourcePath("/paired01a.fq"))
     val parsed = parseArgs(args)
     parsed.fastq shouldBe resourceFile("/paired01a.fq")

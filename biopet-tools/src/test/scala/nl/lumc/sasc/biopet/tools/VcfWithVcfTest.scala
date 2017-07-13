@@ -41,15 +41,15 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val veppedPath = resourcePath("/VEP_oneline.vcf.gz")
-  val unveppedPath = resourcePath("/unvep_online.vcf.gz")
-  val referenceFasta = resourcePath("/fake_chrQ.fa")
-  val monoPath = resourcePath("/chrQ_monoallelic.vcf.gz")
-  val multiPath = resourcePath("/chrQ_multiallelic.vcf.gz")
+  val veppedPath: String = resourcePath("/VEP_oneline.vcf.gz")
+  val unveppedPath: String = resourcePath("/unvep_online.vcf.gz")
+  val referenceFasta: String = resourcePath("/fake_chrQ.fa")
+  val monoPath: String = resourcePath("/chrQ_monoallelic.vcf.gz")
+  val multiPath: String = resourcePath("/chrQ_multiallelic.vcf.gz")
   val rand = new Random()
 
   @Test
-  def testOutputTypeVcf() = {
+  def testOutputTypeVcf(): Unit = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
     val arguments = Array("-I",
@@ -66,7 +66,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testOutputTypeVcfGz() = {
+  def testOutputTypeVcfGz(): Unit = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf.gz")
     tmpFile.deleteOnExit()
     val arguments = Array("-I",
@@ -83,7 +83,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testOutputTypeBcf() = {
+  def testOutputTypeBcf(): Unit = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".bcf")
     tmpFile.deleteOnExit()
     val arguments = Array("-I",
@@ -100,7 +100,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testOutputFieldException() = {
+  def testOutputFieldException(): Unit = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I",
@@ -119,7 +119,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testInputFieldException() = {
+  def testInputFieldException(): Unit = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I",
@@ -138,7 +138,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMinMethodException() = {
+  def testMinMethodException(): Unit = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I",
@@ -157,7 +157,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMaxMethodException() = {
+  def testMaxMethodException(): Unit = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
     val args = Array("-I",
@@ -176,36 +176,36 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testFieldMap() = {
+  def testFieldMap(): Unit = {
     val unvepReader = new VCFFileReader(new File(unveppedPath))
     val header = unvepReader.getFileHeader
     val unvepRecord = unvepReader.iterator().next()
 
-    var fields = List(new Fields("FG", "FG"))
-    fields :::= List(new Fields("FD", "FD"))
-    fields :::= List(new Fields("GM", "GM"))
-    fields :::= List(new Fields("GL", "GL"))
-    fields :::= List(new Fields("CP", "CP"))
-    fields :::= List(new Fields("CG", "CG"))
-    fields :::= List(new Fields("CN", "CN"))
-    fields :::= List(new Fields("DSP", "DSP"))
-    fields :::= List(new Fields("AC", "AC"))
-    fields :::= List(new Fields("AF", "AF"))
-    fields :::= List(new Fields("AN", "AN"))
-    fields :::= List(new Fields("BaseQRankSum", "BaseQRankSum"))
-    fields :::= List(new Fields("DP", "DP"))
-    fields :::= List(new Fields("FS", "FS"))
-    fields :::= List(new Fields("MLEAC", "MLEAC"))
-    fields :::= List(new Fields("MLEAF", "MLEAF"))
-    fields :::= List(new Fields("MQ", "MQ"))
-    fields :::= List(new Fields("MQ0", "MQ0"))
-    fields :::= List(new Fields("MQRankSum", "MQRankSum"))
-    fields :::= List(new Fields("QD", "QD"))
-    fields :::= List(new Fields("RPA", "RPA"))
-    fields :::= List(new Fields("RU", "RU"))
-    fields :::= List(new Fields("ReadPosRankSum", "ReadPosRankSum"))
-    fields :::= List(new Fields("VQSLOD", "VQSLOD"))
-    fields :::= List(new Fields("culprit", "culprit"))
+    var fields = List(Fields("FG", "FG"))
+    fields :::= List(Fields("FD", "FD"))
+    fields :::= List(Fields("GM", "GM"))
+    fields :::= List(Fields("GL", "GL"))
+    fields :::= List(Fields("CP", "CP"))
+    fields :::= List(Fields("CG", "CG"))
+    fields :::= List(Fields("CN", "CN"))
+    fields :::= List(Fields("DSP", "DSP"))
+    fields :::= List(Fields("AC", "AC"))
+    fields :::= List(Fields("AF", "AF"))
+    fields :::= List(Fields("AN", "AN"))
+    fields :::= List(Fields("BaseQRankSum", "BaseQRankSum"))
+    fields :::= List(Fields("DP", "DP"))
+    fields :::= List(Fields("FS", "FS"))
+    fields :::= List(Fields("MLEAC", "MLEAC"))
+    fields :::= List(Fields("MLEAF", "MLEAF"))
+    fields :::= List(Fields("MQ", "MQ"))
+    fields :::= List(Fields("MQ0", "MQ0"))
+    fields :::= List(Fields("MQRankSum", "MQRankSum"))
+    fields :::= List(Fields("QD", "QD"))
+    fields :::= List(Fields("RPA", "RPA"))
+    fields :::= List(Fields("RU", "RU"))
+    fields :::= List(Fields("ReadPosRankSum", "ReadPosRankSum"))
+    fields :::= List(Fields("VQSLOD", "VQSLOD"))
+    fields :::= List(Fields("culprit", "culprit"))
 
     val fieldMap = createFieldMap(fields, unvepRecord, List(unvepRecord), header)
 
@@ -237,32 +237,32 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testGetSecondaryRecords() = {
+  def testGetSecondaryRecords(): Unit = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val vepRecord = vepReader.iterator().next()
 
-    val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
+    val secRec = getSecondaryRecords(vepReader, unvepRecord, matchAllele = false)
 
     secRec.foreach(x => identicalVariantContext(x, vepRecord) shouldBe true)
   }
 
   @Test
-  def testCreateRecord() = {
+  def testCreateRecord(): Unit = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val header = vepReader.getFileHeader
     val vepRecord = vepReader.iterator().next()
 
-    val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
+    val secRec = getSecondaryRecords(vepReader, unvepRecord, matchAllele = false)
 
-    val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), vepRecord, secRec, header)
-    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header)
+    val fieldMap = createFieldMap(List(Fields("CSQ", "CSQ")), vepRecord, secRec, header)
+    val createdRecord = createRecord(fieldMap, unvepRecord, List(Fields("CSQ", "CSQ")), header)
     identicalVariantContext(createdRecord, vepRecord) shouldBe true
   }
 
   @Test
-  def testNumberA() = {
+  def testNumberA(): Unit = {
     val multiRecord = new VCFFileReader(new File(multiPath)).iterator().next()
     val monoRecord = new VCFFileReader(new File(monoPath)).iterator().next()
 
@@ -272,7 +272,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testNumberR() = {
+  def testNumberR(): Unit = {
     val multiRecord = new VCFFileReader(new File(multiPath)).iterator().next()
     val monoRecord = new VCFFileReader(new File(monoPath)).iterator().next()
     val annot = numberR(multiRecord, monoRecord, "ALL_ALLELE")
@@ -281,7 +281,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testNumberAOutput() = {
+  def testNumberAOutput(): Unit = {
     val tmpFile = File.createTempFile("numberA", ".vcf.gz")
     tmpFile.deleteOnExit()
     val arguments = Array("-I",
@@ -301,7 +301,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testNumberROutput() = {
+  def testNumberROutput(): Unit = {
     val tmpFile = File.createTempFile("numberR", ".vcf.gz")
     tmpFile.deleteOnExit()
     val arguments = Array("-I",

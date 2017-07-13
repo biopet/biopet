@@ -115,7 +115,7 @@ object VepNormalizer extends ToolCommand {
                 writer: AsyncVariantContextWriter,
                 newInfos: Array[String],
                 mode: String,
-                removeCsq: Boolean) = {
+                removeCsq: Boolean): Unit = {
     logger.info(s"""You have selected mode $mode""")
     logger.info("Start processing records")
 
@@ -138,7 +138,7 @@ object VepNormalizer extends ToolCommand {
     *
     * @param header VCF header
     */
-  def csqCheck(header: VCFHeader) = {
+  def csqCheck(header: VCFHeader): Unit = {
     if (!header.hasInfoLine("CSQ")) {
       //logger.error("No CSQ info tag found! Is this file VEP-annotated?")
       throw new IllegalArgumentException("No CSQ info tag found! Is this file VEP-annotated?")
@@ -152,7 +152,7 @@ object VepNormalizer extends ToolCommand {
     *
     * @param header VCFHeader of input VCF
     */
-  def versionCheck(header: VCFHeader) = {
+  def versionCheck(header: VCFHeader): Unit = {
     var format = ""
     //HACK: getMetaDataLine does not work for fileformat
     for (line <- header.getMetaDataInInputOrder) {
@@ -214,12 +214,12 @@ object VepNormalizer extends ToolCommand {
       .make()
   }
 
-  protected def createBuilder(record: VariantContext, removeCsq: Boolean) = {
+  protected def createBuilder(record: VariantContext, removeCsq: Boolean): VariantContextBuilder = {
     if (removeCsq) new VariantContextBuilder(record).rmAttribute("CSQ")
     else new VariantContextBuilder(record)
   }
 
-  protected def parseCsq(record: VariantContext) = {
+  protected def parseCsq(record: VariantContext): Array[Array[String]] = {
     record
       .getAttributeAsString("CSQ", "unknown")
       .stripPrefix("[")
@@ -260,7 +260,7 @@ object VepNormalizer extends ToolCommand {
       else failure("Unsupported mode")
     } text "Mode. Can choose between <standard> (generates standard vcf) and <explode> (generates new record for each transcript). Required."
 
-    opt[Unit]("do-not-remove") action { (x, c) =>
+    opt[Unit]("do-not-remove") action { (_, c) =>
       c.copy(removeCSQ = false)
     } text "Do not remove CSQ tag. Optional"
   }

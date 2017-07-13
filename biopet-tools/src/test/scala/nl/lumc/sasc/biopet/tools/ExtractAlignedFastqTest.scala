@@ -54,7 +54,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   private def makeClue(tName: String, f: File, rName: String): String =
     tName + " on " + f.getName + ", read " + rName + ": "
 
-  @Test def testIntervalStartEnd() = {
+  @Test def testIntervalStartEnd(): Unit = {
     val obs = makeIntervalFromString(List("chr5:1000-1100")).next()
     val exp = new Interval("chr5", 1000, 1100)
     obs.getContig should ===(exp.getContig)
@@ -62,7 +62,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     obs.getEnd should ===(exp.getEnd)
   }
 
-  @Test def testIntervalStartEndComma() = {
+  @Test def testIntervalStartEndComma(): Unit = {
     val obs = makeIntervalFromString(List("chr5:1,000-1,100")).next()
     val exp = new Interval("chr5", 1000, 1100)
     obs.getContig should ===(exp.getContig)
@@ -70,7 +70,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     obs.getEnd should ===(exp.getEnd)
   }
 
-  @Test def testIntervalStartEndDot() = {
+  @Test def testIntervalStartEndDot(): Unit = {
     val obs = makeIntervalFromString(List("chr5:1.000-1.100")).next()
     val exp = new Interval("chr5", 1000, 1100)
     obs.getContig should ===(exp.getContig)
@@ -78,7 +78,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     obs.getEnd should ===(exp.getEnd)
   }
 
-  @Test def testIntervalStart() = {
+  @Test def testIntervalStart(): Unit = {
     val obs = makeIntervalFromString(List("chr5:1000")).next()
     val exp = new Interval("chr5", 1000, 1000)
     obs.getContig should ===(exp.getContig)
@@ -86,14 +86,14 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     obs.getEnd should ===(exp.getEnd)
   }
 
-  @Test def testIntervalError() = {
+  @Test def testIntervalError(): Unit = {
     val thrown = intercept[IllegalArgumentException] {
       makeIntervalFromString(List("chr5:1000-")).next()
     }
     thrown.getMessage should ===("Invalid interval string: chr5:1000-")
   }
 
-  @Test def testMemFuncIntervalError() = {
+  @Test def testMemFuncIntervalError(): Unit = {
     val iv = Iterator(new Interval("chrP", 1, 1000))
     val inAln = resourceFile("/single01.bam")
     val thrown = intercept[IllegalArgumentException] {
@@ -103,7 +103,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   }
 
   @DataProvider(name = "singleAlnProvider1", parallel = true)
-  def singleAlnProvider1() = {
+  def singleAlnProvider1(): Array[Array[Object]] = {
     val sFastq1 = makeSingleRecords("r01", "r02", "r03", "r04", "r05")
     val sFastq1Default = sFastq1.keys.map(x => (x, false)).toMap
     val sBam01 = resourceFile("/single01.bam")
@@ -137,7 +137,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
                            feats: Iterator[Interval],
                            inAln: File,
                            fastqMap: Map[String, FastqInput],
-                           resultMap: Map[String, Boolean]) = {
+                           resultMap: Map[String, Boolean]): Unit = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -148,7 +148,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   }
 
   @DataProvider(name = "singleAlnProvider2", parallel = true)
-  def singleAlnProvider2() = {
+  def singleAlnProvider2(): Array[Array[Any]] = {
     val sFastq2 = makeSingleRecords("r01", "r02", "r04", "r07", "r06", "r08")
     val sFastq2Default = sFastq2.keys.map(x => (x, false)).toMap
     val sBam02 = resourceFile("/single02.bam")
@@ -181,7 +181,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
                            inAln: File,
                            minMapQ: Int,
                            fastqMap: Map[String, FastqInput],
-                           resultMap: Map[String, Boolean]) = {
+                           resultMap: Map[String, Boolean]): Unit = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln, minMapQ)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -191,7 +191,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     }
   }
   @DataProvider(name = "pairAlnProvider1", parallel = true)
-  def pairAlnProvider1() = {
+  def pairAlnProvider1(): Array[Array[Object]] = {
     val pFastq1 = makePairRecords(("r01", ("r01/1", "r01/2")),
                                   ("r02", ("r02/1", "r02/2")),
                                   ("r03", ("r03/1", "r03/2")),
@@ -234,7 +234,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
                          feats: Iterator[Interval],
                          inAln: File,
                          fastqMap: Map[String, FastqInput],
-                         resultMap: Map[String, Boolean]) = {
+                         resultMap: Map[String, Boolean]): Unit = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(feats, inAln, commonSuffixLength = 2)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -244,7 +244,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     }
   }
 
-  @Test def testWriteSingleFastqDefault() = {
+  @Test def testWriteSingleFastqDefault(): Unit = {
     val memFunc = (recs: FastqInput) => Set("r01", "r03").contains(fastqId(recs._1))
     val in1 = new FastqReader(resourceFile("/single01.fq"))
     val mo1 = mock[BasicFastqWriter]
@@ -255,7 +255,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     obs.verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
   }
 
-  @Test def testWritePairFastqDefault() = {
+  @Test def testWritePairFastqDefault(): Unit = {
     val mockSet = Set("r01/1", "r01/2", "r03/1", "r03/2")
     val memFunc = (recs: FastqInput) =>
       mockSet.contains(fastqId(recs._1)) || mockSet.contains(fastqId(recs._2.get))
@@ -273,7 +273,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     verify(mo2, times(2)).write(anyObject.asInstanceOf[FastqRecord])
   }
 
-  @Test def testArgsMinimum() = {
+  @Test def testArgsMinimum(): Unit = {
     val args = Array(
       "-I",
       resourcePath("/single01.bam"),
@@ -291,7 +291,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
     parsed.outputFastq1 shouldBe new File("/tmp/tm1.fq")
   }
 
-  @Test def testArgsMaximum() = {
+  @Test def testArgsMaximum(): Unit = {
     val args = Array(
       "-I",
       resourcePath("/paired01.bam"),
