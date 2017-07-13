@@ -16,10 +16,11 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class VariantRecalibrator(val parent: Configurable) extends CommandLineGATK {
   def analysis_type = "VariantRecalibrator"
@@ -122,7 +123,7 @@ class VariantRecalibrator(val parent: Configurable) extends CommandLineGATK {
 
   /** The output recal file used by ApplyRecalibration */
   @Output(fullName = "recal_file", shortName = "recalFile", doc = "The output recal file used by ApplyRecalibration", required = true, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var recal_file: File = _
 
   /** The output tranches file used by ApplyRecalibration */

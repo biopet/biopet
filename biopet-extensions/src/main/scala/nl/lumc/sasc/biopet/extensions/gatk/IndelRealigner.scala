@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherBamFiles
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{ContigScatterFunction, GATKScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class IndelRealigner(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "IndelRealigner"
@@ -45,7 +47,7 @@ class IndelRealigner(val parent: Configurable) extends CommandLineGATK with Scat
 
   /** Output bam */
   @Output(fullName = "out", shortName = "o", doc = "Output bam", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[MergeSamFiles])
+  @Gather(classOf[GatherBamFiles])
   var out: File = _
 
   /** Automatically generated md5 for out */

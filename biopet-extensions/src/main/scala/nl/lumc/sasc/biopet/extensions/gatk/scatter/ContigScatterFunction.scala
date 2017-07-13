@@ -12,7 +12,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.interval.IntervalUtils
@@ -20,14 +20,19 @@ import org.broadinstitute.gatk.utils.interval.IntervalUtils
 import scala.collection.JavaConversions._
 
 /**
- * A scatter function that divides down to the locus level.
+ * Splits intervals by contig instead of evenly.
  */
-class LocusScatterFunction extends GATKScatterFunction with InProcessFunction {
-  protected override def maxIntervals: Int = scatterCount
+class ContigScatterFunction extends GATKScatterFunction with InProcessFunction {
+
+  override def scatterCount: Int = if (intervalFilesExist) super.scatterCount min this.maxIntervals else super.scatterCount
+
+  protected override def maxIntervals: Int = {
+    GATKScatterFunction.getGATKIntervals(this.originalGATK).contigs.size
+  }
 
   def run() {
     val gi = GATKScatterFunction.getGATKIntervals(this.originalGATK)
-    val splits = IntervalUtils.splitLocusIntervals(gi.locs, this.scatterOutputFiles.size)
-    IntervalUtils.scatterFixedIntervals(gi.samFileHeader, splits, this.scatterOutputFiles)
+    IntervalUtils.scatterContigIntervals(gi.samFileHeader, gi.locs, this.scatterOutputFiles)
   }
 }
+

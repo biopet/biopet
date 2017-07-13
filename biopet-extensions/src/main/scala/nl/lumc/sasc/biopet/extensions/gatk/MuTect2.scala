@@ -3,6 +3,8 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
@@ -31,7 +33,7 @@ class MuTect2(val parent: Configurable) extends CommandLineGATK with ScatterGath
 
   /** Output file of the program. */
   @Output(fullName = "out", shortName = "o", required = false)
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var outputVcf: File = _
 
   /**

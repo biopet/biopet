@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "UnifiedGenotyper"
@@ -221,7 +223,7 @@ class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with Sc
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file */
