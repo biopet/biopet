@@ -523,16 +523,14 @@ class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extend
 
   /** This method will create all tables */
   def createTables(): Unit = {
-    try {
-      val setup = DBIO.seq(
-        (runs.schema ++ samples.schema ++
-          libraries.schema ++ pipelines.schema ++
-          modules.schema ++ stats.schema ++ settings.schema ++
-          files.schema ++ executables.schema).create
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    }
+    val setup = DBIO.seq(
+      (runs.schema ++ samples.schema ++
+        libraries.schema ++ pipelines.schema ++
+        modules.schema ++ stats.schema ++ settings.schema ++
+        files.schema ++ executables.schema).create
+    )
+    val setupFuture = db.run(setup)
+    Await.result(setupFuture, Duration.Inf)
   }
 
   /** This method will create a new run and return the runId */

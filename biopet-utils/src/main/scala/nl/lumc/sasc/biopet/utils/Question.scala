@@ -28,7 +28,7 @@ object Question {
     if (posibleValues.nonEmpty) println(s"possible values: ${posibleValues.mkString(", ")}")
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name > ")
-    (Console.readLine.trim, default) match {
+    (scala.io.StdIn.readLine.trim, default) match {
       case (a, Some(d)) if a.isEmpty => d
       case (a, None) if a.isEmpty =>
         println("ERROR: Value is required")
@@ -50,7 +50,7 @@ object Question {
     description.foreach(println)
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name (y/n) > ")
-    Console.readLine.trim.toLowerCase match {
+    scala.io.StdIn.readLine.trim.toLowerCase match {
       case "" =>
         default match {
           case Some(d) => d
@@ -75,7 +75,7 @@ object Question {
     if (posibleValues.nonEmpty) println(s"possible values: ${posibleValues.mkString(", ")}")
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name > ")
-    (Console.readLine.split(",").toList.map(_.trim), default) match {
+    (scala.io.StdIn.readLine.split(",").toList.map(_.trim), default) match {
       case (List(""), Some(d)) => d
       case (List(""), None) =>
         println("ERROR: Value is required")
