@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -27,8 +28,13 @@ class GatherVcfs(val parent: Configurable) extends Picard {
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
 
-  override def cmdLine =
+  val tabix: Option[Tabix] = if (createIndex) Some(Tabix(this, output)) else None
+
+  override def cmdLine: String =
     super.cmdLine +
       repeat("INPUT=", input, spaceSeparated = false) +
-      required("OUTPUT=", output, spaceSeparated = false)
+      required("OUTPUT=", output, spaceSeparated = false) + (tabix match {
+      case Some(t) => s" && ${t.cmdLine}"
+      case _ => ""
+    })
 }
