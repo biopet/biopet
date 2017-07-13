@@ -50,7 +50,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction with Version {
   var maxRecordsInRam: Option[Int] = config("maxrecordsinram")
 
   @Argument(doc = "CREATE_INDEX", required = false)
-  val createIndex: Boolean = config("createindex", default = true)
+  var createIndex: Boolean = config("createindex", default = true)
 
   @Argument(doc = "CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", default = false)
