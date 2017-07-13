@@ -95,7 +95,7 @@ object SummaryToTsv extends ToolCommand {
   def fetchValues(summary: Summary,
                   paths: Map[String, Array[String]],
                   sample: Boolean = false,
-                  lib: Boolean = lib = false): Map[String, Map[String, Option[Any]]] = {
+                  lib: Boolean = false): Map[String, Map[String, Option[Any]]] = {
     for ((name, path) <- paths)
       yield
         name -> {

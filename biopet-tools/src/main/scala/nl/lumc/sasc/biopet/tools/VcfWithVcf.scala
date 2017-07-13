@@ -101,14 +101,14 @@ object VcfWithVcf extends ToolCommand {
     val header = reader.getFileHeader
     val vcfDict = header.getSequenceDictionary match {
       case r if r != null =>
-        r.assertSameDictionary(referenceDict, ignoreOrder = true)
+        r.assertSameDictionary(referenceDict, true)
         r
       case _ => referenceDict
     }
     val secondHeader = secondaryReader.getFileHeader
 
     secondHeader.getSequenceDictionary match {
-      case r if r != null => r.assertSameDictionary(referenceDict, ignoreOrder = true)
+      case r if r != null => r.assertSameDictionary(referenceDict, true)
       case _ =>
     }
 
