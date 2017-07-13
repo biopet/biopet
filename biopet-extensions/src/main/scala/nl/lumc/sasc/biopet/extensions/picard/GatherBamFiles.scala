@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 class GatherBamFiles(val parent: Configurable) extends Picard {
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
-  var input: List[File] = Nil
+  var input: Seq[File] = Nil
 
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _

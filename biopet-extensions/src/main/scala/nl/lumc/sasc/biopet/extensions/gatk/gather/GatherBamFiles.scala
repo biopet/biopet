@@ -7,10 +7,10 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
 
 /**
-  * Created by pjvan_thof on 12-7-17.
+  * Created by pjvan_thof on 13-7-17.
   */
-class GatherVcfs extends picard.GatherVcfs(null) with GatherFunction {
-  analysisName = "Gather_Vcfs"
+class GatherBamFiles extends picard.GatherBamFiles(null) with GatherFunction {
+  analysisName = "Gather_Bam_Files"
 
   override val parent = originalFunction match {
     case b: BiopetCommandLineFunction => b

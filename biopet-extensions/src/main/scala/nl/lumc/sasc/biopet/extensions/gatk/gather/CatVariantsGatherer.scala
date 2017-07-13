@@ -27,6 +27,8 @@ import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
  *           \@Gather(className = "org.broadinstitute.gatk.queue.extensions.gatk.CatVariantsGatherer")
  *           \@Output(doc="File to which variants should be written",required=true)
  *           protected VariantContextWriter writer = null;
+ *
+ *           @deprecated
  */
 class CatVariantsGatherer extends CatVariants(null) with GatherFunction {
   this.assumeSorted = true

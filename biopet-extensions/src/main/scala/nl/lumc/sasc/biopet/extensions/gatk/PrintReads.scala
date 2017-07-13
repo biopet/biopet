@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import nl.lumc.sasc.biopet.extensions.gatk.gather.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherBamFiles
 import nl.lumc.sasc.biopet.extensions.gatk.scatter.{ContigScatterFunction, GATKScatterFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
@@ -29,7 +29,7 @@ class PrintReads(val parent: Configurable) extends CommandLineGATK with ScatterG
 
   /** Write output to this BAM filename instead of STDOUT */
   @Output(fullName = "out", shortName = "o", doc = "Write output to this BAM filename instead of STDOUT", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[MergeSamFiles])
+  @Gather(classOf[GatherBamFiles])
   var out: File = _
 
   /** Exclude all reads with this read group from the output */

@@ -21,6 +21,8 @@ import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
 
 /**
  * Merges BAM files using htsjdk.samtools.MergeSamFiles.
+ *
+ * @deprecated
  */
 class MergeSamFiles extends picard.MergeSamFiles(null) with GatherFunction {
 
