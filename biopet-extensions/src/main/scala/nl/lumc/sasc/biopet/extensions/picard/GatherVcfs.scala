@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.extensions.Tabix
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -28,7 +29,16 @@ class GatherVcfs(val parent: Configurable) extends Picard {
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
 
-  val tabix: Option[Tabix] = if (createIndex) Some(Tabix(this, output)) else None
+  //FIXME: This is a workaround for this issue: https://github.com/broadinstitute/picard/issues/789
+  def tabix: Option[Tabix] = if (createIndex) Some(Tabix(this, output)) else None
+
+  @Output(required = false)
+  private var index: File = _
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (createIndex) index = VcfUtils.getVcfIndexFile(output)
+  }
 
   override def cmdLine: String =
     super.cmdLine +
