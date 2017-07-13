@@ -88,18 +88,18 @@ class PrintReads(val parent: Configurable) extends CommandLineGATK with ScatterG
         outputMd5 = new File(out.getPath + ".md5")
   }
 
-  override def cmdLine = super.cmdLine +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-readGroup", readGroup, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-platform", platform, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-n", number, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-sf", sample_file, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-sn", sample_name, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(simplify, "-s", escape = true, format = "%s") +
-    conditional(no_pg_tag, "-npt", escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    optional("-o", out) +
+    optional("-readGroup", readGroup) +
+    optional("-platform", platform) +
+    optional("-n", number) +
+    repeat("-sf", sample_file) +
+    repeat("-sn", sample_name) +
+    conditional(simplify, "-s") +
+    conditional(no_pg_tag, "-npt") +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object PrintReads {

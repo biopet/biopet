@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
+
+import scala.util.matching.Regex
 
 /**
   * Created by pjvan_thof on 12/4/15.
@@ -64,8 +66,8 @@ class AssignTaxonomy(val parent: Configurable) extends BiopetCommandLineFunction
   var blastEValue: Option[String] = config("blast_e_value")
   var outputDir: File = _
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """Version: (.*)""".r
   override def defaultCoreMemory = 4.0
 
   override def beforeGraph(): Unit = {
@@ -73,7 +75,7 @@ class AssignTaxonomy(val parent: Configurable) extends BiopetCommandLineFunction
     require(outputDir != null)
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("-i", inputFasta) +
       optional("--read_1_seqs_fp", read1SeqsFp) +

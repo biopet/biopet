@@ -30,7 +30,7 @@ class XhmmPca(val parent: Configurable) extends Xhmm {
   @Output(required = true)
   var pcaFile: File = _
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--PCA") + required("-r", inputMatrix) + required("--PCAfiles", pcaFile)
   }
 

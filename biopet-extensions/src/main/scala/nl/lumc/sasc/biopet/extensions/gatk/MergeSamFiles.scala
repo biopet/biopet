@@ -16,14 +16,14 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.picard
-import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
+import org.broadinstitute.gatk.queue.function.scattergather.{GatherFunction, ScatterGatherableFunction}
 
 /**
  * Merges BAM files using htsjdk.samtools.MergeSamFiles.
  */
 class MergeSamFiles extends picard.MergeSamFiles(null) with GatherFunction {
 
-  override val parent = originalFunction match {
+  override val parent: ScatterGatherableFunction with BiopetCommandLineFunction = originalFunction match {
     case b: BiopetCommandLineFunction => b
     case _                            => null
   }

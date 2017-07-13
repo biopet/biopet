@@ -39,7 +39,7 @@ class BedtoolsMerge(val parent: Configurable) extends Bedtools {
   @Argument(doc = "Additional columns to operate upon", required = false)
   var additionalColumns: List[Int] = Nil
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) + required("merge") +
       required("-i", input) + optional("-d", dist) +
       (if (additionalColumns.nonEmpty) required("-c", additionalColumns.mkString(",")) else "") +

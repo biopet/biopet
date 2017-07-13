@@ -16,11 +16,12 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetJavaCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.{Logging, tryToParseNumber}
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 import scala.io.Source
+import scala.util.matching.Regex
 
 /**
   * General picard extension
@@ -28,7 +29,7 @@ import scala.io.Source
   * This is based on using class files directly from the jar, if needed other picard jar can be used
   */
 abstract class Picard extends BiopetJavaCommandLineFunction with Version {
-  override def subPath = "picard" :: super.subPath
+  override def subPath: List[String] = "picard" :: super.subPath
 
   javaMainClass = new picard.cmdline.PicardCommandLine().getClass.getName
 
@@ -55,24 +56,24 @@ abstract class Picard extends BiopetJavaCommandLineFunction with Version {
   @Argument(doc = "CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", default = false)
 
-  def picardToolName = getClass.getSimpleName
+  def picardToolName: String = getClass.getSimpleName
 
-  def versionCommand = {
+  def versionCommand: String = {
     if (jarFile != null)
       executable + " -cp " + jarFile + " " + javaMainClass + s" $picardToolName -h"
     else null
   }
-  def versionRegex = """Version: (.*)""".r
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 4.0
 
-  override def getVersion = {
+  override def getVersion: Option[String] = {
     if (jarFile == null) Picard.getBiopetPicardVersion
     else super.getVersion
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required(picardToolName) +
       required("TMP_DIR=" + jobTempDir) +
@@ -94,7 +95,7 @@ object Picard extends Logging {
           .fromInputStream(src)
           .getLines()
           .map(_.trim.split(":"))
-          .filter(_.size == 5)
+          .filter((_.length) == 5)
           .map(
             line =>
               Map(
@@ -123,7 +124,7 @@ object Picard extends Logging {
           .collect {
             case dep => "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
           }
-      case otherwise => None
+      case _ => None
     }
   }
 
@@ -161,7 +162,7 @@ object Picard extends Logging {
     * @param tag default to "HISTOGRAM"
     * @return
     */
-  def getHistogram(file: File, tag: String = "HISTOGRAM") = {
+  def getHistogram(file: File, tag: String = "HISTOGRAM"): Option[Map[String, List[Option[Any]]]] = {
     getMetricsContent(file, tag) match {
       case Some((header, content)) =>
         val colums = header.zipWithIndex.map(x => x._1 -> content.map(_.lift(x._2))).toMap
@@ -175,7 +176,7 @@ object Picard extends Logging {
     * @param file input metrics file
     * @return (header, content)
     */
-  def getMetricsContent(file: File, tag: String) = {
+  def getMetricsContent(file: File, tag: String): Option[(List[String], List[List[Any]])] = {
     if (!file.exists) None
     else {
       val lines = Source.fromFile(file).getLines().toArray

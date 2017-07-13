@@ -14,12 +14,14 @@
   */
 package nl.lumc.sasc.biopet.extensions.bcftools
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 abstract class Bcftools extends BiopetCommandLineFunction with Version {
-  override def subPath = "bcftools" :: super.subPath
+  override def subPath: List[String] = "bcftools" :: super.subPath
   executable = config("exe", default = "bcftools", namespace = "bcftools", freeVar = false)
-  def versionCommand = executable
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 }

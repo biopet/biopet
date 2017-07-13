@@ -192,36 +192,36 @@ class VariantRecalibrator(val parent: Configurable) extends CommandLineGATK {
       outputIndex = VcfUtils.getVcfIndexFile(recal_file)
   }
 
-  override def cmdLine = super.cmdLine +
-    required("-mode", mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mG", maxGaussians, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mNG", maxNegativeGaussians, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mI", maxIterations, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-nKM", numKMeans, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-std", stdThreshold, spaceSeparated = true, escape = true, format = stdThresholdFormat) +
-    optional("-shrinkage", shrinkage, spaceSeparated = true, escape = true, format = shrinkageFormat) +
-    optional("-dirichlet", dirichlet, spaceSeparated = true, escape = true, format = dirichletFormat) +
-    optional("-priorCounts", priorCounts, spaceSeparated = true, escape = true, format = priorCountsFormat) +
-    optional("-maxNumTrainingData", maxNumTrainingData, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-minNumBad", minNumBadVariants, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-badLodCutoff", badLodCutoff, spaceSeparated = true, escape = true, format = badLodCutoffFormat) +
-    optional("-MQCap", MQCapForLogitJitterTransform, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(no_MQ_logit, "-NoMQLogit", escape = true, format = "%s") +
-    optional("-MQJitt", MQ_jitter, spaceSeparated = true, escape = true, format = MQ_jitterFormat) +
-    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-aggregate", aggregate, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    required("-recalFile", recal_file, spaceSeparated = true, escape = true, format = "%s") +
-    required("-tranchesFile", tranches_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-titv", target_titv, spaceSeparated = true, escape = true, format = target_titvFormat) +
-    repeat("-an", use_annotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-tranche", TStranche, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-ignoreFilter", ignore_filter, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(ignore_all_filters, "-ignoreAllFilters", escape = true, format = "%s") +
-    optional("-rscriptFile", rscript_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-replicate", replicate, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(trustAllPolymorphic, "-allPoly", escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    required("-mode", mode) +
+    optional("-mG", maxGaussians) +
+    optional("-mNG", maxNegativeGaussians) +
+    optional("-mI", maxIterations) +
+    optional("-nKM", numKMeans) +
+    optional("-std", stdThreshold, format = stdThresholdFormat) +
+    optional("-shrinkage", shrinkage, format = shrinkageFormat) +
+    optional("-dirichlet", dirichlet, format = dirichletFormat) +
+    optional("-priorCounts", priorCounts, format = priorCountsFormat) +
+    optional("-maxNumTrainingData", maxNumTrainingData) +
+    optional("-minNumBad", minNumBadVariants) +
+    optional("-badLodCutoff", badLodCutoff, format = badLodCutoffFormat) +
+    optional("-MQCap", MQCapForLogitJitterTransform) +
+    conditional(no_MQ_logit, "-NoMQLogit") +
+    optional("-MQJitt", MQ_jitter, format = MQ_jitterFormat) +
+    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    repeat("-aggregate", aggregate, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    required("-recalFile", recal_file) +
+    required("-tranchesFile", tranches_file) +
+    optional("-titv", target_titv, format = target_titvFormat) +
+    repeat("-an", use_annotation) +
+    repeat("-tranche", TStranche) +
+    repeat("-ignoreFilter", ignore_filter) +
+    conditional(ignore_all_filters, "-ignoreAllFilters") +
+    optional("-rscriptFile", rscript_file) +
+    optional("-replicate", replicate) +
+    conditional(trustAllPolymorphic, "-allPoly") +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

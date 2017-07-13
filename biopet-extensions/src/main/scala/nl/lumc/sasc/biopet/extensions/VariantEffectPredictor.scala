@@ -23,6 +23,7 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.io.Source
+import scala.util.matching.Regex
 
 /**
   * Extension for VariantEffectPredictor
@@ -49,13 +50,13 @@ class VariantEffectPredictor(val parent: Configurable)
   @Output(doc = "output file", required = true)
   var output: File = _
 
-  override def subPath = {
+  override def subPath: List[String] = {
     if (vepVersion.isSet) super.subPath ++ List("vep_settings") ++ vepVersion()
     else super.subPath
   }
 
-  def versionRegex = """version (\d*)""".r
-  def versionCommand = executable + " " + vepScript + " --help"
+  def versionRegex: Regex = """version (\d*)""".r
+  def versionCommand: String = executable + " " + vepScript + " --help"
 
   //Boolean vars
   var v: Boolean = config("v", default = true, freeVar = false)
@@ -177,7 +178,7 @@ class VariantEffectPredictor(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     if (input.exists() && VcfUtils.vcfFileIsEmpty(input)) {
       val zcat = Zcat(this, input, output)
       zcat.cmdLine

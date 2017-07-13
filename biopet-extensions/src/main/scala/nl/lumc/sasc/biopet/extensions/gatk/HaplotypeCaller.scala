@@ -431,93 +431,93 @@ class HaplotypeCaller(val parent: Configurable) extends CommandLineGATK with Sca
     num_cpu_threads_per_data_thread = Some(getThreads)
   }
 
-  override def cmdLine = super.cmdLine +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-likelihoodEngine", likelihoodCalculationEngine, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-hksr", heterogeneousKmerSizeResolution, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(dontTrimActiveRegions, "-dontTrimActiveRegions", escape = true, format = "%s") +
-    optional("-maxDiscARExtension", maxDiscARExtension, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxGGAARExtension", maxGGAARExtension, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-paddingAroundIndels", paddingAroundIndels, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-paddingAroundSNPs", paddingAroundSNPs, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
+  override def cmdLine: String = super.cmdLine +
+    optional("-o", out) +
+    optional("-likelihoodEngine", likelihoodCalculationEngine) +
+    optional("-hksr", heterogeneousKmerSizeResolution) +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.orNull), dbsnp) +
+    conditional(dontTrimActiveRegions, "-dontTrimActiveRegions") +
+    optional("-maxDiscARExtension", maxDiscARExtension) +
+    optional("-maxGGAARExtension", maxGGAARExtension) +
+    optional("-paddingAroundIndels", paddingAroundIndels) +
+    optional("-paddingAroundSNPs", paddingAroundSNPs) +
+    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    repeat("-A", annotation) +
     conditional(useNewAFCalculator, "--useNewAFCalculator") +
-    repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(debug, "-debug", escape = true, format = "%s") +
-    conditional(useFilteredReadsForAnnotations, "-useFilteredReadsForAnnotations", escape = true, format = "%s") +
-    optional("-ERC", emitRefConfidence, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-bamout", bamOutput, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-bamWriterType", bamWriterType, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(disableOptimizations, "-disableOptimizations", escape = true, format = "%s") +
-    conditional(annotateNDA, "-nda", escape = true, format = "%s") +
-    optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
-    optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
-    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
-    optional("-maxAltAlleles", max_alternate_alleles, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-gt_mode", genotyping_mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.getOrElse(null)), alleles, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-contamination", contamination_fraction_to_filter, spaceSeparated = true, escape = true, format = contamination_fraction_to_filterFormat) +
-    optional("-contaminationFile", contamination_fraction_per_sample_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pnrm", p_nonref_model, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-logExactCalls", exactcallslog, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-out_mode", output_mode, spaceSeparated = true, escape = true, format = "%s") + conditional(allSitePLs, "-allSitePLs", escape = true, format = "%s") +
-    optional("-gcpHMM", gcpHMM, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pairHMM", pair_hmm_implementation, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pairHMMSub", pair_hmm_sub_implementation, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(always_load_vector_logless_PairHMM_lib, "-alwaysloadVectorHMM", escape = true, format = "%s") +
-    optional("-globalMAPQ", phredScaledGlobalReadMismappingRate, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(noFpga, "-noFpga", escape = true, format = "%s") + optional("-sn", sample_name, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-kmerSize", kmerSize, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(dontIncreaseKmerSizesForCycles, "-dontIncreaseKmerSizesForCycles", escape = true, format = "%s") +
-    conditional(allowNonUniqueKmersInRef, "-allowNonUniqueKmersInRef", escape = true, format = "%s") +
-    optional("-numPruningSamples", numPruningSamples, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(doNotRecoverDanglingBranches, "-doNotRecoverDanglingBranches", escape = true, format = "%s") +
-    optional("-minDanglingBranchLength", minDanglingBranchLength, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(consensus, "-consensus", escape = true, format = "%s") +
-    optional("-maxNumHaplotypesInPopulation", maxNumHaplotypesInPopulation, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(errorCorrectKmers, "-errorCorrectKmers", escape = true, format = "%s") +
-    optional("-minPruning", minPruning, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(debugGraphTransformations, "-debugGraphTransformations", escape = true, format = "%s") +
-    conditional(allowCyclesInKmerGraphToGeneratePaths, "-allowCyclesInKmerGraphToGeneratePaths", escape = true, format = "%s") +
-    optional("-graph", graphOutput, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-kmerLengthForReadErrorCorrection", kmerLengthForReadErrorCorrection, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-minObservationsForKmerToBeSolid", minObservationsForKmerToBeSolid, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-GQB", GVCFGQBands, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ERCIS", indelSizeToEliminateInRefModel, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mbq", min_base_quality_score, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(includeUmappedReads, "-unmapped", escape = true, format = "%s") +
-    conditional(useAllelesTrigger, "-allelesTrigger", escape = true, format = "%s") +
-    conditional(doNotRunPhysicalPhasing, "-doNotRunPhysicalPhasing", escape = true, format = "%s") +
-    optional("-keepRG", keepRG, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(justDetermineActiveRegions, "-justDetermineActiveRegions", escape = true, format = "%s") +
-    conditional(dontGenotype, "-dontGenotype", escape = true, format = "%s") +
-    conditional(dontUseSoftClippedBases, "-dontUseSoftClippedBases", escape = true, format = "%s") +
-    conditional(captureAssemblyFailureBAM, "-captureAssemblyFailureBAM", escape = true, format = "%s") +
-    conditional(errorCorrectReads, "-errorCorrectReads", escape = true, format = "%s") +
-    optional("-pcrModel", pcr_indel_model, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxReadsInRegionPerSample", maxReadsInRegionPerSample, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-minReadsPerAlignStart", minReadsPerAlignmentStart, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-APO", activityProfileOut, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ARO", activeRegionOut, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-AR", activeRegionIn, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-activeRegionExtension", activeRegionExtension, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(forceActive, "-forceActive", escape = true, format = "%s") +
-    optional("-activeRegionMaxSize", activeRegionMaxSize, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-bandPassSigma", bandPassSigma, spaceSeparated = true, escape = true, format = bandPassSigmaFormat) +
-    optional("-maxProbPropDist", maxProbPropagationDistance, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ActProbThresh", activeProbabilityThreshold, spaceSeparated = true, escape = true, format = activeProbabilityThresholdFormat) +
-    optional("-mmq", min_mapping_quality_score, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
+    repeat("-XA", excludeAnnotation) +
+    repeat("-G", group) +
+    conditional(debug, "-debug") +
+    conditional(useFilteredReadsForAnnotations, "-useFilteredReadsForAnnotations") +
+    optional("-ERC", emitRefConfidence) +
+    optional("-bamout", bamOutput) +
+    optional("-bamWriterType", bamWriterType) +
+    conditional(disableOptimizations, "-disableOptimizations") +
+    conditional(annotateNDA, "-nda") +
+    optional("-hets", heterozygosity, format = heterozygosityFormat) +
+    optional("-indelHeterozygosity", indel_heterozygosity, format = indel_heterozygosityFormat) +
+    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, format = standard_min_confidence_threshold_for_callingFormat) +
+    optional("-maxAltAlleles", max_alternate_alleles) +
+    repeat("-inputPrior", input_prior) +
+    optional("-ploidy", sample_ploidy) +
+    optional("-gt_mode", genotyping_mode) +
+    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.orNull), alleles) +
+    optional("-contamination", contamination_fraction_to_filter, format = contamination_fraction_to_filterFormat) +
+    optional("-contaminationFile", contamination_fraction_per_sample_file) +
+    optional("-pnrm", p_nonref_model) +
+    optional("-logExactCalls", exactcallslog) +
+    optional("-out_mode", output_mode) + conditional(allSitePLs, "-allSitePLs") +
+    optional("-gcpHMM", gcpHMM) +
+    optional("-pairHMM", pair_hmm_implementation) +
+    optional("-pairHMMSub", pair_hmm_sub_implementation) +
+    conditional(always_load_vector_logless_PairHMM_lib, "-alwaysloadVectorHMM") +
+    optional("-globalMAPQ", phredScaledGlobalReadMismappingRate) +
+    conditional(noFpga, "-noFpga") + optional("-sn", sample_name) +
+    repeat("-kmerSize", kmerSize) +
+    conditional(dontIncreaseKmerSizesForCycles, "-dontIncreaseKmerSizesForCycles") +
+    conditional(allowNonUniqueKmersInRef, "-allowNonUniqueKmersInRef") +
+    optional("-numPruningSamples", numPruningSamples) +
+    conditional(doNotRecoverDanglingBranches, "-doNotRecoverDanglingBranches") +
+    optional("-minDanglingBranchLength", minDanglingBranchLength) +
+    conditional(consensus, "-consensus") +
+    optional("-maxNumHaplotypesInPopulation", maxNumHaplotypesInPopulation) +
+    conditional(errorCorrectKmers, "-errorCorrectKmers") +
+    optional("-minPruning", minPruning) +
+    conditional(debugGraphTransformations, "-debugGraphTransformations") +
+    conditional(allowCyclesInKmerGraphToGeneratePaths, "-allowCyclesInKmerGraphToGeneratePaths") +
+    optional("-graph", graphOutput) +
+    optional("-kmerLengthForReadErrorCorrection", kmerLengthForReadErrorCorrection) +
+    optional("-minObservationsForKmerToBeSolid", minObservationsForKmerToBeSolid) +
+    repeat("-GQB", GVCFGQBands) +
+    optional("-ERCIS", indelSizeToEliminateInRefModel) +
+    optional("-mbq", min_base_quality_score) +
+    conditional(includeUmappedReads, "-unmapped") +
+    conditional(useAllelesTrigger, "-allelesTrigger") +
+    conditional(doNotRunPhysicalPhasing, "-doNotRunPhysicalPhasing") +
+    optional("-keepRG", keepRG) +
+    conditional(justDetermineActiveRegions, "-justDetermineActiveRegions") +
+    conditional(dontGenotype, "-dontGenotype") +
+    conditional(dontUseSoftClippedBases, "-dontUseSoftClippedBases") +
+    conditional(captureAssemblyFailureBAM, "-captureAssemblyFailureBAM") +
+    conditional(errorCorrectReads, "-errorCorrectReads") +
+    optional("-pcrModel", pcr_indel_model) +
+    optional("-maxReadsInRegionPerSample", maxReadsInRegionPerSample) +
+    optional("-minReadsPerAlignStart", minReadsPerAlignmentStart) +
+    optional("-APO", activityProfileOut) +
+    optional("-ARO", activeRegionOut) +
+    repeat("-AR", activeRegionIn) +
+    optional("-activeRegionExtension", activeRegionExtension) +
+    conditional(forceActive, "-forceActive") +
+    optional("-activeRegionMaxSize", activeRegionMaxSize) +
+    optional("-bandPassSigma", bandPassSigma, format = bandPassSigmaFormat) +
+    optional("-maxProbPropDist", maxProbPropagationDistance) +
+    optional("-ActProbThresh", activeProbabilityThreshold, format = activeProbabilityThresholdFormat) +
+    optional("-mmq", min_mapping_quality_score) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases") +
     (this.getVersion match {
       case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
-        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, format = standard_min_confidence_threshold_for_emittingFormat)
       case _ => ""
     })
 }

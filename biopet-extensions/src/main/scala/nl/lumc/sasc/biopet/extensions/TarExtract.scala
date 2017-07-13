@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
+
+import scala.util.matching.Regex
 
 /**
   * Created by pjvan_thof on 8/11/15.
@@ -31,11 +33,11 @@ class TarExtract(val parent: Configurable) extends BiopetCommandLineFunction wit
   var outputDir: File = _
 
   executable = config("exe", default = "tar", freeVar = false)
-  def versionCommand = executable + " --version"
-  def versionRegex = """tar \(GNU tar\) (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """tar \(GNU tar\) (.*)""".r
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     jobLocalDir = outputDir
     jobOutputFile = new File(outputDir, "." + inputTar.getName + ".tar.out")
   }

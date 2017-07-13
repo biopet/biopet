@@ -17,17 +17,19 @@ package nl.lumc.sasc.biopet.extensions.conifer
 import nl.lumc.sasc.biopet.core.Version
 import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 
+import scala.util.matching.Regex
+
 abstract class Conifer extends PythonCommandLineFunction with Version {
-  override def subPath = "conifer" :: super.subPath
+  override def subPath: List[String] = "conifer" :: super.subPath
   //  executable = config("exe", default = "conifer")
   setPythonScript(config("script", default = "conifer.py", namespace = "conifer"))
-  def versionRegex = """(.*)""".r
+  def versionRegex: Regex = """(.*)""".r
   override def versionExitcode = List(0)
-  def versionCommand = executable + " " + pythonScript + " --version"
+  def versionCommand: String = executable + " " + pythonScript + " --version"
 
   override def defaultCoreMemory = 5.0
   override def defaultThreads = 1
 
-  def cmdLine = getPythonCommand
+  def cmdLine: String = getPythonCommand
 
 }

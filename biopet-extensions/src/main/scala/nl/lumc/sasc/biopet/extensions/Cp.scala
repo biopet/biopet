@@ -19,7 +19,7 @@ class Cp(val parent: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cp")
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required(source) +
       required(target)

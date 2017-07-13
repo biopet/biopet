@@ -14,7 +14,9 @@
   */
 package nl.lumc.sasc.biopet.extensions.macs2
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 /**
   * General igvtools extension
@@ -23,7 +25,7 @@ import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
   */
 abstract class Macs2 extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "macs2", namespace = "macs2", freeVar = false)
-  def versionCommand = executable + " --version"
-  def versionRegex = """macs2 (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """macs2 (.*)""".r
   override def versionExitcode = List(0, 1)
 }

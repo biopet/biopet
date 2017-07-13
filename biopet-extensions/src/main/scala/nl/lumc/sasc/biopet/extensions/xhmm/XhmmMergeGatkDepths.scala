@@ -30,7 +30,7 @@ class XhmmMergeGatkDepths(val parent: Configurable) extends Xhmm {
   @Output(doc = "Merged output file in XHMM format")
   var output: File = _
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--mergeGATKdepths") +
       repeat("--GATKdepths", gatkDepthsFiles) +
       required("-o", output)

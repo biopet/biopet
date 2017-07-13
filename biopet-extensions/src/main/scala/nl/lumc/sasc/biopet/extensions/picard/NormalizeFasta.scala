@@ -35,7 +35,7 @@ class NormalizeFasta(val parent: Configurable) extends Picard {
   val truncateSequenceNameAtWhitespace: Boolean =
     config("truncate_sequence_name_at_whitespace", default = false)
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +

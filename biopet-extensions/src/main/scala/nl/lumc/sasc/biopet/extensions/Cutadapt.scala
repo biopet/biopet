@@ -44,8 +44,8 @@ class Cutadapt(val parent: Configurable)
   var statsOutput: File = _
 
   executable = config("exe", default = "cutadapt")
-  def versionCommand = executable + " --version"
-  def versionRegex = """(.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """(.*)""".r
 
   /** Name of the key containing clipped adapters information in the summary stats. */
   def adaptersStatsName = "adapters"
@@ -112,7 +112,7 @@ class Cutadapt(val parent: Configurable)
   var untrimmedPairedOutput: Option[File] = config("untrimmed_paired_output")
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       // Options that influence how the adapters are found
       repeat("-a", adapter) +
@@ -187,10 +187,9 @@ class Cutadapt(val parent: Configurable)
         // identify the adapter name and count
         for (line <- adapter.split("\n")) {
           line match {
-            case adapterR(adapter, count) => {
+            case adapterR(adapter, count) =>
               adapterName = adapter
               adapterCount = count.toInt
-            }
             case _ =>
           }
         }

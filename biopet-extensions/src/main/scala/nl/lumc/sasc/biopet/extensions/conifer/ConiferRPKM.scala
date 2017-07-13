@@ -32,7 +32,7 @@ class ConiferRPKM(val parent: Configurable) extends Conifer {
   @Output(doc = "Output RPKM.txt", shortName = "out")
   var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       " rpkm " +
       " --probes" + required(probes) +

@@ -43,18 +43,12 @@ class VarscanMpileup2cns(val parent: Configurable) extends Varscan {
   override def beforeGraph(): Unit = {
     val validValues: Set[Int] = Set(0, 1)
     // check for boolean vars that are passed as ints
-    strandFilter.foreach {
-      case v => require(validValues.contains(v), "strand_filter value must be either 0 or 1")
-    }
-    outputVcf.foreach {
-      case v => require(validValues.contains(v), "output_vcf value must be either 0 or 1")
-    }
-    variants.foreach {
-      case v => require(validValues.contains(v), "variants value must be either 0 or 1")
-    }
+    strandFilter.foreach(v => require(validValues.contains(v), "strand_filter value must be either 0 or 1"))
+    outputVcf.foreach(v => require(validValues.contains(v), "output_vcf value must be either 0 or 1"))
+    variants.foreach(v => require(validValues.contains(v), "variants value must be either 0 or 1"))
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine + required("mpileup2cns") +
       required(input) +
       optional("--min-coverage", minCoverage) +

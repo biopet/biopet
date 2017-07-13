@@ -77,7 +77,7 @@ class GenotypeConcordance(val parent: Configurable) extends CommandLineGATK with
 
   def summaryFiles = Map("output" -> out)
 
-  def summaryStats = {
+  def summaryStats: Map[String, Map[String, AnyRef]] = {
     val report = new GATKReport(out)
     val compProportions = report.getTable("GenotypeConcordance_CompProportions")
     val counts = report.getTable("GenotypeConcordance_Counts")
@@ -120,16 +120,16 @@ class GenotypeConcordance(val parent: Configurable) extends CommandLineGATK with
     if (comp != null) deps :+= VcfUtils.getVcfIndexFile(comp)
   }
 
-  override def cmdLine = super.cmdLine +
-    required(TaggedFile.formatCommandLineParameter("-eval", eval), eval, spaceSeparated = true, escape = true, format = "%s") +
-    required(TaggedFile.formatCommandLineParameter("-comp", comp), comp, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(ignoreFilters, "--ignoreFilters", escape = true, format = "%s") +
-    repeat("-gfe", genotypeFilterExpressionEval, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-gfc", genotypeFilterExpressionComp, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(moltenize, "-moltenize", escape = true, format = "%s") +
-    optional("-sites", printInterestingSites, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    required(TaggedFile.formatCommandLineParameter("-eval", eval), eval) +
+    required(TaggedFile.formatCommandLineParameter("-comp", comp), comp) +
+    conditional(ignoreFilters, "--ignoreFilters") +
+    repeat("-gfe", genotypeFilterExpressionEval) +
+    repeat("-gfc", genotypeFilterExpressionComp) +
+    conditional(moltenize, "-moltenize") +
+    optional("-sites", printInterestingSites) +
+    optional("-o", out) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

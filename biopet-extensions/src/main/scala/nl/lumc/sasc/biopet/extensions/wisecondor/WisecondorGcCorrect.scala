@@ -18,7 +18,7 @@ class WisecondorGcCorrect(val parent: Configurable) extends Wisecondor {
   var nIter: Option[Int] = config("iter", namespace = "wisecondor", default = None)
   var fracLowess: Option[Float] = config("frac_lowess", namespace = "wisecondor", default = None)
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("gc-correct") +
       required("-I", inputBed) +

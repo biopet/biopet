@@ -64,7 +64,7 @@ class AddOrReplaceReadGroups(val parent: Configurable) extends Picard {
   var RGPI: Option[Int] = _
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
        else required("INPUT=", input, spaceSeparated = false)) +

@@ -61,7 +61,7 @@ class CollectAlignmentSummaryMetrics(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +
@@ -76,7 +76,7 @@ class CollectAlignmentSummaryMetrics(val parent: Configurable)
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats: Any = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectAlignmentSummaryMetrics {

@@ -20,13 +20,15 @@ import nl.lumc.sasc.biopet.core.{Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Created by pjvanthof on 20/11/15.
   */
 class VtDecompose(val parent: Configurable) extends Vt with Version with Reference {
-  def versionRegex = """decompose (.*)""".r
+  def versionRegex: Regex = """decompose (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " decompose"
+  def versionCommand: String = executable + " decompose"
 
   @Input(required = true)
   var inputVcf: File = _
@@ -38,7 +40,7 @@ class VtDecompose(val parent: Configurable) extends Vt with Version with Referen
 
   val smartDecompose: Boolean = config("smart_decompose", default = false)
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("decompose") +
       required("-o", outputVcf) +
       optional("-I", intervalsFile) +

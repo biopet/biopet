@@ -41,7 +41,7 @@ class CollectGcBiasMetrics(val parent: Configurable)
   var outputSummary: File = _
 
   @Input(doc = "Reference file", required = false)
-  var reference: File = null
+  var reference: File = _
 
   @Argument(doc = "Window size", required = false)
   var windowSize: Option[Int] = config("windowsize")
@@ -64,7 +64,7 @@ class CollectGcBiasMetrics(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +
@@ -80,7 +80,7 @@ class CollectGcBiasMetrics(val parent: Configurable)
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getHistogram(output, tag = "METRICS CLASS")
+  def summaryStats: Option[Map[String, List[Option[Any]]]] = Picard.getHistogram(output, tag = "METRICS CLASS")
 }
 
 object CollectGcBiasMetrics {

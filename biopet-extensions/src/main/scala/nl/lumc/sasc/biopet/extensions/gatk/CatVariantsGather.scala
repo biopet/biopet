@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
+import org.broadinstitute.gatk.queue.function.scattergather.{GatherFunction, ScatterGatherableFunction}
 
 /**
  *
@@ -32,7 +32,7 @@ class CatVariantsGatherer extends CatVariants(null) with GatherFunction {
 
   analysisName = "Gather_CatVariants"
 
-  override val parent = originalFunction match {
+  override val parent: ScatterGatherableFunction with BiopetCommandLineFunction = originalFunction match {
     case b: BiopetCommandLineFunction => b
     case _                            => null
   }

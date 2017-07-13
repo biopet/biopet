@@ -36,7 +36,7 @@ class ManweAnnotateBed(val parent: Configurable) extends Manwe {
   @Argument(doc = "annotation queries", required = false)
   var queries: List[String] = Nil
 
-  def subCommand = {
+  def subCommand: String = {
     required("annotate-bed") + required(bed) +
       conditional(alreadyUploaded, "-u") +
       repeat("-q", queries) +

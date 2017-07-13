@@ -23,7 +23,7 @@ import scala.collection.JavaConversions._
  * A scatter function that divides down to the locus level.
  */
 class LocusScatterFunction extends GATKScatterFunction with InProcessFunction {
-  protected override def maxIntervals = scatterCount
+  protected override def maxIntervals: Int = scatterCount
 
   def run() {
     val gi = GATKScatterFunction.getGATKIntervals(this.originalGATK)

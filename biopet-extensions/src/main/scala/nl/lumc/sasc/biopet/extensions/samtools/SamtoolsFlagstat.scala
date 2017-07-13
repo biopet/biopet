@@ -28,7 +28,7 @@ class SamtoolsFlagstat(val parent: Configurable) extends Samtools {
   var output: File = _
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("flagstat") +
       (if (inputAsStdin) "-" else required(input)) +
       (if (outputAsStdout) "" else " > " + required(output))
