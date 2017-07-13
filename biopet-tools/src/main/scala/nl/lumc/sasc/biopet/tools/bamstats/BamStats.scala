@@ -94,8 +94,7 @@ object BamStats extends ToolCommand {
     samReader.close()
     referenceFasta
       .map { f =>
-        samHeader.getSequenceDictionary.assertSameDictionary(FastaUtils.getCachedDict(f),
-                                                             false)
+        samHeader.getSequenceDictionary.assertSameDictionary(FastaUtils.getCachedDict(f), false)
         FastaUtils.getCachedDict(f)
       }
       .getOrElse(samHeader.getSequenceDictionary)
