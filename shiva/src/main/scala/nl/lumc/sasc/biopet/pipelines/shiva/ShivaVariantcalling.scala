@@ -138,7 +138,7 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    if (!isGermlineVariantCallingConfigured())
+    if (!isGermlineVariantCallingConfigured)
       Logging.addError(
         "For running the pipeline at least one germline variant caller has to be configured")
     else if (!callers.exists(_.mergeVcfResults))
