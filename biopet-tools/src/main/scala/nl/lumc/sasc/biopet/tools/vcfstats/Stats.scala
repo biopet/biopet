@@ -191,6 +191,18 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
 
 object Stats {
 
+  def emptyStats(samples: List[String]): Stats = {
+    val stats = new Stats
+    //init stats
+    for (sample1 <- samples) {
+      stats.samplesStats += sample1 -> new SampleStats
+      for (sample2 <- samples) {
+        stats.samplesStats(sample1).sampleToSample += sample2 -> new SampleToSampleStats
+      }
+    }
+    stats
+  }
+
   /** Merge m2 into m1 */
   def mergeStatsMap(m1: mutable.Map[Any, Int], m2: mutable.Map[Any, Int]): Unit = {
     for (key <- m2.keySet)
