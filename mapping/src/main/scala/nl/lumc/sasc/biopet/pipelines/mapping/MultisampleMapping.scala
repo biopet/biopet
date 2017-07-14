@@ -236,7 +236,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
           bamMetrics.libId = Some(libId)
           bamMetrics.inputBam = bamFile.get
           bamMetrics.outputDir = new File(libDir, "metrics")
-          bamMetrics.paired = inputR2.isDefined
+          bamMetrics.paired = inputR2.isDefined || inputBam.isDefined
           add(bamMetrics)
 
           if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, bamFile.get))
