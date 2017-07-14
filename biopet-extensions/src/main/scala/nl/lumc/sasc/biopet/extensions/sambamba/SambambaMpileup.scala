@@ -26,11 +26,11 @@ class SambambaMpileup(val parent: Configurable) extends Sambamba {
   var input: List[File] = Nil
 
   @Output(doc = "Output file", required = false)
-  var output: File = null
+  var output: File = _
 
   val buffer: Option[Int] = config("buffer", default = 8 * 1024 * 1024)
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       required("mpileup") +
       optional("-t", threads) +

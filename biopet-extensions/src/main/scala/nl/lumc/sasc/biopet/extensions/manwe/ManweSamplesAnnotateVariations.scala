@@ -30,7 +30,7 @@ class ManweSamplesAnnotateVariations(val parent: Configurable) extends Manwe {
   @Argument(doc = "Annotation queries", required = false)
   var queries: List[String] = Nil
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("annotate-variations") +
       required(uri) +

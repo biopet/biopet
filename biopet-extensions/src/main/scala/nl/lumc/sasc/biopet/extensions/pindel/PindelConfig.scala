@@ -34,7 +34,7 @@ class PindelConfig(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
   var sampleName: String = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", input) +
       required("-n", sampleName) + { if (insertSize == 0) "" else s" -s $insertSize " } +

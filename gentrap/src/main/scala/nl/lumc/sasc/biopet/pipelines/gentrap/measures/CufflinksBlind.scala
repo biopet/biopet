@@ -25,5 +25,6 @@ class CufflinksBlind(val parent: Configurable)
     extends QScript
     with CufflinksMeasurement
     with AnnotationGtf {
-  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_blind_gtf" -> annotationGtf)
+  override def summaryFiles: Map[String, File] =
+    super.summaryFiles ++ Map("cufflinks_blind_gtf" -> annotationGtf)
 }

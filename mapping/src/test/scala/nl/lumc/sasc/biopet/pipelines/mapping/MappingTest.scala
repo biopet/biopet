@@ -51,7 +51,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
   def unmappedToGears = false
 
   @DataProvider(name = "mappingOptions")
-  def mappingOptions = {
+  def mappingOptions: Array[Array[Any]] = {
     for (pair <- paired;
          chunk <- chunks;
          skipMarkDuplicate <- skipMarkDuplicates;
@@ -66,7 +66,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
                   chunks: Int,
                   skipMarkDuplicate: Boolean,
                   skipFlexiprep: Boolean,
-                  zipped: Boolean) = {
+                  zipped: Boolean): Unit = {
     val map = ConfigUtils.mergeMaps(
       Map(
         "output_dir" -> outputDir,
@@ -110,7 +110,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     dir
   }
 
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val r1 = new File(inputDir, "R1.fq")
   val r2 = new File(inputDir, "R2.fq")
@@ -119,7 +119,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
   val hisat2Index = new File(inputDir, "ref.1.ht2")
 
   @BeforeClass
-  def createTempFiles: Unit = {
+  def createTempFiles(): Unit = {
     Files.touch(r1)
     Files.touch(r2)
     Files.touch(r1Zipped)
@@ -169,7 +169,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
   )
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     FileUtils.deleteDirectory(inputDir)
     dirs.foreach(FileUtils.deleteDirectory)
   }
@@ -189,9 +189,9 @@ class MappingTophatTest extends AbstractTestMapping("tophat")
 class MappingGearsTest extends AbstractTestMapping("bwa-mem") {
   override def unmappedToGears = true
 
-  override def paired = Array(true)
+  override def paired = Array(x = true)
   override def chunks = Array(1)
-  override def skipMarkDuplicates = Array(true)
-  override def skipFlexipreps = Array(true)
-  override def zipped = Array(true)
+  override def skipMarkDuplicates = Array(x = true)
+  override def skipFlexipreps = Array(x = true)
+  override def zipped = Array(x = true)
 }

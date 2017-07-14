@@ -30,7 +30,7 @@ class BuildBamIndex(val parent: Configurable) extends Picard {
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false)

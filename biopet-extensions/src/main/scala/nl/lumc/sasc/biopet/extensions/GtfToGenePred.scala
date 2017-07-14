@@ -41,7 +41,7 @@ class GtfToGenePred(val parent: Configurable) extends BiopetCommandLineFunction 
   var simple: Boolean = config("simple", default = false)
   var geneNameAsName2: Boolean = config("gene _name_as_name2", default = false)
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       conditional(genePredExt, "-genePredExt") +
       conditional(allErrors, "-allErrors") +

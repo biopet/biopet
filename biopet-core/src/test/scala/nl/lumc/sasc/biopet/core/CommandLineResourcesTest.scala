@@ -77,7 +77,7 @@ class CommandLineResourcesTest extends TestNGSuite with Matchers {
     val cmd1 = new CommandLineFunctionMock with CommandLineResources
     val cmd2 = new CommandLineFunctionMock with CommandLineResources
     val mainCmd = new CommandLineFunctionMock with CommandLineResources {
-      def combine(functions: List[CommandLineResources]) = combineResources(functions)
+      def combine(functions: List[CommandLineResources]): Unit = combineResources(functions)
     }
     mainCmd.combine(List(cmd1, cmd2))
 

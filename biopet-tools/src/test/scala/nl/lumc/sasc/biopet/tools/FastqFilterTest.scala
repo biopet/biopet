@@ -34,11 +34,11 @@ class FastqFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val preFilterFastq = resourcePath("/paired01_pre_filter.fq")
-  val postFilterFastq = resourcePath("/paired01_post_filter.fq")
+  val preFilterFastq: String = resourcePath("/paired01_pre_filter.fq")
+  val postFilterFastq: String = resourcePath("/paired01_post_filter.fq")
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
     val temp = File.createTempFile("out", ".fastq")
     temp.deleteOnExit()
     val args = Array("-I", preFilterFastq, "-o", temp.getAbsolutePath, "--idRegex", "_filter$")

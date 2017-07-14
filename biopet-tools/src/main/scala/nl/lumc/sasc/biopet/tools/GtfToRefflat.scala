@@ -174,7 +174,7 @@ object GtfToRefflat extends ToolCommand {
     val writer = new PrintWriter(refflatFile)
 
     for {
-      (contig, genes) <- genesBuffer.values.toList.groupBy(_.contig).toList.sortBy(_._1)
+      (_, genes) <- genesBuffer.values.toList.groupBy(_.contig).toList.sortBy(_._1)
       gene <- genes.sortBy(_.start)
       transcript <- gene.transcripts
     } {

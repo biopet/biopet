@@ -61,7 +61,7 @@ class VcfFilter(val parent: Configurable) extends ToolCommandFunction {
       outputVcfIndex = new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", inputVcf) +
       required("-o", outputVcf) +

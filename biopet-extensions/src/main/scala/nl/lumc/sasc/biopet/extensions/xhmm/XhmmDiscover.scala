@@ -43,7 +43,7 @@ class XhmmDiscover(val parent: Configurable) extends Xhmm with Summarizable {
 
   var xhmmAnalysisName: String = _
 
-  override def beforeGraph() = {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (outputXcnv == null) {
       throw new IllegalStateException("Must set output file")
@@ -51,7 +51,7 @@ class XhmmDiscover(val parent: Configurable) extends Xhmm with Summarizable {
     _outputXcnvAuxFile = outputXcnvAuxFile
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--discover") +
       required("-r", inputMatrix) +
       required("-R", r) +

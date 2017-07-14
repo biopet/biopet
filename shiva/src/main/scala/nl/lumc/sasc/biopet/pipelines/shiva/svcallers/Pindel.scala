@@ -29,7 +29,7 @@ class Pindel(val parent: Configurable) extends SvCaller {
   override def defaults =
     Map(
       "pindelvcf" -> Map(
-        "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime()),
+        "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime),
         "compact_output_limit" -> 10
       ))
 
@@ -48,7 +48,7 @@ class Pindel(val parent: Configurable) extends SvCaller {
       add(pindel)
 
       // Current date
-      val today = Calendar.getInstance().getTime()
+      val today = Calendar.getInstance().getTime
       val todayformat = new SimpleDateFormat("yyyyMMdd")
 
       val pindelVcf = new PindelVCF(this)
@@ -56,12 +56,12 @@ class Pindel(val parent: Configurable) extends SvCaller {
       pindelVcf.pindelOutputInputHolder = pindel.outputFile
       pindelVcf.pindelOutputRoot = Some(new File(pindelDir, "sample"))
       pindelVcf.rDate = todayformat.format(today) // officially, we should enter the date of the genome here
-      pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
+      pindelVcf.outputVCF = new File(pindelDir, s"$sample.pindel.vcf")
       add(pindelVcf)
 
       val compressedVCF = new SortVcf(this)
       compressedVCF.input = pindelVcf.outputVCF
-      compressedVCF.output = new File(pindelDir, s"${sample}.pindel.vcf.gz")
+      compressedVCF.output = new File(pindelDir, s"$sample.pindel.vcf.gz")
       add(compressedVCF)
 
       addVCF(sample, compressedVCF.output)

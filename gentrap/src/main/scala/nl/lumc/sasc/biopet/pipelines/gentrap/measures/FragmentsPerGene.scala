@@ -27,7 +27,7 @@ class FragmentsPerGene(val parent: Configurable)
     extends QScript
     with Measurement
     with AnnotationGtf {
-  def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, numHeaderLines = 0, fallback = "0")
+  def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, fallback = "0")
 
   override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> ""))
 
@@ -69,5 +69,6 @@ class FragmentsPerGene(val parent: Configurable)
   def mergedTable = new File(outputDir, s"$name.fragments_per_gene.tsv")
   def heatmap = new File(outputDir, s"$name.fragments_per_gene.png")
 
-  override def summaryFiles = super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf)
+  override def summaryFiles: Map[String, File] =
+    super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf)
 }

@@ -24,19 +24,19 @@ class ConfigValue(val requestIndex: ConfigValueIndex,
                   val default: Boolean) {
 
   /** Get value as String */
-  def asString = any2string(value)
+  def asString: String = any2string(value)
 
   /** Get value as File */
   def asFile = new File(any2string(value))
 
   /** Get value as Int */
-  def asInt = any2int(value)
+  def asInt: Int = any2int(value)
 
   /** Get value as Double */
-  def asDouble = any2double(value)
+  def asDouble: Double = any2double(value)
 
   /** Get value as List[Any] */
-  def asList = any2list(value)
+  def asList: List[Any] = any2list(value)
 
   /** Get value as List[File] */
   def asFileList: List[File] = for (file <- any2stringList(value)) yield new File(file)
@@ -45,10 +45,10 @@ class ConfigValue(val requestIndex: ConfigValueIndex,
   def asStringList: List[String] = any2stringList(value)
 
   /** Get value as Map */
-  def asMap = any2map(value)
+  def asMap: Map[String, Any] = any2map(value)
 
   /** Get value as Boolean */
-  def asBoolean = any2boolean(value)
+  def asBoolean: Boolean = any2boolean(value)
 
   /** Readable output of indexes and value, just for debug */
   override def toString: String = {
@@ -72,7 +72,9 @@ object ConfigValue {
     * @param value Found value
     * @return ConfigValue object
     */
-  def apply(requestIndex: ConfigValueIndex, foundIndex: ConfigValueIndex, value: Any) = {
+  def apply(requestIndex: ConfigValueIndex,
+            foundIndex: ConfigValueIndex,
+            value: Any): ConfigValue = {
     new ConfigValue(requestIndex, foundIndex, value, false)
   }
 
@@ -87,7 +89,7 @@ object ConfigValue {
   def apply(requestIndex: ConfigValueIndex,
             foundIndex: ConfigValueIndex,
             value: Any,
-            default: Boolean) = {
+            default: Boolean): ConfigValue = {
     new ConfigValue(requestIndex, foundIndex, value, default)
   }
 }

@@ -31,13 +31,13 @@ class CollectInsertSizeMetrics(val parent: Configurable)
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.",
          required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "The output file to write statistics to", required = true)
-  var output: File = null
+  var output: File = _
 
   @Output(doc = "Output histogram", required = true)
-  protected var outputHistogram: File = null
+  protected var outputHistogram: File = _
 
   @Argument(doc = "Reference file", required = false)
   var reference: File = _
@@ -66,7 +66,7 @@ class CollectInsertSizeMetrics(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +
@@ -81,7 +81,7 @@ class CollectInsertSizeMetrics(val parent: Configurable)
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
 
-  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats: Any = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectInsertSizeMetrics {

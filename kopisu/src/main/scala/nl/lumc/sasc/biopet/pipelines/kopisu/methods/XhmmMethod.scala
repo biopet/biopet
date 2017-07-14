@@ -147,12 +147,4 @@ class XhmmMethod(val parent: Configurable) extends CnvMethod with Reference {
 
   }
 
-  private def depthOfCoverage(bamFile: File): DepthOfCoverage = {
-    val dp = new DepthOfCoverage(this)
-    dp.input_file = List(bamFile)
-    dp.intervals = List(targets)
-    dp.out = swapExt(xhmmDir, bamFile, ".bam", ".dcov")
-    dp
-  }
-
 }

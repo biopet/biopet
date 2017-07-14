@@ -32,9 +32,9 @@ class SquishBed(val parent: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output interval list", required = true)
   var output: File = _
 
-  var strandSensitive: Boolean = config("strandSensitive", default = false)
+  val strandSensitive: Boolean = config("strandSensitive", default = false)
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", input) +
       required("-o", output) +

@@ -25,16 +25,16 @@ import scala.sys.process.{Process, ProcessLogger}
 
 class GsnapTest extends TestNGSuite with Matchers {
 
-  @BeforeClass def checkExecutable() = {
+  @BeforeClass def checkExecutable(): Unit = {
     val wrapper = new Gsnap(null) {
       override def globalConfig = new Config(Map("db" -> "mock"))
     }
     val proc = Process(wrapper.versionCommand)
     val exitCode =
       try {
-        proc.run(ProcessLogger(lines => (), lines => ())).exitValue()
+        proc.run(ProcessLogger(_ => (), _ => ())).exitValue()
       } catch {
-        case e: java.io.IOException => -1
+        case _: java.io.IOException => -1
         // rethrow if it's not IOException (we only expect IOException if the executable is missing)
         case e: Exception => throw e
       }
@@ -43,7 +43,7 @@ class GsnapTest extends TestNGSuite with Matchers {
   }
 
   @Test(description = "GSNAP version number capture from executable")
-  def testVersion() = {
+  def testVersion(): Unit = {
     new Gsnap(null) {
       override def globalConfig = new Config(Map("db" -> "mock"))
     }.getVersion should not be "N/A"

@@ -42,19 +42,20 @@ class Kopisu(val parent: Configurable) extends QScript with SummaryQScript with 
     if (inputBams.isEmpty) Logging.addError("No input bams found")
   }
 
-  lazy val freecMethod = if (config("use_freec_method", default = true)) {
+  lazy val freecMethod: Option[FreecMethod] = if (config("use_freec_method", default = true)) {
     Some(new FreecMethod(this))
   } else None
 
-  lazy val coniferMethod = if (config("use_conifer_method", default = false)) {
-    Some(new ConiferMethod(this))
-  } else None
+  lazy val coniferMethod: Option[ConiferMethod] =
+    if (config("use_conifer_method", default = false)) {
+      Some(new ConiferMethod(this))
+    } else None
 
-  lazy val cnMopsMethod = if (config("use_cnmops_method", default = false)) {
+  lazy val cnMopsMethod: Option[CnmopsMethod] = if (config("use_cnmops_method", default = false)) {
     Some(new CnmopsMethod(this))
   } else None
 
-  lazy val xhmmMethod = if (config("use_xhmm_method", default = false)) {
+  lazy val xhmmMethod: Option[XhmmMethod] = if (config("use_xhmm_method", default = false)) {
     Some(new XhmmMethod(this))
   } else None
 

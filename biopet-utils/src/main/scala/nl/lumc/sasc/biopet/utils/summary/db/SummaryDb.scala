@@ -265,9 +265,6 @@ trait SummaryDb extends Closeable {
                   library: LibraryQuery = NoLibrary,
                   keyValues: Map[String, List[String]]): Map[String, Option[Any]] = {
     val stats = Await.result(getStat(runId, pipeline, module, sample, library), Duration.Inf)
-    if (module == ModuleName("rna")) {
-      ""
-    }
     keyValues.map {
       case (key, path) =>
         stats match {
@@ -523,16 +520,14 @@ class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extend
 
   /** This method will create all tables */
   def createTables(): Unit = {
-    try {
-      val setup = DBIO.seq(
-        (runs.schema ++ samples.schema ++
-          libraries.schema ++ pipelines.schema ++
-          modules.schema ++ stats.schema ++ settings.schema ++
-          files.schema ++ executables.schema).create
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    }
+    val setup = DBIO.seq(
+      (runs.schema ++ samples.schema ++
+        libraries.schema ++ pipelines.schema ++
+        modules.schema ++ stats.schema ++ settings.schema ++
+        files.schema ++ executables.schema).create
+    )
+    val setupFuture = db.run(setup)
+    Await.result(setupFuture, Duration.Inf)
   }
 
   /** This method will create a new run and return the runId */
@@ -674,7 +669,7 @@ class SummaryDbWrite(val db: Database)(implicit val ec: ExecutionContext) extend
     else db.run(filter.update(Setting(runId, pipelineId, moduleId, sampleId, libId, content)))
   }
 
-  /** Creates a file. This method will raise expection if it already exist */
+  /** Creates a file. This method will raise exception if it already exist */
   def createFile(runId: Int,
                  pipelineId: Int,
                  moduleId: Option[Int] = None,

@@ -41,7 +41,7 @@ class CollectHsMetrics(val parent: Configurable) extends Picard with Summarizabl
   var perTargetCoverage: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = null
+  var reference: File = _
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
   var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
@@ -55,7 +55,7 @@ class CollectHsMetrics(val parent: Configurable) extends Picard with Summarizabl
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +

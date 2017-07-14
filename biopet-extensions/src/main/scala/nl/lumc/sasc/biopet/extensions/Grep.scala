@@ -32,14 +32,14 @@ class Grep(val parent: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "grep")
 
-  var grepFor: String = null
+  var grepFor: String = _
 
   var invertMatch: Boolean = false
   var regex: Boolean = false
   var perlRegexp: Boolean = false
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       conditional(invertMatch, "-v") +
       conditional(regex, "-e") +

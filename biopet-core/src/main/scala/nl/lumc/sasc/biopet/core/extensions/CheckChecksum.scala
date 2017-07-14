@@ -36,7 +36,7 @@ class CheckChecksum extends InProcessFunction {
   var checksum: String = _
 
   /** Exits whenever the input md5sum is not the same as the output md5sum */
-  def run: Unit = {
+  def run(): Unit = {
     val outputChecksum = WriteSummary.parseChecksum(checksumFile).toLowerCase
 
     if (outputChecksum != checksum.toLowerCase) {

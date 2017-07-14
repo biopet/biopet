@@ -201,10 +201,7 @@ trait PedigreeQscript extends MultiSampleQScript { qscript: QScript =>
       }
       val affectedField = p.affectedPhenotype match {
         case Some(b) =>
-          b match {
-            case true => "2"
-            case _ => "1"
-          }
+          if (b) "2" else "1"
         case _ => "0"
       }
       val mainLine: String =

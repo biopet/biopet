@@ -17,8 +17,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Extension for freebayes
@@ -37,7 +39,7 @@ class Freebayes(val parent: Configurable)
   var reference: File = _
 
   @Output(required = true)
-  var outputVcf: File = null
+  var outputVcf: File = _
 
   @Input(required = false)
   var bamList: Option[File] = config("bam_list")
@@ -129,15 +131,15 @@ class Freebayes(val parent: Configurable)
   var haplotypeLength: Option[Int] = config("haplotype_length")
 
   executable = config("exe", default = "freebayes")
-  def versionRegex = """version:  (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """version:  (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("--fasta-reference", reference) +
       repeat("--bam", bamfiles) +

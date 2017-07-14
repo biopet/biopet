@@ -63,20 +63,20 @@ class CatVariants(val parent: Configurable) extends BiopetJavaCommandLineFunctio
 
   override def defaultCoreMemory = 4.0
 
-  override def beforeGraph() = {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine = super.cmdLine +
-    required("-R", reference, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-V", variant, spaceSeparated = true, escape = true, format = "%s") +
-    required("-out", outputFile, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(assumeSorted, "-assumeSorted", escape = true, format = "%s") +
-    optional("--variant_index_type", variant_index_type, spaceSeparated = true, escape = true, format = "%s") +
-    optional("--variant_index_parameter", variant_index_parameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-l", logging_level, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-log", log_to_file, spaceSeparated = true, escape = true, format = "%s") +
+  override def cmdLine: String = super.cmdLine +
+    required("-R", reference) +
+    repeat("-V", variant) +
+    required("-out", outputFile) +
+    conditional(assumeSorted, "-assumeSorted") +
+    optional("--variant_index_type", variant_index_type) +
+    optional("--variant_index_parameter", variant_index_parameter) +
+    optional("-l", logging_level) +
+    optional("-log", log_to_file) +
     (if (writeHeaderToEmptyOutput) s"""
        |c=$$?
        |if [ $$c -eq 0 ] && [ ! -s $outputFile ]; then

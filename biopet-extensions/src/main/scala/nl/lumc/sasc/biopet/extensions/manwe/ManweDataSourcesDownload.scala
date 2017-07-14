@@ -25,7 +25,7 @@ class ManweDataSourcesDownload(val parent: Configurable) extends Manwe {
   @Argument(doc = "uri to data source to download")
   var uri: String = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("data-sources") +
       required("download") +
       required(uri)

@@ -26,19 +26,19 @@ import org.testng.annotations.Test
   */
 class SummaryTest extends TestNGSuite with Matchers {
   @Test
-  def testSamples: Unit = {
+  def testSamples(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.samples shouldBe Set("sample1")
   }
 
   @Test
-  def testLibraries: Unit = {
+  def testLibraries(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.libraries shouldBe Map("sample1" -> Set("lib1"))
   }
 
   @Test
-  def testValue: Unit = {
+  def testValue(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getValue("key_1") shouldBe Some("test_1")
     summary.getValue("key_x") shouldBe None
@@ -54,7 +54,7 @@ class SummaryTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSampleValue: Unit = {
+  def testSampleValue(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getSampleValue("sample1", "key_2") shouldBe Some("test_2")
     summary.getSampleValue("sample1", "key_x") shouldBe None
@@ -62,7 +62,7 @@ class SummaryTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSampleValues: Unit = {
+  def testSampleValues(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getSampleValues("key_2") shouldBe Map("sample1" -> Some("test_2"))
     summary.getSampleValues("key_x") shouldBe Map("sample1" -> None)
@@ -72,7 +72,7 @@ class SummaryTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testLibraryValue: Unit = {
+  def testLibraryValue(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getLibraryValue("sample1", "lib1", "key_3") shouldBe Some("test_3")
     summary.getLibraryValue("sample1", "lib1", "key_x") shouldBe None
@@ -80,7 +80,7 @@ class SummaryTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testLibraryValues: Unit = {
+  def testLibraryValues(): Unit = {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getLibraryValues("key_3") shouldBe Map(("sample1", "lib1") -> Some("test_3"))
     summary.getLibraryValues("key_x") shouldBe Map(("sample1", "lib1") -> None)
@@ -104,7 +104,7 @@ object SummaryTest {
     )
   )
 
-  val testSummaryFile = File.createTempFile("summary.", ".json")
+  val testSummaryFile: File = File.createTempFile("summary.", ".json")
   testSummaryFile.deleteOnExit()
 
   val writer = new PrintWriter(testSummaryFile)

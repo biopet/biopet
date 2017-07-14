@@ -30,10 +30,10 @@ class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T
   protected[Counts] val counts: mutable.Map[T, Long] = mutable.Map() ++ _counts
 
   /** Returns histogram as map */
-  def countsMap = counts.toMap
+  def countsMap: Map[T, Long] = counts.toMap
 
   /** Returns value if it does exist */
-  def get(key: T) = counts.get(key)
+  def get(key: T): Option[Long] = counts.get(key)
 
   /** This will add an other histogram to `this` */
   def +=(other: Counts[T]): Counts[T] = {
@@ -54,7 +54,7 @@ class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T
     writer.close()
   }
 
-  def toSummaryMap = {
+  def toSummaryMap: Map[String, List[Any]] = {
     val values = counts.keySet.toList.sortWith(sortAnyAny)
     Map("values" -> values, "counts" -> values.map(counts(_)))
   }

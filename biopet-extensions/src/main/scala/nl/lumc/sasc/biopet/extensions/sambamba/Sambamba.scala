@@ -16,15 +16,17 @@ package nl.lumc.sasc.biopet.extensions.sambamba
 
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 
+import scala.util.matching.Regex
+
 /** General Sambamba extension */
 abstract class Sambamba extends BiopetCommandLineFunction with Version {
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 2
 
-  override def subPath = "sambamba" :: super.subPath
+  override def subPath: List[String] = "sambamba" :: super.subPath
 
   executable = config("exe", default = "sambamba", namespace = "sambamba", freeVar = false)
-  def versionCommand = executable
-  def versionRegex = """sambamba v?(.*)""".r
+  def versionCommand: String = executable
+  def versionRegex: Regex = """sambamba v?(.*)""".r
   override def versionExitcode = List(0, 1)
 }

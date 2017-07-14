@@ -57,7 +57,7 @@ class BcftoolsCall(val parent: Configurable) extends Bcftools {
     require(c != m)
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("call") +
       optional("-O", O) +

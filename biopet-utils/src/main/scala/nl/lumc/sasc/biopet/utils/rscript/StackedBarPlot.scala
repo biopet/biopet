@@ -37,7 +37,7 @@ class StackedBarPlot(val parent: Configurable) extends Rscript {
   var llabel: Option[String] = config("llabel")
   var title: Option[String] = config("title")
 
-  override def cmd =
+  override def cmd: Seq[String] =
     super.cmd ++
       Seq("--input", input.getAbsolutePath) ++
       Seq("--output", output.getAbsolutePath) ++

@@ -32,7 +32,7 @@ class BreakdancerVCF(val parent: Configurable) extends PythonCommandLineFunction
   @Argument(doc = "Samplename")
   var sample: String = _
 
-  def cmdLine = {
+  def cmdLine: String = {
     getPythonCommand +
       "-i " + required(input) +
       "-o " + required(output) +

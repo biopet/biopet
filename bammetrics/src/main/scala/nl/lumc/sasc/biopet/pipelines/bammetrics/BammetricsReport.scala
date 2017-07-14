@@ -490,7 +490,7 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def writeTableToTsv(tsvFile: File, table: Map[String, Array[Any]], firstColumn: String): Unit = {
-    require(table.map(_._2.size).toList.distinct.size == 1,
+    require(table.map(_._2.length).toList.distinct.size == 1,
             "Not all values has the same number or rows")
     val keys = table.keys.filterNot(_ == firstColumn).toList.sorted
     val writer = new PrintWriter(tsvFile)

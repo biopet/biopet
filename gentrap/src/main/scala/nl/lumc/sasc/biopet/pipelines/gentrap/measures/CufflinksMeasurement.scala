@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.queue.QScript
   * Created by pjvanthof on 20/01/16.
   */
 trait CufflinksMeasurement extends QScript with Measurement {
-  def makeCufflinksJob(id: String, bamFile: File) = {
+  def makeCufflinksJob(id: String, bamFile: File): Cufflinks = {
     val cufflinks = new Cufflinks(this)
     cufflinks.input = bamFile
     cufflinks.outputDir = new File(outputDir, id)

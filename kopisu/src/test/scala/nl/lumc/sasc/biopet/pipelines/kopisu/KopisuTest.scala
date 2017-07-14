@@ -46,7 +46,7 @@ class KopisuTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @DataProvider(name = "shivaSvCallingOptions")
-  def shivaSvCallingOptions = {
+  def shivaSvCallingOptions: Array[Array[AnyVal]] = {
     val bool = Array(true, false)
     (for (bams <- 0 to 3;
           freec <- bool;
@@ -54,7 +54,7 @@ class KopisuTest extends TestNGSuite with Matchers {
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
-  def testKopisu(bams: Int, freec: Boolean, conifer: Boolean) = {
+  def testKopisu(bams: Int, freec: Boolean, conifer: Boolean): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
 
@@ -92,14 +92,14 @@ class KopisuTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object KopisuTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   private def inputTouch(name: String): File = {
     val file = new File(inputDir, name).getAbsoluteFile
@@ -118,10 +118,10 @@ object KopisuTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
-  val controlDir = Files.createTempDir()
+  val controlDir: File = Files.createTempDir()
   Files.touch(new File(controlDir, "test.txt"))
 
-  val coniferScript = File.createTempFile("conifer.", ".py")
+  val coniferScript: File = File.createTempFile("conifer.", ".py")
   coniferScript.deleteOnExit()
 
   def config(outputDir: File) = Map(

@@ -58,7 +58,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                   aMock: FastqReader,
                   bMock: FastqReader,
                   aOutMock: AsyncFastqWriter,
-                  bOutMock: AsyncFastqWriter) = {
+                  bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -87,7 +87,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -104,7 +104,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver()
@@ -122,7 +122,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -140,7 +140,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("2", "3")
@@ -167,7 +167,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -194,7 +194,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                        aMock: FastqReader,
                        bMock: FastqReader,
                        aOutMock: AsyncFastqWriter,
-                       bOutMock: AsyncFastqWriter) = {
+                       bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("2", "3")
@@ -218,7 +218,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("SOLEXA12_24:6:117:1388:2001/2",
                                                   "SOLEXA12_24:6:96:470:1965/2",
@@ -244,7 +244,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                     aMock: FastqReader,
                                     bMock: FastqReader,
                                     aOutMock: AsyncFastqWriter,
-                                    bOutMock: AsyncFastqWriter) = {
+                                    bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1/1", "2/1", "3/1")
     when(aMock.iterator) thenReturn recordsOver("2/1", "3/1")
@@ -266,7 +266,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                          aMock: FastqReader,
                                          bMock: FastqReader,
                                          aOutMock: AsyncFastqWriter,
-                                         bOutMock: AsyncFastqWriter) = {
+                                         bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1_1", "2_1", "3_1")
     when(aMock.iterator) thenReturn recordsOver("2_1", "3_1")
@@ -288,7 +288,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                       aMock: FastqReader,
                                       bMock: FastqReader,
                                       aOutMock: AsyncFastqWriter,
-                                      bOutMock: AsyncFastqWriter) = {
+                                      bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1 desc1b", "2 desc2b", "3 desc3b")
     when(aMock.iterator) thenReturn recordsOver("2 desc2a", "3 desc3a")
@@ -310,7 +310,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                   aMock: FastqReader,
                   bMock: FastqReader,
                   aOutMock: AsyncFastqWriter,
-                  bOutMock: AsyncFastqWriter) = {
+                  bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1/2 yep",
                                                   "2/2 yep",
@@ -334,7 +334,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     numKept shouldBe 2
   }
 
-  @Test def testArgsMinimum() = {
+  @Test def testArgsMinimum(): Unit = {
     val args = Array(
       "-r",
       resourcePath("/paired01a.fq"),

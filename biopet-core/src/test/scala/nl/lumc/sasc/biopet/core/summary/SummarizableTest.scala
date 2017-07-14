@@ -25,7 +25,7 @@ import org.testng.annotations.Test
   */
 class SummarizableTest extends TestNGSuite with Matchers {
   @Test
-  def testDefaultMerge: Unit = {
+  def testDefaultMerge(): Unit = {
     val summarizable = new Summarizable {
       def summaryFiles: Map[String, File] = ???
       def summaryStats: Any = ???
@@ -35,11 +35,11 @@ class SummarizableTest extends TestNGSuite with Matchers {
     }
   }
 
-  def testOverrideMerge: Unit = {
+  def testOverrideMerge(): Unit = {
     val summarizable = new Summarizable {
       def summaryFiles: Map[String, File] = ???
       def summaryStats: Any = ???
-      override def resolveSummaryConflict(v1: Any, v2: Any, key: String) = v1
+      override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = v1
     }
     summarizable.resolveSummaryConflict("1", "1", "key") shouldBe "1"
   }

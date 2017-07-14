@@ -32,7 +32,7 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
 
   flagstat.loadDefaultFunctions()
   flagstat.loadQualityFunctions()
-  flagstat.loadOrientationFunctions
+  flagstat.loadOrientationFunctions()
 
   /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {
@@ -59,7 +59,7 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
     this._3_ClippingHistogram.writeHistogramToTsv(new File(outputDir, "3_prime_clipping.tsv"))
   }
 
-  def toSummaryMap = {
+  def toSummaryMap: Map[String, Map[String, Any]] = {
     Map(
       "flagstats" -> flagstat.toSummaryMap,
       "mapping_quality" -> Map("histogram" -> mappingQualityHistogram.toSummaryMap,

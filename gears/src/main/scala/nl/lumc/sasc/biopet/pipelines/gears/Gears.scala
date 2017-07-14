@@ -30,7 +30,7 @@ import org.broadinstitute.gatk.queue.QScript
 class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { qscript =>
   def this() = this(null)
 
-  override def reportClass = {
+  override def reportClass: Some[GearsReport] = {
     val gearsReport = new GearsReport(this)
     gearsReport.outputDir = new File(outputDir, "report")
     gearsReport.summaryDbFile = summaryDbFile
@@ -143,7 +143,8 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
       lazy val skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
-      lazy val flexiprep = if (skipFlexiprep) None else Some(new Flexiprep(qscript))
+      lazy val flexiprep: Option[Flexiprep] =
+        if (skipFlexiprep) None else Some(new Flexiprep(qscript))
       flexiprep.foreach(_.sampleId = Some(sampleId))
       flexiprep.foreach(_.libId = Some(libId))
       flexiprep.foreach(_.inputR1 = inputR1)
@@ -155,7 +156,8 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
       val libraryGears: Boolean = config("library_gears", default = false)
 
-      lazy val gearsSingle = if (libraryGears) Some(new GearsSingle(qscript)) else None
+      lazy val gearsSingle: Option[GearsSingle] =
+        if (libraryGears) Some(new GearsSingle(qscript)) else None
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
@@ -188,8 +190,6 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
     /** Function to add sample jobs */
     protected def addJobs(): Unit = {
       addPerLibJobs()
-
-      val flexipreps = libraries.values.map(_.flexiprep).toList
 
       val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
       add(Zcat(qscript, libraries.values.map(_.qcR1).toList) | new Gzip(qscript) > mergeR1)

@@ -62,7 +62,7 @@ object GensToVcf extends ToolCommand {
     opt[String]('c', "contig") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(contig = x)
     } text "contig of impute file"
-    opt[Unit]("sortInput") maxOccurs 1 action { (x, c) =>
+    opt[Unit]("sortInput") maxOccurs 1 action { (_, c) =>
       c.copy(sortInput = true)
     } text "In memory sorting"
   }

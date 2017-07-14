@@ -5,6 +5,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Created by Sander Bollen on 20-3-17.
   */
@@ -30,7 +32,7 @@ abstract class Wisecondor extends BiopetCommandLineFunction with Version with Re
     }
   }
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """.+, version (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """.+, version (.*)""".r
 
 }

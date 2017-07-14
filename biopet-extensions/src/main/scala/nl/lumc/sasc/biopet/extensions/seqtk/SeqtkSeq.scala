@@ -86,7 +86,7 @@ class SeqtkSeq(val parent: Configurable) extends Seqtk {
 
   def summaryFiles: Map[String, File] = Map()
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       " seq " +
       optional("-q", q) +

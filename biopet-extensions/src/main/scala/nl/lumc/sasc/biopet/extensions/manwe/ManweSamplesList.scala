@@ -32,7 +32,7 @@ class ManweSamplesList(val parent: Configurable) extends Manwe {
 
   var onlyPublic: Boolean = false
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("list") +
       optional("-u", user) +

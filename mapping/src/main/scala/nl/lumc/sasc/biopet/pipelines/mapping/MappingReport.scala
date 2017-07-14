@@ -18,6 +18,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.pipelines.mapping
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
@@ -40,7 +41,7 @@ object MappingReport extends ReportBuilder {
 
   def pipelineName = "mapping"
 
-  override def extFiles =
+  override def extFiles: List[mapping.MappingReport.ExtFile] =
     super.extFiles ++ List("js/gears.js",
                            "js/krona-2.0.js",
                            "img/krona/loading.gif",

@@ -60,9 +60,8 @@ object FastqFilter extends ToolCommand {
     var total = 0
     var kept = 0
     for (record <- reader.iterator()) {
-      if (cmdArgs.idRegex
-            .map(_.findFirstIn(record.getReadHeader.takeWhile(_ != ' ')).isDefined)
-            .getOrElse(true)) {
+      if (cmdArgs.idRegex.forall(
+            _.findFirstIn(record.getReadHeader.takeWhile(_ != ' ')).isDefined)) {
         writer.write(record)
         kept += 1
       }

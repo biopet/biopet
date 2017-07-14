@@ -18,6 +18,8 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 
+import scala.util.matching.Regex
+
 /**
   * Created by Sander Bollen on 23-11-16.
   *
@@ -28,6 +30,6 @@ abstract class Xhmm extends BiopetCommandLineFunction with Version {
   executable = config("exe", namespace = "xhmm", default = "xhmm")
   var discoverParamsFile: File = config("discover_params", namespace = "xhmm")
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """xhmm (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """xhmm (.*)""".r
 }

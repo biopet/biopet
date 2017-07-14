@@ -87,13 +87,13 @@ class BaseCounterTest extends TestNGSuite with Matchers {
     bamRecordBasesOverlap(read, 60, 70) shouldBe 0
 
     val counts = new Counts
-    bamRecordBasesOverlap(read, 40, 70, counts, true)
+    bamRecordBasesOverlap(read, 40, 70, counts, sense = true)
     counts.senseBases shouldBe 10
     counts.antiSenseBases shouldBe 0
     counts.senseReads shouldBe 1
     counts.antiSenseReads shouldBe 0
 
-    bamRecordBasesOverlap(read, 50, 54, counts, false)
+    bamRecordBasesOverlap(read, 50, 54, counts, sense = false)
     counts.senseBases shouldBe 10
     counts.antiSenseBases shouldBe 5
     counts.senseReads shouldBe 1
@@ -101,7 +101,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSamRecordStrand: Unit = {
+  def testSamRecordStrand(): Unit = {
     val readPlusUnpaired = BaseCounterTest.lineParser.parseLine(
       "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     val readMinUnpaired = BaseCounterTest.lineParser.parseLine(
@@ -115,19 +115,19 @@ class BaseCounterTest extends TestNGSuite with Matchers {
     val readMinPairedR2 = BaseCounterTest.lineParser.parseLine(
       "r02\t153\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
 
-    samRecordStrand(readPlusUnpaired, true) shouldBe false
-    samRecordStrand(readMinUnpaired, true) shouldBe true
-    samRecordStrand(readPlusPairedR1, true) shouldBe false
-    samRecordStrand(readMinPairedR1, true) shouldBe true
-    samRecordStrand(readPlusPairedR2, true) shouldBe true
-    samRecordStrand(readMinPairedR2, true) shouldBe false
+    samRecordStrand(readPlusUnpaired, strand = true) shouldBe false
+    samRecordStrand(readMinUnpaired, strand = true) shouldBe true
+    samRecordStrand(readPlusPairedR1, strand = true) shouldBe false
+    samRecordStrand(readMinPairedR1, strand = true) shouldBe true
+    samRecordStrand(readPlusPairedR2, strand = true) shouldBe true
+    samRecordStrand(readMinPairedR2, strand = true) shouldBe false
 
-    samRecordStrand(readPlusUnpaired, false) shouldBe true
-    samRecordStrand(readMinUnpaired, false) shouldBe false
-    samRecordStrand(readPlusPairedR1, false) shouldBe true
-    samRecordStrand(readMinPairedR1, false) shouldBe false
-    samRecordStrand(readPlusPairedR2, false) shouldBe false
-    samRecordStrand(readMinPairedR2, false) shouldBe true
+    samRecordStrand(readPlusUnpaired, strand = false) shouldBe true
+    samRecordStrand(readMinUnpaired, strand = false) shouldBe false
+    samRecordStrand(readPlusPairedR1, strand = false) shouldBe true
+    samRecordStrand(readMinPairedR1, strand = false) shouldBe false
+    samRecordStrand(readPlusPairedR2, strand = false) shouldBe false
+    samRecordStrand(readMinPairedR2, strand = false) shouldBe true
 
     samRecordStrand(readPlusUnpaired, geneA) shouldBe false
     samRecordStrand(readMinUnpaired, geneA) shouldBe true
@@ -145,7 +145,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGeneCount: Unit = {
+  def testGeneCount(): Unit = {
     val readPlus = BaseCounterTest.lineParser.parseLine(
       "r02\t0\tchrQ\t101\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     val readMin = BaseCounterTest.lineParser.parseLine(
@@ -154,7 +154,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
     geneCount.gene shouldBe geneA
     geneCount.transcripts.size shouldBe 1
-    geneCount.transcripts.head.exonCounts.size shouldBe 4
+    geneCount.transcripts.head.exonCounts.length shouldBe 4
     geneCount.transcripts.head.intronCounts.size shouldBe 3
 
     geneCount.addRecord(readPlus, samRecordStrand(readPlus, geneA))
@@ -166,7 +166,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGroupGenesOnOverlap: Unit = {
+  def testGroupGenesOnOverlap(): Unit = {
     assert(groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneC)))
     assert(groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneD)))
     assert(!groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneD, geneC)))
@@ -177,7 +177,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCreateMetaExonCounts: Unit = {
+  def testCreateMetaExonCounts(): Unit = {
     val ab = createMetaExonCounts(geneA :: geneB :: Nil)
     ab.size shouldBe 9
     assert(ab.exists(x => x._1 == "geneA" && x._2.start == 101 && x._2.end == 120))
@@ -198,7 +198,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMain: Unit = {
+  def testMain(): Unit = {
     val outputDir = Files.createTempDir()
     outputDir.deleteOnExit()
     val prefix = "test"
@@ -213,12 +213,12 @@ class BaseCounterTest extends TestNGSuite with Matchers {
             bamFile.getAbsolutePath,
             "-r",
             refflat.getAbsolutePath))
-    outputDir.list().size shouldBe 35
+    outputDir.list().length shouldBe 35
   }
 }
 
 object BaseCounterTest {
-  val lineParser = {
+  val lineParser: SAMLineParser = {
     val header = new SAMFileHeader
     header.addSequence(new SAMSequenceRecord("chrQ", 10000))
     header.addSequence(new SAMSequenceRecord("chrR", 10000))
@@ -227,7 +227,7 @@ object BaseCounterTest {
     new SAMLineParser(header)
   }
 
-  val geneA = {
+  val geneA: Gene = {
     val gene = new Gene("chrQ", 101, 200, false, "geneA")
     gene.addTranscript("A1", 101, 200, 111, 190, 4)
     for (transcript <- gene) {
@@ -242,7 +242,7 @@ object BaseCounterTest {
     gene
   }
 
-  val geneB = {
+  val geneB: Gene = {
     val gene = new Gene("chrQ", 151, 250, false, "geneB")
     gene.addTranscript("A1", 151, 250, 161, 240, 4)
     for (transcript <- gene) {

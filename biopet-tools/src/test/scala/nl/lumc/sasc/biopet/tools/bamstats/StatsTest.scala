@@ -24,8 +24,8 @@ import org.testng.annotations.Test
 class StatsTest extends TestNGSuite with Matchers {
   @Test
   def testEqual(): Unit = {
-    val s1 = new Stats()
-    val s2 = new Stats()
+    val s1 = Stats()
+    val s2 = Stats()
 
     s1 shouldBe s2
 
@@ -38,7 +38,7 @@ class StatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testEmpty(): Unit = {
-    val stats = new Stats()
+    val stats = Stats()
 
     stats.clippingHistogram.countsMap shouldBe empty
     stats.insertSizeHistogram.countsMap shouldBe empty
@@ -50,9 +50,9 @@ class StatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testPlus: Unit = {
-    val s1 = new Stats()
-    val s2 = new Stats()
+  def testPlus(): Unit = {
+    val s1 = Stats()
+    val s2 = Stats()
 
     s2._3_ClippingHistogram.add(1)
 

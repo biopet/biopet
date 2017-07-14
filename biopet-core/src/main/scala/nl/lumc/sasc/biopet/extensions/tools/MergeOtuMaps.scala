@@ -31,11 +31,11 @@ class MergeOtuMaps(val parent: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output", shortName = "output", required = true)
   var output: File = _
 
-  var skipPrefix: List[String] = config("skip_prefix", default = Nil)
+  val skipPrefix: List[String] = config("skip_prefix", default = Nil)
 
   override def defaultCoreMemory = 6.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("-I", input) +
       required("-o", output) +

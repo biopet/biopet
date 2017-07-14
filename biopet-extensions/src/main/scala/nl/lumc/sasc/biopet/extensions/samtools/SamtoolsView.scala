@@ -22,10 +22,10 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 /** Extension for samtools view */
 class SamtoolsView(val parent: Configurable) extends Samtools {
   @Input(doc = "Bam File")
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "output File")
-  var output: File = null
+  var output: File = _
 
   var q: Option[Int] = config("q")
   var b: Boolean = config("b", default = false)
@@ -37,7 +37,7 @@ class SamtoolsView(val parent: Configurable) extends Samtools {
   var L: Option[File] = None
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("view") +
       optional("-q", q) +

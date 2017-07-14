@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.FullVersion
   */
 class ToolCommandTest extends TestNGSuite with Matchers {
   @Test
-  def testToolCommand: Unit = {
+  def testToolCommand(): Unit = {
     val tool = new ToolCommandFunction {
       def parent = null
       def toolObject = ToolCommandTest
@@ -33,7 +33,7 @@ class ToolCommandTest extends TestNGSuite with Matchers {
     tool.versionCommand shouldBe empty
     tool.versionRegex.toString() shouldBe empty
     tool.getVersion shouldBe Some("Biopet " + FullVersion)
-    tool.beforeGraph
+    tool.beforeGraph()
 
     tool.javaMainClass shouldBe ToolCommandTest.getClass.getName.takeWhile(_ != '$')
   }

@@ -66,8 +66,8 @@ object Version extends Logging {
   private[core] def getVersionInternal(versionCommand: String,
                                        versionRegex: Regex,
                                        versionExitcode: List[Int] = List(0)): Option[String] = {
-    if (versionCache.contains(versionCommand)) return versionCache.get(versionCommand)
-    else if (versionCommand == null || versionRegex == null) return None
+    if (versionCache.contains(versionCommand)) versionCache.get(versionCommand)
+    else if (versionCommand == null || versionRegex == null) None
     else {
       val stdout = new StringBuffer()
       val stderr = new StringBuffer()

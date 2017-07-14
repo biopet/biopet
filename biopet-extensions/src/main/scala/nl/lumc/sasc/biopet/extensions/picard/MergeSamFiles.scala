@@ -54,7 +54,7 @@ class MergeSamFiles(val parent: Configurable) extends Picard {
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +

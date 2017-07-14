@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Extension for hisat2
   *
@@ -34,18 +36,18 @@ class Hisat2(val parent: Configurable)
   // TODO: handle --sra-acc flag. This is currently unsupported by the wrapper.
 
   @Input(doc = "Fastq file R1", shortName = "R1")
-  var R1: File = null
+  var R1: File = _
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
   var R2: Option[File] = None
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
-  var output: File = null
+  var output: File = _
 
   executable = config("exe", default = "hisat2", freeVar = false)
-  def versionRegex = """.*hisat2-align-s version (.*)""".r
+  def versionRegex: Regex = """.*hisat2-align-s version (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " --version"
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
@@ -168,7 +170,7 @@ class Hisat2(val parent: Configurable)
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       conditional(q, "-q") +
       conditional(qseq, "--qseq") +
@@ -258,7 +260,7 @@ class Hisat2(val parent: Configurable)
       required("-x", hisat2Index) +
       (R2 match {
         case Some(r2) => required("-1", R1) + optional("-2", r2)
-        case otherwise => required("-U", R1)
+        case _ => required("-U", R1)
       }) +
       (if (outputAsStdout) "" else required("-S", output))
 }

@@ -90,7 +90,6 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   /** Root page for the shiva report */
   override def indexPage: Future[ReportPage] = Future {
-    val regions = regionsPage
     val oldPage = Await.result(super.indexPage, Duration.Inf)
 
     oldPage.copy(subPages = oldPage.subPages ++ regionsPage)
@@ -120,9 +119,9 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     }
 
     roi match {
-      case Some(x: String) => regionPages += x -> createPage(x, amplicon = false)
+      case Some(x: String) => regionPages += x -> createPage(x)
       case Some(x: List[_]) =>
-        x.foreach(x => regionPages += x.toString -> createPage(x.toString, amplicon = false))
+        x.foreach(x => regionPages += x.toString -> createPage(x.toString))
       case _ =>
     }
 
@@ -216,7 +215,7 @@ trait ShivaReportTrait extends MultisampleMappingReportTrait {
     for (sample <- samples if sampleId.isEmpty || sample.id == sampleId.get) {
       tsvWriter.println(
         sample.name + "\t" + field
-          .map(f => results.get(s"${sample.name};$f").getOrElse(Some("0")).get)
+          .map(f => results.getOrElse(s"${sample.name};$f", Some("0")).get)
           .mkString("\t"))
     }
 

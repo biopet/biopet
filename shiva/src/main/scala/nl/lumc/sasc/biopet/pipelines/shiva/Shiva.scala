@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.extensions.CheckValidateVcf
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
+import nl.lumc.sasc.biopet.extensions.gatk.gather.BqsrGather
 import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu

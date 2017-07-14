@@ -31,7 +31,7 @@ class Sha1sum(val parent: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "sha1sum")
 
   /** Set correct output files */
-  def cmdLine = required(executable) + required(input) + " > " + required(output)
+  def cmdLine: String = required(executable) + required(input) + " > " + required(output)
 }
 
 object Sha1sum {

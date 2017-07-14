@@ -67,10 +67,6 @@ object NcbiReportToContigMap extends ToolCommand {
       .zipWithIndex
       .toMap
 
-    val allContigs = assamblyReport
-      .filter(!_.startsWith("#"))
-      .map(_.split("\t"))
-
     val altNameIds = cmdargs.names.filter(_ != cmdargs.contigNameHeader).map(headers)
     val nameId = headers(cmdargs.contigNameHeader)
 

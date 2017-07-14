@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
 class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "ApplyRecalibration"
@@ -41,7 +43,7 @@ class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with 
 
   /** The output filtered and recalibrated VCF file in which each variant is annotated with its VQSLOD value */
   @Output(fullName = "out", shortName = "o", doc = "The output filtered and recalibrated VCF file in which each variant is annotated with its VQSLOD value", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** The truth sensitivity level at which to start filtering */
@@ -102,17 +104,17 @@ class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with 
     num_threads = Option(getThreads)
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    required(TaggedFile.formatCommandLineParameter("-recalFile", recal_file), recal_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-tranchesFile", tranches_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ts_filter_level", ts_filter_level, spaceSeparated = true, escape = true, format = ts_filter_levelFormat) +
-    optional("-lodCutoff", lodCutoff, spaceSeparated = true, escape = true, format = lodCutoffFormat) +
-    repeat("-ignoreFilter", ignore_filter, spaceSeparated = true, escape = true, format = "%s") + conditional(ignore_all_filters, "-ignoreAllFilters", escape = true, format = "%s") +
-    conditional(excludeFiltered, "-ef", escape = true, format = "%s") +
-    optional("-mode", mode, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    required(TaggedFile.formatCommandLineParameter("-recalFile", recal_file), recal_file) +
+    optional("-tranchesFile", tranches_file) +
+    optional("-o", out) +
+    optional("-ts_filter_level", ts_filter_level, format = ts_filter_levelFormat) +
+    optional("-lodCutoff", lodCutoff, format = lodCutoffFormat) +
+    repeat("-ignoreFilter", ignore_filter) + conditional(ignore_all_filters, "-ignoreAllFilters") +
+    conditional(excludeFiltered, "-ef") +
+    optional("-mode", mode) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

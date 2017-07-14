@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.report._
+import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
@@ -30,7 +31,7 @@ object GearsSingleReport extends ReportBuilder {
 
   def pipelineName = "gearssingle"
 
-  override def extFiles =
+  override def extFiles: List[gears.GearsSingleReport.ExtFile] =
     super.extFiles ++ List("js/gears.js",
                            "js/krona-2.0.js",
                            "img/krona/loading.gif",
@@ -39,8 +40,6 @@ object GearsSingleReport extends ReportBuilder {
       .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage: Future[ReportPage] = Future {
-    val sampleName = sampleId.flatMap(id => samples.find(_.id == id).map(_.name))
-    val libraryName = libId.flatMap(id => libraries.find(_.id == id).map(_.name))
 
     val krakenExecuted = Await.result(summary.getStatsSize(runId,
                                                            "gearskraken",

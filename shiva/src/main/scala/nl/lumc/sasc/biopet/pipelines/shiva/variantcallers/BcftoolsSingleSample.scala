@@ -24,7 +24,7 @@ class BcftoolsSingleSample(val parent: Configurable) extends Variantcaller {
   val name = "bcftools_singlesample"
   protected def defaultPrio = 8
 
-  def biopetScript {
+  def biopetScript() {
     val sampleVcfs = for ((sample, inputBam) <- inputBams.toList) yield {
       val mp = new SamtoolsMpileup(this)
       mp.input :+= inputBam

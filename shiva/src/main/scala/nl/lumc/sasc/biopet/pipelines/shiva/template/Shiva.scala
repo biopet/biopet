@@ -38,7 +38,7 @@ object Shiva extends TemplateTool {
     val mappingConfig = MultiSampleMapping.pipelineMap(map, expert)
 
     val variantCallers = Question.list("Variantcallers",
-                                       posibleValues = possibleVariantcallers,
+                                       possibleValues = possibleVariantcallers,
                                        default =
                                          Some(List("haplotypecaller_gvcf", "haplotypecaller")))
     val useIndelRealigner = Question.boolean("Use indel realigner", default = Some(true))

@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /** Extension for zcat */
 class Zcat(val parent: Configurable) extends BiopetCommandLineFunction with Version {
@@ -32,11 +34,11 @@ class Zcat(val parent: Configurable) extends BiopetCommandLineFunction with Vers
 
   executable = config("exe", default = "zcat")
 
-  def versionRegex = """zcat \(gzip\) (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """zcat \(gzip\) (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       (if (inputAsStdin) "" else repeat(input)) +
       (if (outputAsStdout) "" else (if (appending) " >> " else " > ") + required(output))

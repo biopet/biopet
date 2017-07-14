@@ -32,7 +32,7 @@ class CheckValidateFastq extends InProcessFunction {
   var inputLogFile: File = _
 
   /** Exits whenever the input md5sum is not the same as the output md5sum */
-  def run: Unit = {
+  def run(): Unit = {
 
     val reader = Source.fromFile(inputLogFile)
     reader.getLines().foreach { line =>

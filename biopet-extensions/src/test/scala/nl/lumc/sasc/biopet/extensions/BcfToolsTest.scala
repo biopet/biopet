@@ -28,7 +28,7 @@ import org.testng.annotations.Test
 class BcfToolsTest extends TestNGSuite with Matchers with MockitoSugar {
 
   @Test
-  def BcfToolsViewTest = {
+  def BcfToolsViewTest(): Unit = {
     val view = new BcftoolsView(null)
 
     view.executable = "bcftools"

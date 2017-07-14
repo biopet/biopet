@@ -59,7 +59,7 @@ object BamStats extends ToolCommand {
     opt[Int]("threadBinSize") valueName "<int>" action { (x, c) =>
       c.copy(threadBinSize = x)
     } text "Size of region per thread"
-    opt[Unit]("tsvOutputs") action { (x, c) =>
+    opt[Unit]("tsvOutputs") action { (_, c) =>
       c.copy(tsvOutputs = true)
     } text "Also output tsv files, default there is only a json"
   }
@@ -88,7 +88,7 @@ object BamStats extends ToolCommand {
     * This will retrieve the [[SAMSequenceDictionary]] from the bam file.
     * When `referenceFasta is given he will validate this against the bam file.`
     */
-  def validateReferenceInBam(bamFile: File, referenceFasta: Option[File]) = {
+  def validateReferenceInBam(bamFile: File, referenceFasta: Option[File]): SAMSequenceDictionary = {
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     val samHeader = samReader.getFileHeader
     samReader.close()

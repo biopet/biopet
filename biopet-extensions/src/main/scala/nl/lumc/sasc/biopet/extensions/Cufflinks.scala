@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the cufflinks command line tool.
@@ -37,7 +39,7 @@ class Cufflinks(val parent: Configurable) extends BiopetCommandLineFunction with
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
-  var input: File = null
+  var input: File = _
 
   /** output files, computed automatically from output directory */
   @Output(doc = "Output GTF file")
@@ -187,11 +189,11 @@ class Cufflinks(val parent: Configurable) extends BiopetCommandLineFunction with
   /** do not contact server to check for update availability [FALSE] */
   var noUpdateCheck: Boolean = config("no_update_check", default = false)
 
-  def versionRegex = """cufflinks v(.*)""".r
-  def versionCommand = executable
+  def versionRegex: Regex = """cufflinks v(.*)""".r
+  def versionCommand: String = executable
   override def versionExitcode = List(0, 1)
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--output-dir", outputDir) +
       optional("--num-threads", threads) +

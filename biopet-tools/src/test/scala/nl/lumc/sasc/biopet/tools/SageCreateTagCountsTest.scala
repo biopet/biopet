@@ -35,7 +35,7 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
   }
 
   @Test
-  def testMain = {
+  def testMain(): Unit = {
     val input = resourcePath("/tagCount.tsv")
     val tagLib = resourcePath("/sageTest.tsv")
 
@@ -92,7 +92,7 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
   }
 
   @Test
-  def testOutput = {
+  def testOutput(): Unit = {
     val input = resourcePath("/tagCount.tsv")
     val tagLib = resourcePath("/sageTest.tsv")
 
