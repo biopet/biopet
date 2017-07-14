@@ -95,7 +95,7 @@ object Picard extends Logging {
           .fromInputStream(src)
           .getLines()
           .map(_.trim.split(":"))
-          .filter((_.length) == 5)
+          .filter(_.length == 5)
           .map(
             line =>
               Map(
