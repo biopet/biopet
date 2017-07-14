@@ -36,18 +36,18 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val veppedPath = resourcePath("/chrQ.vcf.gz")
-  val reference = resourcePath("/fake_chrQ.fa")
+  val veppedPath: String = resourcePath("/chrQ.vcf.gz")
+  val reference: String = resourcePath("/fake_chrQ.fa")
 
   // These two have to created
   // resourcepath copies files to another directory
   // hence we need to supply all needed files
-  val dict = resourcePath("/fake_chrQ.dict")
-  val fai = resourcePath("/fake_chrQ.fa.fai")
+  val dict: String = resourcePath("/fake_chrQ.dict")
+  val fai: String = resourcePath("/fake_chrQ.fa.fai")
 
   val rand = new Random()
 
-  @Test def testOutputTypeVcf() = {
+  @Test def testOutputTypeVcf(): Unit = {
     val tmp = File.createTempFile("MergeAlleles", ".vcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -55,7 +55,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testOutputTypeVcfGz() = {
+  @Test def testOutputTypeVcfGz(): Unit = {
     val tmp = File.createTempFile("MergeAlleles", ".vcf.gz")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -63,7 +63,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testOutputTypeBcf() = {
+  @Test def testOutputTypeBcf(): Unit = {
     val tmp = File.createTempFile("MergeAlleles", ".bcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath

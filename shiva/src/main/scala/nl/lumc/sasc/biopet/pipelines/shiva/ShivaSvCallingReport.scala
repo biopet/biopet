@@ -50,7 +50,7 @@ object ShivaSvCallingReport extends Logging {
         .get
       for ((svType, counts) <- sampleCounts
              .collect({ case (k, v: List[_]) => (k, v.toArray[Any]) })) {
-        val elem: Tuple2[String, Array[Long]] = (sampleName, counts.collect({ case x: Long => x }))
+        val elem: (String, Array[Long]) = (sampleName, counts.collect({ case x: Long => x }))
         svType match {
           case "DEL" => delCounts += elem
           case "INS" => insCounts += elem
@@ -61,10 +61,10 @@ object ShivaSvCallingReport extends Logging {
     }
 
     var result: Map[String, Map[String, Array[Long]]] = Map()
-    if (delCounts.exists(elem => (elem._2.sum > 0))) result = Map("DEL" -> delCounts)
-    if (insCounts.exists(elem => (elem._2.sum > 0))) result += ("INS" -> insCounts)
-    if (dupCounts.exists(elem => (elem._2.sum > 0))) result += ("DUP" -> dupCounts)
-    if (invCounts.exists(elem => (elem._2.sum > 0))) result += ("INV" -> invCounts)
+    if (delCounts.exists(elem => elem._2.sum > 0)) result = Map("DEL" -> delCounts)
+    if (insCounts.exists(elem => elem._2.sum > 0)) result += ("INS" -> insCounts)
+    if (dupCounts.exists(elem => elem._2.sum > 0)) result += ("DUP" -> dupCounts)
+    if (invCounts.exists(elem => elem._2.sum > 0)) result += ("INV" -> invCounts)
     result
   }
 
@@ -115,12 +115,11 @@ object ShivaSvCallingReport extends Logging {
 
         for (sampleName <- sampleNames) {
           val sampleCounts: Array[String] = countsForSvType.get(sampleName) match {
-            case Some(c) => c.collect({ case x => x.toString() })
-            case None => {
+            case Some(c) => c.collect({ case x => x.toString })
+            case None =>
               logger.error(
                 s"Internal error, missing sv counts, sample-$sampleName, sv type-${sv.svType}")
               missingCounts
-            }
           }
 
           tsvWriter.print(sv.svType + "\t" + sampleName + "\t")
@@ -148,8 +147,7 @@ object ShivaSvCallingReport extends Logging {
 
     for (i <- histogramPlotTicks.indices) {
       tsvWriter.print(histogramPlotTicks(i))
-      samplesWithCounts.foreach(sampleName =>
-        tsvWriter.print("\t" + counts.get(sampleName).get(i)))
+      samplesWithCounts.foreach(sampleName => tsvWriter.print("\t" + counts(sampleName)(i)))
       tsvWriter.println()
     }
 
@@ -166,14 +164,13 @@ object ShivaSvCallingReport extends Logging {
         xlabel = Some(s"${sv.displayText.substring(0, sv.displayText.length - 1)} size"),
         ylabel = Some("Number of loci"),
         title = Some(sv.displayText),
-        width = 400,
-        removeZero = false
+        width = 400
       )
       plot.height = Some(300)
       plot.llabel = Some("Sample")
       plot.xLog10 = true
       plot.yLog10 = true
-      plot.xLog10AxisTicks = histogramPlotTicks.collect({ case x => x.toString() })
+      plot.xLog10AxisTicks = histogramPlotTicks.collect({ case x => x.toString })
       plot.xLog10AxisLabels = histogramText
       plot.runLocal()
     }

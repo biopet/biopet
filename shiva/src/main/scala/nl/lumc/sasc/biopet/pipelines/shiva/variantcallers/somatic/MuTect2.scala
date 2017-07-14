@@ -1,8 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsReheader
-import nl.lumc.sasc.biopet.extensions.gatk.{BqsrGather, CombineVariants}
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gatk.gather.BqsrGather
 import nl.lumc.sasc.biopet.utils.{IoUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile

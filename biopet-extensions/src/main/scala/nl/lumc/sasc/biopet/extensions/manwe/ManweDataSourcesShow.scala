@@ -27,7 +27,7 @@ class ManweDataSourcesShow(val parent: Configurable) extends Manwe {
   @Argument(doc = "uri of data source")
   var uri: Option[String] = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("data-sources") +
       required("show") +
       required(uri)

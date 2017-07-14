@@ -31,9 +31,9 @@
 <tbody>
 #for (file <- files)
     <tr><td>${allPipelines.find(_.id == file.pipelineId).map(_.name)}</td>
-    <td>${file.moduleId.map(id => allModules.find(x => x.pipelineId == file.pipelineId && file.moduleId == id).map(_.name)).flatten.getOrElse(("-"))}</td>
-    <td>${file.sampleId.map(id => allSamples.find(_.id == id).map(_.name)).flatten.getOrElse(("-"))}</td>
-    <td>${file.libraryId.map(id => allLibraries.find(_.id == id).map(_.name)).flatten.getOrElse(("-"))}</td>
+    <td>${file.moduleId.flatMap(id => allModules.find(x => x.pipelineId == file.pipelineId && file.moduleId == id).map(_.name)).getOrElse("-")}</td>
+    <td>${file.sampleId.flatMap(id => allSamples.find(_.id == id).map(_.name)).getOrElse("-")}</td>
+    <td>${file.libraryId.flatMap(id => allLibraries.find(_.id == id).map(_.name)).getOrElse("-")}</td>
     <td>${file.key}</td>
     <td>${file.path}</td>
     <td>${file.md5}</td></tr>

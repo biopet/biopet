@@ -79,25 +79,23 @@ object SummaryToTsv extends ToolCommand {
       fetchValues(summary, paths, sample = cmdArgs.mode == "sample", lib = cmdArgs.mode == "lib")
 
     cmdArgs.outputFile match {
-      case Some(file) => {
+      case Some(file) =>
         val writer = new PrintWriter(file)
         writer.println(createHeader(paths))
         for (lineId <- values.head._2.keys)
           writer.println(createLine(paths, values, lineId))
         writer.close()
-      }
-      case _ => {
+      case _ =>
         println(createHeader(paths))
         for (lineId <- values.head._2.keys)
           println(createLine(paths, values, lineId))
-      }
     }
   }
 
   def fetchValues(summary: Summary,
                   paths: Map[String, Array[String]],
                   sample: Boolean = false,
-                  lib: Boolean = false) = {
+                  lib: Boolean = false): Map[String, Map[String, Option[Any]]] = {
     for ((name, path) <- paths)
       yield
         name -> {
@@ -109,7 +107,7 @@ object SummaryToTsv extends ToolCommand {
   }
 
   def createHeader(paths: Map[String, Array[String]]): String = {
-    paths.map(_._1).mkString("\t", "\t", "")
+    paths.keys.mkString("\t", "\t", "")
   }
 
   def createLine(paths: Map[String, Array[String]],

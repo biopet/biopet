@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Created by pjvan_thof on 12/4/15.
   */
@@ -31,12 +33,12 @@ class PickClosedReferenceOtus(val parent: Configurable)
   @Input(required = true)
   var inputFasta: File = _
 
-  var outputDir: File = null
+  var outputDir: File = _
 
   override def defaultThreads = 1
   override def defaultCoreMemory = 20.0
-  def versionCommand = executable + " --version"
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """Version: (.*)""".r
 
   @Input(required = false)
   var parameterFp: Option[File] = config("parameter_fp")
@@ -71,7 +73,7 @@ class PickClosedReferenceOtus(val parent: Configurable)
     outputFiles ::= otuMap
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable + required("-f") +
       required("-i", inputFasta) +
       required("-o", outputDir) +

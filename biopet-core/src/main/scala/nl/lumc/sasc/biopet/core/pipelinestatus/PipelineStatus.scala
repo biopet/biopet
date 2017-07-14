@@ -12,15 +12,20 @@
   * license; For commercial users or users who do not want to follow the AGPL
   * license, please contact us to obtain a separate license.
   */
-package nl.lumc.sasc.biopet.core
+package nl.lumc.sasc.biopet.core.pipelinestatus
 
 import java.io.{File, PrintWriter}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import nl.lumc.sasc.biopet.utils.pim._
+import nl.lumc.sasc.biopet.utils.pim.{Job => PimJob}
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import play.api.libs.ws.ahc.AhcWSClient
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.sys.process.Process
 
 /**
@@ -33,7 +38,9 @@ object PipelineStatus extends ToolCommand {
                   follow: Boolean = false,
                   refreshTime: Int = 30,
                   complatePlots: Boolean = false,
-                  compressPlots: Boolean = true)
+                  compressPlots: Boolean = true,
+                  pimHost: Option[String] = None,
+                  pimRunId: Option[String] = None)
       extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -46,19 +53,25 @@ object PipelineStatus extends ToolCommand {
     opt[File]("depsFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(depsFile = Some(x))
     } text "Location of deps file, not required"
-    opt[Unit]('f', "follow") maxOccurs 1 action { (x, c) =>
+    opt[Unit]('f', "follow") maxOccurs 1 action { (_, c) =>
       c.copy(follow = true)
     } text "This will follow a run"
     opt[Int]("refresh") maxOccurs 1 action { (x, c) =>
       c.copy(refreshTime = x)
     } text "Time to check again, default set on 30 seconds"
-    opt[Unit]("completePlots") maxOccurs 1 action { (x, c) =>
+    opt[Unit]("completePlots") maxOccurs 1 action { (_, c) =>
       c.copy(complatePlots = true)
     } text "Add complete plots, this is disabled because of performance. " +
       "Complete plots does show each job separated, while compressed plots collapse all jobs of the same type together."
-    opt[Unit]("skipCompressPlots") maxOccurs 1 action { (x, c) =>
+    opt[Unit]("skipCompressPlots") maxOccurs 1 action { (_, c) =>
       c.copy(compressPlots = false)
     } text "Disable compressed plots. By default compressed plots are enabled."
+    opt[String]("pimHost") maxOccurs 1 action { (x, c) =>
+      c.copy(pimHost = Some(x))
+    } text "Pim host to publish status to"
+    opt[String]("pimRunId") maxOccurs 1 action { (x, c) =>
+      c.copy(pimRunId = Some(x))
+    } text "Pim run Id to publish status to"
   }
 
   def main(args: Array[String]): Unit = {
@@ -68,15 +81,42 @@ object PipelineStatus extends ToolCommand {
     val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
+    implicit lazy val system = ActorSystem()
+    implicit lazy val materializer = ActorMaterializer()
+    implicit lazy val ws = AhcWSClient()
+
     val depsFile = cmdArgs.depsFile.getOrElse(getDepsFileFromDir(cmdArgs.pipelineDir))
-    val deps = readDepsFile(depsFile)
-    writePipelineStatus(deps,
-                        cmdArgs.outputDir,
-                        follow = cmdArgs.follow,
-                        refreshTime = cmdArgs.refreshTime,
-                        plots = cmdArgs.complatePlots,
-                        compressPlots = cmdArgs.compressPlots)
+    val deps = Deps.readDepsFile(depsFile)
+
+    val pimRunId =
+      if (cmdArgs.pimHost.isDefined) Some(cmdArgs.pimRunId.getOrElse {
+        val graphDir = depsFile.getAbsoluteFile.getParentFile
+        if (graphDir.getName == "graph") "biopet_" + graphDir.getParentFile.getName
+        else "biopet_" + depsFile.getAbsolutePath.replaceAll("/", "_")
+      })
+      else None
+
+    if (cmdArgs.pimHost.isDefined) {
+      require(pimRunId.isDefined, "Could not auto-generate Pim run ID, please supply --pimRunId")
+      logger.info(s"Status will be pushed to ${cmdArgs.pimHost.get}/run/${pimRunId.get}")
+      Await.result(deps.publishCompressedGraphToPim(cmdArgs.pimHost.get, pimRunId.get),
+                   Duration.Inf)
+    }
+
+    writePipelineStatus(
+      deps,
+      cmdArgs.outputDir,
+      follow = cmdArgs.follow,
+      refreshTime = cmdArgs.refreshTime,
+      plots = cmdArgs.complatePlots,
+      compressPlots = cmdArgs.compressPlots,
+      pimHost = cmdArgs.pimHost,
+      pimRunId = pimRunId
+    )
     logger.info("Done")
+
+    ws.close()
+    system.terminate()
   }
 
   def getDepsFileFromDir(pipelineDir: File): File = {
@@ -89,26 +129,18 @@ object PipelineStatus extends ToolCommand {
     new File(graphDir, "deps.json")
   }
 
-  case class Deps(jobs: Map[String, Job], files: Array[Map[String, Any]])
-
-  def readDepsFile(depsFile: File) = {
-    val deps = ConfigUtils.fileToConfigMap(depsFile)
-
-    val jobs =
-      ConfigUtils.any2map(deps("jobs")).map(x => x._1 -> new Job(x._1, ConfigUtils.any2map(x._2)))
-    val files = ConfigUtils.any2list(deps("files")).map(x => ConfigUtils.any2map(x)).toArray
-
-    Deps(jobs, files)
-  }
-
-  def writePipelineStatus(deps: Deps,
-                          outputDir: File,
-                          alreadyDone: Set[String] = Set(),
-                          alreadyFailed: Set[String] = Set(),
-                          follow: Boolean = false,
-                          refreshTime: Int = 30,
-                          plots: Boolean = false,
-                          compressPlots: Boolean = true): Unit = {
+  def writePipelineStatus(
+      deps: Deps,
+      outputDir: File,
+      alreadyDone: Set[String] = Set(),
+      alreadyFailed: Set[String] = Set(),
+      follow: Boolean = false,
+      refreshTime: Int = 30,
+      plots: Boolean = false,
+      compressPlots: Boolean = true,
+      pimHost: Option[String] = None,
+      pimRunId: Option[String] = None,
+      pimStatus: Map[String, JobStatus.Value] = Map())(implicit ws: AhcWSClient): Unit = {
 
     val jobDone = jobsDone(deps)
     val jobFailed = jobsFailed(deps, jobDone)
@@ -123,16 +155,14 @@ object PipelineStatus extends ToolCommand {
     val jobsWriter = new PrintWriter(new File(outputDir, s"jobs.json"))
     jobsWriter.println(ConfigUtils.mapToJson(jobsDeps).spaces2)
     jobsWriter.close()
-    futures :+= writeGraphvizFile(jobsDeps,
-                                  new File(outputDir, s"jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   plots,
                                   plots)
-    futures :+= writeGraphvizFile(jobsDeps,
-                                  new File(outputDir, s"compress.jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"compress.jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
@@ -142,30 +172,29 @@ object PipelineStatus extends ToolCommand {
                                   compress = true)
 
     val mainJobs = deps.jobs.filter(_._2.mainJob == true).map {
-      case (name, job) =>
-        name -> getMainDependencies(name, deps)
+      case (name, _) => name -> deps.getMainDependencies(name)
     }
 
     val mainJobsWriter = new PrintWriter(new File(outputDir, s"main_jobs.json"))
     mainJobsWriter.println(ConfigUtils.mapToJson(mainJobs).spaces2)
     mainJobsWriter.close()
-    futures :+= writeGraphvizFile(mainJobs,
-                                  new File(outputDir, s"main_jobs.gv"),
+    futures :+= writeGraphvizFile(new File(outputDir, s"main_jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   plots,
-                                  plots)
-    futures :+= writeGraphvizFile(mainJobs,
-                                  new File(outputDir, s"compress.main_jobs.gv"),
+                                  plots,
+                                  main = true)
+    futures :+= writeGraphvizFile(new File(outputDir, s"compress.main_jobs.gv"),
                                   jobDone,
                                   jobFailed,
                                   jobsStart,
                                   deps,
                                   compressPlots,
                                   compressPlots,
-                                  compress = true)
+                                  compress = true,
+                                  main = true)
 
     val totalJobs = deps.jobs.size
     val totalStart = jobsStart.size
@@ -173,55 +202,75 @@ object PipelineStatus extends ToolCommand {
     val totalFailed = jobFailed.size
     val totalPending = totalJobs - jobsStart.size - jobDone.size - jobFailed.size
 
-    futures.foreach(x => Await.ready(x, Duration.Inf))
+    futures.foreach(x => Await.result(x, Duration.Inf))
 
+    val putStatuses = pimHost.map { host =>
+      val runId = pimRunId.getOrElse(
+        throw new IllegalStateException(
+          "Pim requires a run id, please supply this with --pimRunId"))
+
+      val futures = (for (job <- deps.jobs) yield {
+        val status = job._1 match {
+          case n if jobsStart.contains(n) => JobStatus.running
+          case n if jobFailed.contains(n) => JobStatus.failed
+          case n if jobDone.contains(n) => JobStatus.success
+          case _ => JobStatus.idle
+        }
+
+        if (!pimStatus.get(job._1).contains(status)) {
+          Thread.sleep(20)
+          Some(
+            ws.url(s"$host/api/runs/test/jobs/" + job._1)
+              .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
+              .put(PimJob(job._1, Job.compressedName(job._1)._1, runId, "none", status).toString)
+              .map(job._1 -> (_, status)))
+        } else None
+      }).flatten
+      if (logger.isDebugEnabled) futures.foreach(_.onComplete(logger.debug(_)))
+      futures.foreach { f =>
+        f.onFailure { case e => logger.warn("Post job did fail", e) }
+        f.onSuccess {
+          case r if r._2._1.status == 200 => logger.debug(r)
+          case r => logger.warn("Post job did fail: " + r)
+        }
+      }
+      Await.ready(Future.sequence(futures), Duration.Inf)
+      futures.flatMap(_.value.flatMap(_.toOption)).map(x => x._1 -> x._2._2).toMap
+    }
     logger.info(
-      s"Total job: ${totalJobs}, Pending: ${totalPending}, Ready to run / running: ${totalStart}, Done: ${totalDone}, Failed ${totalFailed}")
+      s"Total job: $totalJobs, Pending: $totalPending, Ready to run / running: $totalStart, Done: $totalDone, Failed $totalFailed")
 
     if (follow) {
       Thread.sleep(refreshTime * 1000)
-      writePipelineStatus(deps, outputDir, jobDone, jobFailed, follow)
+      writePipelineStatus(deps,
+                          outputDir,
+                          jobDone,
+                          jobFailed,
+                          follow,
+                          refreshTime,
+                          plots,
+                          compressPlots,
+                          pimHost,
+                          pimRunId,
+                          pimStatus ++ putStatuses.getOrElse(Map()))
     }
   }
 
-  def getMainDependencies(jobName: String, deps: Deps): List[String] = {
-    val job = deps.jobs(jobName)
-    val dependencies = job.dependsOnJobs match {
-      case l: List[_] => l.map(_.toString)
-    }
-    dependencies.flatMap { dep =>
-      deps.jobs(dep).mainJob match {
-        case true => List(dep)
-        case false => getMainDependencies(dep, deps)
-      }
-    }.distinct
-  }
-
-  val numberRegex = """(.*)_(\d*)$""".r
-  def compressOnType(jobs: Map[String, List[String]]): Map[String, List[String]] = {
-    val set = for ((job, deps) <- jobs.toSet; dep <- deps) yield {
-      (compressedName(job)._1, compressedName(dep)._1)
-    }
-    // This will collapse a Set[(String, String)] to a Map[String, List[String]]
-    set.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).toList) ++ jobs
-      .filter(_._2.isEmpty)
-      .map(job => compressedName(job._1)._1 -> Nil)
-  }
-
-  def compressedName(jobName: String) = jobName match {
-    case numberRegex(name, number) => (name, number.toInt)
-  }
-
-  def writeGraphvizFile(jobsDeps: Map[String, List[String]],
-                        outputFile: File,
+  def writeGraphvizFile(outputFile: File,
                         jobDone: Set[String],
                         jobFailed: Set[String],
                         jobsStart: Set[String],
                         deps: Deps,
                         png: Boolean = true,
                         svg: Boolean = true,
-                        compress: Boolean = false): Future[Unit] = Future {
-    val graph = if (compress) compressOnType(jobsDeps) else jobsDeps
+                        compress: Boolean = false,
+                        main: Boolean = false): Future[Unit] = Future {
+    val graph =
+      if (compress && main) deps.compressOnType(main = true)
+      else if (compress) deps.compressOnType()
+      else if (main) deps.getMainDeps
+      else deps.jobs.map(x => x._1 -> x._2.dependsOnJobs)
+
     val writer = new PrintWriter(outputFile)
     writer.println("digraph graphname {")
 
@@ -229,27 +278,28 @@ object PipelineStatus extends ToolCommand {
       case (job, jobDeps) =>
         // Writing color of node
         val compressTotal =
-          if (compress) Some(deps.jobs.keys.filter(compressedName(_)._1 == job)) else None
+          if (compress) Some(deps.jobs.keys.filter(Job.compressedName(_)._1 == job)) else None
         val compressDone =
-          if (compress) Some(jobDone.filter(compressedName(_)._1 == job)) else None
+          if (compress) Some(jobDone.filter(Job.compressedName(_)._1 == job)) else None
         val compressFailed =
-          if (compress) Some(jobFailed.filter(compressedName(_)._1 == job)) else None
+          if (compress) Some(jobFailed.filter(Job.compressedName(_)._1 == job)) else None
         val compressStart =
-          if (compress) Some(jobsStart.filter(compressedName(_)._1 == job)) else None
+          if (compress) Some(jobsStart.filter(Job.compressedName(_)._1 == job)) else None
         val compressIntermediate =
           if (compress)
-            Some(deps.jobs.filter(x => compressedName(x._1)._1 == job).forall(_._2.intermediate))
+            Some(
+              deps.jobs.filter(x => Job.compressedName(x._1)._1 == job).forall(_._2.intermediate))
           else None
 
         if (compress) {
           val pend = compressTotal.get.size - compressFailed.get
-            .filterNot(compressStart.get.contains(_))
+            .diff(compressStart.get)
             .size - compressStart.get.size - compressDone.get.size
           writer.println(s"""  $job [label = "$job
         |Total: ${compressTotal.get.size}
         |Fail: ${compressFailed.get.size}
-        |Pend:${pend}
-        |Run: ${compressStart.get.filterNot(compressFailed.get.contains(_)).size}
+        |Pend:$pend
+        |Run: ${compressStart.get.diff(compressFailed.get).size}
         |Done: ${compressDone.get.size}"]""".stripMargin)
         }
 
@@ -263,16 +313,16 @@ object PipelineStatus extends ToolCommand {
         // Dashed lined for intermediate jobs
         if ((deps.jobs.contains(job) && deps
               .jobs(job)
-              .intermediate) || (compressIntermediate == Some(true)))
+              .intermediate) || compressIntermediate.contains(true))
           writer.println(s"  $job [style = dashed]")
 
         // Writing Node deps
         jobDeps.foreach { dep =>
           if (compress) {
             val depsNames = deps.jobs
-              .filter(x => compressedName(x._1)._1 == dep)
-              .filter(_._2.outputUsedByJobs.exists(x => compressedName(x)._1 == job))
-              .map(x => x._1 -> x._2.outputUsedByJobs.filter(x => compressedName(x)._1 == job))
+              .filter(x => Job.compressedName(x._1)._1 == dep)
+              .filter(_._2.outputUsedByJobs.exists(x => Job.compressedName(x)._1 == job))
+              .map(x => x._1 -> x._2.outputUsedByJobs.filter(x => Job.compressedName(x)._1 == job))
             val total = depsNames.size
             val done = depsNames
               .map(x => x._2.exists(y => jobDone.contains(x._1)))
@@ -342,23 +392,4 @@ object PipelineStatus extends ToolCommand {
     f.map(x => x._1 -> Await.result(x._2, Duration.Inf)).filter(_._2).keySet ++ alreadyFailed
   }
 
-  class Job(val name: String, map: Map[String, Any]) {
-
-    def doneAtStart: Boolean = ConfigUtils.any2boolean(map("done_at_start"))
-
-    def failFiles = ConfigUtils.any2fileList(map("fail_files"))
-    def doneFiles = ConfigUtils.any2fileList(map("done_files"))
-    def outputUsedByJobs = ConfigUtils.any2stringList(map("output_used_by_jobs"))
-    def dependsOnJobs = ConfigUtils.any2stringList(map("depends_on_jobs"))
-    def stdoutFile = new File(ConfigUtils.any2string(map("stdout_file")))
-
-    def outputsFiles = ConfigUtils.any2fileList(map("outputs"))
-    def inputFiles = ConfigUtils.any2fileList(map("inputs"))
-
-    def mainJob = ConfigUtils.any2boolean(map("main_job"))
-    def intermediate = ConfigUtils.any2boolean(map("intermediate"))
-
-    def isDone: Future[Boolean] = Future { doneFiles.forall(_.exists()) }
-    def isFailed: Future[Boolean] = Future { failFiles.exists(_.exists()) }
-  }
 }

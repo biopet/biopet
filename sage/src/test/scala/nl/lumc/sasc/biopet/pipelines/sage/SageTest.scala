@@ -85,19 +85,16 @@ class SageTest extends TestNGSuite with Matchers {
       val pipeline = initPipeline(map)
       pipeline.script()
 
-      val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
-      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
-
       pipeline.summaryFiles shouldBe Map()
       pipeline.summarySettings shouldBe Map()
 
       pipeline.samples.foreach {
-        case (sampleId, sample) =>
+        case (_, sample) =>
           sample.summaryFiles shouldBe Map()
           sample.summaryStats shouldBe Map()
           sample.summarySettings shouldBe Map()
           sample.libraries.foreach {
-            case (libId, lib) =>
+            case (_, lib) =>
               lib.summaryFiles shouldBe Map()
               lib.summaryStats shouldBe Map()
               lib.summarySettings shouldBe Map()
@@ -114,21 +111,21 @@ class SageTest extends TestNGSuite with Matchers {
 }
 
 class SageNoBedTest extends SageTest {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
   override def countBed = false
 }
 
 class SageNoLibTest extends SageTest {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
   override def transcriptome = false
   override def tagsLibrary = false
 }
 
 class SageLibraryCountsTest extends SageTest {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
   override def libraryCounts = Some(true)
 }
 

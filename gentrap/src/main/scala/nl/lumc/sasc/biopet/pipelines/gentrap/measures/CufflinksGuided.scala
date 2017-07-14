@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationGtf
+import nl.lumc.sasc.biopet.extensions.Cufflinks
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -25,11 +26,12 @@ class CufflinksGuided(val parent: Configurable)
     extends QScript
     with CufflinksMeasurement
     with AnnotationGtf {
-  override def makeCufflinksJob(id: String, bamFile: File) = {
+  override def makeCufflinksJob(id: String, bamFile: File): Cufflinks = {
     val cufflinks = super.makeCufflinksJob(id, bamFile)
     cufflinks.gtfGuide = Some(annotationGtf)
     cufflinks
   }
 
-  override def summaryFiles = super.summaryFiles ++ Map("cufflinks_guided_gtf" -> annotationGtf)
+  override def summaryFiles: Map[String, File] =
+    super.summaryFiles ++ Map("cufflinks_guided_gtf" -> annotationGtf)
 }

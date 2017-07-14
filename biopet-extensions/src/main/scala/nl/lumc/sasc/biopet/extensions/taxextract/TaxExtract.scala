@@ -5,6 +5,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
 
+import scala.util.matching.Regex
+
 /**
   * Created by Sander Bollen on 2-5-17.
   */
@@ -27,6 +29,6 @@ abstract class TaxExtract extends BiopetCommandLineFunction with Version {
       required("-n", taxName)
   }
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """.+, version (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """.+, version (.*)""".r
 }

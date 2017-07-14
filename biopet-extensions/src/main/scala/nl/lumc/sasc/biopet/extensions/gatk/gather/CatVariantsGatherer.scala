@@ -12,11 +12,12 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.gather
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, CommandLineGATK}
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
+import org.broadinstitute.gatk.queue.function.scattergather.{GatherFunction, ScatterGatherableFunction}
 
 /**
  *
@@ -26,13 +27,15 @@ import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
  *           \@Gather(className = "org.broadinstitute.gatk.queue.extensions.gatk.CatVariantsGatherer")
  *           \@Output(doc="File to which variants should be written",required=true)
  *           protected VariantContextWriter writer = null;
+ *
+ *           @deprecated
  */
 class CatVariantsGatherer extends CatVariants(null) with GatherFunction {
   this.assumeSorted = true
 
   analysisName = "Gather_CatVariants"
 
-  override val parent = originalFunction match {
+  override val parent: ScatterGatherableFunction with BiopetCommandLineFunction = originalFunction match {
     case b: BiopetCommandLineFunction => b
     case _                            => null
   }

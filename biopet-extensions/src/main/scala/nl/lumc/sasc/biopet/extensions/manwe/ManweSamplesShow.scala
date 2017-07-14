@@ -27,7 +27,7 @@ class ManweSamplesShow(val parent: Configurable) extends Manwe {
   @Argument(doc = "The sample to show")
   var uri: Option[String] = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("show") +
       required(uri)

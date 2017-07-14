@@ -27,7 +27,7 @@ import org.testng.annotations.Test
   */
 class BamStatsTest extends TestNGSuite with Matchers {
   @Test
-  def testMain: Unit = {
+  def testMain(): Unit = {
     val outputDir = Files.createTempDir()
     outputDir.deleteOnExit()
     BamStats.main(
@@ -56,7 +56,7 @@ class BamStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testTsvOutputs: Unit = {
+  def testTsvOutputs(): Unit = {
     val outputDir = Files.createTempDir()
     outputDir.deleteOnExit()
     BamStats.main(

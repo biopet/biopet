@@ -35,7 +35,7 @@ class Cat(val parent: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cat")
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       (if (inputAsStdin) "" else repeat(input)) +
       (if (outputAsStdout) "" else (if (appending) " >> " else " > ") + required(output))

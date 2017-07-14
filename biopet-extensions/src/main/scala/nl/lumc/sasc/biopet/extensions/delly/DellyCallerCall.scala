@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   *
   * Created by imoustakas on 9-5-17.
@@ -35,8 +37,8 @@ class DellyCallerCall(val parent: Configurable)
   override def defaultThreads = 1
   override def defaultCoreMemory = 4.0
 
-  def versionCommand = versionexecutable.getAbsolutePath
-  def versionRegex = """D(ELLY|elly) \(Version: (.*)\)""".r
+  def versionCommand: String = versionexecutable.getAbsolutePath
+  def versionRegex: Regex = """D(ELLY|elly) \(Version: (.*)\)""".r
   override def versionExitcode = List(0, 1)
   @Input(doc = "Input file (bam)")
   var input: File = _
@@ -62,7 +64,7 @@ class DellyCallerCall(val parent: Configurable)
     if (reference == null) reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("call") +
       required("-t", analysistype) + // SV type (DEL, DUP, INV, BND, INS)

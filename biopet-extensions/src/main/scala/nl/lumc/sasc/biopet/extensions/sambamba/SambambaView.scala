@@ -35,7 +35,7 @@ class SambambaView(val parent: Configurable) extends Sambamba {
   val compressionLevel: Option[Int] = config("compression_level", default = 6)
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("view") +
       optional("--filter", filter) +

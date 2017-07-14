@@ -32,7 +32,7 @@ class DownloadNcbiAssemblyTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNC_003403_1: Unit = {
+  def testNC_003403_1(): Unit = {
     val output = File.createTempFile("test.", ".fasta")
     val outputReport = File.createTempFile("test.", ".report")
     output.deleteOnExit()

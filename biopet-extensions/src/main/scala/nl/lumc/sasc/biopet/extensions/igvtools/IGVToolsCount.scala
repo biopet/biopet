@@ -80,7 +80,7 @@ class IGVToolsCount(val parent: Configurable) extends IGVTools {
   }
 
   /** Returns command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("count") +
       optional("--maxZoom", maxZoom) +

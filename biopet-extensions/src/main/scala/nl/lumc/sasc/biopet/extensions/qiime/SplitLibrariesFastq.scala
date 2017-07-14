@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Created by pjvan_thof on 12/10/15.
   */
@@ -28,8 +30,8 @@ class SplitLibrariesFastq(val parent: Configurable)
     with Version {
   executable = config("exe", default = "split_libraries_fastq.py")
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """Version: (.*)""".r
 
   @Input
   var input: List[File] = Nil
@@ -69,7 +71,7 @@ class SplitLibrariesFastq(val parent: Configurable)
     _outputSeqs = outputSeqs
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       optional("-v", v) +
       optional("-m", m) +

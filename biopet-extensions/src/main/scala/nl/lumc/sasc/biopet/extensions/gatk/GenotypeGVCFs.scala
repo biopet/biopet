@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class GenotypeGVCFs(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "GenotypeGVCFs"
@@ -33,7 +35,7 @@ class GenotypeGVCFs(val parent: Configurable) extends CommandLineGATK with Scatt
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** Include loci found to be non-variant after genotyping */
@@ -130,28 +132,28 @@ class GenotypeGVCFs(val parent: Configurable) extends CommandLineGATK with Scatt
     dbsnp.foreach(x => deps :+= VcfUtils.getVcfIndexFile(x))
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(includeNonVariantSites, "-allSites", escape = true, format = "%s") +
-    conditional(uniquifySamples, "-uniquifySamples", escape = true, format = "%s") +
-    conditional(annotateNDA, "-nda", escape = true, format = "%s") +
+  override def cmdLine: String = super.cmdLine +
+    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-o", out) +
+    conditional(includeNonVariantSites, "-allSites") +
+    conditional(uniquifySamples, "-uniquifySamples") +
+    conditional(annotateNDA, "-nda") +
     conditional(useNewAFCalculator, "--useNewAFCalculator") +
-    optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
-    optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
-    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
-    optional("-maxAltAlleles", max_alternate_alleles, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
+    optional("-hets", heterozygosity, format = heterozygosityFormat) +
+    optional("-indelHeterozygosity", indel_heterozygosity, format = indel_heterozygosityFormat) +
+    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, format = standard_min_confidence_threshold_for_callingFormat) +
+    optional("-maxAltAlleles", max_alternate_alleles) +
+    repeat("-inputPrior", input_prior) +
+    optional("-ploidy", sample_ploidy) +
+    repeat("-A", annotation) +
+    repeat("-G", group) +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.orNull), dbsnp) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases") +
     (this.getVersion match {
       case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
-        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, format = standard_min_confidence_threshold_for_emittingFormat)
       case _ => ""
     })
 }

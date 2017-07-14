@@ -13,7 +13,7 @@ class WisecondorCount(val parent: Configurable) extends Wisecondor {
   @Input
   var inputBam: File = _
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("count") +
       required("-I", inputBam) +

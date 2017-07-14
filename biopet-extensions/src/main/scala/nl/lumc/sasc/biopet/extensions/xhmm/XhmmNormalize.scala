@@ -38,7 +38,7 @@ class XhmmNormalize(val parent: Configurable) extends Xhmm {
 
   var pveFactor: Float = config("pve_mean_factor", namespace = "xhmm_normalize", default = 0.7)
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--normalize") +
       required("-r", inputMatrix) +
       required("--PCAfiles", pcaFile) +

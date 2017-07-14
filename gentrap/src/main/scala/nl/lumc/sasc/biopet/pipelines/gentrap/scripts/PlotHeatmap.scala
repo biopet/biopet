@@ -28,10 +28,10 @@ class PlotHeatmap(val parent: Configurable) extends RscriptCommandLineFunction {
   protected var script: File = config("script", default = "plot_heatmap.R")
 
   @Input(doc = "Input table", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Output plot", required = false)
-  var output: File = null
+  var output: File = _
 
   var countType: Option[String] = config("count_type")
   var useLog: Boolean = config("use_log", default = false)

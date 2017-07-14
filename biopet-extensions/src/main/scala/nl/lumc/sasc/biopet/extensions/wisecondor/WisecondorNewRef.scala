@@ -16,7 +16,7 @@ class WisecondorNewRef(val parent: Configurable) extends Wisecondor {
   var nNeighbourBins: Option[Int] =
     config("n_neighbour_bins", namespace = "wisecondor", default = None)
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("newref") +
       repeat("-I", inputBeds) +

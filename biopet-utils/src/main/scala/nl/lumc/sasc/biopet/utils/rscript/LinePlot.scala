@@ -46,7 +46,7 @@ class LinePlot(val parent: Configurable) extends Rscript {
   var xLog10AxisTicks: Seq[String] = Seq.empty
   var xLog10AxisLabels: Seq[String] = Seq.empty
 
-  override def cmd =
+  override def cmd: Seq[String] =
     super.cmd ++
       Seq("--input", input.getAbsolutePath) ++
       Seq("--output", output.getAbsolutePath) ++

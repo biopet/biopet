@@ -111,7 +111,7 @@ object SeqStat extends ToolCommand {
                       lengths: mutable.ArrayBuffer[Int] = mutable.ArrayBuffer())
 
   val baseStats: mutable.ArrayBuffer[BaseStat] = mutable.ArrayBuffer()
-  val readStats: ReadStat = new ReadStat()
+  val readStats: ReadStat = ReadStat()
 
   var readLengthHistogram: mutable.Map[String, Long] = mutable.Map.empty
 
@@ -203,7 +203,7 @@ object SeqStat extends ToolCommand {
       )
       // ensure bases: `ACTGN` is always reported even having a zero count.
       // Other chars might be counted also, these are also reported
-      .retain((nucleotide, count) => (count > 0 || "ACTGN".contains(nucleotide.toString)))
+      .retain((nucleotide, count) => count > 0 || "ACTGN".contains(nucleotide.toString))
 
     baseQualHistogram = quals.slice(phredEncoding.id, quals.size)
     baseQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - baseQualHistogram.size)(
@@ -262,11 +262,10 @@ object SeqStat extends ToolCommand {
     val report = reportMap(commandArgs.fastq)
 
     commandArgs.outputJson match {
-      case Some(file) => {
+      case Some(file) =>
         val writer = new PrintWriter(file)
         writer.println(ConfigUtils.mapToJson(report))
         writer.close()
-      }
       case _ => println(ConfigUtils.mapToJson(report))
     }
   }

@@ -58,7 +58,7 @@ object FastqSplitter extends ToolCommand {
     var counter: Long = 0
     while (reader.hasNext) {
       for (writer <- output) {
-        for (t <- 1 to groupSize if reader.hasNext) {
+        for (_ <- 1 to groupSize if reader.hasNext) {
           writer.write(reader.next())
           counter += 1
           if (counter % 1000000 == 0) logger.info(counter + " reads processed")

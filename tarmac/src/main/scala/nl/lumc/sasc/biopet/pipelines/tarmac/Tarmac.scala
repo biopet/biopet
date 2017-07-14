@@ -68,14 +68,14 @@ class Tarmac(val parent: Configurable)
     )
   }
 
-  def init() = {}
+  def init(): Unit = {}
 
-  def biopetScript() = {
+  def biopetScript(): Unit = {
     addSamplesJobs()
     addSummaryJobs()
   }
 
-  def addMultiSampleJobs() = {
+  def addMultiSampleJobs(): Unit = {
     val initRefMap = samples map {
       case (sampleName, sample) => sample -> getReferenceSamplesForSample(sampleName)
     }
@@ -383,7 +383,7 @@ class Tarmac(val parent: Configurable)
    */
   def createXhmmReferenceJobs(sample: Sample,
                               referenceSamples: Set[Sample],
-                              outputDirectory: File): Tuple2[List[QFunction], File] = {
+                              outputDirectory: File): (List[QFunction], File) = {
     /* XHMM requires refset including self */
     val totalSet = referenceSamples + sample
     val merger = new XhmmMergeGatkDepths(this)
@@ -431,7 +431,7 @@ class Tarmac(val parent: Configurable)
     zscore
   }
 
-  def createXhmmZscore(sample: Sample, referenceMatrix: File): Tuple2[List[QFunction], File] = {
+  def createXhmmZscore(sample: Sample, referenceMatrix: File): (List[QFunction], File) = {
 
     // the filtered and centered matrix
     val filtMatrix = new XhmmMatrix(this)
@@ -494,7 +494,7 @@ class Tarmac(val parent: Configurable)
     protected lazy val outputXhmmCountJob: String \/ QFunction = {
       val outFile = new File(xhmmDir, s"$name.dcov")
       (inputXhmmCountFile, bamFile) match {
-        case (Some(f), _) => {
+        case (Some(f), _) =>
           if (bamFile.isDefined) {
             logger.warn(
               s"Both BAM and Xhmm count files are given for sample $name. The BAM file will be ignored")
@@ -503,11 +503,9 @@ class Tarmac(val parent: Configurable)
           ln.input = f
           ln.output = outFile
           \/-(ln)
-        }
-        case (None, Some(bam)) => {
+        case (None, Some(bam)) =>
           val dcov = DepthOfCoverage(root, List(bam), outFile, List(targets))
           \/-(dcov)
-        }
         case _ =>
           -\/(
             s"Cannot find bam file or xhmm count file for sample" +
@@ -522,6 +520,7 @@ class Tarmac(val parent: Configurable)
         case \/-(ln: Ln) => \/-(ln.output)
         case \/-(doc: DepthOfCoverage) => \/-(doc.intervalSummaryFile)
         case -\/(error) => -\/(error)
+        case _ => throw new IllegalStateException("This should not be reachable")
       }
     }
 
@@ -534,7 +533,7 @@ class Tarmac(val parent: Configurable)
     protected lazy val outputWisecondorCountJob: String \/ QFunction = {
       val outFile = new File(wisecondorDir, s"$name.wisecondor.bed")
       (inputWisecondorCountFile, bamFile) match {
-        case (Some(f), _) => {
+        case (Some(f), _) =>
           if (bamFile.isDefined) {
             logger.warn(
               s"Both BAM and Wisecondor count files are given for sample $name. The BAM file will be ignored")
@@ -543,14 +542,12 @@ class Tarmac(val parent: Configurable)
           ln.input = f
           ln.output = outFile
           \/-(ln)
-        }
-        case (None, Some(bam)) => {
+        case (None, Some(bam)) =>
           val counter = new WisecondorCount(root)
           counter.inputBam = bam
           counter.output = outFile
           counter.binFile = Some(targets)
           \/-(counter)
-        }
         case _ =>
           -\/(
             s"Cannot find bam file or wisecondor count for sample" +
@@ -565,6 +562,7 @@ class Tarmac(val parent: Configurable)
         case \/-(ln: Ln) => \/-(ln.output)
         case \/-(count: WisecondorCount) => \/-(count.output)
         case -\/(error) => -\/(error)
+        case _ => throw new IllegalStateException("This should not be reachable")
       }
     }
 
@@ -582,6 +580,7 @@ class Tarmac(val parent: Configurable)
       outputWisecondorGccJob match {
         case \/-(gcc: WisecondorGcCorrect) => \/-(gcc.output)
         case -\/(error) => -\/(error)
+        case _ => throw new IllegalStateException("This should not be reachable")
       }
     }
 

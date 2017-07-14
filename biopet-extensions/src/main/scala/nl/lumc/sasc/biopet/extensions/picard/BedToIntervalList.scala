@@ -28,16 +28,16 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 class BedToIntervalList(val parent: Configurable) extends Picard with Reference {
 
   @Input(doc = "Input bed file", required = true)
-  var input: File = null
+  var input: File = _
 
   @Input(doc = "Reference dict file", required = true)
   var dict: File = new File(
     referenceFasta().toString.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
 
   @Output(doc = "Output interval list", required = true)
-  var output: File = null
+  var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("SEQUENCE_DICTIONARY=", dict, spaceSeparated = false) +
       required("INPUT=", input, spaceSeparated = false) +

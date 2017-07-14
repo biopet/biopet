@@ -31,7 +31,7 @@ class ConiferExport(val parent: Configurable) extends Conifer {
     this.preProcessExecutable()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       " export " +
       " --input" + required(input) +

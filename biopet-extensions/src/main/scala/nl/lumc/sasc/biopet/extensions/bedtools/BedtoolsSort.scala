@@ -26,15 +26,15 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 class BedtoolsSort(val parent: Configurable) extends Bedtools with Reference {
 
   @Input
-  var input: File = null
+  var input: File = _
 
   @Output
-  var output: File = null
+  var output: File = _
 
   @Argument(required = false)
   var faidx: File = referenceFai
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("sort") + required("-i", input) +
       optional("-faidx", faidx) +
       (if (outputAsStdout) "" else " > " + required(output))

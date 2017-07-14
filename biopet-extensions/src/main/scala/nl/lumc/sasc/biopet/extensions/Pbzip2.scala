@@ -33,7 +33,7 @@ class Pbzip2(val parent: Configurable) extends BiopetCommandLineFunction {
   var decomrpess = true
   var memory: Option[Int] = config("memory")
 
-  override def defaultCoreMemory = memory.getOrElse(1000).toDouble / 1000
+  override def defaultCoreMemory: Double = memory.getOrElse(1000).toDouble / 1000
   override def defaultThreads = 2
 
   override def beforeCmd() {
@@ -41,7 +41,7 @@ class Pbzip2(val parent: Configurable) extends BiopetCommandLineFunction {
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       conditional(decomrpess, "-d") +
       conditional(!decomrpess, "-z") +

@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the tabix command
@@ -29,10 +31,10 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input bgzipped file", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Output (for region query)", required = false)
-  var outputQuery: File = null
+  var outputQuery: File = _
 
   def outputIndex: File = {
     require(input != null, "Input should be defined")
@@ -57,8 +59,8 @@ class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Ver
 
   executable = config("exe", default = "tabix", freeVar = false)
 
-  def versionCommand = executable
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 
   /** Formats that tabix can handle */
@@ -78,7 +80,7 @@ class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Ver
     }
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     val baseCommand = required(executable) +
       optional("-p", p) +
       optional("-s", s) +
@@ -103,7 +105,7 @@ class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Ver
 }
 
 object Tabix {
-  def apply(root: Configurable, input: File) = {
+  def apply(root: Configurable, input: File): Tabix = {
     val tabix = new Tabix(root)
     tabix.input = input
     tabix.p = tabix.input.getName match {

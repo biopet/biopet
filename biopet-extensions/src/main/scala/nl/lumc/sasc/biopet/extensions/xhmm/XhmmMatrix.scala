@@ -85,7 +85,7 @@ class XhmmMatrix(val parent: Configurable) extends Xhmm {
 
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--matrix") +
       required("-r", inputMatrix) +
       required("-o", outputMatrix) +

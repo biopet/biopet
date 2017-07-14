@@ -19,7 +19,7 @@ package nl.lumc.sasc.biopet.utils
   */
 trait MainCommand {
 
-  lazy val commandName = this.getClass.getSimpleName
+  lazy val commandName: String = this.getClass.getSimpleName
     .split("\\$")
     .last
 

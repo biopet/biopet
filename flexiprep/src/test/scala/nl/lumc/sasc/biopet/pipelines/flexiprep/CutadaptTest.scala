@@ -37,7 +37,7 @@ class CutadaptTest extends FastqcV0101Test {
     caExe
   }
 
-  @Test def testAdapterFound() = {
+  @Test def testAdapterFound(): Unit = {
     val cutadapt = testCutadaptInst
     val adapters = cutadapt.extractClippedAdapters(cutadaptOut)
     adapters.keys.size shouldBe 4
@@ -60,7 +60,7 @@ class CutadaptTest extends FastqcV0101Test {
     )
   }
 
-  @Test def testSummary() = {
+  @Test def testSummary(): Unit = {
     val cutadapt = testCutadaptInst
     val summary = cutadapt.summaryStats
 

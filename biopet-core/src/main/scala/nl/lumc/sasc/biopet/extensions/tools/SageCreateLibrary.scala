@@ -38,12 +38,12 @@ class SageCreateLibrary(val parent: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output file all genes", shortName = "allGenes", required = false)
   var allGenesOutput: File = _
 
-  var tag: String = config("tag", default = "CATG")
-  var length: Option[Int] = config("length", default = 17)
+  val tag: String = config("tag", default = "CATG")
+  val length: Option[Int] = config("length", default = 17)
 
   override def defaultCoreMemory = 3.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", input) +
       optional("--tag", tag) +

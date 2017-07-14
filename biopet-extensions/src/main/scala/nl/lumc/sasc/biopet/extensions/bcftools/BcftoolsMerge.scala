@@ -46,7 +46,7 @@ class BcftoolsMerge(val parent: Configurable) extends Bcftools {
   var O: Option[String] = config("O")
   var r: List[String] = config("r", default = Nil)
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("merge") +
       (if (outputAsStdout) "" else required("-o", output)) +

@@ -27,7 +27,7 @@ class ManweSamplesActivate(val parent: Configurable) extends Manwe {
   @Argument(doc = "uri to sample to activate")
   var uri: String = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("activate") +
       required(uri)

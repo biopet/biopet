@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Output
+
+import scala.util.matching.Regex
 
 /**
   * Created by pjvan_thof on 8/11/15.
@@ -30,8 +32,8 @@ class Curl(val parent: Configurable) extends BiopetCommandLineFunction with Vers
   var url: String = _
 
   executable = config("exe", default = "curl")
-  def versionCommand = executable + " --version"
-  def versionRegex = """curl (\w+\.\w+\.\w+) .*""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """curl (\w+\.\w+\.\w+) .*""".r
 
   def cmdLine: String =
     required(executable) + required(url) + (if (outputAsStdout) "" else " > " + required(output))

@@ -18,9 +18,10 @@ import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.util.Interval
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import nl.lumc.sasc.biopet.utils.{FastaUtils, Logging}
@@ -28,32 +29,32 @@ import nl.lumc.sasc.biopet.utils.{FastaUtils, Logging}
 /**
   * Created by pjvan_thof on 8/20/15.
   */
-case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
-                         val header: List[String] = Nil) {
-  def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
+case class BedRecordList(chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
+  def allRecords: immutable.Iterable[BedRecord] =
+    for (chr <- chrRecords; record <- chr._2) yield record
 
-  def toSamIntervals = allRecords.map(_.toSamInterval)
+  def toSamIntervals: immutable.Iterable[Interval] = allRecords.map(_.toSamInterval)
 
-  lazy val sorted = {
+  lazy val sorted: BedRecordList = {
     val sorted = new BedRecordList(
       chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
     if (sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))) this else sorted
   }
 
-  lazy val isSorted = sorted.hashCode() == this.hashCode() || sorted.chrRecords.forall(x =>
-    x._2 == chrRecords(x._1))
+  lazy val isSorted: Boolean = sorted.hashCode() == this.hashCode() || sorted.chrRecords.forall(
+    x => x._2 == chrRecords(x._1))
 
-  def overlapWith(record: BedRecord) =
+  def overlapWith(record: BedRecord): List[BedRecord] =
     sorted.chrRecords
       .getOrElse(record.chr, Nil)
       .dropWhile(_.end <= record.start)
       .takeWhile(_.start < record.end)
 
-  def length = allRecords.foldLeft(0L)((a, b) => a + b.length)
+  def length: Long = allRecords.foldLeft(0L)((a, b) => a + b.length)
 
-  def squishBed(strandSensitive: Boolean = true, nameSensitive: Boolean = true) =
+  def squishBed(strandSensitive: Boolean = true, nameSensitive: Boolean = true): BedRecordList =
     BedRecordList.fromList {
-      (for ((chr, records) <- sorted.chrRecords; record <- records) yield {
+      (for ((_, records) <- sorted.chrRecords; record <- records) yield {
         val overlaps = overlapWith(record)
           .filterNot(_ == record)
           .filterNot(strandSensitive && _.strand != record.strand)
@@ -125,7 +126,7 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]],
     list._2 :: list._1
   }
 
-  def validateContigs(reference: File) = {
+  def validateContigs(reference: File): BedRecordList = {
     val dict = FastaUtils.getCachedDict(reference)
     val notExisting = chrRecords.keys.filter(dict.getSequence(_) == null).toList
     require(
@@ -182,7 +183,7 @@ object BedRecordList {
     * @param bedFiles Input bed files
     * @return
     */
-  def fromFilesCombine(bedFiles: File*) = {
+  def fromFilesCombine(bedFiles: File*): BedRecordList = {
     fromFiles(bedFiles, combine = true)
   }
 
@@ -193,16 +194,16 @@ object BedRecordList {
     * @param combine When true overlaping regions are merged
     * @return
     */
-  def fromFiles(bedFiles: Seq[File], combine: Boolean = false) = {
+  def fromFiles(bedFiles: Seq[File], combine: Boolean = false): BedRecordList = {
     val list = bedFiles.foldLeft(empty)((a, b) => fromList(fromFile(b).allRecords ++ a.allRecords))
     if (combine) list.combineOverlap
     else list
   }
 
   /** This created a empty [[BedRecordList]] */
-  def empty = fromList(Nil)
+  def empty: BedRecordList = fromList(Nil)
 
-  def fromFile(bedFile: File) = {
+  def fromFile(bedFile: File): BedRecordList = {
     val reader = Source.fromFile(bedFile)
     val all = reader.getLines().toList
     val header = all.takeWhile(x => x.startsWith("browser") || x.startsWith("track"))
@@ -223,9 +224,9 @@ object BedRecordList {
     }
   }
 
-  def fromReference(file: File) = fromDict(FastaUtils.getCachedDict(file))
+  def fromReference(file: File): BedRecordList = fromDict(FastaUtils.getCachedDict(file))
 
-  def fromDict(dict: SAMSequenceDictionary) = {
+  def fromDict(dict: SAMSequenceDictionary): BedRecordList = {
     fromList(for (contig <- dict.getSequences) yield {
       BedRecord(contig.getSequenceName, 0, contig.getSequenceLength)
     })

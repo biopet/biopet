@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Created by pjvan_thof on 8/15/15.
   */
@@ -31,20 +33,20 @@ class BowtieBuild(val parent: Configurable) extends BiopetCommandLineFunction wi
   var baseName: String = _
 
   executable = config("exe", default = "bowtie-build", freeVar = false)
-  def versionRegex = """.*[Vv]ersion:? (\d*\.\d*\.\d*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """.*[Vv]ersion:? (\d*\.\d*\.\d*)""".r
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 15.0
 
   @Output
   private var outputFiles: List[File] = Nil
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     outputFiles ::= new File(reference.getParentFile, baseName + ".1.ebwt")
     outputFiles ::= new File(reference.getParentFile, baseName + ".2.ebwt")
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required("cd", reference.getParentFile) + " && " +
       required(executable) +
       required(reference) +

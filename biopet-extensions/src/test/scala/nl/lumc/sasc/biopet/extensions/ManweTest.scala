@@ -30,7 +30,7 @@ import scala.io.Source
 class ManweTest extends TestNGSuite with Matchers {
 
   @Test
-  def testManweAnnotatedBed = {
+  def testManweAnnotatedBed(): Unit = {
     val manwe = new ManweAnnotateBed(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -62,7 +62,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweAnnotateVcf = {
+  def testManweAnnotateVcf(): Unit = {
     val manwe = new ManweAnnotateVcf(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -94,7 +94,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweDataSourcesAnnotate = {
+  def testManweDataSourcesAnnotate(): Unit = {
     val manwe = new ManweDataSourcesAnnotate(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -119,7 +119,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweDataSourcesDownload = {
+  def testManweDataSourcesDownload(): Unit = {
     val manwe = new ManweDataSourcesDownload(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -136,7 +136,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweDataSourcesList = {
+  def testManweDataSourcesList(): Unit = {
     val manwe = new ManweDataSourcesList(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -151,7 +151,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweDataSourcesShow = {
+  def testManweDataSourcesShow(): Unit = {
     val manwe = new ManweDataSourcesShow(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -167,7 +167,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesActivate = {
+  def testManweSamplesActivate(): Unit = {
     val manwe = new ManweSamplesActivate(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -183,7 +183,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesAdd = {
+  def testManweSamplesAdd(): Unit = {
     val manwe = new ManweSamplesAdd(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -207,7 +207,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesAnnotateVariations = {
+  def testManweSamplesAnnotateVariations(): Unit = {
     val manwe = new ManweSamplesAnnotateVariations(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -227,7 +227,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesImport = {
+  def testManweSamplesImport(): Unit = {
     val manwe = new ManweSamplesImport(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -284,7 +284,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesImportBed = {
+  def testManweSamplesImportBed(): Unit = {
 
     val manwe = new ManweSamplesImportBed(null) {
       override def globalConfig =
@@ -314,7 +314,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesImportVcf = {
+  def testManweSamplesImportVcf(): Unit = {
     val manwe = new ManweSamplesImportVcf(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -347,7 +347,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesList = {
+  def testManweSamplesList(): Unit = {
     val manwe = new ManweSamplesList(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -375,7 +375,7 @@ class ManweTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testManweSamplesShow = {
+  def testManweSamplesShow(): Unit = {
     val manwe = new ManweSamplesShow(null) {
       override def globalConfig =
         new Config(Map("manwe_config" -> "${manwe.manweConfig.getAbsolutePath}"))
@@ -391,7 +391,7 @@ class ManweTest extends TestNGSuite with Matchers {
       s"manwe samples show /uri/1 -c ${manwe.manweConfig.getAbsolutePath} > ${out.getAbsolutePath}")
   }
 
-  @Test def testConfigCreation = {
+  @Test def testConfigCreation(): Unit = {
     val manwe = new ManweAnnotateBed(null) {
       override def globalConfig =
         new Config(

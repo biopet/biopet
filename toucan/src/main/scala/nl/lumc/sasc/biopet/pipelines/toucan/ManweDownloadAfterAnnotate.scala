@@ -27,14 +27,14 @@ import scala.io.Source
 class ManweDownloadAfterAnnotate(root: Configurable, annotate: ManweAnnotateVcf)
     extends ManweDataSourcesDownload(root) {
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(annotate != null, "Annotate should be defined")
     this.deps :+= annotate.jobOutputFile
   }
 
-  override def beforeCmd: Unit = {
-    super.beforeCmd
+  override def beforeCmd(): Unit = {
+    super.beforeCmd()
 
     this.uri = getUri
   }
@@ -68,7 +68,7 @@ class ManweDownloadAfterAnnotate(root: Configurable, annotate: ManweAnnotateVcf)
     uri
   }
 
-  override def subCommand = {
+  override def subCommand: String = {
     required("data-sources") + required("download") + getUri
   }
 

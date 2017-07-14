@@ -33,7 +33,7 @@ class FindOverlapMatchTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testOverlap: Unit = {
+  def testOverlap(): Unit = {
     val input = new File(resourcePath("/overlapmetrics.txt"))
     val output = File.createTempFile("overlap.", ".txt")
     val shouldBeOutput = new File(resourcePath("/overlapmetrics.default.output"))
@@ -47,7 +47,7 @@ class FindOverlapMatchTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testOverlapSameName: Unit = {
+  def testOverlapSameName(): Unit = {
     val input = new File(resourcePath("/overlapmetrics.txt"))
     val output = File.createTempFile("overlap.", ".txt")
     val shouldBeOutput = new File(resourcePath("/overlapmetrics.same_names.output"))

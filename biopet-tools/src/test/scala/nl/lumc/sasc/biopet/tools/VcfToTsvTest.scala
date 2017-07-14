@@ -37,10 +37,10 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
 
   val rand = new Random()
 
-  val vepped = resourcePath("/VEP_oneline.vcf")
-  val unvepped = resourcePath("/unvepped.vcf")
+  val vepped: String = resourcePath("/VEP_oneline.vcf")
+  val unvepped: String = resourcePath("/unvepped.vcf")
 
-  @Test def testAllFields() = {
+  @Test def testAllFields(): Unit = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -48,7 +48,7 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testSpecificField() = {
+  @Test def testSpecificField(): Unit = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -56,7 +56,7 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testNewSeparators() = {
+  @Test def testNewSeparators(): Unit = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -66,20 +66,20 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test(expectedExceptions = Array(classOf[IllegalArgumentException]))
-  def testIdenticalSeparators() = {
+  def testIdenticalSeparators(): Unit = {
     val tmpPath = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
     val arguments = Array("-I", vepped, "-o", tmpPath, "--all_info", "--separator", ",")
     main(arguments)
   }
 
-  @Test def testFormatter() = {
+  @Test def testFormatter(): Unit = {
     val formatter = createFormatter(2)
     formatter.format(5000.12345) should be("5000.12")
     val nformatter = createFormatter(3)
     nformatter.format(5000.12345) should be("5000.123")
   }
 
-  @Test def testSortFields() = {
+  @Test def testSortFields(): Unit = {
     val unsortedFields = Set("Child01-GT",
                              "Mother02-GT",
                              "Father03-GT",

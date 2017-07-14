@@ -46,9 +46,7 @@ table[data-sortable] th:after {
     vertical-align: inherit;
     height: 0;
     width: 0;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent;
+    border: 5px solid transparent;
     margin-right: 1px;
     margin-left: 10px;
     float: right;

@@ -12,7 +12,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.interval.IntervalUtils
@@ -24,9 +24,9 @@ import scala.collection.JavaConversions._
  */
 class ContigScatterFunction extends GATKScatterFunction with InProcessFunction {
 
-  override def scatterCount = if (intervalFilesExist) super.scatterCount min this.maxIntervals else super.scatterCount
+  override def scatterCount: Int = if (intervalFilesExist) super.scatterCount min this.maxIntervals else super.scatterCount
 
-  protected override def maxIntervals = {
+  protected override def maxIntervals: Int = {
     GATKScatterFunction.getGATKIntervals(this.originalGATK).contigs.size
   }
 

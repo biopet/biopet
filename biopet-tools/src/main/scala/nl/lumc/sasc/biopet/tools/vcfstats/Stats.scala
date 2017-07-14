@@ -171,7 +171,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   def getTotalStats(samples: List[String],
                     genotypeFields: List[String] = Nil,
                     infoFields: List[String] = Nil,
-                    sampleDistributions: List[String] = Nil) =
+                    sampleDistributions: List[String] = Nil): Map[String, Any] =
     getContigStats("total", samples, genotypeFields, infoFields, sampleDistributions)
 
   /** This will generate stats for total and contigs separated */

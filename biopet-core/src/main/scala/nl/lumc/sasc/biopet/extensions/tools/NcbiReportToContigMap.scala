@@ -35,7 +35,7 @@ class NcbiReportToContigMap(val parent: Configurable) extends ToolCommandFunctio
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-a", assemblyReport) +
       required("--report", outputReport) +

@@ -16,21 +16,23 @@ package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /** Extension for Kraken */
 class KrakenReport(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", default = "kraken-report")
-  def versionRegex = """Kraken version (.*)""".r
+  def versionRegex: Regex = """Kraken version (.*)""".r
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 1
 
-  def versionCommand = {
+  def versionCommand: String = {
     val exe = new File(new File(executable).getParent, "kraken")
     if (exe.exists()) exe.getAbsolutePath + " --version"
     else executable + " --version"
