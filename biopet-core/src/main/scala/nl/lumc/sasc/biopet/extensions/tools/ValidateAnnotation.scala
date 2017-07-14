@@ -41,7 +41,7 @@ class ValidateAnnotation(val parent: Configurable) extends ToolCommandFunction w
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       optional("-r", refflatFile) +
       repeat("-g", gtfFile) +

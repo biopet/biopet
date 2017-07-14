@@ -44,7 +44,7 @@ class CarpTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "carpOptions")
-  def carpOptions = {
+  def carpOptions: Array[Array[Any]] = {
     val bool = Array(true, false)
 
     for (s1 <- bool; s2 <- bool; s3 <- bool; t <- bool; c <- bool)
@@ -103,7 +103,7 @@ class CarpTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.filter(_.exists()).foreach { dir =>
       try {
         FileUtils.deleteDirectory(dir)
@@ -116,8 +116,8 @@ class CarpTest extends TestNGSuite with Matchers {
 }
 
 object CarpTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   def inputTouch(name: String): String = {
     val file = new File(inputDir, name)

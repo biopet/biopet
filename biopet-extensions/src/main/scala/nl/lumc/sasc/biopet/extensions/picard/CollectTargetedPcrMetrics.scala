@@ -36,7 +36,7 @@ class CollectTargetedPcrMetrics(val parent: Configurable)
   var input: File = _
 
   @Input(doc = "Reference", required = true)
-  var reference: File = null
+  var reference: File = _
 
   @Input(doc = "AMPLICON_INTERVALS", required = true)
   var ampliconIntervals: File = _
@@ -61,7 +61,7 @@ class CollectTargetedPcrMetrics(val parent: Configurable)
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +
@@ -76,7 +76,7 @@ class CollectTargetedPcrMetrics(val parent: Configurable)
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats: Any = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectTargetedPcrMetrics {

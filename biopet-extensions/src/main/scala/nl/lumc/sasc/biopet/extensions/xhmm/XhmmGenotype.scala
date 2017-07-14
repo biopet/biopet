@@ -40,14 +40,14 @@ class XhmmGenotype(val parent: Configurable) extends Xhmm with Reference {
   @Input
   var f: File = _
 
-  override def beforeGraph() = {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (f == null) {
       f = referenceFasta()
     }
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     executable + required("--genotype") +
       required("-p", discoverParamsFile) +
       required("-r", inputMatrix) +

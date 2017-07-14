@@ -30,14 +30,14 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   lazy val input: List[File] = try {
     commands.flatMap(_.inputs)
   } catch {
-    case e: Exception => Nil
+    case _: Exception => Nil
   }
 
   @Output
   lazy val output: List[File] = try {
     commands.flatMap(_.outputs)
   } catch {
-    case e: Exception => Nil
+    case _: Exception => Nil
   }
 
   _pipesJobs :::= commands
@@ -74,7 +74,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   override def defaultThreads = 0
 
   val parent: Configurable = commands.head.parent
-  override def configNamespace = commands.map(_.configNamespace).mkString("-")
+  override def configNamespace: String = commands.map(_.configNamespace).mkString("-")
   def cmdLine: String = {
     "(" + commands.head.cmdLine + (if (commands.head.stdinFile.isDefined) {
                                      " < " + required(

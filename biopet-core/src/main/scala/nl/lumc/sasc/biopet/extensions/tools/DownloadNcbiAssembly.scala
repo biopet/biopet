@@ -29,7 +29,7 @@ class DownloadNcbiAssembly(val parent: Configurable) extends ToolCommandFunction
   var outputReport: File = _
 
   @Input(required = true)
-  var assemblyReport: File = null
+  var assemblyReport: File = _
 
   var nameHeader: Option[String] = None
 
@@ -38,7 +38,7 @@ class DownloadNcbiAssembly(val parent: Configurable) extends ToolCommandFunction
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-a", assemblyReport) +
       required("--report", outputReport) +

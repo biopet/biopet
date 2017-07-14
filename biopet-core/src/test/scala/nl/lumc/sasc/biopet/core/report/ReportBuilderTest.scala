@@ -15,7 +15,6 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io.File
-import java.nio.file.Paths
 import java.sql.Date
 
 import com.google.common.io.Files
@@ -32,16 +31,12 @@ import scala.concurrent.duration.Duration
   */
 class ReportBuilderTest extends TestNGSuite with Matchers {
 
-  private def resourcePath(p: String): String = {
-    Paths.get(getClass.getResource(p).toURI).toString
-  }
-
   @DataProvider(name = "testGeneratePages")
-  def generatePageProvider = {
+  def generatePageProvider: Array[Array[Any]] = {
     val sample = Array(Some("sampleName"), None)
     val lib = Array(Some("libName"), None)
     val nested = Array(false, true)
-    for (s <- sample; l <- lib; n <- nested if (!(l.isDefined && s.isEmpty))) yield Array(s, l, n)
+    for (s <- sample; l <- lib; n <- nested if !(l.isDefined && s.isEmpty)) yield Array(s, l, n)
   }
 
   @Test(dataProvider = "testGeneratePages")
@@ -51,7 +46,7 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
       def reportName: String = "test"
       def indexPage: Future[ReportPage] =
         Future(
-          ReportPage((if (nested) "p1" -> Future(ReportPage(Nil, Nil, Map())) :: Nil else Nil),
+          ReportPage(if (nested) "p1" -> Future(ReportPage(Nil, Nil, Map())) :: Nil else Nil,
                      Nil,
                      Map()))
     }
@@ -107,7 +102,7 @@ class ReportBuilderTest extends TestNGSuite with Matchers {
   //  }
 
   @Test
-  def testRenderTemplate: Unit = {
+  def testRenderTemplate(): Unit = {
     ReportBuilder.renderTemplate("/template.ssp", Map("arg" -> "test")) shouldBe "test"
     ReportBuilder.renderTemplate("/template.ssp", Map("arg" -> "bla")) shouldBe "bla"
   }

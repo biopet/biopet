@@ -32,14 +32,14 @@ import scala.io.Source
 class ManweActivateAfterImport(root: Configurable, imported: ManweSamplesImport)
     extends ManweSamplesActivate(root) {
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(imported != null, "Imported should be defined")
     this.deps :+= imported.jobOutputFile
   }
 
-  override def beforeCmd: Unit = {
-    super.beforeCmd
+  override def beforeCmd(): Unit = {
+    super.beforeCmd()
 
     this.uri = getUri
   }
@@ -73,7 +73,7 @@ class ManweActivateAfterImport(root: Configurable, imported: ManweSamplesImport)
     uri
   }
 
-  override def subCommand = {
+  override def subCommand: String = {
     required("samples") + required("activate") + getUri
   }
 

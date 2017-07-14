@@ -43,7 +43,7 @@ object RegionAfCount extends ToolCommand {
       (x, c) =>
         c.copy(outputPrefix = x)
     }
-    opt[Unit]('s', "scatterPlot") unbounded () action { (x, c) =>
+    opt[Unit]('s', "scatterPlot") unbounded () action { (_, c) =>
       c.copy(scatterpPlot = true)
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
@@ -116,7 +116,7 @@ object RegionAfCount extends ToolCommand {
           afCounts.toMap
         }).toMap
 
-    logger.info(s"Done reading, ${c} regions")
+    logger.info(s"Done reading, $c regions")
 
     logger.info("Writing output files")
 

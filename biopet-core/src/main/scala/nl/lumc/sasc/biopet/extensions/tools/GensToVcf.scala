@@ -63,7 +63,7 @@ class GensToVcf(val parent: Configurable) extends ToolCommandFunction with Refer
     sortInput = true
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("--inputGenotypes", inputGens) +
       required("--inputInfo", inputInfo) +

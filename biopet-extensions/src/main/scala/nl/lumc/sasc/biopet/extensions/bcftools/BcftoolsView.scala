@@ -126,7 +126,7 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
   @Argument(doc = "Exclude privates", required = false)
   var excludePrivate: Boolean = config("X", default = false)
 
-  override def beforeGraph() = {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
 
     require((compressionLevel <= 9) && (compressionLevel >= 0))
@@ -136,7 +136,7 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
     )
   }
 
-  def baseCmd = {
+  def baseCmd: String = {
     executable +
       required("view") +
       conditional(dropGenotype, "-G") +
@@ -173,15 +173,15 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
       conditional(excludePrivate, "-X")
   }
 
-  def cmdPipeInput = {
+  def cmdPipeInput: String = {
     baseCmd + "-"
   }
 
-  def cmdPipe = {
+  def cmdPipe: String = {
     baseCmd + required(input)
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     baseCmd + required("-o", output) + required(input)
   }
 
@@ -190,7 +190,7 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
     * primarily for testing
     * @return
     */
-  final def cmd = {
+  final def cmd: String = {
     val a = cmdLine
     a.replace("'", "").replace("  ", " ").trim
   }

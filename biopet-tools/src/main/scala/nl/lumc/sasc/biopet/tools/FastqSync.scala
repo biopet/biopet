@@ -26,7 +26,7 @@ object FastqSync extends ToolCommand {
 
   /** Implicit class to allow for lazy retrieval of FastqRecord ID without any read pair mark */
   private implicit class FastqPair(fq: FastqRecord) {
-    lazy val fragId = fq.getReadHeader.split(" ").head match {
+    lazy val fragId: String = fq.getReadHeader.split(" ").head match {
       case x if x.endsWith(idSufixes._1) => x.stripSuffix(idSufixes._1)
       case x if x.endsWith(idSufixes._2) => x.stripSuffix(idSufixes._2)
       case x => x

@@ -41,9 +41,9 @@ class SamtoolsSort(val parent: Configurable) extends Samtools {
       config("prefix", default = new File(System.getProperty("java.io.tmpdir"), output.getName))
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("sort") +
-      optional("-m", (coreMemory + "G")) +
+      optional("-m", coreMemory + "G") +
       optional("-@", threads) +
       optional("-O", outputFormat) +
       required("-T", prefix) +

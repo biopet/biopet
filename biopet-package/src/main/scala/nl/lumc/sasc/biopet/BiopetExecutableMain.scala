@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.core.PipelineStatus
+import nl.lumc.sasc.biopet.core.pipelinestatus.PipelineStatus
 import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
 
 object BiopetExecutableMain extends BiopetExecutable {
@@ -39,6 +39,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty,
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
+    nl.lumc.sasc.biopet.pipelines.tarmac.Tarmac,
     nl.lumc.sasc.biopet.pipelines.shiva.GenotypeGvcfs,
     nl.lumc.sasc.biopet.pipelines.generateindexes.DownloadGenomes,
     nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes,

@@ -14,14 +14,15 @@
   */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.{SAMRecord, SamReaderFactory}
-import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecordList, BedRecord}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 import picard.annotation.{Gene, GeneAnnotationReader}
 
 import scala.collection.JavaConversions._
+import scala.collection.immutable
 
 /**
   * This tool will generate Base count based on a bam file and a refflat file
@@ -83,7 +84,8 @@ object BaseCounter extends ToolCommand {
       yield runThread(cmdArgs.bamFile, genes)).toList
     logger.info("Done reading bamFile")
 
-    writeGeneCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    val geneStats =
+      writeGeneCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
     writeMergeExonCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
     writeMergeIntronCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
     writeTranscriptCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
@@ -95,6 +97,15 @@ object BaseCounter extends ToolCommand {
     writeStrandedMetaExonsCount(counts.flatMap(_.strandedMetaExonCounts),
                                 cmdArgs.outputDir,
                                 cmdArgs.prefix)
+
+    val summary = Map(
+      "gene" -> geneStats
+    )
+
+    val summaryWriter = new PrintWriter(
+      new File(cmdArgs.outputDir, s"${cmdArgs.prefix}.summary.json"))
+    summaryWriter.println(ConfigUtils.mapToJson(summary).spaces2)
+    summaryWriter.close()
   }
 
   /**
@@ -220,41 +231,57 @@ object BaseCounter extends ToolCommand {
     * Intronic: then it's not seen as an exon on 1 of the transcripts
     * Exonic + Intronic = Total
     */
-  def writeGeneCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+  def writeGeneCounts(genes: List[GeneCount],
+                      outputDir: File,
+                      prefix: String): Map[String, Map[String, Long]] = {
     val geneTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.counts"))
     val geneTotalSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.sense.counts"))
     val geneTotalAntiSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.antisense.counts"))
+    var geneTotalSenseCounts = 0L
+    var geneTotalAntiSenseCounts = 0L
+
     val geneExonicWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.exonic.counts"))
     val geneExonicSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.exonic.sense.counts"))
     val geneExonicAntiSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.exonic.antisense.counts"))
+    var geneExonicSenseCounts = 0L
+    var geneExonicAntiSenseCounts = 0L
+
     val geneIntronicWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.intronic.counts"))
     val geneIntronicSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.intronic.sense.counts"))
     val geneIntronicAntiSenseWriter = new PrintWriter(
       new File(outputDir, s"$prefix.base.gene.intronic.antisense.counts"))
+    var geneIntronSenseCounts = 0L
+    var geneIntronAntiSenseCounts = 0L
 
     genes.sortBy(_.gene.getName).foreach { geneCount =>
+      geneTotalSenseCounts += geneCount.counts.senseBases
+      geneTotalAntiSenseCounts += geneCount.counts.antiSenseBases
       geneTotalWriter.println(geneCount.gene.getName + "\t" + geneCount.counts.totalBases)
       geneTotalSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.counts.senseBases)
       geneTotalAntiSenseWriter.println(
         geneCount.gene.getName + "\t" + geneCount.counts.antiSenseBases)
-      geneExonicWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.totalBases).sum)
-      geneExonicSenseWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.senseBases).sum)
-      geneExonicAntiSenseWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.antiSenseBases).sum)
-      geneIntronicWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.totalBases).sum)
-      geneIntronicSenseWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.senseBases).sum)
-      geneIntronicAntiSenseWriter.println(
-        geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.antiSenseBases).sum)
+
+      val exonSense = geneCount.exonCounts.map(_.counts.senseBases).sum
+      val exonAntiSense = geneCount.exonCounts.map(_.counts.antiSenseBases).sum
+      geneExonicSenseCounts += exonSense
+      geneExonicAntiSenseCounts += exonAntiSense
+      geneExonicWriter.println(geneCount.gene.getName + "\t" + (exonSense + exonAntiSense))
+      geneExonicSenseWriter.println(geneCount.gene.getName + "\t" + exonSense)
+      geneExonicAntiSenseWriter.println(geneCount.gene.getName + "\t" + exonAntiSense)
+
+      val intronSense = geneCount.intronCounts.map(_.counts.senseBases).sum
+      val intronAntiSense = geneCount.intronCounts.map(_.counts.antiSenseBases).sum
+      geneIntronSenseCounts += intronSense
+      geneIntronAntiSenseCounts += intronAntiSense
+      geneIntronicWriter.println(geneCount.gene.getName + "\t" + (intronSense + intronAntiSense))
+      geneIntronicSenseWriter.println(geneCount.gene.getName + "\t" + intronSense)
+      geneIntronicAntiSenseWriter.println(geneCount.gene.getName + "\t" + intronAntiSense)
     }
 
     geneTotalWriter.close()
@@ -266,6 +293,24 @@ object BaseCounter extends ToolCommand {
     geneIntronicWriter.close()
     geneIntronicSenseWriter.close()
     geneIntronicAntiSenseWriter.close()
+
+    Map(
+      "total" -> Map(
+        "total_bases" -> (geneTotalSenseCounts + geneTotalAntiSenseCounts),
+        "sense_bases" -> geneTotalSenseCounts,
+        "antisense_bases" -> geneTotalAntiSenseCounts
+      ),
+      "exonic" -> Map(
+        "total_bases" -> (geneExonicSenseCounts + geneExonicAntiSenseCounts),
+        "sense_bases" -> geneExonicSenseCounts,
+        "antisense_bases" -> geneExonicAntiSenseCounts
+      ),
+      "intronic" -> Map(
+        "total_bases" -> (geneIntronSenseCounts + geneIntronAntiSenseCounts),
+        "sense_bases" -> geneIntronSenseCounts,
+        "antisense_bases" -> geneIntronAntiSenseCounts
+      )
+    )
   }
 
   /**
@@ -407,7 +452,7 @@ object BaseCounter extends ToolCommand {
 
     bamReader.close()
     counter += 1
-    if (counter % 1000 == 0) logger.info(s"${counter} chunks done")
+    if (counter % 1000 == 0) logger.info(s"$counter chunks done")
     ThreadOutput(counts.values.toList, metaExons, plusMetaExons ::: minMetaExons)
   }
 
@@ -468,7 +513,7 @@ object BaseCounter extends ToolCommand {
     overlap
   }
 
-  def groupGenesOnOverlap(genes: Iterable[Gene]) = {
+  def groupGenesOnOverlap(genes: Iterable[Gene]): Map[String, List[List[Gene]]] = {
     genes
       .groupBy(_.getContig)
       .map {
@@ -487,13 +532,13 @@ object BaseCounter extends ToolCommand {
   class Counts {
     var senseBases = 0L
     var antiSenseBases = 0L
-    def totalBases = senseBases + antiSenseBases
+    def totalBases: Long = senseBases + antiSenseBases
     var senseReads = 0L
     var antiSenseReads = 0L
-    def totalReads = senseReads + antiSenseReads
+    def totalReads: Long = senseReads + antiSenseReads
   }
 
-  def generateMergedExonRegions(gene: Gene) =
+  def generateMergedExonRegions(gene: Gene): BedRecordList =
     BedRecordList
       .fromList(
         gene
@@ -504,17 +549,18 @@ object BaseCounter extends ToolCommand {
 
   class GeneCount(val gene: Gene) {
     val counts = new Counts
-    val transcripts = gene.iterator().map(new TranscriptCount(_)).toList
-    def intronRegions =
+    val transcripts: List[TranscriptCount] = gene.iterator().map(new TranscriptCount(_)).toList
+    def intronRegions: BedRecordList =
       BedRecordList
         .fromList(
           BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: generateMergedExonRegions(
             gene).allRecords.toList)
         .squishBed(strandSensitive = false, nameSensitive = false)
 
-    val exonCounts =
+    val exonCounts: immutable.Iterable[RegionCount] =
       generateMergedExonRegions(gene).allRecords.map(e => new RegionCount(e.start + 1, e.end))
-    val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
+    val intronCounts: immutable.Iterable[RegionCount] =
+      intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
 
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
       bamRecordBasesOverlap(samRecord, gene.getStart, gene.getEnd, counts, sense)
@@ -526,7 +572,7 @@ object BaseCounter extends ToolCommand {
 
   class TranscriptCount(val transcript: Gene#Transcript) {
     val counts = new Counts
-    def intronRegions =
+    def intronRegions: BedRecordList =
       BedRecordList
         .fromList(
           BedRecord(transcript.getGene.getContig, transcript.start() - 1, transcript.end()) ::
@@ -535,9 +581,9 @@ object BaseCounter extends ToolCommand {
             .toList)
         .squishBed(strandSensitive = false, nameSensitive = false)
 
-    val exonCounts = transcript.exons.map(new RegionCount(_))
-    val intronCounts =
-      if (transcript.exons.size > 1)
+    val exonCounts: Array[RegionCount] = transcript.exons.map(new RegionCount(_))
+    val intronCounts: List[RegionCount] =
+      if (transcript.exons.length > 1)
         intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end)).toList
       else Nil
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {

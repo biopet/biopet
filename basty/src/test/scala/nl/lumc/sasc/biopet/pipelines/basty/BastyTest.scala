@@ -48,7 +48,7 @@ class BastyTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "bastyOptions")
-  def bastyOptions = {
+  def bastyOptions: Array[Array[Any]] = {
     for (s1 <- sample1; s2 <- sample2) yield Array("", s1, s2)
   }
 
@@ -114,7 +114,7 @@ class BastyTest extends TestNGSuite with Matchers {
                                                                                    numberSamples
                                                                                  else 0)
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration)
-                                                                             (numberLibs * 2)
+                                                                             numberLibs * 2
                                                                            else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration)
                                                                        numberLibs
@@ -125,7 +125,7 @@ class BastyTest extends TestNGSuite with Matchers {
       pipeline.summaryFiles shouldBe Map()
 
       pipeline.samples foreach {
-        case (sampleId, sample) =>
+        case (_, sample) =>
           sample.summarySettings shouldBe Map()
           sample.summaryFiles.get("variants_fasta") should not be None
           sample.summaryFiles.get("consensus_fasta") should not be None
@@ -135,7 +135,7 @@ class BastyTest extends TestNGSuite with Matchers {
           sample.summaryFiles.get("snps_only_consensus_variants_fasta") should not be None
           sample.summaryStats shouldBe Map()
           sample.libraries.foreach {
-            case (libId, lib) =>
+            case (_, lib) =>
               lib.summarySettings shouldBe Map()
               lib.summaryFiles shouldBe Map()
               lib.summaryStats shouldBe Map()
@@ -154,14 +154,14 @@ class BastyTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object BastyTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   def inputTouch(name: String): String = {
     val file = new File(inputDir, name)

@@ -50,7 +50,7 @@ class CentrifugeKreport(val parent: Configurable) extends BiopetCommandLineFunct
     deps :+= new File(index + ".3.cf")
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       conditional(onlyUnique, "--only-unique") +
       conditional(showZeros, "--show-zeros") +

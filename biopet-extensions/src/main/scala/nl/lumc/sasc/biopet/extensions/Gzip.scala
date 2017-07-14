@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 class Gzip(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Input file", required = true)
@@ -29,10 +31,10 @@ class Gzip(val parent: Configurable) extends BiopetCommandLineFunction with Vers
 
   executable = config("exe", default = "gzip", freeVar = false)
 
-  def versionRegex = """gzip (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """gzip (.*)""".r
+  def versionCommand: String = executable + " --version"
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + " -c " +
       (if (inputAsStdin) "" else repeat(input)) +
       (if (outputAsStdout) "" else " > " + required(output))

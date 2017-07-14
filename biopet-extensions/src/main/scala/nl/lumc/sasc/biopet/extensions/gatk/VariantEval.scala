@@ -145,31 +145,31 @@ class VariantEval(val parent: Configurable) extends CommandLineGATK {
     goldStandard.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
   }
 
-  override def cmdLine = super.cmdLine +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-eval", eval, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-gold", goldStandard.getOrElse(null)), goldStandard, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-select", select_exps, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-selectName", select_names, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-sn", sample, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-knownName", known_names, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-ST", stratificationModule, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(doNotUseAllStandardStratifications, "-noST", escape = true, format = "%s") +
-    repeat("-EV", evalModule, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(doNotUseAllStandardModules, "-noEV", escape = true, format = "%s") +
-    optional("-mpq", minPhaseQuality, spaceSeparated = true, escape = true, format = minPhaseQualityFormat) +
-    optional("-mvq", mendelianViolationQualThreshold, spaceSeparated = true, escape = true, format = mendelianViolationQualThresholdFormat) +
-    optional("-ploidy", samplePloidy, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-aa", ancestralAlignments, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(requireStrictAlleleMatch, "-strict", escape = true, format = "%s") +
-    conditional(keepAC0, "-keepAC0", escape = true, format = "%s") +
-    optional("-numSamples", numSamples, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(mergeEvals, "-mergeEvals", escape = true, format = "%s") +
-    optional("-stratIntervals", stratIntervals, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-knownCNVs", knownCNVs, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    optional("-o", out) +
+    repeat("-eval", eval, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.orNull), dbsnp) +
+    optional(TaggedFile.formatCommandLineParameter("-gold", goldStandard.orNull), goldStandard) +
+    repeat("-select", select_exps) +
+    repeat("-selectName", select_names) +
+    repeat("-sn", sample) +
+    repeat("-knownName", known_names) +
+    repeat("-ST", stratificationModule) +
+    conditional(doNotUseAllStandardStratifications, "-noST") +
+    repeat("-EV", evalModule) +
+    conditional(doNotUseAllStandardModules, "-noEV") +
+    optional("-mpq", minPhaseQuality, format = minPhaseQualityFormat) +
+    optional("-mvq", mendelianViolationQualThreshold, format = mendelianViolationQualThresholdFormat) +
+    optional("-ploidy", samplePloidy) +
+    optional("-aa", ancestralAlignments) +
+    conditional(requireStrictAlleleMatch, "-strict") +
+    conditional(keepAC0, "-keepAC0") +
+    optional("-numSamples", numSamples) +
+    conditional(mergeEvals, "-mergeEvals") +
+    optional("-stratIntervals", stratIntervals) +
+    optional("-knownCNVs", knownCNVs) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

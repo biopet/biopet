@@ -29,13 +29,13 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 class CollectWgsMetrics(val parent: Configurable) extends Picard with Summarizable with Reference {
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Metrics file", required = true)
-  var output: File = null
+  var output: File = _
 
   @Input(doc = "Reference", required = true)
-  var reference: File = null
+  var reference: File = _
 
   @Argument(doc = "MINIMUM_MAPPING_QUALITY", required = false)
   var minMapQ: Option[Int] = config("minimum_mapping_quality")
@@ -59,7 +59,7 @@ class CollectWgsMetrics(val parent: Configurable) extends Picard with Summarizab
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +

@@ -44,7 +44,7 @@ class KrakenReportToJson(val parent: Configurable) extends ToolCommandFunction w
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", inputReport) +
       required("-o", output) +

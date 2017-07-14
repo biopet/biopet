@@ -24,7 +24,7 @@ import org.testng.annotations.Test
 class ReportSectionTest extends TestNGSuite with Matchers {
 
   @Test
-  def testSectionRender: Unit = {
+  def testSectionRender(): Unit = {
     ReportSection("/template.ssp", Map("arg" -> "test")).render() shouldBe "test"
     ReportSection("/template.ssp").render(Map("arg" -> "test")) shouldBe "test"
   }

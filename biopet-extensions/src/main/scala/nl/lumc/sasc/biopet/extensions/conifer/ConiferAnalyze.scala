@@ -42,7 +42,7 @@ class ConiferAnalyze(val parent: Configurable) extends Conifer {
   @Argument(doc = "Minimum population median RPKM per probe", required = false)
   var minRpkm: Option[Double] = config("min_rpkm")
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       " analyze " +
       " --probes" + required(probes) +

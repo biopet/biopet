@@ -36,11 +36,11 @@ class FindRepeatsPacBioTest extends TestNGSuite with MockitoSugar with Matchers 
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val bed = resourcePath("/rrna01.bed")
-  val bam = resourcePath("/paired01.bam")
+  val bed: String = resourcePath("/rrna01.bed")
+  val bam: String = resourcePath("/paired01.bam")
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
 
     val outputFile = File.createTempFile("repeats", ".tsv")
     outputFile.deleteOnExit()
@@ -49,7 +49,7 @@ class FindRepeatsPacBioTest extends TestNGSuite with MockitoSugar with Matchers 
   }
 
   @Test
-  def testResult() = {
+  def testResult(): Unit = {
     val samReader = SamReaderFactory.makeDefault().open(new File(bam))
     val header = samReader.getFileHeader
     val record = samReader.iterator().next()
@@ -64,7 +64,7 @@ class FindRepeatsPacBioTest extends TestNGSuite with MockitoSugar with Matchers 
   }
 
   @Test
-  def testResultObject = {
+  def testResultObject(): Unit = {
     val record = SamReaderFactory.makeDefault().open(new File(bam)).iterator().next()
     val result = new Result
     result.samRecord = record

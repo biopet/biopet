@@ -40,9 +40,7 @@ object Spec extends JavaTokenParsers {
   // here, without any error checking.
   // TODO: implement as token parser
 
-  def string: Parser[String] = stringLiteral ^^ {
-    case s => s.substring(1, s.length - 1)
-  }
+  def string: Parser[String] = stringLiteral ^^ (s => s.substring(1, s.length - 1))
 
   def value: Parser[Any] = (
     obj

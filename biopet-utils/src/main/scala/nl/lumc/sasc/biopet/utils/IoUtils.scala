@@ -72,12 +72,7 @@ object IoUtils {
       else fname
     }
 
-  /**
-    * This return the contends of a file as a List[String]
-    *
-    * @param file
-    * @return
-    */
+  /** This return the contends of a file as a List[String] */
   def getLinesFromFile(file: File): List[String] = {
     val reader = Source.fromFile(file)
     val lines = reader.getLines().toList
@@ -87,10 +82,15 @@ object IoUtils {
 
   def executableExist(exe: String): Boolean = {
     try {
-      val process = Process(Seq(exe)).run()
       true
     } catch {
-      case e: IOException => false
+      case _: IOException => false
     }
+  }
+
+  def writeLinesToFile(output: File, lines: List[String]): Unit = {
+    val writer = new PrintWriter(output)
+    lines.foreach(writer.println)
+    writer.close()
   }
 }

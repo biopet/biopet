@@ -39,7 +39,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMain = {
+  def testMain(): Unit = {
 
     val input = resourcePath("/mini.transcriptome.fa")
     val output = File.createTempFile("sageCreateLibrary", ".tsv")
@@ -87,7 +87,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testOutPut = {
+  def testOutPut(): Unit = {
     val input = resourcePath("/mini.transcriptome.fa")
     val output = File.createTempFile("sageCreateLibrary", ".tsv")
     output.deleteOnExit()
@@ -134,7 +134,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testGetTags = {
+  def testGetTags(): Unit = {
     val input = resourcePath("/mini.transcriptome.fa")
 
     val reader = FastaReaderHelper.readFastaDNASequence(new File(input))
@@ -142,7 +142,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     val records = reader.iterator.toList
     val tagRegex = ("CATG" + "[CATG]{" + 17 + "}").r
 
-    val record1 = records(0)
+    val record1 = records.head
     val record2 = records(1)
     val record3 = records(2)
 

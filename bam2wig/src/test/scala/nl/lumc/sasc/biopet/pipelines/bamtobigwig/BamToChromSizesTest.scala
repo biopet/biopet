@@ -32,7 +32,7 @@ class BamToChromSizesTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testChromSizes: Unit = {
+  def testChromSizes(): Unit = {
     val bamFile = new File(resourcePath("/empty.bam"))
     val bamToChromSizes = new BamToChromSizes(null)
     bamToChromSizes.bamFile = bamFile

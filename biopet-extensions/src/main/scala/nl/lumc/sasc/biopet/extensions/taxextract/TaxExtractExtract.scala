@@ -34,7 +34,7 @@ class TaxExtractExtract(val parent: Configurable) extends TaxExtract {
   @Argument(required = false)
   var reverse: Boolean = false
 
-  override def cmdLine = {
+  override def cmdLine: String = {
     if (List(fq2, out2).count(_.isDefined) == 1) {
       Logging.addError("Both fq2 and out2 must be defined if either one is defined")
     }

@@ -39,13 +39,13 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val veppedPath = resourcePath("/VEP_oneline.vcf")
-  val starPath = resourcePath("/star_genotype.vcf.gz")
+  val veppedPath: String = resourcePath("/VEP_oneline.vcf")
+  val starPath: String = resourcePath("/star_genotype.vcf.gz")
   val vepped = new File(veppedPath)
   val star = new File(starPath)
   val rand = new Random()
 
-  @Test def testOutputTypeVcf() = {
+  @Test def testOutputTypeVcf(): Unit = {
     val tmp = File.createTempFile("VcfFilter", ".vcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -53,7 +53,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testOutputTypeBcf() = {
+  @Test def testOutputTypeBcf(): Unit = {
     val tmp = File.createTempFile("VcfFilter", ".bcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -61,7 +61,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testOutputTypeVcfGz() = {
+  @Test def testOutputTypeVcfGz(): Unit = {
     val tmp = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -69,7 +69,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
-  @Test def testMustHaveGenotypes() = {
+  @Test def testMustHaveGenotypes(): Unit = {
 
     /**
       * This should simply not raise an exception
@@ -98,7 +98,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
   }
 
-  @Test def testHasGenotype() = {
+  @Test def testHasGenotype(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -122,7 +122,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
       List(("Sample_103", GenotypeType.HET), ("Sample_101", GenotypeType.HOM_REF))) shouldBe false
   }
 
-  @Test def testMinQualScore() = {
+  @Test def testMinQualScore(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -131,21 +131,21 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
   }
 
-  @Test def testHasNonRefCalls() = {
+  @Test def testHasNonRefCalls(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
     hasNonRefCalls(record) shouldBe true
   }
 
-  @Test def testHasCalls() = {
+  @Test def testHasCalls(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
     hasCalls(record) shouldBe true
   }
 
-  @Test def testHasMinDP() = {
+  @Test def testHasMinDP(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -153,42 +153,42 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     hasMinTotalDepth(record, 200) shouldBe false
   }
 
-  @Test def testHasMinSampleDP() = {
+  @Test def testHasMinSampleDP(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    hasMinSampleDepth(record, 30, 1) shouldBe true
+    hasMinSampleDepth(record, 30) shouldBe true
     hasMinSampleDepth(record, 30, 2) shouldBe true
     hasMinSampleDepth(record, 30, 3) shouldBe true
-    hasMinSampleDepth(record, 40, 1) shouldBe true
+    hasMinSampleDepth(record, 40) shouldBe true
     hasMinSampleDepth(record, 40, 2) shouldBe true
     hasMinSampleDepth(record, 40, 3) shouldBe false
-    hasMinSampleDepth(record, 50, 1) shouldBe false
+    hasMinSampleDepth(record, 50) shouldBe false
     hasMinSampleDepth(record, 50, 2) shouldBe false
     hasMinSampleDepth(record, 50, 3) shouldBe false
   }
 
-  @Test def testHasMinSampleAD() = {
+  @Test def testHasMinSampleAD(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
     minAlternateDepth(record, 0, 3) shouldBe true
     minAlternateDepth(record, 10, 2) shouldBe true
     minAlternateDepth(record, 10, 3) shouldBe false
-    minAlternateDepth(record, 20, 1) shouldBe true
+    minAlternateDepth(record, 20) shouldBe true
     minAlternateDepth(record, 20, 2) shouldBe false
   }
 
-  @Test def testHasMinGQ() = {
+  @Test def testHasMinGQ(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    minGenomeQuality(record, 99, 1) shouldBe true
+    minGenomeQuality(record, 99) shouldBe true
     minGenomeQuality(record, 99, 2) shouldBe true
     minGenomeQuality(record, 99, 3) shouldBe true
   }
 
-  @Test def testMustHaveVariant() = {
+  @Test def testMustHaveVariant(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -202,7 +202,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     starReader.iterator().foreach(x => mustHaveVariant(x, List("Sample_101")) shouldBe false)
   }
 
-  @Test def testSameGenotype() = {
+  @Test def testSameGenotype(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -211,7 +211,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     notSameGenotype(record, "Sample_102", "Sample_103") shouldBe true
   }
 
-  @Test def testfilterHetVarToHomVar() = {
+  @Test def testfilterHetVarToHomVar(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -220,7 +220,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     filterHetVarToHomVar(record, "Sample_102", "Sample_103") shouldBe true
   }
 
-  @Test def testDeNovo() = {
+  @Test def testDeNovo(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -229,31 +229,31 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     uniqueVariantInSample(record, "Sample_103") shouldBe false
   }
 
-  @Test def testResToDom() = {
+  @Test def testResToDom(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
+    val trio = Trio("Sample_101", "Sample_102", "Sample_103")
 
     resToDom(record, List(trio)) shouldBe false
   }
 
-  @Test def testTrioCompound = {
+  @Test def testTrioCompound: Boolean = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
+    val trio = Trio("Sample_101", "Sample_102", "Sample_103")
 
     trioCompound(record, List(trio))
   }
 
-  @Test def testDeNovoTrio = {
+  @Test def testDeNovoTrio: Boolean = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
+    val trio = Trio("Sample_101", "Sample_102", "Sample_103")
 
     denovoTrio(record, List(trio))
   }
 
-  @Test def testInIDSet() = {
+  @Test def testInIDSet(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 

@@ -16,11 +16,11 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFunction
+import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
-class MergeAlleles(val parent: Configurable) extends ToolCommandFunction {
+class MergeAlleles(val parent: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.MergeAlleles
 
   @Input(doc = "Input vcf files", shortName = "input", required = true)
@@ -32,17 +32,18 @@ class MergeAlleles(val parent: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output vcf file index", shortName = "output", required = true)
   private var outputIndex: File = _
 
-  var reference: File = config("reference")
+  var reference: File = _
 
   override def defaultCoreMemory = 1.0
 
   override def beforeGraph() {
     super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
     if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("-I", input) +
       required("-o", output) +

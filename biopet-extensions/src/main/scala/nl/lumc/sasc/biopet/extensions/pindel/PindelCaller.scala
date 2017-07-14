@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
+import scala.util.matching.Regex
+
 /**
   * Extension for pindel
   *
@@ -35,15 +37,15 @@ class PindelCaller(val parent: Configurable)
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
 
-  def versionRegex = """Pindel version:? (.*)""".r
+  def versionRegex: Regex = """Pindel version:? (.*)""".r
   override def versionExitcode = List(1)
-  def versionCommand = executable
+  def versionCommand: String = executable
 
   /**
     * Required parameters
     */
   @Input
-  var reference: File = referenceFasta
+  var reference: File = referenceFasta()
 
   @Input(doc = "Input specification for Pindel to use")
   var input: File = _
@@ -126,7 +128,7 @@ class PindelCaller(val parent: Configurable)
   var minDdMapDistance: Option[Int] = config("min_dd_map_distance")
   var ddReportDuplicationReads: Option[Int] = config("dd_report_duplication_reads")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     if (reference == null) reference = referenceFasta()
 
     // we should check whether the `pindel-config-file` is set or the `config-file` for the bam-list
@@ -136,14 +138,12 @@ class PindelCaller(val parent: Configurable)
       case (Some(a), Some(b)) =>
         Logging.addError(
           s"Please specify either a pindel config or bam-config. Not both for Pindel: $a or $b")
-      case (Some(a), None) => {
-        Logging.logger.info(s"Using '${a}' as pindel config for Pindel")
+      case (Some(a), None) =>
+        Logging.logger.info(s"Using '$a' as pindel config for Pindel")
         input = a.getAbsoluteFile
-      }
-      case (None, Some(b)) => {
-        Logging.logger.info(s"Using '${b}' as bam config for Pindel")
+      case (None, Some(b)) =>
+        Logging.logger.info(s"Using '$b' as bam config for Pindel")
         input = b.getAbsoluteFile
-      }
     }
 
     /** setting the output files for the many outputfiles pindel has */
@@ -166,7 +166,7 @@ class PindelCaller(val parent: Configurable)
     outputFile = new File(outputPrefix + File.separator, "sample_D")
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--fasta ", reference) +
       optional("--pindel-config-file", pindelFile) +
@@ -219,7 +219,7 @@ object PindelCaller {
     val caller = new PindelCaller(root)
     caller.configFile = Some(configFile)
     caller.outputPrefix = outputDir
-    caller.beforeGraph
+    caller.beforeGraph()
     caller
   }
 }

@@ -56,11 +56,10 @@ object SamplesTsvToConfig extends ToolCommand {
     cmdArgs.outputFile match {
       case Some(file) if file.getName.endsWith(".yml") || file.getName.endsWith(".yaml") =>
         ConfigUtils.mapToYamlFile(configMap, file)
-      case Some(file) => {
+      case Some(file) =>
         val writer = new PrintWriter(file)
         writer.println(ConfigUtils.mapToJson(configMap).spaces2)
         writer.close()
-      }
       case _ => println(ConfigUtils.mapToYaml(configMap))
     }
   }

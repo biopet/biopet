@@ -1,26 +1,31 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.freec
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
-class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+import scala.util.matching.Regex
+
+class FreeC(val parent: Configurable)
+    extends BiopetCommandLineFunction
+    with Reference
+    with Version {
 
   override def defaults = Map("max_walltime_limit" -> 7200)
 
@@ -60,7 +65,8 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
 
   executable = config("exe", default = "freec", freeVar = false)
   var bedGraphOutput: Boolean = config("BedGraphOutput", default = false)
-  var bedtools: Option[File] = config("exe", default = "bedtools", namespace = "bedtools", freeVar = false)
+  var bedtools: Option[File] =
+    config("exe", default = "bedtools", namespace = "bedtools", freeVar = false)
   var breakPointThreshold: Option[Double] = config("breakPointThreshold")
   var breakPointType: Option[Int] = config("breakPointType")
 
@@ -120,15 +126,15 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
   var captureRegions: Option[File] = config("captureRegions")
 
   // Control-FREEC v8.7 : calling copy number alterations and LOH regions using deep-sequencing data
-  override def versionCommand = executable
-  override def versionRegex = """Control-FREEC v([0-9\.]+) : .*""".r
+  override def versionCommand: String = executable
+  override def versionRegex: Regex = """Control-FREEC v([0-9\.]+) : .*""".r
   override def defaultThreads = 4
   override def defaultCoreMemory = 50
 
   private var configFile: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
 
     _gcProfile = gcProfile
     _sampleBins = sampleBins
@@ -141,8 +147,8 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
     output = cnvOutput
   }
 
-  override def beforeCmd: Unit = {
-    super.beforeCmd
+  override def beforeCmd(): Unit = {
+    super.beforeCmd()
 
     outputPath.mkdirs()
 
@@ -150,62 +156,81 @@ class FreeC(val parent: Configurable) extends BiopetCommandLineFunction with Ref
     createConfigFile
   }
 
-  protected def createConfigFile = {
+  protected def createConfigFile(): Unit = {
     val writer = new PrintWriter(configFile)
 
     val conf: String = "[general]" + "\n" +
       conditional(bedGraphOutput, "BedGraphOutput=TRUE", escape = false) + "\n" +
       required("bedtools=", bedtools, spaceSeparated = false, escape = false) + "\n" +
-      optional("breakPointThreshold=", breakPointThreshold, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("breakPointType=", breakPointType, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("breakPointThreshold=", breakPointThreshold, spaceSeparated = false, escape = false) + "\n" +
+      optional("breakPointType=", breakPointType, spaceSeparated = false, escape = false) + "\n" +
       required("chrFiles=", chrFiles, spaceSeparated = false, escape = false) + "\n" +
       required("chrLenFile=", chrLenFile, spaceSeparated = false, escape = false) + "\n" +
-      optional("coefficientOfVariation=", coefficientOfVariation, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("contamination=", contamination, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("coefficientOfVariation=",
+               coefficientOfVariation,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("contamination=", contamination, spaceSeparated = false, escape = false) + "\n" +
       conditional(contaminationAdjustment, "contaminationAdjustment=TRUE", escape = false) + "\n" +
-      optional("degree=", degree, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("forceGCcontentNormalization=", forceGCcontentNormalization, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("GCcontentProfile=", gcContentProfile, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("gemMappabilityFile=", gemMappabilityFile, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("intercept=", intercept, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minCNAlength=", minCNAlength, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minMappabilityPerWindow=", minMappabilityPerWindow, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minExpectedGC=", minExpectedGC, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("maxExpectedGC=", maxExpectedGC, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalSubclonePresence=", minimalSubclonePresence, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("maxThreads=", getThreads, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("degree=", degree, spaceSeparated = false, escape = false) + "\n" +
+      optional("forceGCcontentNormalization=",
+               forceGCcontentNormalization,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("GCcontentProfile=", gcContentProfile, spaceSeparated = false, escape = false) + "\n" +
+      optional("gemMappabilityFile=", gemMappabilityFile, spaceSeparated = false, escape = false) + "\n" +
+      optional("intercept=", intercept, spaceSeparated = false, escape = false) + "\n" +
+      optional("minCNAlength=", minCNAlength, spaceSeparated = false, escape = false) + "\n" +
+      optional("minMappabilityPerWindow=",
+               minMappabilityPerWindow,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("minExpectedGC=", minExpectedGC, spaceSeparated = false, escape = false) + "\n" +
+      optional("maxExpectedGC=", maxExpectedGC, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalSubclonePresence=",
+               minimalSubclonePresence,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("maxThreads=", getThreads, spaceSeparated = false, escape = false) + "\n" +
       conditional(noisyData, "noisyData=TRUE", escape = false) + "\n" +
-      required("outputDir=", outputPath, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("ploidy=", ploidy, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      required("outputDir=", outputPath, spaceSeparated = false, escape = false) + "\n" +
+      optional("ploidy=", ploidy, spaceSeparated = false, escape = false) + "\n" +
       conditional(printNA, "printNA=TRUE", escape = false) + "\n" +
-      optional("readCountThreshold=", readCountThreshold, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      required("sambamba=", sambamba, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("SambambaThreads=", sambambaThreads, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      required("samtools=", samtools, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("sex=", sex, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("step=", step, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("telocentromeric=", telocentromeric, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("readCountThreshold=", readCountThreshold, spaceSeparated = false, escape = false) + "\n" +
+      required("sambamba=", sambamba, spaceSeparated = false, escape = false) + "\n" +
+      optional("SambambaThreads=", sambambaThreads, spaceSeparated = false, escape = false) + "\n" +
+      required("samtools=", samtools, spaceSeparated = false, escape = false) + "\n" +
+      optional("sex=", sex, spaceSeparated = false, escape = false) + "\n" +
+      optional("step=", step, spaceSeparated = false, escape = false) + "\n" +
+      optional("telocentromeric=", telocentromeric, spaceSeparated = false, escape = false) + "\n" +
       conditional(uniqueMatch, "uniqueMatch=TRUE", escape = false) + "\n" +
-      optional("window=", window, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("window=", window, spaceSeparated = false, escape = false) + "\n" +
       "[sample]" + "\n" +
-      required("mateFile=", input, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("mateCopyNumberFile=", mateCopyNumberFile, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      required("inputFormat=", inputFormat, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      required("mateOrientation=", mateOrientation, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      required("mateFile=", input, spaceSeparated = false, escape = false) + "\n" +
+      optional("mateCopyNumberFile=", mateCopyNumberFile, spaceSeparated = false, escape = false) + "\n" +
+      required("inputFormat=", inputFormat, spaceSeparated = false, escape = false) + "\n" +
+      required("mateOrientation=", mateOrientation, spaceSeparated = false, escape = false) + "\n" +
       "[BAF]" + "\n" +
-      optional("SNPfile=", snpFile, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalCoveragePerPosition=", minimalCoveragePerPosition, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("makePileup=", makePileup, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("fastaFile=", fastaFile, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("minimalQualityPerPosition=", minimalQualityPerPosition, suffix = "", spaceSeparated = false, escape = false) + "\n" +
-      optional("shiftInQuality=", shiftInQuality, suffix = "", spaceSeparated = false, escape = false) + "\n" +
+      optional("SNPfile=", snpFile, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalCoveragePerPosition=",
+               minimalCoveragePerPosition,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("makePileup=", makePileup, spaceSeparated = false, escape = false) + "\n" +
+      optional("fastaFile=", fastaFile, spaceSeparated = false, escape = false) + "\n" +
+      optional("minimalQualityPerPosition=",
+               minimalQualityPerPosition,
+               spaceSeparated = false,
+               escape = false) + "\n" +
+      optional("shiftInQuality=", shiftInQuality, spaceSeparated = false, escape = false) + "\n" +
       "[target]" + "\n" +
-      optional("captureRegions=", captureRegions, suffix = "", spaceSeparated = false, escape = false) + "\n"
+      optional("captureRegions=", captureRegions, spaceSeparated = false, escape = false) + "\n"
 
     writer.write(conf)
     writer.close()
   }
 
-  def cmdLine = required(executable) +
-    required("--conf", configFile)
+  def cmdLine: String =
+    required(executable) +
+      required("--conf", configFile)
 }

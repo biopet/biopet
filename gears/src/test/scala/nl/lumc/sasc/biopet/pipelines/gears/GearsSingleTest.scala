@@ -129,9 +129,10 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.seqCount.isDefined shouldBe seqCount
 
       // SamToFastq should have started if it was started from bam
-      gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode == Some("bam")) 1
+      gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (inputMode.contains("bam"))
+                                                                      1
                                                                     else 0)
-      gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode == Some("bam")) 1
+      gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (inputMode.contains("bam")) 1
                                                                   else 0)
 
       gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(false)) 1
@@ -235,9 +236,9 @@ class GearsSingleQiimeOpenDownsampleTest extends TestGearsSingle {
 }
 
 object TestGearsSingle {
-  def outputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
 
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)

@@ -47,7 +47,7 @@ class SamtoolsMpileup(val parent: Configurable) extends Samtools with Reference 
     reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("mpileup") +
       optional("-f", reference) +

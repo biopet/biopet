@@ -15,6 +15,7 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationRefFlat
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -27,7 +28,7 @@ class BaseCounts(val parent: Configurable)
     with Measurement
     with AnnotationRefFlat {
 
-  def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 0, fallback = "0")
+  def mergeArgs = MergeArgs(List(1), 2, fallback = "0")
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
@@ -103,6 +104,15 @@ class BaseCounts(val parent: Configurable)
     addTableAndHeatmap(jobs.values.map(_.strandedAntiSenseMetaExonCounts).toList,
                        "strandedAntiSenseMetaExonCounts")
 
+    jobs.foreach(x => baseCounterStats = baseCounterStats ++ Map(x._1 -> x._2.summaryJson))
+
+    addSummarizable(new Summarizable {
+      def summaryFiles: Map[String, File] = Map()
+      def summaryStats: Any = baseCounterStats
+    }, "basecounter")
+
     addSummaryJobs()
   }
+
+  private var baseCounterStats: Map[String, File] = Map()
 }

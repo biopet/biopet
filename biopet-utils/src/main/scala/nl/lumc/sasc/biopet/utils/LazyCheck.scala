@@ -19,12 +19,12 @@ package nl.lumc.sasc.biopet.utils
   */
 class LazyCheck[T](function: => T) {
   private var _isSet = false
-  def isSet = _isSet
-  lazy val value = {
+  def isSet: Boolean = _isSet
+  lazy val value: T = {
     val cache = function
     _isSet = true
     cache
   }
-  def apply() = value
-  def get = value
+  def apply(): T = value
+  def get: T = value
 }

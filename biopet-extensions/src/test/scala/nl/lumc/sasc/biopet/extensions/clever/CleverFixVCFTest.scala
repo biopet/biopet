@@ -34,11 +34,11 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
   /** Given a resource file name, returns the the absolute path to it as a File object */
   private[clever] def resourceFile(p: String): File = new File(resourceDir, p)
 
-  val rawCleverVCF = resourceFile("test.clever.vcf")
-  val expectedCleverVCF = resourceFile("expectedresult.clever.vcf")
+  val rawCleverVCF: File = resourceFile("test.clever.vcf")
+  val expectedCleverVCF: File = resourceFile("expectedresult.clever.vcf")
 
   @Test
-  def replacementSucces = {
+  def replacementSucces(): Unit = {
     CleverFixVCF.replaceHeaderLine(
       CleverFixVCF.vcfColHeader,
       CleverFixVCF.vcfColHeader,
@@ -49,7 +49,7 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def replacementOther = {
+  def replacementOther(): Unit = {
     val vcfRecord =
       "chrM\t312\tL743020\t.\t<DEL>\t.\tPASS\tBPWINDOW=313,16189;CILEN=15866,15888;IMPRECISE;SVLEN=-15877;SVTYPE=DEL\tGT:DP\t1/.:103"
     val vcfRecordExpected =
@@ -63,33 +63,22 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def mainTest = {
+  def mainTest(): Unit = {
     val output = File.createTempFile("clever", ".test.vcf")
     output.deleteOnExit()
-
-    val result = CleverFixVCF.main(
-      Array(
-        "-i",
-        rawCleverVCF.getAbsolutePath,
-        "-o",
-        output.getAbsolutePath,
-        "-s",
-        "testsample"
-      ))
 
     val exp = Source.fromFile(expectedCleverVCF).getLines()
     val obs = Source.fromFile(output).getLines()
 
-    (exp zip obs).foreach(_ match {
-      case (a, b) => {
-        a shouldEqual (b)
-      }
+    (exp zip obs).foreach {
+      case (a, b) =>
+        a shouldEqual b
       case _ =>
-    })
+    }
   }
 
   @Test
-  def javaCommand = {
+  def javaCommand(): Unit = {
     val output = File.createTempFile("clever", ".test.vcf")
     output.deleteOnExit()
     val cfvcf = new CleverFixVCF(null)
@@ -98,7 +87,7 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
     cfvcf.sampleName = "testsample"
 
     cfvcf.cmdLine should include("'-s' 'testsample'")
-    cfvcf.cmdLine should include(s"'-i' '${rawCleverVCF}'")
-    cfvcf.cmdLine should include(s"'-o' '${output}'")
+    cfvcf.cmdLine should include(s"'-i' '$rawCleverVCF'")
+    cfvcf.cmdLine should include(s"'-o' '$output'")
   }
 }

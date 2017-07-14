@@ -40,7 +40,7 @@ class Awk(val parent: Configurable) extends BiopetCommandLineFunction with Versi
 
   var command: String = _
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required(command) +
       (if (inputAsStdin) "" else required(input)) +

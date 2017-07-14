@@ -12,12 +12,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.extensions.gatk.CommandLineGATK
 import org.broadinstitute.gatk.queue.extensions.gatk.GATKIntervals
-import org.broadinstitute.gatk.queue.function.scattergather.{ CloneFunction, ScatterFunction }
+import org.broadinstitute.gatk.queue.function.scattergather.{CloneFunction, ScatterFunction}
 import org.broadinstitute.gatk.utils.commandline.Output
 import org.broadinstitute.gatk.utils.interval.IntervalUtils
 import org.broadinstitute.gatk.utils.io.IOUtils
@@ -48,7 +49,7 @@ trait GATKScatterFunction extends ScatterFunction {
       this.includeUnmapped = this.originalGATK.intervalsString.exists(interval => IntervalUtils.isUnmapped(interval))
   }
 
-  override def isScatterGatherable = {
+  override def isScatterGatherable: Boolean = {
     this.originalGATK.reference_sequence != null
   }
 
@@ -77,7 +78,7 @@ trait GATKScatterFunction extends ScatterFunction {
   /**
    * @return true if all interval files exist.
    */
-  protected def intervalFilesExist = {
+  protected def intervalFilesExist: Boolean = {
     !(this.originalGATK.intervals ++ this.originalGATK.excludeIntervals).exists(interval => !interval.exists())
   }
 
@@ -90,15 +91,16 @@ trait GATKScatterFunction extends ScatterFunction {
 object GATKScatterFunction {
   var gatkIntervalsCache = Seq.empty[GATKIntervals]
 
-  def getGATKIntervals(originalFunction: CommandLineGATK) = {
+  def getGATKIntervals(originalFunction: CommandLineGATK): GATKIntervals = {
     val gatkIntervals = new GATKIntervals(
       originalFunction.reference_sequence,
-      originalFunction.intervals.toSeq,
-      originalFunction.intervalsString.toSeq,
-      originalFunction.interval_set_rule.getOrElse(null),
-      originalFunction.interval_merging.getOrElse(null),
+      originalFunction.intervals,
+      originalFunction.intervalsString,
+      originalFunction.interval_set_rule.orNull,
+      originalFunction.interval_merging.orNull,
       originalFunction.interval_padding,
-      originalFunction.excludeIntervals.toSeq, originalFunction.excludeIntervalsString.toSeq)
+      originalFunction.excludeIntervals,
+      originalFunction.excludeIntervalsString)
     gatkIntervalsCache.find(_ == gatkIntervals) match {
       case Some(existingGatkIntervals) => existingGatkIntervals
       case None =>

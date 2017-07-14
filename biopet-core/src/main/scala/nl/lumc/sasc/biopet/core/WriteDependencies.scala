@@ -16,10 +16,14 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{File, PrintWriter}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import nl.lumc.sasc.biopet.core.pipelinestatus.{Deps, PipelineStatus}
 import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import org.broadinstitute.gatk.queue.function.{CommandLineFunction, QFunction}
+import play.api.libs.ws.ahc.AhcWSClient
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -47,7 +51,7 @@ object WriteDependencies extends Logging with Configurable {
     * This method will generate a json file where information about job and file dependencies are stored
     *
     * @param functions This should be all functions that are given to the graph of Queue
-    * @param outputDir
+    * @param outputDir Output where the files will be placed
     */
   def writeDependencies(functions: Seq[QFunction], outputDir: File): Unit = {
     outputDir.mkdirs()
@@ -59,17 +63,17 @@ object WriteDependencies extends Logging with Configurable {
 
     case class QueueFile(file: File) {
       private val inputJobs: ListBuffer[QFunction] = ListBuffer()
-      def addInputJob(function: QFunction) = inputJobs += function
-      def inputJobNames = inputJobs.toList.map(functionNames)
+      def addInputJob(function: QFunction): Unit = inputJobs += function
+      def inputJobNames: List[String] = inputJobs.toList.map(functionNames)
 
       private val outputJobs: ListBuffer[QFunction] = ListBuffer()
-      def addOutputJob(function: QFunction) = {
+      def addOutputJob(function: QFunction): Unit = {
         if (outputJobs.nonEmpty) logger.warn(s"File '$file' is found as output of multiple jobs")
         outputJobs += function
       }
-      def outputJobNames = outputJobs.toList.map(functionNames)
+      def outputJobNames: List[String] = outputJobs.toList.map(functionNames)
 
-      def getMap = {
+      def getMap: Map[String, Any] = {
         val fileExist = file.exists()
         if (!fileExist && outputJobs.isEmpty) {
           if (errorOnMissingInput) Logging.addError(s"Input file does not exist: $file")
@@ -85,7 +89,7 @@ object WriteDependencies extends Logging with Configurable {
         )
       }
 
-      def isIntermediate = outputJobs.exists(_.isIntermediate)
+      def isIntermediate: Boolean = outputJobs.exists(_.isIntermediate)
     }
 
     val files: mutable.Map[File, QueueFile] = mutable.Map()
@@ -161,8 +165,15 @@ object WriteDependencies extends Logging with Configurable {
         .spaces2)
     writer.close()
 
-    PipelineStatus.writePipelineStatus(PipelineStatus.readDepsFile(outputFile), outputDir)
     logger.info("done calculating dependencies")
+
+    implicit lazy val system = ActorSystem()
+    implicit lazy val materializer = ActorMaterializer()
+    implicit lazy val ws = AhcWSClient()
+
+    PipelineStatus.writePipelineStatus(Deps.readDepsFile(outputFile), outputDir)
+    ws.close()
+    system.terminate()
   }
 
 }

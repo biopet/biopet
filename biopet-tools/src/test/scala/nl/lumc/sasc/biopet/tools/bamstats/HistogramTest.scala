@@ -27,7 +27,7 @@ import scala.io.Source
   */
 class HistogramTest extends TestNGSuite with Matchers {
   @Test
-  def testValues: Unit = {
+  def testValues(): Unit = {
     val data: Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
     val c1 = new Histogram[Int](data)
     c1.countsMap shouldBe data
@@ -51,13 +51,13 @@ class HistogramTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testEmpty: Unit = {
+  def testEmpty(): Unit = {
     val c1 = new Histogram[Int]()
     c1.countsMap.isEmpty shouldBe true
   }
 
   @Test
-  def testTsv: Unit = {
+  def testTsv(): Unit = {
     val data: Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
     val c1 = new Histogram[Int](data)
 

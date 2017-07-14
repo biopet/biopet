@@ -43,7 +43,7 @@ class VarscanCnsSingleSample(val parent: Configurable) extends Variantcaller {
     "varscanmpileup2cns" -> Map("output_vcf" -> 1)
   )
 
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     val sampleVcfs = for ((sample, inputBam) <- inputBams.toList) yield {
       val mpileup = new SamtoolsMpileup(this)
       mpileup.input = List(inputBam)

@@ -25,14 +25,14 @@
     val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
     val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
-    settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
-    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
-    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
+    settings.count(_._2.getOrElse("skip_trim", None).contains(true))
+    val trimCount = settings.count(_._2.getOrElse("skip_trim", None).contains(false))
+    val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
     val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-        summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
-    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
+        summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None).contains(true)
+    else settings.count(_._2.getOrElse("paired", None).contains(true)) >= 1
 }#
 
 #if (showIntro)
@@ -123,7 +123,7 @@
         #for (sample <- samples.sortBy(_.name))
             #{
                 val sampleRowspan = {
-                libraries.filter(_.sampleId == sample.id).size +
+                libraries.count(_.sampleId == sample.id) +
                  settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
                 }
             }#
@@ -135,7 +135,7 @@
             #end
             </td>
             #for (lib <- libraries.filter(_.sampleId == sample.id))
-                #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
+                #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired").contains(true) }#
                 <td #if (paired == true) rowspan="2" #end>
                 #if (multisample)
                     <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>

@@ -37,18 +37,18 @@ class GearsQiimeOpen(val parent: Configurable)
     )
   )
 
-  def init() = {
+  def init(): Unit = {
     require(fastqInput != null)
     require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
-  def otuMap = _otuMap
+  def otuMap: File = _otuMap
 
   private var _otuTable: File = _
-  def otuTable = _otuTable
+  def otuTable: File = _otuTable
 
-  def biopetScript() = {
+  def biopetScript(): Unit = {
 
     val splitLib = new SplitLibrariesFastq(this)
     splitLib.input :+= fastqInput

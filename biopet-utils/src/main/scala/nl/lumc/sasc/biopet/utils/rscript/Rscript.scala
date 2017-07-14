@@ -35,7 +35,7 @@ trait Rscript extends Configurable {
 
   def rscriptExecutable: String = config("exe", default = "Rscript", namespace = "rscript")
 
-  /** This is the defaul implementation, to add arguments override this */
+  /** This is the default implementation, to add arguments override this */
   def cmd: Seq[String] = Seq(rscriptExecutable, Rscript.alreadyCopied(script).getAbsolutePath)
 
   /**

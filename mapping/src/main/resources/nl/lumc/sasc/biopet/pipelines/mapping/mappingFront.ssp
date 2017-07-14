@@ -28,8 +28,8 @@
     <tr><th>Last commit hash</th><td>${run.commitHash}</td></tr>
     <tr><th>Output directory</th><td>${run.outputDir}</td></tr>
     <tr><th>Reference</th><td>${settings.get("species")} - ${settings.get("name")}</td></tr>
-    <tr><th>Sample</th><td>${allSamples.filter(_.id == sampleId.get).headOption.map(_.name)}</td></tr>
-    <tr><th>Library</th><td>${allLibraries.filter(_.id == libId.get).headOption.map(_.name)}</td></tr>
+    <tr><th>Sample</th><td>${allSamples.find(_.id == sampleId.get).map(_.name)}</td></tr>
+    <tr><th>Library</th><td>${allLibraries.find(_.id == libId.get).map(_.name)}</td></tr>
 </tbody>
 </table>
 <br/>

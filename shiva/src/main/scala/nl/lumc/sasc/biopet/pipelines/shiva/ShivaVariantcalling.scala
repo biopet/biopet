@@ -22,6 +22,11 @@ import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.{
+  MuTect2,
+  SomaticVariantCaller,
+  TumorNormalPair
+}
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
 import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -51,20 +56,45 @@ class ShivaVariantcalling(val parent: Configurable)
 
   var genders: Map[String, Gender.Value] = _
 
+  var tumorSamples: List[TumorNormalPair] = _
+
+  def isGermlineVariantCallingConfigured: Boolean = {
+    callers.exists(!_.isInstanceOf[SomaticVariantCaller])
+  }
+
+  def isSomaticVariantCallingConfigured: Boolean = {
+    callers.exists(_.isInstanceOf[SomaticVariantCaller])
+  }
+
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+
+    //TODO: this needs changed when the sample/library refactoring is beeing done
     if (Option(genders).isEmpty) genders = {
-      val samples: Map[String, Any] = config("genders", default = Map())
-      samples.map {
-        case (sampleName, gender) =>
-          sampleName -> (gender.toString.toLowerCase match {
-            case "male" => Gender.Male
-            case "female" => Gender.Female
-            case _ => Gender.Unknown
-          })
-      }
+      inputBams.keys.map { sampleName =>
+        val gender: Option[String] =
+          config("gender", path = "samples" :: sampleName :: "tags" :: Nil)
+        sampleName -> (gender match {
+          case Some("male") => Gender.Male
+          case Some("female") => Gender.Female
+          case _ => Gender.Unknown
+        })
+      }.toMap
     }
+
+    //TODO: this needs changed when the sample/library refactoring is beeing done
+    if (Option(tumorSamples).isEmpty)
+      tumorSamples = inputBams.keys
+        .filter(name =>
+          config("type", path = "samples" :: name :: "tags" :: Nil, default = "normal").asString.toLowerCase == "tumor")
+        .map { tumorSample =>
+          val normal: String = config("normal", path = "samples" :: tumorSample :: "tags" :: Nil)
+          if (!inputBams.keySet.contains(normal))
+            Logging.addError(s"Normal sample '$normal' does not exist")
+          TumorNormalPair(tumorSample, normal)
+        }
+        .toList
   }
 
   var referenceVcf: Option[File] = config("reference_vcf")
@@ -108,7 +138,10 @@ class ShivaVariantcalling(val parent: Configurable)
               .callersList(this)
               .map(_.name)
               .mkString(", "))
-    if (!callers.exists(_.mergeVcfResults))
+    if (!isGermlineVariantCallingConfigured)
+      Logging.addError(
+        "For running the pipeline at least one germline variant caller has to be configured")
+    else if (!callers.exists(_.mergeVcfResults))
       Logging.addError("must select at least 1 variantcaller where merge_vcf_results is true")
 
     addAll(
@@ -128,6 +161,11 @@ class ShivaVariantcalling(val parent: Configurable)
       caller.namePrefix = namePrefix
       caller.outputDir = new File(outputDir, caller.name)
       caller.genders = genders
+      caller match {
+        case c: SomaticVariantCaller => c.tnPairs = tumorSamples
+        case _ =>
+      }
+
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean =
@@ -226,5 +264,7 @@ object ShivaVariantcalling extends PipelineCommand {
       new RawVcf(root) ::
       new Bcftools(root) ::
       new BcftoolsSingleSample(root) ::
-      new VarscanCnsSingleSample(root) :: Nil
+      new VarscanCnsSingleSample(root) ::
+      new MuTect2(root) :: Nil
+
 }

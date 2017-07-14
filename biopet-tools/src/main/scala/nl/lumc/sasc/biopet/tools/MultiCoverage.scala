@@ -33,7 +33,7 @@ object MultiCoverage extends ToolCommand {
       (x, c) =>
         c.copy(outputFile = x)
     } text "output file"
-    opt[Unit]("mean") unbounded () valueName "<file>" action { (x, c) =>
+    opt[Unit]("mean") unbounded () valueName "<file>" action { (_, c) =>
       c.copy(mean = true)
     } text "By default total bases is outputed, enable this option make the output relative to region length"
   }

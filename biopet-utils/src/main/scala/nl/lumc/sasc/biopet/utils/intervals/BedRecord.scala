@@ -18,6 +18,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval
 import nl.lumc.sasc.biopet.utils.FastaUtils
 
+import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -39,7 +40,7 @@ case class BedRecord(chr: String,
 
   def originals(nested: Boolean = true): List[BedRecord] = {
     if (_originals.isEmpty) List(this)
-    else if (nested) _originals.flatMap(_.originals(true))
+    else if (nested) _originals.flatMap(_.originals())
     else _originals
   }
 
@@ -49,9 +50,9 @@ case class BedRecord(chr: String,
     else false
   }
 
-  def length = end - start
+  def length: Int = end - start
 
-  def scatter(binSize: Int) = {
+  def scatter(binSize: Int): List[BedRecord] = {
     val binNumber = length / binSize
     if (binNumber <= 1) List(this)
     else {
@@ -68,51 +69,53 @@ case class BedRecord(chr: String,
     FastaUtils.getSequenceGc(referenceFile, chr, start, end)
   }
 
-  lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(for (i <- 0 until blockCount.get) yield {
-      val exonNumber = strand match {
-        case Some(false) => blockCount.get - i
-        case _ => i + 1
-      }
-      BedRecord(chr,
-                start + blockStarts(i),
-                start + blockStarts(i) + blockSizes(i),
-                Some(s"exon-$exonNumber"),
-                _originals = List(this))
-    })
-  } else None
+  lazy val exons: Option[immutable.IndexedSeq[BedRecord]] =
+    if (blockCount.isDefined && blockSizes.nonEmpty && blockStarts.nonEmpty) {
+      Some(for (i <- 0 until blockCount.get) yield {
+        val exonNumber = strand match {
+          case Some(false) => blockCount.get - i
+          case _ => i + 1
+        }
+        BedRecord(chr,
+                  start + blockStarts(i),
+                  start + blockStarts(i) + blockSizes(i),
+                  Some(s"exon-$exonNumber"),
+                  _originals = List(this))
+      })
+    } else None
 
-  lazy val introns = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(for (i <- 0 until (blockCount.get - 1)) yield {
-      val intronNumber = strand match {
-        case Some(false) => blockCount.get - i
-        case _ => i + 1
-      }
-      BedRecord(chr,
-                start + blockStarts(i) + blockSizes(i),
-                start + blockStarts(i + 1),
-                Some(s"intron-$intronNumber"),
-                _originals = List(this))
-    })
-  } else None
+  lazy val introns: Option[immutable.IndexedSeq[BedRecord]] =
+    if (blockCount.isDefined && blockSizes.nonEmpty && blockStarts.nonEmpty) {
+      Some(for (i <- 0 until (blockCount.get - 1)) yield {
+        val intronNumber = strand match {
+          case Some(false) => blockCount.get - i
+          case _ => i + 1
+        }
+        BedRecord(chr,
+                  start + blockStarts(i) + blockSizes(i),
+                  start + blockStarts(i + 1),
+                  Some(s"intron-$intronNumber"),
+                  _originals = List(this))
+      })
+    } else None
 
-  lazy val utr5 = (strand, thickStart, thickEnd) match {
-    case (Some(true), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+  lazy val utr5: Option[BedRecord] = (strand, thickStart, thickEnd) match {
+    case (Some(true), Some(tStart), Some(tEnd)) if tStart > start && tEnd < end =>
       Some(BedRecord(chr, start, tStart, name.map(_ + "_utr5")))
-    case (Some(false), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+    case (Some(false), Some(tStart), Some(tEnd)) if tStart > start && tEnd < end =>
       Some(BedRecord(chr, tEnd, end, name.map(_ + "_utr5")))
     case _ => None
   }
 
-  lazy val utr3 = (strand, thickStart, thickEnd) match {
-    case (Some(false), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+  lazy val utr3: Option[BedRecord] = (strand, thickStart, thickEnd) match {
+    case (Some(false), Some(tStart), Some(tEnd)) if tStart > start && tEnd < end =>
       Some(BedRecord(chr, start, tStart, name.map(_ + "_utr3")))
-    case (Some(true), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+    case (Some(true), Some(tStart), Some(tEnd)) if tStart > start && tEnd < end =>
       Some(BedRecord(chr, tEnd, end, name.map(_ + "_utr3")))
     case _ => None
   }
 
-  override def toString = {
+  override def toString: String = {
     def arrayToOption[T](array: IndexedSeq[T]): Option[IndexedSeq[T]] = {
       if (array.isEmpty) None
       else Some(array)
@@ -135,17 +138,16 @@ case class BedRecord(chr: String,
       .mkString("\t")
   }
 
-  def validate = {
+  def validate: BedRecord = {
     require(start < end, "Start is greater then end")
     (thickStart, thickEnd) match {
       case (Some(s), Some(e)) => require(s <= e, "Thick start is greater then end")
       case _ =>
     }
     blockCount match {
-      case Some(count) => {
+      case Some(count) =>
         require(count == blockSizes.length, "Number of sizes is not the same as blockCount")
         require(count == blockStarts.length, "Number of starts is not the same as blockCount")
-      }
       case _ =>
     }
     this

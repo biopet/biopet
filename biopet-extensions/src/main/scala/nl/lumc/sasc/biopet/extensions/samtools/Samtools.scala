@@ -14,13 +14,15 @@
   */
 package nl.lumc.sasc.biopet.extensions.samtools
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 /** General class for samtools extensions */
 abstract class Samtools extends BiopetCommandLineFunction with Version {
-  override def subPath = "samtools" :: super.subPath
+  override def subPath: List[String] = "samtools" :: super.subPath
   executable = config("exe", default = "samtools", namespace = "samtools", freeVar = false)
-  def versionCommand = executable
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 }

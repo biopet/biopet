@@ -42,7 +42,7 @@ trait TemplateTool extends ToolCommand {
     opt[File]('t', "template") valueName "<file>" action { (x, c) =>
       c.copy(template = Some(x))
     } text "Path to template. By default it will try to fetch this from the ENV value 'BIOPET_SCRIPT_TEMPLATE'"
-    opt[Unit]("expert") action { (x, c) =>
+    opt[Unit]("expert") action { (_, c) =>
       c.copy(expert = true)
     } text "This enables expert options / questions"
   }
@@ -149,7 +149,6 @@ object TemplateTool {
         val files = configFile :: currentList
         if (files.size > 1) {
           val configs = files.map(f => new Summary(ConfigUtils.fileToConfigMap(f)))
-          val sizes = configs.map(x => (x.samples.size, x.libraries.map(_._2.size).sum))
           val samples = configs.flatMap(_.samples.toList)
           val libs = configs.flatMap(_.libraries.flatMap {
             case (s, libs) => libs.toList.map(l => (s, l))

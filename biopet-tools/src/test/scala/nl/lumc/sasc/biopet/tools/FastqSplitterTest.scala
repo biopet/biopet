@@ -32,10 +32,10 @@ class FastqSplitterTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val fq = resourcePath("/paired01a.fq")
+  val fq: String = resourcePath("/paired01a.fq")
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
     val temp = File.createTempFile("out", ".fastq")
     temp.deleteOnExit()
     val args = Array("-I", fq, "-o", temp.getAbsolutePath)
@@ -43,7 +43,7 @@ class FastqSplitterTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testManyOutMain() = {
+  def testManyOutMain(): Unit = {
     val files = (0 until 10).map(_ => File.createTempFile("out", ".fastq"))
     files.foreach(_.deleteOnExit())
     var args = Array("-I", fq)

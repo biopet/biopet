@@ -22,12 +22,12 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 class GatherBamFiles(val parent: Configurable) extends Picard {
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
-  var input: List[File] = Nil
+  var input: Seq[File] = Nil
 
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       repeat("INPUT=", input, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false)
