@@ -163,12 +163,17 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     checkItems(items)
   }
 
-  @Test(expectedExceptions = Array(classOf[TribbleException.MalformedFeatureFile]))
-  def testVCF3TribbleException(): Unit = {}
-
-  @Test(expectedExceptions = Array(classOf[IllegalArgumentException]))
-  def testNoCSQTagException() {
-    csqCheck(new VCFFileReader(unvepped, false).getFileHeader)
+  @Test
+  def testVCF3TribbleException(): Unit = {
+    intercept[TribbleException.MalformedFeatureFile] {
+      new VCFFileReader(vcf3, false)
+    }
   }
 
+  @Test
+  def testNoCSQTagException() {
+    intercept[IllegalArgumentException] {
+      csqCheck(new VCFFileReader(unvepped, false).getFileHeader)
+    }
+  }
 }
