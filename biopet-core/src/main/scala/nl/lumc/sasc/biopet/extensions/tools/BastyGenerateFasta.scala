@@ -43,8 +43,8 @@ class BastyGenerateFasta(val parent: Configurable) extends ToolCommandFunction w
 
   var snpsOnly: Boolean = config("snps_only", default = false)
   var sampleName: String = _
-  var minAD: Int = config("min_ad", default = 8)
-  var minDepth: Int = config("min_depth", default = 8)
+  val minAD: Int = config("min_ad", default = 8)
+  val minDepth: Int = config("min_depth", default = 8)
   var outputName: String = _
 
   override def defaultCoreMemory = 4.0
@@ -54,7 +54,7 @@ class BastyGenerateFasta(val parent: Configurable) extends ToolCommandFunction w
     reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       optional("--inputVcf", inputVcf) +
       optional("--bamFile", bamFile) +

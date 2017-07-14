@@ -32,7 +32,7 @@ class FreecMethod(val parent: Configurable) extends CnvMethod {
 
   var snpFile: Option[File] = config("snp_file", freeVar = false)
 
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     inputBams.foreach {
       case (sampleName, bamFile) =>
         val sampleOutput = new File(outputDir, sampleName)
@@ -73,5 +73,5 @@ class FreecMethod(val parent: Configurable) extends CnvMethod {
     addSummaryJobs()
   }
 
-  override def summaryFiles = super.summaryFiles ++ snpFile.map("snp_file" -> _)
+  override def summaryFiles: Map[String, File] = super.summaryFiles ++ snpFile.map("snp_file" -> _)
 }

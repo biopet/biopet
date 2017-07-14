@@ -17,8 +17,10 @@ package nl.lumc.sasc.biopet.extensions.gmap
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the gsnap command line tool
@@ -44,7 +46,7 @@ class Gsnap(val parent: Configurable)
 
   /** output file */
   @Output(doc = "Output alignment file", required = true)
-  var output: File = null
+  var output: File = _
 
   /** genome directory */
   @Argument(doc = "Directory of genome database")
@@ -330,8 +332,8 @@ class Gsnap(val parent: Configurable)
   /** value to put into read-group library (rg-pl) field */
   var readGroupPlatform: Option[String] = config("read_group_platform")
 
-  def versionRegex = """.* version (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """.* version (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -341,7 +343,7 @@ class Gsnap(val parent: Configurable)
     }
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       optional("--dir", dir) +
       optional("--db", db) +

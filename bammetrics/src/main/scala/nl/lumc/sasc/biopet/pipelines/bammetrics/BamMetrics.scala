@@ -48,7 +48,7 @@ class BamMetrics(val parent: Configurable)
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
   /** returns files to store in summary */
-  def summaryFiles =
+  def summaryFiles: Map[String, File] =
     Map("reference" -> referenceFasta(), "input_bam" -> inputBam) ++
       ampliconBedFile.map("amplicon" -> _).toMap ++
       ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
@@ -58,7 +58,7 @@ class BamMetrics(val parent: Configurable)
     Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
         "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
 
-  override def reportClass = {
+  override def reportClass: Some[BammetricsReport] = {
     val bammetricsReport = new BammetricsReport(this)
     bammetricsReport.outputDir = new File(outputDir, "report")
     bammetricsReport.summaryDbFile = summaryDbFile

@@ -232,47 +232,47 @@ class SelectVariants(val parent: Configurable) extends CommandLineGATK with Scat
       outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
-  override def cmdLine = super.cmdLine +
-    required(TaggedFile.formatCommandLineParameter("-V", variant), variant, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-disc", discordance.getOrElse(null)), discordance, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-conc", concordance.getOrElse(null)), concordance, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-sn", sample_name, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-se", sample_expressions, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-sf", sample_file, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-xl_sn", exclude_sample_name, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-xl_sf", exclude_sample_file, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-xl_se", exclude_sample_expressions, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-select", selectexpressions, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(invertselect, "-invertSelect", escape = true, format = "%s") +
-    conditional(excludeNonVariants, "-env", escape = true, format = "%s") +
-    conditional(excludeFiltered, "-ef", escape = true, format = "%s") +
-    conditional(preserveAlleles, "-noTrim", escape = true, format = "%s") +
-    conditional(removeUnusedAlternates, "-trimAlternates", escape = true, format = "%s") +
-    optional("-restrictAllelesTo", restrictAllelesTo, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(keepOriginalAC, "-keepOriginalAC", escape = true, format = "%s") +
-    conditional(keepOriginalDP, "-keepOriginalDP", escape = true, format = "%s") +
-    conditional(mendelianViolation, "-mv", escape = true, format = "%s") +
-    conditional(invertMendelianViolation, "-invMv", escape = true, format = "%s") +
-    optional("-mvq", mendelianViolationQualThreshold, spaceSeparated = true, escape = true, format = mendelianViolationQualThresholdFormat) +
-    optional("-fraction", select_random_fraction, spaceSeparated = true, escape = true, format = select_random_fractionFormat) +
-    optional("-fractionGenotypes", remove_fraction_genotypes, spaceSeparated = true, escape = true, format = remove_fraction_genotypesFormat) +
-    repeat("-selectType", selectTypeToInclude, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-xlSelectType", selectTypeToExclude, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-IDs", keepIDs, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-xlIDs", excludeIDs, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(fullyDecode, "--fullyDecode", escape = true, format = "%s") +
-    conditional(justRead, "--justRead", escape = true, format = "%s") +
-    optional("--maxIndelSize", maxIndelSize, spaceSeparated = true, escape = true, format = "%s") +
-    optional("--minIndelSize", minIndelSize, spaceSeparated = true, escape = true, format = "%s") +
-    optional("--maxFilteredGenotypes", maxFilteredGenotypes, spaceSeparated = true, escape = true, format = "%s") +
-    optional("--minFilteredGenotypes", minFilteredGenotypes, spaceSeparated = true, escape = true, format = "%s") +
-    optional("--maxFractionFilteredGenotypes", maxFractionFilteredGenotypes, spaceSeparated = true, escape = true, format = maxFractionFilteredGenotypesFormat) +
-    optional("--minFractionFilteredGenotypes", minFractionFilteredGenotypes, spaceSeparated = true, escape = true, format = minFractionFilteredGenotypesFormat) +
-    conditional(setFilteredGtToNocall, "--setFilteredGtToNocall", escape = true, format = "%s") +
-    conditional(ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES, "--ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES", escape = true, format = "%s") +
-    conditional(forceValidOutput, "--forceValidOutput", escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    required(TaggedFile.formatCommandLineParameter("-V", variant), variant) +
+    optional(TaggedFile.formatCommandLineParameter("-disc", discordance.orNull), discordance) +
+    optional(TaggedFile.formatCommandLineParameter("-conc", concordance.orNull), concordance) +
+    optional("-o", out) +
+    repeat("-sn", sample_name) +
+    repeat("-se", sample_expressions) +
+    repeat("-sf", sample_file) +
+    repeat("-xl_sn", exclude_sample_name) +
+    repeat("-xl_sf", exclude_sample_file) +
+    repeat("-xl_se", exclude_sample_expressions) +
+    repeat("-select", selectexpressions) +
+    conditional(invertselect, "-invertSelect") +
+    conditional(excludeNonVariants, "-env") +
+    conditional(excludeFiltered, "-ef") +
+    conditional(preserveAlleles, "-noTrim") +
+    conditional(removeUnusedAlternates, "-trimAlternates") +
+    optional("-restrictAllelesTo", restrictAllelesTo) +
+    conditional(keepOriginalAC, "-keepOriginalAC") +
+    conditional(keepOriginalDP, "-keepOriginalDP") +
+    conditional(mendelianViolation, "-mv") +
+    conditional(invertMendelianViolation, "-invMv") +
+    optional("-mvq", mendelianViolationQualThreshold, format = mendelianViolationQualThresholdFormat) +
+    optional("-fraction", select_random_fraction, format = select_random_fractionFormat) +
+    optional("-fractionGenotypes", remove_fraction_genotypes, format = remove_fraction_genotypesFormat) +
+    repeat("-selectType", selectTypeToInclude) +
+    repeat("-xlSelectType", selectTypeToExclude) +
+    optional("-IDs", keepIDs) +
+    optional("-xlIDs", excludeIDs) +
+    conditional(fullyDecode, "--fullyDecode") +
+    conditional(justRead, "--justRead") +
+    optional("--maxIndelSize", maxIndelSize) +
+    optional("--minIndelSize", minIndelSize) +
+    optional("--maxFilteredGenotypes", maxFilteredGenotypes) +
+    optional("--minFilteredGenotypes", minFilteredGenotypes) +
+    optional("--maxFractionFilteredGenotypes", maxFractionFilteredGenotypes, format = maxFractionFilteredGenotypesFormat) +
+    optional("--minFractionFilteredGenotypes", minFractionFilteredGenotypes, format = minFractionFilteredGenotypesFormat) +
+    conditional(setFilteredGtToNocall, "--setFilteredGtToNocall") +
+    conditional(ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES, "--ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES") +
+    conditional(forceValidOutput, "--forceValidOutput") +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

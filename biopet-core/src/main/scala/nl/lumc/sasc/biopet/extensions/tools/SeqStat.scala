@@ -33,14 +33,14 @@ class SeqStat(val parent: Configurable) extends ToolCommandFunction with Summari
   mainFunction = false
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Output JSON", shortName = "output", required = true)
-  var output: File = null
+  var output: File = _
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine = super.cmdLine + required("-i", input) + required("-o", output)
+  override def cmdLine: String = super.cmdLine + required("-i", input) + required("-o", output)
 
   def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)

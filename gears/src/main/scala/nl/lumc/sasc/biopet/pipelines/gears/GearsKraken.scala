@@ -132,7 +132,7 @@ object GearsKraken {
     val taxs: mutable.Map[String, Any] = mutable.Map()
 
     def addTax(map: Map[String, Any], path: List[String] = Nil): Unit = {
-      val name = map.get("name").getOrElse("noName").toString
+      val name = map.getOrElse("name", "noName").toString
       val x = path.foldLeft(taxs)(
         (a, b) =>
           if (a.contains(b)) a(b).asInstanceOf[mutable.Map[String, Any]]
@@ -144,20 +144,18 @@ object GearsKraken {
       if (!x.contains(name)) x += name -> mutable.Map[String, Any]()
 
       map
-        .get("children")
-        .getOrElse(List())
+        .getOrElse("children", List())
         .asInstanceOf[List[Any]]
         .foreach(x => addTax(x.asInstanceOf[Map[String, Any]], path ::: name :: Nil))
     }
 
     summaries.foreach { x =>
-      addTax(x._2.get("classified").getOrElse(Map()).asInstanceOf[Map[String, Any]])
+      addTax(x._2.getOrElse("classified", Map()).asInstanceOf[Map[String, Any]])
     }
 
     def getValue(sample: String, path: List[String], key: String) = {
       path
-        .foldLeft(
-          summaries(sample).get("classified").getOrElse(Map()).asInstanceOf[Map[String, Any]]) {
+        .foldLeft(summaries(sample).getOrElse("classified", Map()).asInstanceOf[Map[String, Any]]) {
           (b, a) =>
             b.getOrElse("children", List[Map[String, Any]]())
               .asInstanceOf[List[Map[String, Any]]]

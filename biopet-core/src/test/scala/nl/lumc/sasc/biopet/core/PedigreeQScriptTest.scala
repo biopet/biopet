@@ -73,7 +73,7 @@ class PedigreeQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testIsMother() = {
+  def testIsMother(): Unit = {
     val script = PedigreeQScriptTest(trioPed :: Nil)
     script.init()
     script.biopetScript()
@@ -82,7 +82,7 @@ class PedigreeQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testIsFather() = {
+  def testIsFather(): Unit = {
     val script = PedigreeQScriptTest(trioPed :: Nil)
     script.init()
     script.biopetScript()
@@ -91,7 +91,7 @@ class PedigreeQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testIsTrio() = {
+  def testIsTrio(): Unit = {
     val script = PedigreeQScriptTest(trioPed :: Nil)
     script.init()
     script.biopetScript()
@@ -106,7 +106,7 @@ class PedigreeQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testConcatenation() = {
+  def testConcatenation(): Unit = {
     val script = PedigreeQScriptTest(sample1 :: sample2 :: sample3 :: trioPed :: Nil)
     script.init()
     script.biopetScript()
@@ -171,13 +171,19 @@ object PedigreeQScriptTest {
 
   val trioPed = Map("ped_file" -> resourcePath("/trio.ped"))
 
-  def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
+  def apply(configs: List[Map[String, Any]],
+            only: List[String] = Nil): QScript with PedigreeQscript {
+    def init(): Unit
+
+    def biopetScript(): Unit
+
+  } = {
     new QScript with PedigreeQscript { qscript =>
 
       qSettings = new QSettings()
       qSettings.runName = "test"
 
-      override val onlySamples = only
+      override val onlySamples: List[String] = only
 
       var buffer = new ListBuffer[String]()
 

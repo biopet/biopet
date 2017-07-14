@@ -8,7 +8,7 @@ import nl.lumc.sasc.biopet.utils.annotation.Feature
 import scala.io.Source
 
 /**
-  * Created by pjvan_thof on 8-6-17.
+  * Created by pjvanthof on 8-6-17.
   */
 object ExtractTagsFromGtf extends ToolCommand {
   case class Args(outputFile: File = null,

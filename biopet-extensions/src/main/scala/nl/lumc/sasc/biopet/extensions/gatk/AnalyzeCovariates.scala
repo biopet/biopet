@@ -60,15 +60,15 @@ class AnalyzeCovariates(val parent: Configurable) extends CommandLineGATK with S
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def cmdLine = super.cmdLine +
-    optional("-before", beforeReportFile, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-after", afterReportFile, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(ignoreLastModificationTimes, "-ignoreLMT", escape = true, format = "%s") +
-    optional("-plots", plotsReportFile, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-csv", intermediateCsvFile, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    optional("-before", beforeReportFile) +
+    optional("-after", afterReportFile) +
+    conditional(ignoreLastModificationTimes, "-ignoreLMT") +
+    optional("-plots", plotsReportFile) +
+    optional("-csv", intermediateCsvFile) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object AnalyzeCovariates {

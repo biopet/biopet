@@ -33,7 +33,7 @@ class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers
   }
 
   @Test
-  def testCorrectSampleTsv = {
+  def testCorrectSampleTsv(): Unit = {
     val tsv = resourcePath("/sample.tsv")
     val output = File.createTempFile("testCorrectSampleTsv", ".json")
     output.deleteOnExit()
@@ -42,7 +42,7 @@ class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers
   }
 
   @Test
-  def testNoSampleColumn() = {
+  def testNoSampleColumn(): Unit = {
     val tsv = resourcePath("/no_sample.tsv")
     val output = File.createTempFile("testNoSampleColumn", ".json")
     output.deleteOnExit()
@@ -51,7 +51,7 @@ class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers
   }
 
   @Test
-  def testNumberInLibs = {
+  def testNumberInLibs(): Unit = {
     val tsv = resourcePath("/number.tsv")
     val output = File.createTempFile("testNumberInLibs", ".json")
     output.deleteOnExit()
@@ -60,7 +60,7 @@ class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers
   }
 
   @Test
-  def testSampleIDs = {
+  def testSampleIDs(): Unit = {
     val tsv = resourcePath("/same.tsv")
     val output = File.createTempFile("testSampleIDs", ".json")
     output.deleteOnExit()
@@ -71,7 +71,7 @@ class SamplesTsvToConfigTest extends TestNGSuite with MockitoSugar with Matchers
   }
 
   @Test
-  def testJson = {
+  def testJson(): Unit = {
     val tsv = new File(resourcePath("/sample.tsv"))
     val json = stringFromInputs(List(tsv), Nil)
 

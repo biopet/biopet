@@ -14,6 +14,8 @@
   */
 package nl.lumc.sasc.biopet.utils.config
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, ConfigUtilsTest}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -36,9 +38,9 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   @Test def testContains(): Unit = {
     ConfigTest.config.contains("m1") shouldBe true
     ConfigTest.config.contains("notexist") shouldBe false
-    ConfigTest.config.contains(new ConfigValueIndex("m1", Nil, "k1")) shouldBe true
-    ConfigTest.config.contains(new ConfigValueIndex("notexist", Nil, "k1")) shouldBe true
-    ConfigTest.config.contains(new ConfigValueIndex("notexist", Nil, "k1", false)) shouldBe false
+    ConfigTest.config.contains(ConfigValueIndex("m1", Nil, "k1")) shouldBe true
+    ConfigTest.config.contains(ConfigValueIndex("notexist", Nil, "k1")) shouldBe true
+    ConfigTest.config.contains(ConfigValueIndex("notexist", Nil, "k1", freeVar = false)) shouldBe false
   }
 
   @Test def testApply(): Unit = {
@@ -62,23 +64,23 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   @Test def testSkipNested(): Unit = {
     val map = Map("1" -> Map("2" -> Map("4" -> Map("5" -> Map("k1" -> "v1")))))
     Config
-      .getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1"))
+      .getValueFromMap(map, ConfigValueIndex("5", List("1", "2", "4", "5"), "k1"))
       .get
       .asString shouldBe "v1"
     Config
-      .getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1"))
+      .getValueFromMap(map, ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1"))
       .get
       .asString shouldBe "v1"
     Config
       .getValueFromMap(
         map,
-        new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1"))
+        ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1"))
       .get
       .asString shouldBe "v1"
   }
 
   @DataProvider(name = "testGetValueFromMapProvider")
-  def testGetValueFromMapProvider() = {
+  def testGetValueFromMapProvider(): Array[Array[Any]] = {
     Array(
       Array("m1", Nil, "k1", true, "v2"),
       Array("m1", List("bla"), "k1", true, "v2"),
@@ -122,7 +124,7 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
                           freeVar: Boolean,
                           expected: Any): Unit = {
     val map = ConfigTest.map
-    val index = new ConfigValueIndex(module, path, key, freeVar)
+    val index = ConfigValueIndex(module, path, key, freeVar)
     val value = Config.getValueFromMap(map, index)
     value match {
       case Some(x) => x.value shouldBe expected
@@ -157,7 +159,7 @@ object ConfigTest {
     )
   )
 
-  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2, "json")
+  val file: File = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2, "json")
 
   val config = new Config
   config.loadConfigFile(file)

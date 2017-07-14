@@ -43,7 +43,7 @@ class PrefixFastq(val parent: Configurable) extends ToolCommandFunction {
     * Creates command to execute extension
     * @return
     */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", inputFastq) +
       required("-o", outputFastq) +

@@ -24,7 +24,7 @@ class Freebayes(val parent: Configurable) extends Variantcaller {
   val name = "freebayes"
   protected def defaultPrio = 7
 
-  def biopetScript {
+  def biopetScript() {
     val fb = new nl.lumc.sasc.biopet.extensions.Freebayes(this)
     fb.bamfiles = inputBams.values.toList
     fb.outputVcf = new File(outputDir, namePrefix + ".freebayes.vcf")

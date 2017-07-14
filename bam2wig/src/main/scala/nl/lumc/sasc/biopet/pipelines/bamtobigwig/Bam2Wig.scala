@@ -31,7 +31,7 @@ class Bam2Wig(val parent: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
   @Input(doc = "Input bam file", required = true)
-  var bamFile: File = null
+  var bamFile: File = _
 
   def init(): Unit = {
     inputFiles :+= new InputFile(bamFile)

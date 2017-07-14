@@ -25,6 +25,7 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
+import scala.util.matching.Regex
 
 object KrakenReportToJson extends ToolCommand {
 
@@ -53,7 +54,7 @@ object KrakenReportToJson extends ToolCommand {
   }
 
   var cladeIDs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill(32)(0)
-  val spacePattern = "^( +)".r
+  val spacePattern: Regex = "^( +)".r
   private var lines: Map[Long, KrakenHit] = Map.empty
 
   case class Args(krakenreport: File = null,
@@ -118,7 +119,7 @@ object KrakenReportToJson extends ToolCommand {
 
     cladeIDs(cladeLevel + 1) = values(4).toLong
     Map(
-      values(4).toLong -> new KrakenHit(
+      values(4).toLong -> KrakenHit(
         taxonomyID = values(4).toLong,
         taxonomyName = if (skipNames) "" else scientificName.trim,
         cladeCount = values(2).toLong,
@@ -168,7 +169,7 @@ object KrakenReportToJson extends ToolCommand {
       }
     })
 
-    val result = Map("unclassified" -> lines(0).toJSON(withChildren = false),
+    val result = Map("unclassified" -> lines(0).toJSON(),
                      "classified" -> lines(1).toJSON(withChildren = true))
     mapToJson(result).spaces2
 

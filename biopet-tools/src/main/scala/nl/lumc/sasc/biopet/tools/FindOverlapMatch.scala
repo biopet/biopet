@@ -47,7 +47,7 @@ object FindOverlapMatch extends ToolCommand {
     opt[Double]('c', "cutoff") required () unbounded () valueName "<value>" action { (x, c) =>
       c.copy(cutoff = x)
     } text "minimum value to report it as pair"
-    opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (x, c) =>
+    opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (_, c) =>
       c.copy(filterSameNames = false)
     } text "Do not compare samples with the same name"
     opt[String]("rowSampleRegex") unbounded () valueName "<regex>" action { (x, c) =>
@@ -82,12 +82,11 @@ object FindOverlapMatch extends ToolCommand {
       case _ => sys.process.stdout
     }
 
-    for (columnSample <- samplesColumnHeader if cmdArgs.columnSampleRegex
-           .map(_.findFirstIn(columnSample._1).isDefined)
-           .getOrElse(true)) {
+    for (columnSample <- samplesColumnHeader
+         if cmdArgs.columnSampleRegex.forall(_.findFirstIn(columnSample._1).isDefined)) {
       val buffer = ListBuffer[(String, Double)]()
       for (rowSample <- samplesRowHeader
-           if cmdArgs.rowSampleRegex.map(_.findFirstIn(rowSample._1).isDefined).getOrElse(true)) {
+           if cmdArgs.rowSampleRegex.forall(_.findFirstIn(rowSample._1).isDefined)) {
         val value = data(columnSample._2)(rowSample._2).toDouble
         if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || columnSample._2 != rowSample._2)) {
           buffer.+=((rowSample._1, value))

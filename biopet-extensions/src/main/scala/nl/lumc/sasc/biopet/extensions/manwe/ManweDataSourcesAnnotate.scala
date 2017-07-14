@@ -31,7 +31,7 @@ class ManweDataSourcesAnnotate(val parent: Configurable) extends Manwe {
   @Argument(doc = "Flag whether to wait for annotation to complete on server")
   var waitToComplete: Boolean = false
 
-  def subCommand = {
+  def subCommand: String = {
     required("data-sources") + required("annotate") +
       required(uri) +
       repeat("-q", queries) +

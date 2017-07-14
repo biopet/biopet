@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions.pindel
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, Reference, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Created by wyleung on 20-1-16.
@@ -32,22 +34,22 @@ class PindelVCF(val parent: Configurable)
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  def versionRegex = """Version:?[ ]+(.*)""".r
+  def versionRegex: Regex = """Version:?[ ]+(.*)""".r
   override def versionExitcode = List(0)
-  def versionCommand = executable + " -h"
+  def versionCommand: String = executable + " -h"
 
   /**
     * Required parameters
     */
   @Input
-  var reference: File = referenceFasta
+  var reference: File = referenceFasta()
 
   @Output
   var outputVCF: File = _
 
   var rDate: String = config("rdate", freeVar = false)
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     if (reference == null) reference = referenceFasta()
   }
 
@@ -81,7 +83,7 @@ class PindelVCF(val parent: Configurable)
   var minimumStrandSupport: Option[Int] = config("minimum_strand_support")
   var gatkCompatible: Boolean = config("gatk_compatible", default = false)
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--reference", reference) +
       required("--reference_name", referenceSpecies) +

@@ -28,7 +28,7 @@ import org.testng.annotations.Test
 class VariantEffectPredictorTest extends TestNGSuite with Matchers {
 
   @Test
-  def testSummaryStats = {
+  def testSummaryStats(): Unit = {
     val file = new File(Paths.get(getClass.getResource("/vep.metrics").toURI).toString)
 
     val vep = new VariantEffectPredictor(null)
@@ -48,15 +48,14 @@ class VariantEffectPredictorTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testFailedSummaryStats = {
+  def testFailedSummaryStats(): Unit = {
     val file = new File(Paths.get(getClass.getResource("/vep.failed.metrics").toURI).toString)
 
     val vep = new VariantEffectPredictor(null)
-    val stats = vep.parseStatsFile(file)
   }
 
   @Test
-  def testMergeFailSuccess: Unit = {
+  def testMergeFailSuccess(): Unit = {
     val file1 = new File(Paths.get(getClass.getResource("/vep.metrics").toURI).toString)
     val vep1 = new VariantEffectPredictor(null)
     val stats1 = vep1.parseStatsFile(file1)

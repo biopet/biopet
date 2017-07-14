@@ -157,31 +157,31 @@ class IndelRealigner(val parent: Configurable) extends CommandLineGATK with Scat
         outMD5 = new File(out.getPath + ".md5")
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-known", knownAlleles, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    required("-targetIntervals", targetIntervals, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-LOD", LODThresholdForCleaning, spaceSeparated = true, escape = true, format = LODThresholdForCleaningFormat) +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-model", consensusDeterminationModel, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-entropy", entropyThreshold, spaceSeparated = true, escape = true, format = entropyThresholdFormat) +
-    optional("-maxInMemory", maxReadsInMemory, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxIsize", maxIsizeForMovement, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxPosMove", maxPositionalMoveAllowed, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxConsensuses", maxConsensuses, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-greedy", maxReadsForConsensuses, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxReads", maxReadsForRealignment, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(noOriginalAlignmentTags, "-noTags", escape = true, format = "%s") +
-    optional("-nWayOut", nWayOut, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(generate_nWayOut_md5s, "--generate_nWayOut_md5s", escape = true, format = "%s") +
-    conditional(check_early, "-check_early", escape = true, format = "%s") +
-    conditional(noPGTag, "-noPG", escape = true, format = "%s") +
-    conditional(keepPGTags, "-keepPG", escape = true, format = "%s") +
-    optional("-indels", indelsFileForDebugging, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-stats", statisticsFileForDebugging, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-snps", SNPsFileForDebugging, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-known", knownAlleles, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    required("-targetIntervals", targetIntervals) +
+    optional("-LOD", LODThresholdForCleaning, format = LODThresholdForCleaningFormat) +
+    optional("-o", out) +
+    optional("-model", consensusDeterminationModel) +
+    optional("-entropy", entropyThreshold, format = entropyThresholdFormat) +
+    optional("-maxInMemory", maxReadsInMemory) +
+    optional("-maxIsize", maxIsizeForMovement) +
+    optional("-maxPosMove", maxPositionalMoveAllowed) +
+    optional("-maxConsensuses", maxConsensuses) +
+    optional("-greedy", maxReadsForConsensuses) +
+    optional("-maxReads", maxReadsForRealignment) +
+    conditional(noOriginalAlignmentTags, "-noTags") +
+    optional("-nWayOut", nWayOut) +
+    conditional(generate_nWayOut_md5s, "--generate_nWayOut_md5s") +
+    conditional(check_early, "-check_early") +
+    conditional(noPGTag, "-noPG") +
+    conditional(keepPGTags, "-keepPG") +
+    optional("-indels", indelsFileForDebugging) +
+    optional("-stats", statisticsFileForDebugging) +
+    optional("-snps", SNPsFileForDebugging) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object IndelRealigner {

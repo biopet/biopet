@@ -52,7 +52,7 @@
             #for (sampleName <- sampleNames)
                 #{
                     val sampleCount: String = traCounts.get(sampleName) match {
-                        case Some(c) => c.toString()
+                        case Some(c) => c.toString
                         case None => "-"
                     }
                 }#
@@ -94,7 +94,7 @@
             <td><a href="${rootPath}Samples/${sampleName}/index.html">${sampleName}</a></td>
             #{
                 val sampleCounts: Array[String] = countsForSvType.get(sampleName) match {
-                    case Some(c: Array[_]) => c.collect({case x => x.toString()})
+                    case Some(c: Array[_]) => c.collect({case x => x.toString})
                     case None => missingCounts
                 }
             }#

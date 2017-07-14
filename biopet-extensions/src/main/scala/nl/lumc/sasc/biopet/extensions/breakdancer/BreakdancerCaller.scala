@@ -16,18 +16,20 @@ package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 class BreakdancerCaller(val parent: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
   override def defaultThreads = 1 // breakdancer can only work on 1 single thread
 
-  def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex: Regex = """.*[Vv]ersion:? (.*)""".r
   override def versionExitcode = List(1)
-  def versionCommand = executable
+  def versionCommand: String = executable
 
   @Input(doc = "The breakdancer configuration file")
   var input: File = _
@@ -74,7 +76,7 @@ class BreakdancerCaller(val parent: Configurable) extends BiopetCommandLineFunct
 
   override def beforeCmd() {}
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       optional("-s", s) +
       optional("-c", c) +

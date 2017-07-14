@@ -132,11 +132,11 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       pipeline.summarySettings.get("cnv_calling") shouldBe Some(cnvCalling)
 
       pipeline.samples foreach {
-        case (sampleId, sample) =>
+        case (_, sample) =>
           sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
           sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
           sample.libraries.foreach {
-            case (libId, lib) =>
+            case (_, lib) =>
               lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
               lib.summarySettings.get("use_indel_realigner") shouldBe None // Should not exist anymore
               lib.summarySettings.get("use_base_recalibration") shouldBe Some(
@@ -166,48 +166,48 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
 class ShivaDefaultTest extends ShivaTestTrait
 class ShivaNoDbsnpTest extends ShivaTestTrait {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
-  override def realignProvider = Array(true)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
+  override def realignProvider = Array(x = true)
   override def dbsnp = false
 }
 class ShivaNoPrintReadsTest extends ShivaTestTrait {
-  override def realignProvider = Array(false)
+  override def realignProvider = Array(x = false)
   override def usePrintReads = false
 }
 class ShivaLibraryCallingTest extends ShivaTestTrait {
   override def sample1 = Array(true, false)
   override def sample2 = Array(false, true)
-  override def realignProvider = Array(false)
-  override def baseRecalibrationProvider = Array(false)
+  override def realignProvider = Array(x = false)
+  override def baseRecalibrationProvider = Array(x = false)
   override def libraryCalling = true
 }
 class ShivaSampleCallingTest extends ShivaTestTrait {
   override def sample1 = Array(true, false)
   override def sample2 = Array(false, true)
-  override def realignProvider = Array(false)
-  override def baseRecalibrationProvider = Array(false)
+  override def realignProvider = Array(x = false)
+  override def baseRecalibrationProvider = Array(x = false)
   override def sampleCalling = true
 }
 class ShivaWithSvCallingTest extends ShivaTestTrait {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
-  override def realignProvider = Array(false)
-  override def baseRecalibrationProvider = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
+  override def realignProvider = Array(x = false)
+  override def baseRecalibrationProvider = Array(x = false)
   override def svCalling = true
 }
 class ShivaWithCnvCallingTest extends ShivaTestTrait {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
-  override def realignProvider = Array(false)
-  override def baseRecalibrationProvider = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
+  override def realignProvider = Array(x = false)
+  override def baseRecalibrationProvider = Array(x = false)
   override def cnvCalling = true
 }
 class ShivaWithAnnotationTest extends ShivaTestTrait {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
-  override def realignProvider = Array(false)
-  override def baseRecalibrationProvider = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
+  override def realignProvider = Array(x = false)
+  override def baseRecalibrationProvider = Array(x = false)
   override def annotation = true
 }
 

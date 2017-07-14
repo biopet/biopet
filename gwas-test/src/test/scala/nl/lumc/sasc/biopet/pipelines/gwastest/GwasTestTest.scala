@@ -42,7 +42,7 @@ class GwasTestTest extends TestNGSuite with Matchers {
   private var dirs: List[File] = Nil
 
   @Test
-  def testFromVcf: Unit = {
+  def testFromVcf(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     Logging.errors.clear()
@@ -53,7 +53,7 @@ class GwasTestTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testEmpty: Unit = {
+  def testEmpty(): Unit = {
     val outputDir = Files.createTempDir()
     dirs :+= outputDir
     val pipeline = initPipeline(GwasTestTest.config(outputDir))
@@ -63,17 +63,17 @@ class GwasTestTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object GwasTestTest {
-  val vcfFile = File.createTempFile("gwas.", ".vcf")
+  val vcfFile: File = File.createTempFile("gwas.", ".vcf")
   Files.touch(vcfFile)
   vcfFile.deleteOnExit()
 
-  val phenotypeFile = File.createTempFile("gwas.", ".txt")
+  val phenotypeFile: File = File.createTempFile("gwas.", ".txt")
   phenotypeFile.deleteOnExit()
 
   val reference = new File(resourcePath("/fake_chrQ.fa"))

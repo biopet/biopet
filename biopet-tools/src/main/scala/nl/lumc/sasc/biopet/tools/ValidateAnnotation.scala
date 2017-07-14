@@ -41,7 +41,7 @@ object ValidateAnnotation extends ToolCommand {
     opt[File]('R', "reference") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(reference = x)
     } text "Reference fasta to check vcf file against"
-    opt[Unit]("disableFail") maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[Unit]("disableFail") maxOccurs 1 valueName "<file>" action { (_, c) =>
       c.copy(failOnError = false)
     } text "Do not fail on error. The tool will still exit when encountering an error, but will do so with exit code 0"
   }

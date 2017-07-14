@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 class CleverCaller(val parent: Configurable)
     extends BiopetCommandLineFunction
     with Reference
@@ -32,8 +34,8 @@ class CleverCaller(val parent: Configurable)
   override def defaultThreads = 8
   override def defaultCoreMemory = 3.0
 
-  def versionCommand = versionExecutable.getAbsolutePath
-  def versionRegex = """(.*)""".r
+  def versionCommand: String = versionExecutable.getAbsolutePath
+  def versionRegex: Regex = """(.*)""".r
   override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")
@@ -67,7 +69,7 @@ class CleverCaller(val parent: Configurable)
     if (reference == null) reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--sorted") +
       required("--use_xa") +

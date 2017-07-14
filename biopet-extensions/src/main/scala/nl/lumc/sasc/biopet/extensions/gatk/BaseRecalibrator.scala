@@ -157,35 +157,35 @@ class BaseRecalibrator(val parent: Configurable) extends CommandLineGATK with Sc
     knownSitesIndexes ++= knownSites.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-knownSites", knownSites, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    required("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-cov", covariate, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(no_standard_covs, "-noStandard", escape = true, format = "%s") +
-    conditional(run_without_dbsnp_potentially_ruining_quality, "-run_without_dbsnp_potentially_ruining_quality", escape = true, format = "%s") +
-    optional("-sMode", solid_recal_mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-solid_nocall_strategy", solid_nocall_strategy, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mcs", mismatches_context_size, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ics", indels_context_size, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxCycle", maximum_cycle_value, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mdq", mismatches_default_quality, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-idq", insertions_default_quality, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ddq", deletions_default_quality, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-lqt", low_quality_tail, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ql", quantizing_levels, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-bintag", binary_tag_name, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(sort_by_all_columns, "-sortAllCols", escape = true, format = "%s") +
-    optional("-dP", default_platform, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-fP", force_platform, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-fRG", force_readgroup, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-recal_table_update_log", recal_table_update_log, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxstr", max_str_unit_length, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxrep", max_repeat_length, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(lowMemoryMode, "-lowMemoryMode", escape = true, format = "%s") +
-    optional("-bqsrBAQGOP", bqsrBAQGapOpenPenalty, spaceSeparated = true, escape = true, format = bqsrBAQGapOpenPenaltyFormat) +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-knownSites", knownSites, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    required("-o", out) +
+    repeat("-cov", covariate) +
+    conditional(no_standard_covs, "-noStandard") +
+    conditional(run_without_dbsnp_potentially_ruining_quality, "-run_without_dbsnp_potentially_ruining_quality") +
+    optional("-sMode", solid_recal_mode) +
+    optional("-solid_nocall_strategy", solid_nocall_strategy) +
+    optional("-mcs", mismatches_context_size) +
+    optional("-ics", indels_context_size) +
+    optional("-maxCycle", maximum_cycle_value) +
+    optional("-mdq", mismatches_default_quality) +
+    optional("-idq", insertions_default_quality) +
+    optional("-ddq", deletions_default_quality) +
+    optional("-lqt", low_quality_tail) +
+    optional("-ql", quantizing_levels) +
+    optional("-bintag", binary_tag_name) +
+    conditional(sort_by_all_columns, "-sortAllCols") +
+    optional("-dP", default_platform) +
+    optional("-fP", force_platform) +
+    optional("-fRG", force_readgroup) +
+    optional("-recal_table_update_log", recal_table_update_log) +
+    optional("-maxstr", max_str_unit_length) +
+    optional("-maxrep", max_repeat_length) +
+    conditional(lowMemoryMode, "-lowMemoryMode") +
+    optional("-bqsrBAQGOP", bqsrBAQGapOpenPenalty, format = bqsrBAQGapOpenPenaltyFormat) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object BaseRecalibrator {

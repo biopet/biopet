@@ -17,8 +17,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /** Extension for stampy */
 class Stampy(val parent: Configurable)
@@ -32,7 +34,7 @@ class Stampy(val parent: Configurable)
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "ref")
-  var reference: File = null
+  var reference: File = _
 
   @Input(doc = "The genome prefix.")
   var genome: File = config("genome")
@@ -57,19 +59,19 @@ class Stampy(val parent: Configurable)
   var sensitive: Boolean = config("sensitive", default = false)
   var fast: Boolean = config("fast", default = false)
 
-  var readgroup: String = null
+  var readgroup: String = _
   var verbosity: Option[Int] = config("verbosity", default = 2)
   var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
-  def versionRegex = """stampy v(.*) \(.*\), .*""".r
+  def versionRegex: Regex = """stampy v(.*) \(.*\), .*""".r
   override def versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
 
-  def versionCommand = executable + " --help"
+  def versionCommand: String = executable + " --help"
 
   /** Sets readgroup when not set yet */
   override def beforeGraph(): Unit = {
@@ -79,7 +81,7 @@ class Stampy(val parent: Configurable)
   }
 
   /** Returns command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     var cmd: String = required(executable) +
       optional("-t", nCoresRequest) +
       conditional(solexa, "--solexa") +

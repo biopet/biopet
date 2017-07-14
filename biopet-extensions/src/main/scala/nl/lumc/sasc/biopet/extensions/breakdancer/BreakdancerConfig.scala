@@ -41,7 +41,7 @@ class BreakdancerConfig(val parent: Configurable) extends BiopetCommandLineFunct
   var coefvarCutoff: Option[Int] = config("coef_cutoff") // Cutoff on coefficients of variation [1]
   var histogramBins: Option[Int] = config("histogram_bins") // Number of bins in the histogram [50]
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       optional("-q", minMq) +
       conditional(useMq, "-m") +

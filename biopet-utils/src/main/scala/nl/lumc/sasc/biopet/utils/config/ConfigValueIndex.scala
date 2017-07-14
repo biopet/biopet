@@ -25,6 +25,6 @@ case class ConfigValueIndex(module: String,
                             path: List[String],
                             key: String,
                             freeVar: Boolean = true) {
-  override def toString =
+  override def toString: String =
     "Module = " + module + ",  path = " + path + ",  key = " + key + ",  freeVar = " + freeVar
 }

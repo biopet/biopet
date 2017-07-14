@@ -38,8 +38,8 @@ class Config(protected var _map: Map[String, Any],
     loadDefaultConfig()
   }
 
-  def map = _map
-  def defaults = _defaults
+  def map: Map[String, Any] = _map
+  def defaults: Map[String, Any] = _defaults
 
   /**
     * Loading a environmental variable as location of config files to merge into the config
@@ -85,7 +85,7 @@ class Config(protected var _map: Map[String, Any],
   }
 
   /**
-    * Add a single vallue to the config
+    * Add a single value to the config
     * @param key key of value
     * @param value value itself
     * @param path Path to value
@@ -231,7 +231,7 @@ class Config(protected var _map: Map[String, Any],
       map.foreach {
         case (key, value: Map[_, _]) =>
           reportUnused(value.asInstanceOf[Map[String, Any]], path :+ key)
-        case (key, value) =>
+        case (key, _) =>
           logger.warn(
             s"config key in user config is never used, key: $key" +
               (if (path.nonEmpty) s", path: ${path.mkString(" -> ")}" else ""))
@@ -303,7 +303,7 @@ object Config extends Logging {
         if (p.isDefined)
           Option(
             ConfigValue(startIndex,
-                        ConfigValueIndex(startIndex.module, path, startIndex.key, freeVar = true),
+                        ConfigValueIndex(startIndex.module, path, startIndex.key),
                         p.get))
         else None
       } else None

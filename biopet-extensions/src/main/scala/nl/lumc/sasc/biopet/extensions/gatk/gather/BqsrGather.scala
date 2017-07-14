@@ -34,7 +34,7 @@ class BqsrGather extends InProcessFunction {
 
   def run(): Unit = {
     val l = new util.ArrayList[File]()
-    inputBqsrFiles.foreach(l.add(_))
+    inputBqsrFiles.foreach(l.add)
     val gather = new BQSRGatherer
     gather.gather(l, outputBqsrFile)
   }

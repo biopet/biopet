@@ -89,7 +89,7 @@ class ShivaSvCalling(val parent: Configurable) extends QScript with SummaryQScri
     }
 
     // merge VCF by sample
-    for ((sample, bamFile) <- inputBams) {
+    for ((sample, _) <- inputBams) {
       if (callers.size > 1) {
         var sampleVCFS: List[Option[File]] = List.empty
         callers.foreach { caller =>

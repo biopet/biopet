@@ -72,7 +72,7 @@ class BedtoolsGroupby(val parent: Configurable) extends Bedtools {
     if (output.nonEmpty) " > "
     else ""
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("groupby") +
       optional(inputFlag, input) +
       optional("-g", grp) +

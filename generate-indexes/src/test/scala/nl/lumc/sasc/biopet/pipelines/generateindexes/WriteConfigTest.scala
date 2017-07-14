@@ -26,12 +26,12 @@ import org.testng.annotations.Test
   */
 class WriteConfigTest extends TestNGSuite with Matchers {
   @Test
-  def testWriteConfig: Unit = {
+  def testWriteConfig(): Unit = {
     val writeConfig = new WriteConfig
     writeConfig.config = Map("test" -> "bla")
     writeConfig.out = File.createTempFile("config.", ".json")
     writeConfig.out.deleteOnExit()
-    writeConfig.run
+    writeConfig.run()
 
     ConfigUtils.fileToConfigMap(writeConfig.out) shouldBe Map("test" -> "bla")
   }

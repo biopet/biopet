@@ -30,7 +30,7 @@ trait BiopetJavaCommandLineFunction
   override def defaultVmemFactor: Double = 2.0
 
   /** Constructs java opts, this adds scala threads */
-  override def javaOpts =
+  override def javaOpts: String =
     super.javaOpts +
       optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false) +
       optional("-Dscala.concurrent.context.maxThreads=", threads, spaceSeparated = false)

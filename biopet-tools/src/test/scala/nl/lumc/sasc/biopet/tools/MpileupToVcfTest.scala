@@ -37,10 +37,10 @@ class MpileupToVcfTest extends TestNGSuite with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val pileup = resourcePath("/paired01.pileup")
+  val pileup: String = resourcePath("/paired01.pileup")
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
     val tmp = File.createTempFile("mpileup", ".vcf")
     tmp.deleteOnExit()
     val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath)
@@ -49,7 +49,7 @@ class MpileupToVcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def validateOutVcf() = {
+  def validateOutVcf(): Unit = {
     val tmp = File.createTempFile("mpileup", ".vcf")
     tmp.deleteOnExit()
     val args = Array("-I",
@@ -74,7 +74,7 @@ class MpileupToVcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def extraValidateOutVcf() = {
+  def extraValidateOutVcf(): Unit = {
     val tmp = File.createTempFile("mpileup", ".vcf")
     tmp.deleteOnExit()
     val args = Array("-I",
@@ -94,11 +94,10 @@ class MpileupToVcfTest extends TestNGSuite with Matchers {
     val fasta = resourcePath("/chrQ_allN.fa")
 
     val sequenceFile = new IndexedFastaSequenceFile(new File(fasta))
-    val sequenceDict = sequenceFile.getSequenceDictionary
 
     for (record <- vcfReader) {
       val alleles = record.getAlleles.toSet
-      var refAlleles = alleles -- record.getAlternateAlleles.toSet
+      val refAlleles = alleles -- record.getAlternateAlleles.toSet
 
       refAlleles.size should be >= 1
 

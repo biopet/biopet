@@ -101,12 +101,11 @@ object MergeTables extends ToolCommand {
       .sorted
 
     output.write((featureName +: samples).mkString("\t") + "\n")
-    features.foreach {
-      case feature =>
-        // get feature values for each sample (order == order of samples in header)
-        val line = feature +: samples
-          .map(results(_).getOrElse(feature, fallback))
-        output.write(line.mkString("\t") + "\n")
+    features.foreach { feature =>
+      // get feature values for each sample (order == order of samples in header)
+      val line = feature +: samples
+        .map(results(_).getOrElse(feature, fallback))
+      output.write(line.mkString("\t") + "\n")
     }
     output.flush()
   }

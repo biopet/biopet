@@ -33,18 +33,18 @@ object Gentrap extends TemplateTool {
 
   def pipelineMap(map: Map[String, Any], expert: Boolean): Map[String, Any] = {
     val aligner = Question.string("Aligner",
-                                  posibleValues = MultiSampleMapping.possibleAligners,
+                                  possibleValues = MultiSampleMapping.possibleAligners,
                                   default = Some("gsnap"))
 
     val mappingConfig = MultiSampleMapping.pipelineMap(map ++ Map("aligner" -> aligner), expert)
 
     val expressionMeasures = Question.list(
       "ExpressionMeasures",
-      posibleValues = ExpMeasures.values.map(x => unCamelize(x.toString)).toList)
+      possibleValues = ExpMeasures.values.map(x => unCamelize(x.toString)).toList)
 
     val strandProtocol = Question.list(
       "StrandProtocol",
-      posibleValues = StrandProtocol.values.map(x => unCamelize(x.toString)).toList)
+      possibleValues = StrandProtocol.values.map(x => unCamelize(x.toString)).toList)
 
     val annotationRefFlat = Question.string(
       "annotationRefFlat",
@@ -64,7 +64,7 @@ object Gentrap extends TemplateTool {
       "annotation_refflat" -> annotationRefFlat
     ) ++ (if (Question.boolean("Call variants")) {
             val variantCallers = Question.list("Variantcallers",
-                                               posibleValues = Shiva.possibleVariantcallers,
+                                               possibleValues = Shiva.possibleVariantcallers,
                                                default = Some(List("varscan_cns_singlesample")))
 
             Map("call_variants" -> true, "variantcallers" -> variantCallers)

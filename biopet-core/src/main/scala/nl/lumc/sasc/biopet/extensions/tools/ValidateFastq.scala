@@ -31,7 +31,7 @@ class ValidateFastq(val parent: Configurable) extends ToolCommandFunction {
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", r1Fastq) +
       optional("-j", r2Fastq)

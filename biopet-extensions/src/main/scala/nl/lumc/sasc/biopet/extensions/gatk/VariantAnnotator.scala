@@ -118,22 +118,22 @@ class VariantAnnotator(val parent: Configurable) extends CommandLineGATK with Sc
       outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
-  override def cmdLine = super.cmdLine +
-    required(TaggedFile.formatCommandLineParameter("-V", variant), variant, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-snpEffFile", snpEffFile.getOrElse()), snpEffFile, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse()), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-E", expression, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(resourceAlleleConcordance, "-rac", escape = true, format = "%s") +
-    conditional(useAllAnnotations, "-all", escape = true, format = "%s") +
-    conditional(alwaysAppendDbsnpId, "-alwaysAppendDbsnpId", escape = true, format = "%s") +
-    optional("-mvq", MendelViolationGenotypeQualityThreshold, spaceSeparated = true, escape = true, format = MendelViolationGenotypeQualityThresholdFormat) +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    required(TaggedFile.formatCommandLineParameter("-V", variant), variant) +
+    optional(TaggedFile.formatCommandLineParameter("-snpEffFile", snpEffFile.getOrElse(new File("."))), snpEffFile) +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(new File("."))), dbsnp) +
+    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-o", out) +
+    repeat("-A", annotation) +
+    repeat("-XA", excludeAnnotation) +
+    repeat("-G", group) +
+    repeat("-E", expression) +
+    conditional(resourceAlleleConcordance, "-rac") +
+    conditional(useAllAnnotations, "-all") +
+    conditional(alwaysAppendDbsnpId, "-alwaysAppendDbsnpId") +
+    optional("-mvq", MendelViolationGenotypeQualityThreshold, format = MendelViolationGenotypeQualityThresholdFormat) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

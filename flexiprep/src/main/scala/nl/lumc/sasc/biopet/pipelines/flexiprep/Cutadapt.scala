@@ -76,11 +76,10 @@ class Cutadapt(root: Configurable, fastqc: Fastqc)
           case (adapterSequence: String, adapterStats: Map[_, _]) =>
             seqToNameMap.get(adapterSequence) match {
               // adapter sequence is found by FastQC
-              case Some(adapterSeqName) => {
+              case Some(adapterSeqName) =>
                 Some(
                   adapterSeqName ->
                     Map("sequence" -> adapterSequence, "stats" -> adapterStats.toMap))
-              }
               // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
               // sequences come from FastQC
               case _ =>
@@ -88,14 +87,14 @@ class Cutadapt(root: Configurable, fastqc: Fastqc)
                   s"Adapter '$adapterSequence' is clipped but not found by FastQC in '$fastqInput'.")
             }
           // FastQC found no adapters
-          case otherwise =>
+          case _ =>
             logger.debug(s"No adapters found for summarizing in '$fastqInput'.")
             None
         }
       // "adapters" key not found ~ something went wrong in our part
       case _ =>
         throw new RuntimeException(
-          s"Required key '${adaptersStatsName}' not found in stats entry '${fastqInput}'.")
+          s"Required key '$adaptersStatsName' not found in stats entry '$fastqInput'.")
     }
     initStats.updated(adaptersStatsName, adapterCounts)
   }

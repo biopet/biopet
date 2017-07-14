@@ -41,7 +41,7 @@ import scala.util.matching.Regex
 class WriteSummaryTest extends TestNGSuite with Matchers {
 
   @Test
-  def testCreateFile: Unit = {
+  def testCreateFile(): Unit = {
     val dbFile = File.createTempFile("summary.", ".db")
     dbFile.deleteOnExit()
     val db = SummaryDb.openSqliteSummary(dbFile)
@@ -295,7 +295,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
   }
 
   @AfterClass
-  def removeDirs: Unit = {
+  def removeDirs(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
@@ -325,7 +325,7 @@ object WriteSummaryTest {
       override def globalConfig = new Config(c)
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
-      val tempFile = File.createTempFile("summary", ".json")
+      val tempFile: File = File.createTempFile("summary", ".json")
       tempFile.deleteOnExit()
       def summaryFile: File = tempFile
       def init(): Unit = {}
@@ -348,7 +348,7 @@ object WriteSummaryTest {
       override def globalConfig = new Config(c + ("exe" -> "test"))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
-      val tempFile = File.createTempFile("summary", ".json")
+      val tempFile: File = File.createTempFile("summary", ".json")
       tempFile.deleteOnExit()
       def summaryFile: File = tempFile
       def init(): Unit = {}
@@ -367,7 +367,7 @@ object WriteSummaryTest {
       override def globalConfig = new Config(c + ("exe" -> "test"))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
-      val tempFile = File.createTempFile("summary", ".json")
+      val tempFile: File = File.createTempFile("summary", ".json")
       tempFile.deleteOnExit()
       def summaryFile: File = tempFile
       def init(): Unit = {}

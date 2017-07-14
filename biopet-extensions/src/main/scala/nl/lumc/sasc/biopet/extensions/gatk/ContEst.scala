@@ -12,14 +12,14 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   def analysis_type: String = "ContEst"
 
   /** Getter and setter for tumor sample bam file. */
-  def tumorSampleBam = input_file.find(file => isFileWithTag(file, "eval")).getOrElse(null)
+  def tumorSampleBam: File = input_file.find(file => isFileWithTag(file, "eval")).orNull
   def tumorSampleBam_= (value:File):Unit = {
     input_file = input_file.filterNot(file => isFileWithTag(file, "eval"))
     input_file :+= TaggedFile(value, "eval")
   }
 
   /** Getter and setter for normal sample bam file. */
-  def normalSampleBam = input_file.find(file => isFileWithTag(file, "genotype")).getOrElse(null)
+  def normalSampleBam: File = input_file.find(file => isFileWithTag(file, "genotype")).orNull
   def normalSampleBam_= (value:File):Unit = {
     input_file = input_file.filterNot(file => isFileWithTag(file, "genotype"))
     input_file :+= TaggedFile(value, "genotype")
@@ -73,7 +73,7 @@ class ContEst(val parent: Configurable) extends CommandLineGATK {
   @Argument(fullName = "trim_fraction", required = false)
   var trimFraction: Option[Double] = config("trim_fraction")
 
-  override def cmdLine = super.cmdLine +
+  override def cmdLine: String = super.cmdLine +
     required("--popfile", popFile) +
     required("--out", output) +
     optional("--base_report", baseReportFile) +

@@ -238,9 +238,8 @@ object VcfWithVcf extends ToolCommand {
                     "Type of field " + attribute._1 + " is not numeric")
               }
             case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
-            case _ => {
+            case _ =>
               scalaListToJavaObjectArrayList(attribute._2)
-            }
           }
         )
       })

@@ -52,16 +52,16 @@ object VcfToTsv extends ToolCommand {
     opt[String]('i', "info_field") unbounded () action { (x, c) =>
       c.copy(infoFields = x :: c.infoFields)
     } text "Info field to use" valueName "Info field name"
-    opt[Unit]("all_info") unbounded () action { (x, c) =>
+    opt[Unit]("all_info") unbounded () action { (_, c) =>
       c.copy(allInfo = true)
     } text "Use all info fields in the vcf header"
-    opt[Unit]("all_format") unbounded () action { (x, c) =>
+    opt[Unit]("all_format") unbounded () action { (_, c) =>
       c.copy(allFormat = true)
     } text "Use all genotype fields in the vcf header"
     opt[String]('s', "sample_field") unbounded () action { (x, c) =>
       c.copy(sampleFields = x :: c.sampleFields)
     } text "Genotype fields to use in the tsv file"
-    opt[Unit]('d', "disable_defaults") unbounded () action { (x, c) =>
+    opt[Unit]('d', "disable_defaults") unbounded () action { (_, c) =>
       c.copy(disableDefaults = true)
     } text "Don't output the default columns from the vcf file"
     opt[String]("separator") maxOccurs 1 action { (x, c) =>
@@ -171,7 +171,7 @@ object VcfToTsv extends ToolCommand {
     * @return DecimalFormat formatter
     */
   def createFormatter(len: Int): DecimalFormat = {
-    val patternString = "###." + (for (x <- 1 to len) yield "#").mkString("")
+    val patternString = "###." + (for (_ <- 1 to len) yield "#").mkString("")
     new DecimalFormat(patternString)
   }
 

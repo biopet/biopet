@@ -60,10 +60,10 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   }
 
   /**
-    *  This value is used to let you job wait a x number of second after it finish.
-    *  This is ionly used when having storage delay issues
+    * This value is used to let you job wait a x number of second after it finish.
+    * This is ionly used when having storage delay issues
     */
-  var jobDelayTime: Option[Int] = config("job_delay_time")
+  val jobDelayTime: Option[Int] = config("job_delay_time")
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
@@ -147,9 +147,9 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   }
 
   private[core] var _inputAsStdin = false
-  def inputAsStdin = _inputAsStdin
+  def inputAsStdin: Boolean = _inputAsStdin
   private[core] var _outputAsStdout = false
-  def outputAsStdout = _outputAsStdout
+  def outputAsStdout: Boolean = _outputAsStdout
 
   /**
     * This operator sends stdout to `that` and combine this into 1 command line function
@@ -212,13 +212,13 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
                maxGroups: Int = 0): String = {
     if (values.size % groupSize != 0)
       Logging.addError(
-        s"Arg '${argName}' values: '${values}' does not fit to a groupSize of ${groupSize}")
+        s"Arg '$argName' values: '$values' does not fit to a groupSize of $groupSize")
     val groups = values.size / groupSize
     if (groups < minGroups)
-      Logging.addError(s"Args '${argName}' need atleast $minGroups with size $groupSize")
+      Logging.addError(s"Args '$argName' need atleast $minGroups with size $groupSize")
     if (maxGroups > 0 && groups > maxGroups)
-      Logging.addError(s"Args '${argName}' may only have $maxGroups with size $groupSize")
-    if (values.nonEmpty) required(argName) + values.map(required(_)).mkString
+      Logging.addError(s"Args '$argName' may only have $maxGroups with size $groupSize")
+    if (values.nonEmpty) required(argName) + values.map(required).mkString
     else ""
   }
 
@@ -251,7 +251,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   }
 
   private[core] var _pipesJobs: List[BiopetCommandLineFunction] = Nil
-  def pipesJobs = _pipesJobs
+  def pipesJobs: List[BiopetCommandLineFunction] = _pipesJobs
   def addPipeJob(job: BiopetCommandLineFunction) {
     _pipesJobs :+= job
     _pipesJobs = _pipesJobs.distinct

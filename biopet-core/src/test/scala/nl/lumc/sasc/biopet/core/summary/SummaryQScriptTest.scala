@@ -30,7 +30,7 @@ import SummaryQScriptTest._
   */
 class SummaryQScriptTest extends TestNGSuite with Matchers {
   @Test
-  def testNoJobs: Unit = {
+  def testNoJobs(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val script = makeQscript()
     script.addSummaryJobs()
@@ -38,7 +38,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testFiles: Unit = {
+  def testFiles(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
     val script = makeQscript(files = Map("file" -> file))
@@ -55,7 +55,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDuplicateFiles: Unit = {
+  def testDuplicateFiles(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
     val script = makeQscript(files = Map("file" -> file, "file2" -> file))
@@ -72,7 +72,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testAddSummarizable: Unit = {
+  def testAddSummarizable(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
     val script = makeQscript()
@@ -91,7 +91,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testInputFile: Unit = {
+  def testInputFile(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
     val script = makeQscript()
@@ -112,7 +112,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testAddQscript: Unit = {
+  def testAddQscript(): Unit = {
     SummaryQScript.md5sumCache.clear()
     val script = makeQscript()
     script.addSummaryQScript(script)
@@ -129,7 +129,7 @@ object SummaryQScriptTest {
       override def globalConfig = new Config(c)
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
-      val tempFile = File.createTempFile("summary", ".json")
+      val tempFile: File = File.createTempFile("summary", ".json")
       tempFile.deleteOnExit()
       def summaryFile: File = tempFile
       def init(): Unit = ???

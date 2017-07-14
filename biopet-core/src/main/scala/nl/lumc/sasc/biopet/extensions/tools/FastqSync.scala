@@ -35,31 +35,31 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
 
   /** Original FASTQ file (read 1 or 2) */
   @Input(required = true)
-  var refFastq: File = null
+  var refFastq: File = _
 
   /** "Input read 1 FASTQ file" */
   @Input(required = true)
-  var inputFastq1: File = null
+  var inputFastq1: File = _
 
   /** Input read 2 FASTQ file */
   @Input(required = true)
-  var inputFastq2: File = null
+  var inputFastq2: File = _
 
   /** Output read 1 FASTQ file */
   @Output(required = true)
-  var outputFastq1: File = null
+  var outputFastq1: File = _
 
   /** Output read 2 FASTQ file */
   @Output(required = true)
-  var outputFastq2: File = null
+  var outputFastq2: File = _
 
   /** Sync statistics */
   @Output(required = true)
-  var outputStats: File = null
+  var outputStats: File = _
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-r", refFastq) +
       required("-i", inputFastq1) +
@@ -98,7 +98,7 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
         "num_reads_kept" -> countRLeft)
   }
 
-  override def summaryDeps = outputStats :: super.summaryDeps
+  override def summaryDeps: List[File] = outputStats :: super.summaryDeps
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {

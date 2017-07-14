@@ -39,7 +39,7 @@ class VcfStatsForSv(val parent: Configurable) extends ToolCommandFunction with S
   override def defaultResidentFactor = 2.0
   override def defaultVmemFactor = 3.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", inputFile) +
       required("-o", outputFile) +

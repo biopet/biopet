@@ -104,17 +104,17 @@ class ApplyRecalibration(val parent: Configurable) extends CommandLineGATK with 
     num_threads = Option(getThreads)
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    required(TaggedFile.formatCommandLineParameter("-recalFile", recal_file), recal_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-tranchesFile", tranches_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ts_filter_level", ts_filter_level, spaceSeparated = true, escape = true, format = ts_filter_levelFormat) +
-    optional("-lodCutoff", lodCutoff, spaceSeparated = true, escape = true, format = lodCutoffFormat) +
-    repeat("-ignoreFilter", ignore_filter, spaceSeparated = true, escape = true, format = "%s") + conditional(ignore_all_filters, "-ignoreAllFilters", escape = true, format = "%s") +
-    conditional(excludeFiltered, "-ef", escape = true, format = "%s") +
-    optional("-mode", mode, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    required(TaggedFile.formatCommandLineParameter("-recalFile", recal_file), recal_file) +
+    optional("-tranchesFile", tranches_file) +
+    optional("-o", out) +
+    optional("-ts_filter_level", ts_filter_level, format = ts_filter_levelFormat) +
+    optional("-lodCutoff", lodCutoff, format = lodCutoffFormat) +
+    repeat("-ignoreFilter", ignore_filter) + conditional(ignore_all_filters, "-ignoreAllFilters") +
+    conditional(excludeFiltered, "-ef") +
+    optional("-mode", mode) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }

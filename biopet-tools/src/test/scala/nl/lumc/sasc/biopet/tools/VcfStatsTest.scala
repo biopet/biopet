@@ -115,7 +115,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMergeStatsMap() = {
+  def testMergeStatsMap(): Unit = {
     val m1: mutable.Map[Any, Int] = mutable.Map("a" -> 1)
     val m2: mutable.Map[Any, Int] = mutable.Map("b" -> 2)
 
@@ -136,7 +136,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMergeNestedStatsMap() = {
+  def testMergeNestedStatsMap(): Unit = {
     val m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(
       "test" ->
         mutable.Map("nested" -> mutable.Map("a" -> 1)))
@@ -171,7 +171,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testValueOfTsv() = {
+  def testValueOfTsv(): Unit = {
     val i = new File(resourcePath("/sample.tsv"))
 
     valueFromTsv(i, "Sample_ID_1", "library") should be(Some("Lib_ID_1"))
@@ -182,7 +182,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testNoExistOutputDir: Unit = {
+  def testNoExistOutputDir(): Unit = {
     val tmp = Files.createTempDirectory("vcfStats")
     FileUtils.deleteDirectory(new File(tmp.toAbsolutePath.toString))
     val vcf = resourcePath("/chrQ.vcf.gz")
@@ -193,7 +193,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
     val tmp = Files.createTempDirectory("vcfStats")
     val vcf = resourcePath("/chrQ.vcf.gz")
     val ref = resourcePath("/fake_chrQ.fa")
@@ -357,7 +357,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSortAnyAny() = {
+  def testSortAnyAny(): Unit = {
     //stub
     val one: Any = 1
     val two: Any = 2
@@ -373,7 +373,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCheckGeneral() = {
+  def testCheckGeneral(): Unit = {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
     val blah = checkGeneral(record, List())
@@ -459,7 +459,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testCheckGenotype() = {
+  def testCheckGenotype(): Unit = {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
     val genotype = record.getGenotype(0)

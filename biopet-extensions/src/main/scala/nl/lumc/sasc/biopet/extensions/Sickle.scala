@@ -16,13 +16,14 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.matching.Regex
 
 /**
   * Extension for sickle
@@ -58,8 +59,8 @@ class Sickle(val parent: Configurable)
   var discardN: Boolean = config("discardN", default = false)
   var quiet: Boolean = config("quiet", default = false)
   var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
-  def versionRegex = """sickle version (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """sickle version (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   /** Sets qualityType is still empty */
   override def beforeGraph() {
@@ -67,7 +68,7 @@ class Sickle(val parent: Configurable)
   }
 
   /** Return command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     var cmd: String = required(executable)
     if (inputR2 != null) {
       cmd += required("pe") +
@@ -87,7 +88,7 @@ class Sickle(val parent: Configurable)
       (if (outputAsStdout) "" else " > " + required(outputStats))
   }
 
-  override def summaryDeps = outputStats :: super.summaryDeps
+  override def summaryDeps: List[File] = outputStats :: super.summaryDeps
 
   /** returns stats map for summary */
   def summaryStats: Map[String, Any] = {
@@ -109,12 +110,12 @@ class Sickle(val parent: Configurable)
         case sKept(num) => stats += ("num_reads_kept" -> num.toInt)
         case sDiscarded(num) => stats += ("num_reads_discarded_total" -> num.toInt)
         // paired run
-        case pPairKept(reads, pairs) => stats += ("num_reads_kept" -> reads.toInt)
-        case pSingleKept(total, r1, r2) =>
+        case pPairKept(reads, _) => stats += ("num_reads_kept" -> reads.toInt)
+        case pSingleKept(_, r1, r2) =>
           stats += ("num_reads_kept_R1" -> r1.toInt)
           stats += ("num_reads_kept_R2" -> r2.toInt)
-        case pPairDiscarded(reads, pairs) => stats += ("num_reads_discarded_both" -> reads.toInt)
-        case pSingleDiscarded(total, r1, r2) =>
+        case pPairDiscarded(reads, _) => stats += ("num_reads_discarded_both" -> reads.toInt)
+        case pSingleDiscarded(_, r1, r2) =>
           stats += ("num_reads_discarded_R1" -> r1.toInt)
           stats += ("num_reads_discarded_R2" -> r2.toInt)
         case _ =>

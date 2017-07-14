@@ -39,7 +39,7 @@ class MergeTables(val parent: Configurable) extends ToolCommandFunction {
 
   /** Output file */
   @Output(doc = "Output merged table", required = true)
-  var output: File = null
+  var output: File = _
 
   // TODO: should be List[Int] really
   /** List of column indices to combine to make a unique identifier per row */
@@ -49,7 +49,7 @@ class MergeTables(val parent: Configurable) extends ToolCommandFunction {
   var valueColumnIndex: Int = config("value_column_index", default = 2)
 
   /** Name of the identifier column in the output file */
-  var idColumnName: Option[String] = config("id_column_name")
+  val idColumnName: Option[String] = config("id_column_name")
 
   /** Common file extension of all input files */
   var fileExtension: Option[String] = config("file_extension")
@@ -61,10 +61,10 @@ class MergeTables(val parent: Configurable) extends ToolCommandFunction {
   var fallbackString: Option[String] = config("fallback_string")
 
   /** Column delimiter of each input file (used for splitting into columns */
-  var delimiter: Option[String] = config("delimiter")
+  val delimiter: Option[String] = config("delimiter")
 
   // executed command line
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", idColumnIndices.mkString(",")) +
       required("-a", valueColumnIndex) +

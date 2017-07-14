@@ -28,7 +28,7 @@ class SnptestToVcf(val parent: Configurable) extends ToolCommandFunction with Re
   def toolObject = nl.lumc.sasc.biopet.tools.SnptestToVcf
 
   @Input(doc = "input Info file", required = true)
-  var inputInfo: File = null
+  var inputInfo: File = _
 
   @Input(required = true)
   var reference: File = _
@@ -45,7 +45,7 @@ class SnptestToVcf(val parent: Configurable) extends ToolCommandFunction with Re
     //if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("--inputInfo", inputInfo) +
       required("--outputVcf", outputVcf) +

@@ -114,15 +114,15 @@ trait Sys {
     while (cache.size >= maxRunningProcesses) {
       for ((cmd, c) <- cache.toList) {
         val results = Option(c)
-        if (!results.map(_.isRunning).getOrElse(true)) try {
+        if (!results.forall(_.isRunning)) try {
           cache -= cmd
         } catch {
-          case e: NullPointerException =>
+          case _: NullPointerException =>
         } else
           try {
             results.foreach(x => Await.ready(x.get, Duration.fromNanos(100000)))
           } catch {
-            case e: TimeoutException =>
+            case _: TimeoutException =>
           }
       }
     }
@@ -162,7 +162,7 @@ trait Sys {
       p.tryFailure {
         Logging.logger.error("stdout: " + stdout.get)
         Logging.logger.error("stderr: " + stderr.get)
-        new ExecutionCanceled(s"Process: '${cmd.mkString(" ")}' canceled")
+        ExecutionCanceled(s"Process: '${cmd.mkString(" ")}' canceled")
       }
       proc.destroy()
     }

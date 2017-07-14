@@ -26,10 +26,10 @@ import scala.language.reflectiveCalls
   */
 class PipelineCommandTest extends TestNGSuite with Matchers {
   @Test
-  def testPipelineCommand: Unit = {
+  def testPipelineCommand(): Unit = {
     val pipeline = new PipelineCommand {
       override val globalConfig = new Config(Map())
-      def getConfig = globalConfig
+      def getConfig: Config = globalConfig
     }
 
     pipeline.pipelineName shouldBe this.getClass.getSimpleName.toLowerCase

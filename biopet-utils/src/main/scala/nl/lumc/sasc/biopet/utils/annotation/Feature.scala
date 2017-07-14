@@ -52,8 +52,8 @@ case class Feature(contig: String,
       attributes.map(x => x._1 + s"=${x._2}").mkString(";")
     ).mkString("\t")
 
-  def minPosition = if (start < end) start else end
-  def maxPosition = if (start > end) start else end
+  def minPosition: Int = if (start < end) start else end
+  def maxPosition: Int = if (start > end) start else end
 }
 
 object Feature {
@@ -72,11 +72,11 @@ object Feature {
           s"strand only allows '+' or '-', not ${values(6)}, gtf line: $line")
     }
 
-    val artibutes = values.lift(8).map(_.split(";")).getOrElse(Array()).map {
-      case artibutesGtfRegex(key, value) => key -> value
-      case artibutesGffRegex(key, value) => key -> value
+    val attributes = values.lift(8).map(_.split(";")).getOrElse(Array()).map {
+      case attributesGtfRegex(key, value) => key -> value
+      case attributesGffRegex(key, value) => key -> value
       case _ =>
-        throw new IllegalArgumentException(s"Atribute it not correct formatted, gtf line: $line")
+        throw new IllegalArgumentException(s"Attribute it not correct formatted, gtf line: $line")
     } toMap
 
     val score = values(5) match {
@@ -99,9 +99,9 @@ object Feature {
             score,
             strand,
             frame,
-            artibutes)
+            attributes)
   }
 
-  lazy val artibutesGtfRegex: Regex = """\s*(\S*) "(.*)"$""".r
-  lazy val artibutesGffRegex: Regex = """\s*(\S*)=(.*)$""".r
+  lazy val attributesGtfRegex: Regex = """\s*(\S*) "(.*)"$""".r
+  lazy val attributesGffRegex: Regex = """\s*(\S*)=(.*)$""".r
 }

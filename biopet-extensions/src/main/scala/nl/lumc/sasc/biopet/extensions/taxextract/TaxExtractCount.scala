@@ -18,7 +18,7 @@ class TaxExtractCount(val parent: Configurable) extends TaxExtract {
   @Argument(required = false)
   var reverse: Boolean = false
 
-  override def cmdLine = {
+  override def cmdLine: String = {
     super.cmdLine +
       conditional(reverse, "--reverse") +
       (if (outputAsStdout) "" else " > " + required(output))

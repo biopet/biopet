@@ -31,9 +31,6 @@ import scala.concurrent.duration.Duration
   * Created by pjvanthof on 24/02/16.
   */
 class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
-  private def resourcePath(p: String): String = {
-    Paths.get(getClass.getResource(p).toURI).toString
-  }
 
   @Test
   def testGeneratePages(): Unit = {

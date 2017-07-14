@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, Reference, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Extension for Tophat
@@ -30,9 +32,9 @@ class Tophat(val parent: Configurable)
 
   executable = config("exe", default = "tophat", freeVar = false)
 
-  def versionRegex = """TopHat v(.*)""".r
+  def versionRegex: Regex = """TopHat v(.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " --version"
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
@@ -267,8 +269,8 @@ class Tophat(val parent: Configurable)
 
   var rgPlatform: Option[String] = config("rg_platform")
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (bowtie1 && !new File(bowtieIndex).getParentFile
           .list()
           .toList

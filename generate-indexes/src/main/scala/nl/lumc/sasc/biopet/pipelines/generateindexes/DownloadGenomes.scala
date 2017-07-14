@@ -86,7 +86,7 @@ class DownloadGenomes(val parent: Configurable) extends QScript with BiopetQScri
                     val ncbiReportToContigMap = new NcbiReportToContigMap(this)
                     ncbiReportToContigMap.assemblyReport = ncbiAssemblyReport
                     ncbiReportToContigMap.contigMap =
-                      new File(genomeDir, s"${speciesName}-${genomeName}.contig.map.tsv")
+                      new File(genomeDir, s"$speciesName-$genomeName.contig.map.tsv")
                     ncbiReportToContigMap.nameHeader = genomeConfig
                       .get("ncbi_assembly_header_name")
                       .map(_.toString)

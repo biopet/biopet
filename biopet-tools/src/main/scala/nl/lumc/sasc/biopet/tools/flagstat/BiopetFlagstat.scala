@@ -71,7 +71,7 @@ object BiopetFlagstat extends ToolCommand {
     logger.info("Start reading file: " + commandArgs.inputFile)
     for (record <- iterSam) {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
-        logger.info("Reads prosessed: " + flagstatCollector.readsCount)
+        logger.info("Reads processed: " + flagstatCollector.readsCount)
       flagstatCollector.loadRecord(record)
     }
 

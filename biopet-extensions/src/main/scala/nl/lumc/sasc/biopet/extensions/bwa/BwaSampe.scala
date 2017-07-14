@@ -40,7 +40,7 @@ class BwaSampe(val parent: Configurable) extends Bwa with Reference {
   var saiR2: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = null
+  var reference: File = _
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _
@@ -61,7 +61,7 @@ class BwaSampe(val parent: Configurable) extends Bwa with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("sampe") +
       optional("-a", a) +

@@ -14,12 +14,14 @@
   */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 /** General abstract class for bedtools extensions */
 abstract class Bedtools extends BiopetCommandLineFunction with Version {
-  override def subPath = "bedtools" :: super.subPath
+  override def subPath: List[String] = "bedtools" :: super.subPath
   executable = config("exe", default = "bedtools", namespace = "bedtools")
-  def versionCommand = executable + " --version"
-  def versionRegex = """bedtools (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """bedtools (.*)""".r
 }

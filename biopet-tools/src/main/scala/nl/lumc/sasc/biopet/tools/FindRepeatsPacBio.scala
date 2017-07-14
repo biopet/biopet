@@ -100,7 +100,7 @@ object FindRepeatsPacBio extends ToolCommand {
       }
       bamIter.close()
       commandArgs.outputFile match {
-        case Some(file) => {
+        case Some(file) =>
           val writer = new PrintWriter(file)
           writer.println(header.mkString("\t"))
           writer.println(
@@ -119,8 +119,7 @@ object FindRepeatsPacBio extends ToolCommand {
               notSpan
             ).mkString("\t"))
           writer.close()
-        }
-        case _ => {
+        case _ =>
           println(header.mkString("\t"))
           println(
             List(
@@ -137,7 +136,6 @@ object FindRepeatsPacBio extends ToolCommand {
               deletions.mkString("/"),
               notSpan
             ).mkString("\t"))
-        }
       }
     }
   }
@@ -152,7 +150,7 @@ object FindRepeatsPacBio extends ToolCommand {
     var ins: List[Ins] = Nil
     var samRecord: SAMRecord = _
 
-    override def toString = {
+    override def toString: String = {
       "id: " + samRecord.getReadName + "  beginDel: " + beginDel + "  endDel: " + endDel + "  dels: " + dels + "  ins: " + ins
     }
   }

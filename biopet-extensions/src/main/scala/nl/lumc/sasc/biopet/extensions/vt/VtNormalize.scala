@@ -18,15 +18,17 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Created by pjvanthof on 20/11/15.
   */
 class VtNormalize(val parent: Configurable) extends Vt with Version with Reference {
-  def versionRegex = """normalize (.*)""".r
+  def versionRegex: Regex = """normalize (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " normalize"
+  def versionCommand: String = executable + " normalize"
 
   @Input(required = true)
   var inputVcf: File = _
@@ -45,7 +47,7 @@ class VtNormalize(val parent: Configurable) extends Vt with Version with Referen
     reference = referenceFasta()
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("normalize") +
       required("-o", outputVcf) +
       optional("-w", windowSize) +

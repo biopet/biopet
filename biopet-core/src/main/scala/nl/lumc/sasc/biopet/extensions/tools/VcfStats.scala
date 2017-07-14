@@ -50,9 +50,9 @@ class VcfStats(val parent: Configurable)
   protected var outputDir: File = _
 
   var infoTags: List[String] = Nil
-  var genotypeTags: List[String] = Nil
-  var allInfoTags = false
-  var allGenotypeTags = false
+  val genotypeTags: List[String] = Nil
+  val allInfoTags = false
+  val allGenotypeTags = false
   var reference: File = _
   var intervals: Option[File] = None
 

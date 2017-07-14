@@ -31,7 +31,7 @@ class ConfigurableTest extends TestNGSuite with Matchers {
             configNamespace: String = null,
             freeVar: Boolean = true,
             sample: String = null,
-            library: String = null) = {
+            library: String = null): ConfigValue = {
       config(key, default, configNamespace, freeVar = freeVar, sample = sample, library = library)
     }
   }
