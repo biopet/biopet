@@ -9,7 +9,9 @@ import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
-
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -73,14 +75,13 @@ object VcfStatsSpark extends ToolCommand {
       if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
     } text s"""Create a wiggle track with bin size <binSize> for any of the following genotype fields:
               |${genotypeWiggleOptions.mkString(", ")}""".stripMargin
-    opt[Int]('t',"localThreads")unbounded () action { (x, c) =>
+    opt[Int]('t', "localThreads") unbounded () action { (x, c) =>
       c.copy(localThreads = x)
     } text s"Number of local threads to use"
-    opt[String]("sparkMaster")unbounded () action { (x, c) =>
+    opt[String]("sparkMaster") unbounded () action { (x, c) =>
       c.copy(sparkMaster = Some(x))
     } text s"Spark master to use"
   }
-
 
   def main(args: Array[String]): Unit = {
 
@@ -97,7 +98,7 @@ object VcfStatsSpark extends ToolCommand {
     val adInfoTags = {
       (for (infoTag <- cmdArgs.infoTags if !defaultInfoFields.contains(infoTag)) yield {
         require(header.getInfoHeaderLine(infoTag) != null,
-          "Info tag '" + infoTag + "' not found in header of vcf file")
+                "Info tag '" + infoTag + "' not found in header of vcf file")
         infoTag
       }) ::: (for (line <- header.getInfoHeaderLines if cmdArgs.allInfoTags
                    if !defaultInfoFields.contains(line.getID)
@@ -109,7 +110,7 @@ object VcfStatsSpark extends ToolCommand {
     val adGenotypeTags = (for (genotypeTag <- cmdArgs.genotypeTags
                                if !defaultGenotypeFields.contains(genotypeTag)) yield {
       require(header.getFormatHeaderLine(genotypeTag) != null,
-        "Format tag '" + genotypeTag + "' not found in header of vcf file")
+              "Format tag '" + genotypeTag + "' not found in header of vcf file")
       genotypeTag
     }) ::: (for (line <- header.getFormatHeaderLines if cmdArgs.allGenotypeTags
                  if !defaultGenotypeFields.contains(line.getID)
@@ -117,7 +118,6 @@ object VcfStatsSpark extends ToolCommand {
                  if line.getID != "PL") yield {
       line.getID
     }).toList ::: defaultGenotypeFields
-
 
     logger.info("Init spark context")
 
@@ -135,11 +135,31 @@ object VcfStatsSpark extends ToolCommand {
       .scatter(cmdArgs.binSize)
       .flatten
 
-    val regionStats = sc.parallelize(regions, regions.size).groupBy(_.chr).map { case (contig, records) => contig -> records.map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))}
+    val regionStats = sc.parallelize(regions, regions.size).groupBy(_.chr).map {
+      case (contig, records) =>
+        contig -> records.map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+    }
 
-    val chrStats = regionStats.map {case (contig, stats) => contig -> stats.reduce(_ += _)}
+    val chrStats =
+      regionStats.map { case (contig, stats) => contig -> stats.reduce(_ += _) }.cache()
 
-    val totalStats = chrStats.values.reduce(_ += _)
+    val contigOverlap = chrStats.map {
+      case (contig, stats) =>
+        writeOverlap(stats,
+                     _.genotypeOverlap,
+                     cmdArgs.outputDir + s"/sample_compare/contigs/$contig/genotype_overlap",
+                     samples,
+                     cmdArgs.contigSampleOverlapPlots)
+
+        writeOverlap(stats,
+                     _.alleleOverlap,
+                     cmdArgs.outputDir + s"/sample_compare/contigs/$contig/allele_overlap",
+                     samples,
+                     cmdArgs.contigSampleOverlapPlots)
+    }
+
+    val totalStats = chrStats.values.reduce(_ += _) // Blocking
+    //Await.ready(contigOverlap, Duration.Inf)
 
     val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
     val json = ConfigUtils.mapToJson(
@@ -155,19 +175,21 @@ object VcfStatsSpark extends ToolCommand {
     //TODO: write wig files
 
     writeOverlap(totalStats,
-      _.genotypeOverlap,
-      cmdArgs.outputDir + "/sample_compare/genotype_overlap",
-      samples)
+                 _.genotypeOverlap,
+                 cmdArgs.outputDir + "/sample_compare/genotype_overlap",
+                 samples)
     writeOverlap(totalStats,
-      _.alleleOverlap,
-      cmdArgs.outputDir + "/sample_compare/allele_overlap",
-      samples)
+                 _.alleleOverlap,
+                 cmdArgs.outputDir + "/sample_compare/allele_overlap",
+                 samples)
 
+    Thread.sleep(1000000)
     sc.stop
     logger.info("Done")
   }
 
-  def readBin(bedRecord: BedRecord, samples: List[String],
+  def readBin(bedRecord: BedRecord,
+              samples: List[String],
               cmdArgs: Args,
               adInfoTags: List[String],
               adGenotypeTags: List[String]): Stats = {
@@ -184,7 +206,7 @@ object VcfStatsSpark extends ToolCommand {
       Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
       for (sample <- samples) yield {
         Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
-          fillGenotype(adGenotypeTags))
+                                  fillGenotype(adGenotypeTags))
       }
       chunkCounter += 1
     }
@@ -194,7 +216,7 @@ object VcfStatsSpark extends ToolCommand {
       for (sample1 <- samples) yield {
         val genotype = record.getGenotype(sample1)
         Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
-          checkGenotype(record, genotype, adGenotypeTags))
+                                  checkGenotype(record, genotype, adGenotypeTags))
         for (sample2 <- samples) {
           val genotype2 = record.getGenotype(sample2)
           if (genotype.getAlleles == genotype2.getAlleles)
@@ -213,16 +235,17 @@ object VcfStatsSpark extends ToolCommand {
 
 /** Commandline argument */
 case class VcfStatsArgs(inputFile: File = null,
-                outputDir: File = null,
-                referenceFile: File = null,
-                intervals: Option[File] = None,
-                infoTags: List[String] = Nil,
-                genotypeTags: List[String] = Nil,
-                allInfoTags: Boolean = false,
-                allGenotypeTags: Boolean = false,
-                binSize: Int = 10000000,
-                writeBinStats: Boolean = false,
-                generalWiggle: List[String] = Nil,
-                genotypeWiggle: List[String] = Nil,
-                localThreads: Int = 1,
-                sparkMaster: Option[String] = None)
+                        outputDir: File = null,
+                        referenceFile: File = null,
+                        intervals: Option[File] = None,
+                        infoTags: List[String] = Nil,
+                        genotypeTags: List[String] = Nil,
+                        allInfoTags: Boolean = false,
+                        allGenotypeTags: Boolean = false,
+                        binSize: Int = 10000000,
+                        writeBinStats: Boolean = false,
+                        generalWiggle: List[String] = Nil,
+                        genotypeWiggle: List[String] = Nil,
+                        localThreads: Int = 1,
+                        sparkMaster: Option[String] = None,
+                        contigSampleOverlapPlots: Boolean = false)

@@ -163,13 +163,20 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
       "info" -> infoFields.map(f => f -> getField(f, contig)).toMap,
       "sample_distributions" -> sampleDistributions
         .map(f => f -> getField("SampleDistribution-" + f, contig))
-        .toMap,
-      "sample_compare" -> Map(
-        "samples" -> samples,
-        "genotype_overlap" -> samples.map(sample1 => samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).genotypeOverlap)),
-        "allele_overlap" -> samples.map(sample1 => samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
-      )
-    )
+        .toMap
+    ) ++ (if (contig == "total")
+            Map(
+              "sample_compare" -> Map(
+                "samples" -> samples,
+                "genotype_overlap" -> samples.map(sample1 =>
+                  samples.map(sample2 =>
+                    samplesStats(sample1).sampleToSample(sample2).genotypeOverlap)),
+                "allele_overlap" -> samples.map(sample1 =>
+                  samples.map(sample2 =>
+                    samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
+              )
+            )
+          else Map())
   }
 
   /** This will generate stats for total */

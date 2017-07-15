@@ -81,18 +81,18 @@ object VcfStats extends ToolCommand {
   )
 
   val genotypeWiggleOptions = List("Total",
-                                           "Het",
-                                           "HetNonRef",
-                                           "Hom",
-                                           "HomRef",
-                                           "HomVar",
-                                           "Mixed",
-                                           "NoCall",
-                                           "NonInformative",
-                                           "Available",
-                                           "Called",
-                                           "Filtered",
-                                           "Variant")
+                                   "Het",
+                                   "HetNonRef",
+                                   "Hom",
+                                   "HomRef",
+                                   "HomVar",
+                                   "Mixed",
+                                   "NoCall",
+                                   "NonInformative",
+                                   "Available",
+                                   "Called",
+                                   "Filtered",
+                                   "Variant")
 
   /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
@@ -149,16 +149,16 @@ object VcfStats extends ToolCommand {
       if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
     } text s"""Create a wiggle track with bin size <binSize> for any of the following genotype fields:
         |${genotypeWiggleOptions.mkString(", ")}""".stripMargin
-    opt[Int]('t',"localThreads")unbounded () action { (x, c) =>
+    opt[Int]('t', "localThreads") unbounded () action { (x, c) =>
       c.copy(localThreads = x)
     } text s"Number of local threads to use"
-    opt[String]("sparkMaster")unbounded () action { (x, c) =>
+    opt[String]("sparkMaster") unbounded () action { (x, c) =>
       c.copy(sparkMaster = Some(x))
     } text s"Spark master to use"
 
   }
 
-  protected var cmdArgs: Args = _
+  //protected var cmdArgs: Args = _
 
   val defaultGenotypeFields =
     List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
@@ -184,7 +184,7 @@ object VcfStats extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val argsParser = new OptParser
-    cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.info("Init spark context")
 
@@ -334,14 +334,14 @@ object VcfStats extends ToolCommand {
     // Write general wiggle tracks
     for (field <- cmdArgs.generalWiggle) {
       val file = new File(cmdArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
-      writeWiggle(intervals, field, "count", file, genotype = false)
+      writeWiggle(intervals, field, "count", file, genotype = false, cmdArgs.outputDir)
     }
 
     // Write sample wiggle tracks
     for (field <- cmdArgs.genotypeWiggle; sample <- samples) {
       val file = new File(cmdArgs.outputDir,
                           "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
-      writeWiggle(intervals, field, sample, file, genotype = true)
+      writeWiggle(intervals, field, sample, file, genotype = true, cmdArgs.outputDir)
     }
 
     writeOverlap(stats,
@@ -362,7 +362,8 @@ object VcfStats extends ToolCommand {
                             row: String,
                             column: String,
                             outputFile: File,
-                            genotype: Boolean): Unit = {
+                            genotype: Boolean,
+                            outputDir: File): Unit = {
     val groupedIntervals =
       intervals.groupBy(_.getContig).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
@@ -375,11 +376,11 @@ object VcfStats extends ToolCommand {
         val file = {
           if (genotype)
             new File(
-              cmdArgs.outputDir,
+              outputDir,
               "bins" + File.separator + chr + File.separator + "genotype-" + interval.getStart + "-" + interval.getEnd + "-general.tsv")
           else
             new File(
-              cmdArgs.outputDir,
+              outputDir,
               "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
         }
         writer.println(valueFromTsv(file, row, column).getOrElse(0))
@@ -639,7 +640,8 @@ object VcfStats extends ToolCommand {
   def writeOverlap(stats: Stats,
                    function: SampleToSampleStats => Int,
                    prefix: String,
-                   samples: List[String]): Unit = {
+                   samples: List[String],
+                   plots: Boolean = true): Unit = {
     val absFile = new File(prefix + ".abs.tsv")
     val relFile = new File(prefix + ".rel.tsv")
 
@@ -662,7 +664,7 @@ object VcfStats extends ToolCommand {
     absWriter.close()
     relWriter.close()
 
-    plotHeatmap(relFile)
+    if (plots) plotHeatmap(relFile)
   }
 
   /** Plots heatmaps on target tsv file */
