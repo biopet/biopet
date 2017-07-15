@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.{File, PrintWriter}
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{cmdArgs, _}
+import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand, VcfUtils}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -137,7 +137,7 @@ object VcfStatsSpark extends ToolCommand {
 
     val regionStats = sc.parallelize(regions, regions.size).groupBy(_.chr).map { case (contig, records) => contig -> records.map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))}
 
-    val chrStats = regionStats.map {case (contig, stats) => contig -> stats.reduce(_ += _)}.cache()
+    val chrStats = regionStats.map {case (contig, stats) => contig -> stats.reduce(_ += _)}
 
     val totalStats = chrStats.values.reduce(_ += _)
 
@@ -162,8 +162,6 @@ object VcfStatsSpark extends ToolCommand {
       _.alleleOverlap,
       cmdArgs.outputDir + "/sample_compare/allele_overlap",
       samples)
-
-    Thread.sleep(1000000)
 
     sc.stop
     logger.info("Done")

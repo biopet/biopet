@@ -643,8 +643,6 @@ object VcfStats extends ToolCommand {
     val absFile = new File(prefix + ".abs.tsv")
     val relFile = new File(prefix + ".rel.tsv")
 
-    stats.getContigStats()
-
     absFile.getParentFile.mkdirs()
 
     val absWriter = new PrintWriter(absFile)
