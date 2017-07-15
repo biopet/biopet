@@ -58,7 +58,7 @@ object VcfStats extends ToolCommand {
                   sparkMaster: Option[String] = None)
       extends AbstractArgs
 
-  private val generalWiggleOptions = List(
+  val generalWiggleOptions = List(
     "Total",
     "Biallelic",
     "ComplexIndel",
@@ -80,7 +80,7 @@ object VcfStats extends ToolCommand {
     "Variant"
   )
 
-  private val genotypeWiggleOptions = List("Total",
+  val genotypeWiggleOptions = List("Total",
                                            "Het",
                                            "HetNonRef",
                                            "Hom",
@@ -234,7 +234,7 @@ object VcfStats extends ToolCommand {
     val intervals: List[Interval] =
       BedRecordList.fromList(bedRecords.flatten).toSamIntervals.toList
 
-    val totalBases = bedRecords.length
+    val totalBases = bedRecords.flatten.map(_.length.toLong).sum
 
     // Reading vcf records
     logger.info("Start reading vcf records")
@@ -642,6 +642,8 @@ object VcfStats extends ToolCommand {
                    samples: List[String]): Unit = {
     val absFile = new File(prefix + ".abs.tsv")
     val relFile = new File(prefix + ".rel.tsv")
+
+    stats.getContigStats()
 
     absFile.getParentFile.mkdirs()
 

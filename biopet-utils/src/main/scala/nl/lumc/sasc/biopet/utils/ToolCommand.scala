@@ -50,6 +50,6 @@ trait ToolCommand extends MainCommand with Logging {
     } text "Print version"
   }
 
-  protected type Args <: AbstractArgs
+  protected type Args
   protected type OptParser <: AbstractOptParser
 }

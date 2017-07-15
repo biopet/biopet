@@ -14,14 +14,16 @@ object SparkTest {
     val sc = new SparkContext(conf)
 
     def sleep(i: Int): Int = {
-      Thread.sleep(1000)
+      Thread.sleep(10)
       i
     }
 
-    val bla = sc.parallelize(1 until 1000).map(sleep)
-    val bla2 = bla.reduce((a, b) => a + b)
+    (1 until 1000).toList
+    println(sc.defaultParallelism)
+    val bla = sc.parallelize(1 until 1000, 1000).map(x => x -> sleep(x))
+    val bla2 = bla.groupBy(_._1).map(x => x._1 -> x._2.map(_._2).fold(0)(_ + _))
 
-    println(bla2)
+    println(bla2.cache().collect().mkString(";"))
 
     Thread.sleep(1000000)
 
