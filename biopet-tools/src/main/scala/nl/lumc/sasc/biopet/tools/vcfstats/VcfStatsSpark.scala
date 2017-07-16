@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.{File, PrintWriter}
+import java.net.URLClassLoader
 
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
@@ -124,6 +125,7 @@ object VcfStatsSpark extends ToolCommand {
     val conf = new SparkConf()
       .setAppName(this.getClass.getSimpleName)
       .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
+      .setJars(ClassLoader.getSystemClassLoader.asInstanceOf[URLClassLoader].getURLs.map(_.getFile))
     val sc = new SparkContext(conf)
     logger.info("Spark context is up")
 
@@ -183,7 +185,6 @@ object VcfStatsSpark extends ToolCommand {
                  cmdArgs.outputDir + "/sample_compare/allele_overlap",
                  samples)
 
-    Thread.sleep(1000000)
     sc.stop
     logger.info("Done")
   }
