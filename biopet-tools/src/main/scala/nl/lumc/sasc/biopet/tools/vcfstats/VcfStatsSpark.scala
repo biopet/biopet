@@ -151,12 +151,13 @@ object VcfStatsSpark extends ToolCommand {
 
     val chrStats = regionStats.combineByKey(
       createCombiner = (x: (Stats, BedRecord)) => x._1,
-      mergeValue = (x: Stats,b: (Stats, BedRecord)) => x += b._1,
-      mergeCombiners = (x: Stats,y: Stats) => x += y,
+      mergeValue = (x: Stats, b: (Stats, BedRecord)) => x += b._1,
+      mergeCombiners = (x: Stats, y: Stats) => x += y,
       partitioner = new HashPartitioner(contigs.size),
-      mapSideCombine = true)
+      mapSideCombine = true
+    )
 
-    val totalStats = chrStats.aggregate(Stats.emptyStats(samples)) (_ += _._2, _ += _)
+    val totalStats = chrStats.aggregate(Stats.emptyStats(samples))(_ += _._2, _ += _)
 
     val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
     val json = ConfigUtils.mapToJson(
