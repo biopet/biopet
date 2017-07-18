@@ -2,7 +2,12 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{defaultGenotypeFields, defaultInfoFields, generalWiggleOptions, genotypeWiggleOptions}
+import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{
+  defaultGenotypeFields,
+  defaultInfoFields,
+  generalWiggleOptions,
+  genotypeWiggleOptions
+}
 import nl.lumc.sasc.biopet.utils.AbstractOptParser
 
 /**
