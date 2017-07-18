@@ -170,16 +170,16 @@ class VcfStatsTest extends TestNGSuite with Matchers {
                                         "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
   }
 
-  @Test
-  def testValueOfTsv(): Unit = {
-    val i = new File(resourcePath("/sample.tsv"))
-
-    valueFromTsv(i, "Sample_ID_1", "library") should be(Some("Lib_ID_1"))
-    valueFromTsv(i, "Sample_ID_2", "library") should be(Some("Lib_ID_2"))
-    valueFromTsv(i, "Sample_ID_1", "bam") should be(Some("MyFirst.bam"))
-    valueFromTsv(i, "Sample_ID_2", "bam") should be(Some("MySecond.bam"))
-    valueFromTsv(i, "Sample_ID_3", "bam") should be(empty)
-  }
+//  @Test
+//  def testValueOfTsv(): Unit = {
+//    val i = new File(resourcePath("/sample.tsv"))
+//
+//    valueFromTsv(i, "Sample_ID_1", "library") should be(Some("Lib_ID_1"))
+//    valueFromTsv(i, "Sample_ID_2", "library") should be(Some("Lib_ID_2"))
+//    valueFromTsv(i, "Sample_ID_1", "bam") should be(Some("MyFirst.bam"))
+//    valueFromTsv(i, "Sample_ID_2", "bam") should be(Some("MySecond.bam"))
+//    valueFromTsv(i, "Sample_ID_3", "bam") should be(empty)
+//  }
 
   @Test
   def testNoExistOutputDir(): Unit = {
@@ -221,96 +221,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
             "--binSize",
             "50",
             "--writeBinStats"))
-    noException should be thrownBy main(
-      Array("-I",
-            vcf,
-            "-R",
-            ref,
-            "-o",
-            tmp.toAbsolutePath.toString,
-            "--binSize",
-            "50",
-            "--writeBinStats",
-            "--generalWiggle",
-            "Total"))
-    noException should be thrownBy main(
-      Array("-I",
-            vcf,
-            "-R",
-            ref,
-            "-o",
-            tmp.toAbsolutePath.toString,
-            "--binSize",
-            "50",
-            "--writeBinStats",
-            "--genotypeWiggle",
-            "Total"))
-
-    val genotypes = List("Het",
-                         "HetNonRef",
-                         "Hom",
-                         "HomRef",
-                         "HomVar",
-                         "Mixed",
-                         "NoCall",
-                         "NonInformative",
-                         "Available",
-                         "Called",
-                         "Filtered",
-                         "Variant")
-
-    genotypes.foreach(
-      x =>
-        noException should be thrownBy main(
-          Array("-I",
-                vcf,
-                "-R",
-                ref,
-                "-o",
-                tmp.toAbsolutePath.toString,
-                "--binSize",
-                "50",
-                "--writeBinStats",
-                "--genotypeWiggle",
-                x))
-    )
-
-    val general = List(
-      "Biallelic",
-      "ComplexIndel",
-      "Filtered",
-      "FullyDecoded",
-      "Indel",
-      "Mixed",
-      "MNP",
-      "MonomorphicInSamples",
-      "NotFiltered",
-      "PointEvent",
-      "PolymorphicInSamples",
-      "SimpleDeletion",
-      "SimpleInsertion",
-      "SNP",
-      "StructuralIndel",
-      "Symbolic",
-      "SymbolicOrSV",
-      "Variant"
-    )
-
-    general.foreach(
-      x =>
-        noException should be thrownBy main(
-          Array("-I",
-                vcf,
-                "-R",
-                ref,
-                "-o",
-                tmp.toAbsolutePath.toString,
-                "--binSize",
-                "50",
-                "--writeBinStats",
-                "--generalWiggle",
-                x))
-    )
 
     // returns null when validation fails
     def validateArgs(array: Array[String]): Option[VcfStatsArgs] = {
