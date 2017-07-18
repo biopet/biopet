@@ -172,7 +172,7 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    val subFixes = findR1R2Subfixes(commandArgs.refFastq1, commandArgs.refFastq2)
+    idSufixes = findR1R2Subfixes(commandArgs.refFastq1, commandArgs.refFastq2)
 
     val refReader = new FastqReader(commandArgs.refFastq1)
     val AReader = new FastqReader(commandArgs.inputFastq1)
@@ -194,6 +194,13 @@ object FastqSync extends ToolCommand {
     }
   }
 
+  /**
+    * This method will look up the unique suffix for R1 and R2
+    *
+    * @param fastqR1 input R1 file
+    * @param fastqR2 Input R2 file
+    * @return subfix for (R1, R2)
+    */
   def findR1R2Subfixes(fastqR1: File, fastqR2: File): (String, String) = {
     val refReader1 = new FastqReader(fastqR1)
     val refReader2 = new FastqReader(fastqR2)
@@ -208,6 +215,6 @@ object FastqSync extends ToolCommand {
   }
 
   /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
-  var idSufixes: (String, String) = _
+  private var idSufixes: (String, String) = _
 
 }
