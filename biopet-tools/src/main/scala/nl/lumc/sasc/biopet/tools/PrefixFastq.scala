@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 object PrefixFastq extends ToolCommand {
@@ -28,9 +28,9 @@ object PrefixFastq extends ToolCommand {
     * @param output output fastq file (can be zipper)
     * @param seq Seq to prefix the reads with
     */
-  case class Args(input: File = null, output: File = null, seq: String = null) extends AbstractArgs
+  case class Args(input: File = null, output: File = null, seq: String = null)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "input") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }

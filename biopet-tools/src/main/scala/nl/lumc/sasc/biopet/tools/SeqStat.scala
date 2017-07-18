@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
@@ -48,9 +48,9 @@ object SeqStat extends ToolCommand {
   private var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
   private var readQualGTEHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
 
-  case class Args(fastq: File = null, outputJson: Option[File] = None) extends AbstractArgs
+  case class Args(fastq: File = null, outputJson: Option[File] = None)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""
          |$commandName - Summarize FastQ

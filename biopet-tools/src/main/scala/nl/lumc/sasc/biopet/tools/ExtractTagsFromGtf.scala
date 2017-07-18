@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.annotation.Feature
 
 import scala.io.Source
@@ -15,9 +15,8 @@ object ExtractTagsFromGtf extends ToolCommand {
                   gtfFile: File = null,
                   tags: List[String] = Nil,
                   feature: Option[String] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "Input refFlat file. Mandatory"

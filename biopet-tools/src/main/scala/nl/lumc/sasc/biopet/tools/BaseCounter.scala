@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.{SAMRecord, SamReaderFactory}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 import picard.annotation.{Gene, GeneAnnotationReader}
 
@@ -35,9 +35,8 @@ object BaseCounter extends ToolCommand {
                   outputDir: File = null,
                   bamFile: File = null,
                   prefix: String = "output")
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
     } text "refFlat file. Mandatory"

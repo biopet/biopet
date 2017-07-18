@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.File
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 
@@ -27,10 +27,9 @@ object VcfStatsForSv extends ToolCommand {
   case class Args(inputFile: File = null,
                   outputFile: File = null,
                   histBinBoundaries: Array[Int] = Array())
-      extends AbstractArgs
 
   /** Parsing commandline arguments */
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } validate { x =>

@@ -14,19 +14,18 @@
   */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.{QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
 
 object FindRepeatsPacBio extends ToolCommand {
   case class Args(inputBam: File = null, outputFile: Option[File] = None, inputBed: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputBam") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBam = x)
     } text "Path to input file"

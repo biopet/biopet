@@ -14,9 +14,9 @@
   */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.summary.Summary
 
 /**
@@ -29,9 +29,8 @@ object SummaryToTsv extends ToolCommand {
                   outputFile: Option[File] = None,
                   values: List[String] = Nil,
                   mode: String = "root")
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('s', "summary") required () unbounded () maxOccurs 1 valueName "<file>" action {
       (x, c) =>
         c.copy(summary = x)

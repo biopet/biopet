@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 import scala.collection.JavaConversions._
@@ -27,9 +27,8 @@ import scala.collection.JavaConversions._
   */
 object ValidateVcf extends ToolCommand {
   case class Args(inputVcf: File = null, reference: File = null, failOnError: Boolean = true)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "Vcf file to check"

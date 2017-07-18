@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools.flagstat
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.{SAMRecord, SamReaderFactory}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -28,9 +28,8 @@ object BiopetFlagstat extends ToolCommand {
                   outputFile: Option[File] = None,
                   summaryFile: Option[File] = None,
                   region: Option[String] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "input bam file"

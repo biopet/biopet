@@ -25,7 +25,7 @@ import htsjdk.variant.variantcontext.writer.{
 }
 import htsjdk.variant.variantcontext.{Allele, VariantContextBuilder}
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -39,9 +39,8 @@ object SnptestToVcf extends ToolCommand {
                   outputVcf: File = null,
                   referenceFasta: File = null,
                   contig: String = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputInfo") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputInfo = x)
     } text "Input info fields"

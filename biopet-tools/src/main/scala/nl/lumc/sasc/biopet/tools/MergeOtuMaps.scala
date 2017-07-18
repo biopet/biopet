@@ -14,9 +14,9 @@
   */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
@@ -27,9 +27,8 @@ object MergeOtuMaps extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil,
                   outputFile: File = null,
                   skipPrefix: List[String] = Nil)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") minOccurs 2 required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(inputFiles = x :: c.inputFiles)

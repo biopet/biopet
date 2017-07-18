@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.utils.{BamUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, BamUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 import scala.collection.JavaConversions._
@@ -19,9 +19,8 @@ object MultiCoverage extends ToolCommand {
                   bamFiles: List[File] = Nil,
                   outputFile: File = null,
                   mean: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('L', "bedFile") required () maxOccurs 1 unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(bedFile = x)

@@ -22,7 +22,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand, VcfUtils}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -62,9 +62,8 @@ object VcfFilter extends ToolCommand {
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   iDset: Set[String] = Set(),
                   minGenomeQuality: Int = 0)
-      extends AbstractArgs {}
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "Input vcf file"

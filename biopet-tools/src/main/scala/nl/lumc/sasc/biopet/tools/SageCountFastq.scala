@@ -17,16 +17,15 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.fastq.FastqReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
-
 import scala.collection.{SortedMap, mutable}
 
 object SageCountFastq extends ToolCommand {
-  case class Args(input: File = null, output: File = null) extends AbstractArgs
+  case class Args(input: File = new File(""), output: File = new File(""))
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }

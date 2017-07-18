@@ -18,7 +18,7 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.tools.vcfstats.{SampleStats, SampleToSampleStats, Stats, VcfStats}
+import nl.lumc.sasc.biopet.tools.vcfstats._
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -313,9 +313,9 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     )
 
     // returns null when validation fails
-    def validateArgs(array: Array[String]): Option[Args] = {
-      val argsParser = new OptParser
-      argsParser.parse(array, Args())
+    def validateArgs(array: Array[String]): Option[VcfStatsArgs] = {
+      val argsParser = new VcfStatsOptParser("vcfstats")
+      argsParser.parse(array, VcfStatsArgs())
     }
 
     val stderr1 = new java.io.ByteArrayOutputStream

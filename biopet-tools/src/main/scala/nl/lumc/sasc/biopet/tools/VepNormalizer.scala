@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.writer.{
 }
 import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 
@@ -232,9 +232,8 @@ object VepNormalizer extends ToolCommand {
                   outputVCF: File = null,
                   mode: String = null,
                   removeCSQ: Boolean = true)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""|$commandName - Parse VEP-annotated VCF to standard VCF format """)
 
