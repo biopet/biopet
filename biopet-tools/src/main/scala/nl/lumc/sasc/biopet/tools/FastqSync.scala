@@ -215,6 +215,6 @@ object FastqSync extends ToolCommand {
   }
 
   /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
-  private var idSufixes: (String, String) = _
+  private[tools] var idSufixes: (String, String) = _
 
 }
