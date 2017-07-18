@@ -106,7 +106,9 @@ case class BedRecordList(chrRecords: Map[String, List[BedRecord]], header: List[
           })
   }
 
-  def scatter(binSize: Int, combineContigs: Boolean = true): List[List[BedRecord]] = {
+  def scatter(binSize: Int,
+              combineContigs: Boolean = true,
+              maxContigsInSingleJob: Option[Int] = None): List[List[BedRecord]] = {
     val list = allRecords
       .flatMap(_.scatter(binSize))
       .toList
@@ -119,7 +121,9 @@ case class BedRecordList(chrRecords: Map[String, List[BedRecord]], header: List[
             val bufferSize = buffer.map(_.length).sum
             if (!combineContigs && buffer.head.chr != record.chr)
               (buffer :: finalList, List(record))
-            else if (bufferSize < (binSize / 2)) (finalList, record :: buffer)
+            else if (bufferSize < (binSize / 2) &&
+                     buffer.size < maxContigsInSingleJob.getOrElse(Int.MaxValue))
+              (finalList, record :: buffer)
             else (buffer :: finalList, List(record))
           }
       }

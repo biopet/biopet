@@ -72,7 +72,7 @@ object VcfStatsSpark extends ToolCommand {
         BedRecordList.fromFile(i).validateContigs(cmdArgs.referenceFile)
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap
-      .scatter(cmdArgs.binSize)
+      .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
     val contigs = regions.flatMap(_.map(_.chr)).distinct
 
     val regionStats = sc
