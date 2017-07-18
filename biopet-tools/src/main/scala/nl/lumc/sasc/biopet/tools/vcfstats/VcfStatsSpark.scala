@@ -61,7 +61,7 @@ object VcfStatsSpark extends ToolCommand {
       .getURLs
       .map(_.getFile)
     val conf = new SparkConf()
-      .setAppName(this.getClass.getSimpleName)
+      .setAppName(commandName)
       .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
       .setJars(jars)
     val sc = new SparkContext(conf)

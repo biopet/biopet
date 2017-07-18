@@ -30,7 +30,6 @@ import scala.util.Random
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
@@ -77,8 +76,6 @@ object VcfStats extends ToolCommand {
                                    "Filtered",
                                    "Variant")
 
-  //protected var cmdArgs: Args = _
-
   val defaultGenotypeFields =
     List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
 
@@ -108,7 +105,7 @@ object VcfStats extends ToolCommand {
     logger.info("Init spark context")
 
     val conf = new SparkConf()
-      .setAppName(this.getClass.getSimpleName)
+      .setAppName(commandName)
       .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
     val sparkContext = new SparkContext(conf)
 

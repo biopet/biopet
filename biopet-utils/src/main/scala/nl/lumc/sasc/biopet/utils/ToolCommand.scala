@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.FullVersion
   */
 trait ToolCommand extends MainCommand with Logging {
 
+  loadBiopetProperties()
+
   protected type Args
   protected type OptParser <: AbstractOptParser[Args]
 }
