@@ -149,8 +149,6 @@ object VcfStatsSpark extends ToolCommand {
       record.chr -> (readBin(record, samples, cmdArgs, adInfoTags, adGenotypeTags), record)
     }
 
-    val f1 = (s:Stats, b:BedRecord) => s
-    val f3 = (s1:Stats, s: Stats) => s1 += s
     val chrStats = regionStats.combineByKey(
       createCombiner = (x: (Stats, BedRecord)) => x._1,
       mergeValue = (x: Stats,b: (Stats, BedRecord)) => x += b._1,
@@ -158,10 +156,7 @@ object VcfStatsSpark extends ToolCommand {
       partitioner = new HashPartitioner(contigs.size),
       mapSideCombine = true)
 
-    //val chrStats = regionStats.aggregateByKey(Stats.emptyStats(samples)) (_ += _._1, _ += _)
-
     val totalStats = chrStats.aggregate(Stats.emptyStats(samples)) (_ += _._2, _ += _)
-    //Await.ready(contigOverlap, Duration.Inf)
 
     val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
     val json = ConfigUtils.mapToJson(
@@ -179,8 +174,6 @@ object VcfStatsSpark extends ToolCommand {
                  _.alleleOverlap,
                  cmdArgs.outputDir + "/sample_compare/allele_overlap",
                  samples)
-
-    Thread.sleep(1000000)
 
     sc.stop
     logger.info("Done")
