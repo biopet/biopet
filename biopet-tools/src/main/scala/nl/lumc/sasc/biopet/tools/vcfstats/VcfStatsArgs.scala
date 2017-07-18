@@ -2,12 +2,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{
-  defaultGenotypeFields,
-  defaultInfoFields,
-  generalWiggleOptions,
-  genotypeWiggleOptions
-}
+import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{defaultGenotypeFields, defaultInfoFields}
 import nl.lumc.sasc.biopet.utils.AbstractOptParser
 
 /**
@@ -26,8 +21,6 @@ case class VcfStatsArgs(inputFile: File = null,
                         binSize: Int = 10000000,
                         maxContigsInSingleJob: Int = 250,
                         writeBinStats: Boolean = false,
-                        generalWiggle: List[String] = Nil,
-                        genotypeWiggle: List[String] = Nil,
                         localThreads: Int = 1,
                         sparkMaster: Option[String] = None,
                         contigSampleOverlapPlots: Boolean = false)
@@ -80,18 +73,6 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   opt[Unit]("writeBinStats") unbounded () action { (_, c) =>
     c.copy(writeBinStats = true)
   } text "Write bin statistics. Default False"
-  opt[String]("generalWiggle") unbounded () action { (x, c) =>
-    c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
-  } validate { x =>
-    if (generalWiggleOptions.contains(x)) success else failure(s"""Nonexistent field $x""")
-  } text s"""Create a wiggle track with bin size <binSize> for any of the following statistics:
-            |${generalWiggleOptions.mkString(", ")}""".stripMargin
-  opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
-    c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
-  } validate { x =>
-    if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
-  } text s"""Create a wiggle track with bin size <binSize> for any of the following genotype fields:
-            |${genotypeWiggleOptions.mkString(", ")}""".stripMargin
   opt[Int]('t', "localThreads") unbounded () action { (x, c) =>
     c.copy(localThreads = x)
   } text s"Number of local threads to use"
