@@ -59,10 +59,7 @@ object VcfStatsSpark extends ToolCommand {
     val jars = ClassLoader.getSystemClassLoader
       .asInstanceOf[URLClassLoader]
       .getURLs
-      .map(_.getFile) ++ List(
-      "/home/pjvan_thof/src/biopet/biopet-utils/target/BiopetUtils-0.10.0-SNAPSHOT.jar",
-      "/home/pjvan_thof/src/biopet/biopet-tools/target/BiopetTools-0.10.0-SNAPSHOT.jar"
-    )
+      .map(_.getFile)
     val conf = new SparkConf()
       .setAppName(this.getClass.getSimpleName)
       .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
