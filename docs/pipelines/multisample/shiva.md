@@ -103,9 +103,9 @@ At this moment the following variant callers can be used
 | varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
 | raw | [Naive variant caller](../../tools/MpileupToVcf) |  |
 
-###### Config tumor-normal pairs
+###### Config for tumor-normal pairs
 
-To define the tumor-normal pairs the config can look like this:
+To define the tumor-normal pairs, the config can look like this:
 
 ```yaml
 samples:
