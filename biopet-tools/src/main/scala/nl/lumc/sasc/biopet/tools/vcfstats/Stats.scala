@@ -16,9 +16,10 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.{File, PrintWriter}
 
-import scala.collection.mutable
+import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.sampleDistributions
 
-import nl.lumc.sasc.biopet.utils.sortAnyAny
+import scala.collection.mutable
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, sortAnyAny}
 
 /**
   * General stats class to store vcf stats
@@ -26,7 +27,7 @@ import nl.lumc.sasc.biopet.utils.sortAnyAny
   * @param generalStats Stores are general stats
   * @param samplesStats Stores all sample/genotype specific stats
   */
-case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] =
+case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
                    mutable.Map(),
                  samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
 
@@ -36,12 +37,10 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
       if (this.samplesStats.contains(key)) this.samplesStats(key) += value
       else this.samplesStats(key) = value
     }
-    for ((chr, chrMap) <- other.generalStats; (field, fieldMap) <- chrMap) {
-      if (!this.generalStats.contains(chr))
-        generalStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
-      val thisField = this.generalStats(chr).get(field)
+    for ((field, fieldMap) <- other.generalStats) {
+      val thisField = this.generalStats.get(field)
       if (thisField.isDefined) Stats.mergeStatsMap(thisField.get, fieldMap)
-      else this.generalStats(chr) += field -> fieldMap
+      else this.generalStats += field -> fieldMap
     }
     this
   }
@@ -49,17 +48,13 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   /** Function to write 1 specific general field */
   def writeField(field: String,
                  outputDir: File,
-                 prefix: String = "",
-                 chr: String = "total"): File = {
-    val file = (prefix, chr) match {
-      case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+                 prefix: String = ""): File = {
+    val file = prefix match {
+      case "" => new File(outputDir, field + ".tsv")
+      case _ => new File(outputDir, prefix + "-" + field + ".tsv")
     }
 
     val data = this.generalStats
-      .getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]())
       .getOrElse(field, mutable.Map[Any, Int]())
 
     file.getParentFile.mkdirs()
@@ -73,10 +68,9 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   }
 
   /** Function to write 1 specific general field */
-  def getField(field: String, chr: String = "total"): Map[String, Array[Any]] = {
+  def getField(field: String): Map[String, Array[Any]] = {
 
     val data = this.generalStats
-      .getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]())
       .getOrElse(field, mutable.Map[Any, Int]())
     val rows = for (key <- data.keySet.toArray.sortWith(sortAnyAny)) yield {
       (key, data(key))
@@ -88,13 +82,10 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   def writeGenotypeField(samples: List[String],
                          field: String,
                          outputDir: File,
-                         prefix: String = "",
-                         chr: String = "total"): Unit = {
-    val file = (prefix, chr) match {
-      case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+                         prefix: String = ""): Unit = {
+    val file = prefix match {
+      case "" => new File(outputDir, field + ".tsv")
+      case _ => new File(outputDir, prefix + "-" + field + ".tsv")
     }
 
     file.getParentFile.mkdirs()
@@ -105,7 +96,6 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
         this
           .samplesStats(sample)
           .genotypeStats
-          .getOrElse(chr, Map[String, Map[Any, Int]]())
           .getOrElse(field, Map[Any, Int]())
           .keySet).fold(Set[Any]())(_ ++ _)
     for (key <- keySet.toList.sortWith(sortAnyAny)) {
@@ -114,7 +104,6 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
           this
             .samplesStats(sample)
             .genotypeStats
-            .getOrElse(chr, Map[String, Map[Any, Int]]())
             .getOrElse(field, Map[Any, Int]())
             .getOrElse(key, 0)
       writer.println(values.mkString(key + "\t", "\t", ""))
@@ -124,14 +113,12 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
 
   /** Function to write 1 specific genotype field */
   def getGenotypeField(samples: List[String],
-                       field: String,
-                       chr: String = "total"): Map[String, Map[String, Any]] = {
+                       field: String): Map[String, Map[String, Any]] = {
     val keySet = (for (sample <- samples)
       yield
         this
           .samplesStats(sample)
           .genotypeStats
-          .getOrElse(chr, Map[String, Map[Any, Int]]())
           .getOrElse(field, Map[Any, Int]())
           .keySet).fold(Set[Any]())(_ ++ _)
 
@@ -144,7 +131,6 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
                 key.toString -> this
                   .samplesStats(sample)
                   .genotypeStats
-                  .getOrElse(chr, Map[String, Map[Any, Int]]())
                   .getOrElse(field, Map[Any, Int]())
                   .get(key))
             .filter(_._2.isDefined)
@@ -153,19 +139,17 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
   }
 
   /** This will generate stats for one contig */
-  def getContigStats(contig: String,
-                     samples: List[String],
+  def getStatsAsMap(samples: List[String],
                      genotypeFields: List[String] = Nil,
                      infoFields: List[String] = Nil,
                      sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(
-      "genotype" -> genotypeFields.map(f => f -> getGenotypeField(samples, f, contig)).toMap,
-      "info" -> infoFields.map(f => f -> getField(f, contig)).toMap,
+      "genotype" -> genotypeFields.map(f => f -> getGenotypeField(samples, f)).toMap,
+      "info" -> infoFields.map(f => f -> getField(f)).toMap,
       "sample_distributions" -> sampleDistributions
-        .map(f => f -> getField("SampleDistribution-" + f, contig))
+        .map(f => f -> getField("SampleDistribution-" + f))
         .toMap
-    ) ++ (if (contig == "total")
-            Map(
+    ) ++ Map(
               "sample_compare" -> Map(
                 "samples" -> samples,
                 "genotype_overlap" -> samples.map(sample1 =>
@@ -176,29 +160,21 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[String, mutable.M
                     samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
               )
             )
-          else Map())
   }
 
-  /** This will generate stats for total */
-  def getTotalStats(samples: List[String],
-                    genotypeFields: List[String] = Nil,
-                    infoFields: List[String] = Nil,
-                    sampleDistributions: List[String] = Nil): Map[String, Any] =
-    getContigStats("total", samples, genotypeFields, infoFields, sampleDistributions)
-
-  /** This will generate stats for total and contigs separated */
-  def getAllStats(contigs: List[String],
+  def writeToFile(outputFile: File,
                   samples: List[String],
                   genotypeFields: List[String] = Nil,
                   infoFields: List[String] = Nil,
-                  sampleDistributions: List[String] = Nil): Map[String, Any] = {
-    Map(
-      "contigs" -> contigs
-        .map(c => c -> getContigStats(c, samples, genotypeFields, infoFields, sampleDistributions))
-        .toMap,
-      "total" -> getTotalStats(samples, genotypeFields, infoFields, sampleDistributions)
-    )
+                  sampleDistributions: List[String] = Nil): Unit = {
+    val allWriter = new PrintWriter(outputFile)
+    val json = ConfigUtils.mapToJson(
+      this.getStatsAsMap(samples, genotypeFields, infoFields, sampleDistributions))
+    allWriter.println(json.nospaces)
+    allWriter.close()
+
   }
+
 }
 
 object Stats {
@@ -222,17 +198,15 @@ object Stats {
   }
 
   /** Merge m2 into m1 */
-  def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]],
-                          m2: Map[String, Map[String, Map[Any, Int]]]): Unit = {
-    for ((chr, chrMap) <- m2; (field, fieldMap) <- chrMap) {
-      if (m1.contains(chr)) {
-        if (m1(chr).contains(field)) {
-          for ((key, value) <- fieldMap) {
-            if (m1(chr)(field).contains(key)) m1(chr)(field)(key) += value
-            else m1(chr)(field)(key) = value
-          }
-        } else m1(chr)(field) = mutable.Map(fieldMap.toList: _*)
-      } else m1(chr) = mutable.Map(field -> mutable.Map(fieldMap.toList: _*))
+  def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[Any, Int]],
+                          m2: Map[String, Map[Any, Int]]): Unit = {
+    for ((field, fieldMap) <- m2) {
+      if (m1.contains(field)) {
+        for ((key, value) <- fieldMap) {
+          if (m1(field).contains(key)) m1(field)(key) += value
+          else m1(field)(key) = value
+        }
+      } else m1(field) = mutable.Map(fieldMap.toList: _*)
     }
   }
 }

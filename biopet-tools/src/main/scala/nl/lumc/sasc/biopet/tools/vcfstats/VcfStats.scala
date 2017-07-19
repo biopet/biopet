@@ -6,7 +6,7 @@ import java.net.URLClassLoader
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{ToolCommand, VcfUtils}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
@@ -83,13 +83,7 @@ object VcfStats extends ToolCommand {
 
     val totalStats = regionStats.reduce(_ += _)
 
-    val allWriter = new PrintWriter(new File(cmdArgs.outputDir, "stats.json"))
-    val json = ConfigUtils.mapToJson(
-      totalStats.getAllStats(contigs, samples, adGenotypeTags, adInfoTags, sampleDistributions))
-    allWriter.println(json.nospaces)
-    allWriter.close()
-
-    //TODO: write wig files
+    totalStats.writeToFile(new File(cmdArgs.outputDir, "stats.json"), samples, adGenotypeTags, adInfoTags, sampleDistributions)
 
     writeOverlap(totalStats,
                  _.genotypeOverlap,
@@ -240,7 +234,7 @@ object VcfStats extends ToolCommand {
   protected[tools] def checkGenotype(
       record: VariantContext,
       genotype: Genotype,
-      additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -288,13 +282,13 @@ object VcfStats extends ToolCommand {
       else addToBuffer(tag, value, found = true)
     }
 
-    Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
+    buffer.toMap
   }
 
   /** Function to check all general stats, all info expect sample/genotype specific stats */
   protected[tools] def checkGeneral(
       record: VariantContext,
-      additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -371,11 +365,11 @@ object VcfStats extends ToolCommand {
       else addToBuffer(tag, value, found = true)
     }
 
-    Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
+    buffer.toMap
   }
 
   protected[tools] def fillGeneral(
-      additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -425,11 +419,11 @@ object VcfStats extends ToolCommand {
       addToBuffer(tag, "not set", found = false)
     }
 
-    Map("total" -> buffer.toMap)
+    buffer.toMap
   }
 
   protected[tools] def fillGenotype(
-      additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -461,6 +455,6 @@ object VcfStats extends ToolCommand {
       addToBuffer(tag, 0, found = false)
     }
 
-    Map("total" -> buffer.toMap)
+    buffer.toMap
   }
 }
