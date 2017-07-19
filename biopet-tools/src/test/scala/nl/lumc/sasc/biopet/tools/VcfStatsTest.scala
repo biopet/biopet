@@ -89,22 +89,16 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val ss2 = SampleToSampleStats()
 
     s1 += s2
-    s1.genotypeStats shouldBe mutable.Map(
-      "1" -> mutable.Map(1 -> 1),
-      "2" -> mutable.Map(2 -> 2))
+    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 2))
     ss1.alleleOverlap = 1
     ss2.alleleOverlap = 2
     s1.sampleToSample shouldBe mutable.Map("s1" -> ss1, "s2" -> ss2)
 
     s1 += s2
-    s1.genotypeStats shouldBe mutable.Map(
-      "1" -> mutable.Map(1 -> 1),
-      "2" -> mutable.Map(2 -> 4))
+    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 4))
 
     s1 += s1
-    s1.genotypeStats shouldBe mutable.Map(
-      "1" -> mutable.Map(1 -> 2),
-      "2" -> mutable.Map(2 -> 8))
+    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
   }
 
   @Test
@@ -130,15 +124,16 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testMergeNestedStatsMap(): Unit = {
-    val m1: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map("nested" -> mutable.Map("a" -> 1))
+    val m1: mutable.Map[String, mutable.Map[Any, Int]] =
+      mutable.Map("nested" -> mutable.Map("a" -> 1))
     val m2: Map[String, Map[Any, Int]] = Map("nested" -> Map("b" -> 2))
 
     Stats.mergeNestedStatsMap(m1, m2)
 
-    m1 should equal(
-      mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2)))
+    m1 should equal(mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2)))
 
-    val m3: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map("nestedd" -> mutable.Map(1 -> 500))
+    val m3: mutable.Map[String, mutable.Map[Any, Int]] =
+      mutable.Map("nestedd" -> mutable.Map(1 -> 500))
     val m4: Map[String, Map[Any, Int]] = Map("nestedd" -> Map(6 -> 125))
 
     Stats.mergeNestedStatsMap(m3, m4)

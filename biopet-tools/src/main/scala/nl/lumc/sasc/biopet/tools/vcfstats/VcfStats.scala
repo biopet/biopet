@@ -6,11 +6,14 @@ import java.net.URLClassLoader
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
-import nl.lumc.sasc.biopet.utils.{ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand, VcfUtils}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -74,17 +77,34 @@ object VcfStats extends ToolCommand {
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
-    val contigs = regions.flatMap(_.map(_.chr)).distinct
 
     val regionStats = sc
       .parallelize(regions, regions.size)
       .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .cache()
 
-    val totalStats = regionStats.reduce(_ += _)
+    val totalStats = Future(regionStats.aggregate(Stats.emptyStats(samples))(_ += _._1, _ += _))
+      .map(
+        _.writeAllOutput(cmdArgs.outputDir,
+                         samples,
+                         adGenotypeTags,
+                         adInfoTags,
+                         sampleDistributions))
 
-    totalStats.writeToFile(new File(cmdArgs.outputDir, "stats.json"), samples, adGenotypeTags, adInfoTags, sampleDistributions)
+    regionStats
+      .flatMap(_._2)
+      .aggregateByKey(Stats.emptyStats(samples))(_ += _, _ += _)
+      .foreach {
+        case (k, v) =>
+          v.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + k),
+                           samples,
+                           adGenotypeTags,
+                           adInfoTags,
+                           sampleDistributions)
+      }
+    regionStats.unpersist()
 
-    totalStats.writeOverlap(cmdArgs.outputDir, samples)
+    Await.result(totalStats, Duration.Inf)
 
     sc.stop
     logger.info("Done")
@@ -94,11 +114,14 @@ object VcfStats extends ToolCommand {
               samples: List[String],
               cmdArgs: Args,
               adInfoTags: List[String],
-              adGenotypeTags: List[String]): Stats = {
+              adGenotypeTags: List[String]): (Stats, List[(String, Stats)]) = {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
-    val stats = Stats.emptyStats(samples)
+    val totalStats = Stats.emptyStats(samples)
+    val dict = FastaUtils.getDictFromFasta(cmdArgs.referenceFile)
 
-    for (bedRecord <- bedRecords) {
+    val nonCompleteContigs = for (bedRecord <- bedRecords) yield {
+      val stats = Stats.emptyStats(samples)
+
       logger.info("Starting on: " + bedRecord)
 
       val samInterval = bedRecord.toSamInterval
@@ -128,10 +151,22 @@ object VcfStats extends ToolCommand {
           }
         }
       }
+      totalStats += stats
+      if (bedRecord.length == dict.getSequence(bedRecord.chr).getSequenceLength) {
+        Future {
+          stats.writeAllOutput(
+            new File(cmdArgs.outputDir, "contigs" + File.separator + bedRecord.chr),
+            samples,
+            adGenotypeTags,
+            adInfoTags,
+            sampleDistributions)
+          None
+        }
+      } else Future.successful(Some(bedRecord.chr -> stats))
     }
     reader.close()
 
-    stats
+    (totalStats, Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten)
   }
 
   val defaultGenotypeFields =
@@ -153,10 +188,9 @@ object VcfStats extends ToolCommand {
                                  "Variant")
 
   /** Function to check sample/genotype specific stats */
-  protected[tools] def checkGenotype(
-      record: VariantContext,
-      genotype: Genotype,
-      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
+  protected[tools] def checkGenotype(record: VariantContext,
+                                     genotype: Genotype,
+                                     additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -208,9 +242,8 @@ object VcfStats extends ToolCommand {
   }
 
   /** Function to check all general stats, all info expect sample/genotype specific stats */
-  protected[tools] def checkGeneral(
-      record: VariantContext,
-      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
+  protected[tools] def checkGeneral(record: VariantContext,
+                                    additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -290,8 +323,7 @@ object VcfStats extends ToolCommand {
     buffer.toMap
   }
 
-  protected[tools] def fillGeneral(
-      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
+  protected[tools] def fillGeneral(additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -344,8 +376,7 @@ object VcfStats extends ToolCommand {
     buffer.toMap
   }
 
-  protected[tools] def fillGenotype(
-      additionalTags: List[String]): Map[String, Map[Any, Int]] = {
+  protected[tools] def fillGenotype(additionalTags: List[String]): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {

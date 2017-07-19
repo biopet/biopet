@@ -30,8 +30,7 @@ import scala.sys.process.{Process, ProcessLogger}
   * @param generalStats Stores are general stats
   * @param samplesStats Stores all sample/genotype specific stats
   */
-case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
-                   mutable.Map(),
+case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
                  samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
 
   /** Add an other class */
@@ -49,9 +48,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
   }
 
   /** Function to write 1 specific general field */
-  def writeField(field: String,
-                 outputDir: File,
-                 prefix: String = ""): File = {
+  def writeField(field: String, outputDir: File, prefix: String = ""): File = {
     val file = prefix match {
       case "" => new File(outputDir, field + ".tsv")
       case _ => new File(outputDir, prefix + "-" + field + ".tsv")
@@ -115,8 +112,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
   }
 
   /** Function to write 1 specific genotype field */
-  def getGenotypeField(samples: List[String],
-                       field: String): Map[String, Map[String, Any]] = {
+  def getGenotypeField(samples: List[String], field: String): Map[String, Map[String, Any]] = {
     val keySet = (for (sample <- samples)
       yield
         this
@@ -143,9 +139,9 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
 
   /** This will generate stats for one contig */
   def getStatsAsMap(samples: List[String],
-                     genotypeFields: List[String] = Nil,
-                     infoFields: List[String] = Nil,
-                     sampleDistributions: List[String] = Nil): Map[String, Any] = {
+                    genotypeFields: List[String] = Nil,
+                    infoFields: List[String] = Nil,
+                    sampleDistributions: List[String] = Nil): Map[String, Any] = {
     Map(
       "genotype" -> genotypeFields.map(f => f -> getGenotypeField(samples, f)).toMap,
       "info" -> infoFields.map(f => f -> getField(f)).toMap,
@@ -153,16 +149,28 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
         .map(f => f -> getField("SampleDistribution-" + f))
         .toMap
     ) ++ Map(
-              "sample_compare" -> Map(
-                "samples" -> samples,
-                "genotype_overlap" -> samples.map(sample1 =>
-                  samples.map(sample2 =>
-                    samplesStats(sample1).sampleToSample(sample2).genotypeOverlap)),
-                "allele_overlap" -> samples.map(sample1 =>
-                  samples.map(sample2 =>
-                    samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
-              )
-            )
+      "sample_compare" -> Map(
+        "samples" -> samples,
+        "genotype_overlap" -> samples.map(sample1 =>
+          samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).genotypeOverlap)),
+        "allele_overlap" -> samples.map(sample1 =>
+          samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
+      )
+    )
+  }
+
+  def writeAllOutput(outputDir: File,
+                     samples: List[String],
+                     genotypeFields: List[String] = Nil,
+                     infoFields: List[String] = Nil,
+                     sampleDistributions: List[String] = Nil): Unit = {
+    outputDir.mkdirs()
+    this.writeToFile(new File(outputDir, "stats.json"),
+                     samples,
+                     genotypeFields,
+                     infoFields,
+                     sampleDistributions)
+    writeOverlap(outputDir, samples)
   }
 
   def writeToFile(outputFile: File,
@@ -178,19 +186,15 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] =
   }
 
   def writeOverlap(outputDir: File, samples: List[String]): Unit = {
-    this.writeOverlap(_.genotypeOverlap,
-      outputDir + "/sample_compare/genotype_overlap",
-      samples)
-    this.writeOverlap(_.alleleOverlap,
-      outputDir + "/sample_compare/allele_overlap",
-      samples)
+    this.writeOverlap(_.genotypeOverlap, outputDir + "/sample_compare/genotype_overlap", samples)
+    this.writeOverlap(_.alleleOverlap, outputDir + "/sample_compare/allele_overlap", samples)
   }
 
   /** Function to write sample to sample compare tsv's / heatmaps */
   private def writeOverlap(function: SampleToSampleStats => Int,
-                   prefix: String,
-                   samples: List[String],
-                   plots: Boolean = true): Unit = {
+                           prefix: String,
+                           samples: List[String],
+                           plots: Boolean = true): Unit = {
     val absFile = new File(prefix + ".abs.tsv")
     val relFile = new File(prefix + ".rel.tsv")
 
