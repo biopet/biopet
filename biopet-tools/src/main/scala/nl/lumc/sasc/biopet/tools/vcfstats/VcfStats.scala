@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools.vcfstats
 
-import java.io.{File, FileOutputStream, IOException, PrintWriter}
+import java.io.File
 import java.net.URLClassLoader
 
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
@@ -11,7 +11,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.sys.process.{Process, ProcessLogger}
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -85,14 +84,7 @@ object VcfStats extends ToolCommand {
 
     totalStats.writeToFile(new File(cmdArgs.outputDir, "stats.json"), samples, adGenotypeTags, adInfoTags, sampleDistributions)
 
-    writeOverlap(totalStats,
-                 _.genotypeOverlap,
-                 cmdArgs.outputDir + "/sample_compare/genotype_overlap",
-                 samples)
-    writeOverlap(totalStats,
-                 _.alleleOverlap,
-                 cmdArgs.outputDir + "/sample_compare/allele_overlap",
-                 samples)
+    totalStats.writeOverlap(cmdArgs.outputDir, samples)
 
     sc.stop
     logger.info("Done")
@@ -159,76 +151,6 @@ object VcfStats extends ToolCommand {
                                  "Called",
                                  "Filtered",
                                  "Variant")
-
-  /** Function to write sample to sample compare tsv's / heatmaps */
-  def writeOverlap(stats: Stats,
-                   function: SampleToSampleStats => Int,
-                   prefix: String,
-                   samples: List[String],
-                   plots: Boolean = true): Unit = {
-    val absFile = new File(prefix + ".abs.tsv")
-    val relFile = new File(prefix + ".rel.tsv")
-
-    absFile.getParentFile.mkdirs()
-
-    val absWriter = new PrintWriter(absFile)
-    val relWriter = new PrintWriter(relFile)
-
-    absWriter.println(samples.mkString("\t", "\t", ""))
-    relWriter.println(samples.mkString("\t", "\t", ""))
-    for (sample1 <- samples) {
-      val values = for (sample2 <- samples)
-        yield function(stats.samplesStats(sample1).sampleToSample(sample2))
-
-      absWriter.println(values.mkString(sample1 + "\t", "\t", ""))
-
-      val total = function(stats.samplesStats(sample1).sampleToSample(sample1))
-      relWriter.println(values.map(_.toFloat / total).mkString(sample1 + "\t", "\t", ""))
-    }
-    absWriter.close()
-    relWriter.close()
-
-    if (plots) plotHeatmap(relFile)
-  }
-
-  /** Plots heatmaps on target tsv file */
-  def plotHeatmap(file: File) {
-    executeRscript(
-      "plotHeatmap.R",
-      Array(
-        file.getAbsolutePath,
-        file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png",
-        file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png",
-        file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.dendrogram.png"
-      )
-    )
-  }
-
-  /** Function to execute Rscript as subproces */
-  def executeRscript(resource: String, args: Array[String]): Unit = {
-    val is = getClass.getResourceAsStream(resource)
-    val file = File.createTempFile("script.", "." + resource)
-    file.deleteOnExit()
-    val os = new FileOutputStream(file)
-    org.apache.commons.io.IOUtils.copy(is, os)
-    os.close()
-
-    val command: String = "Rscript " + file + " " + args.mkString(" ")
-
-    logger.info("Starting: " + command)
-    try {
-      val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
-      if (process.exitValue() == 0) logger.info("Done: " + command)
-      else {
-        logger.warn("Failed: " + command)
-        if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
-      }
-    } catch {
-      case e: IOException =>
-        logger.warn("Failed: " + command)
-        logger.debug(e)
-    }
-  }
 
   /** Function to check sample/genotype specific stats */
   protected[tools] def checkGenotype(
