@@ -285,7 +285,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Symbolic") shouldEqual Some(0)
     general.get("SimpleInsertion") shouldEqual Some(1)
 
-    val total = blah("total")
+    val total = blah
     total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
     total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
     total.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
@@ -355,7 +355,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Het") shouldEqual Some(1)
     general.get("HetNonRef") shouldEqual Some(0)
 
-    val total = blah("total")
+    val total = blah
     total.get("GQ") shouldEqual Some(Map(99 -> 1))
     total.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
     total.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
