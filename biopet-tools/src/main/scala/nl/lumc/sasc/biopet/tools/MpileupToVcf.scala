@@ -62,7 +62,7 @@ object MpileupToVcf extends ToolCommand {
     opt[Double]("seqError") action { (x, c) =>
       c.copy(seqError = x)
     }
-    opt[Unit]("refCalls") action { (x, c) =>
+    opt[Unit]("refCalls") action { (_, c) =>
       c.copy(refCalls = true)
     }
   }
@@ -204,9 +204,9 @@ object MpileupToVcf extends ToolCommand {
           for (a <- ad.indices if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.contains(a))
             max = a
           val f = ad(max).toDouble / left
-          for (a <- 0 to floor(f).toInt if gt.size < commandArgs.ploidy) gt.append(max)
+          for (_ <- 0 to floor(f).toInt if gt.size < commandArgs.ploidy) gt.append(max)
           if (f - floor(f) >= commandArgs.homoFraction) {
-            for (b <- p to commandArgs.ploidy if gt.size < commandArgs.ploidy) gt.append(max)
+            for (_ <- p to commandArgs.ploidy if gt.size < commandArgs.ploidy) gt.append(max)
           }
           left -= ad(max)
         }

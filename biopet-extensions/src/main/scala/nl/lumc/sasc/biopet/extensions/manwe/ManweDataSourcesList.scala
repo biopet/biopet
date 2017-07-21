@@ -27,7 +27,7 @@ class ManweDataSourcesList(val parent: Configurable) extends Manwe {
   @Argument(doc = "User uri to filter by")
   var user: Option[String] = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("data-sources") +
       required("list") +
       optional("-u", user)

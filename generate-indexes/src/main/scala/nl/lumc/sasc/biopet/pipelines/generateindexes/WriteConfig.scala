@@ -32,7 +32,7 @@ class WriteConfig extends InProcessFunction {
 
   var config: Map[String, Any] = _
 
-  def run: Unit = {
+  def run(): Unit = {
     val writer = new PrintWriter(out)
     writer.println(ConfigUtils.mapToJson(config).spaces2)
     writer.close()

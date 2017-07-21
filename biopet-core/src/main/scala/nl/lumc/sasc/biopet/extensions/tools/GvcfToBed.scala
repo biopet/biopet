@@ -32,18 +32,13 @@ class GvcfToBed(val parent: Configurable) extends ToolCommandFunction {
   @Output(doc = "output bed")
   var outputBed: File = _
 
-  @Argument(doc = "sample", required = false)
   var sample: Option[String] = None
-
-  @Argument(doc = "minquality", required = false)
   var minQuality: Int = 0
-
-  @Argument(doc = "inverse", required = false)
   var inverse: Option[File] = None
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine = {
+  override def cmdLine: String = {
     super.cmdLine +
       required("-I", inputVcf) +
       required("-O", outputBed) +

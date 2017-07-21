@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /** Extension for Kraken */
 class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
@@ -45,11 +47,11 @@ class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   executable = config("exe", default = "kraken")
 
-  def versionRegex = """^Kraken version ([\d\w\-\.]+)""".r
+  def versionRegex: Regex = """^Kraken version ([\d\w\-\.]+)""".r
 
   override def versionExitcode = List(0, 1)
 
-  def versionCommand = executable + " --version"
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 17.0
 
@@ -62,7 +64,7 @@ class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   }
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("--db", db) +
       optional("--threads", nCoresRequest) +

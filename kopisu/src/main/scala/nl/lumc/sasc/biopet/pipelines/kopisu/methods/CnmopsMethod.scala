@@ -27,7 +27,7 @@ import scala.collection.JavaConversions._
 class CnmopsMethod(val parent: Configurable) extends CnvMethod with Reference {
   def name = "cnmops"
 
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
 
     // we repeat running cnmops for all chromosomes
     val cnmopsJobs = referenceDict.getSequences
@@ -35,11 +35,11 @@ class CnmopsMethod(val parent: Configurable) extends CnvMethod with Reference {
         val cnmops = new Cnmops(this)
         cnmops.chromosome = contig.getSequenceName
         cnmops.input = inputBams.flatMap {
-          case (sampleName, bamFile) => Some(bamFile)
+          case (_, bamFile) => Some(bamFile)
           case _ => None
         }.toList
         cnmops.outputDir = Some(new File(outputDir, contig.getSequenceName))
-        cnmops.beforeGraph
+        cnmops.beforeGraph()
         cnmops
       })
       .toList

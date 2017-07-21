@@ -22,5 +22,5 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
   */
 class FixMpileup(val parent: Configurable) extends PythonCommandLineFunction {
   setPythonScript("fix_mpileup.py", "/nl/lumc/sasc/biopet/extensions/varscan/")
-  def cmdLine = getPythonCommand
+  def cmdLine: String = getPythonCommand
 }

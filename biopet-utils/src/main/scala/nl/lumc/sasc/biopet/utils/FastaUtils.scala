@@ -43,7 +43,7 @@ object FastaUtils {
   private var dictCache: Map[File, SAMSequenceDictionary] = Map()
 
   /** This will clear the dict cache */
-  def clearCache() = {
+  def clearCache(): Unit = {
     dictCache = Map()
   }
 
@@ -84,8 +84,8 @@ object FastaUtils {
       .map { line =>
         val columns = line.split("\t")
         val refContig = columns(0)
-        val alterniveNames = columns(1).split(";").toSet
-        refContig -> alterniveNames
+        val alternativeNames = columns(1).split(";").toSet
+        refContig -> alternativeNames
       }
       .toMap
     reader.close()

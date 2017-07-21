@@ -60,8 +60,8 @@ class TinyCapTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "tinyCapOptions")
-  def tinyCapOptions = {
-    val bool = Array(true)
+  def tinyCapOptions: Array[Array[Any]] = {
+    val bool = Array(x = true)
 
     for (s1 <- bool) yield Array("", s1)
   }
@@ -90,14 +90,14 @@ class TinyCapTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
 
 object TinyCapTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val r1 = new File(inputDir, "R1.fq.gz")
   Files.touch(r1)
@@ -121,8 +121,8 @@ object TinyCapTest {
   def config(outputDir: File) = Map(
     "skip_write_dependencies" -> true,
     "output_dir" -> outputDir,
-    "reference_fasta" -> (referenceFasta.getAbsolutePath),
-    "bowtie_index" -> (bowtieIndex.getAbsolutePath),
+    "reference_fasta" -> referenceFasta.getAbsolutePath,
+    "bowtie_index" -> bowtieIndex.getAbsolutePath,
     "annotation_gff" -> annotationGFF,
     "annotation_gtf" -> annotationGTF,
     "annotation_refflat" -> annotationRefflat,

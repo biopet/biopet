@@ -64,7 +64,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
     opt[File]('b', "bam") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
     } text "bam file, from which the variants (VCF files) were called"
-    opt[Int]('m', "min_mapping_quality") maxOccurs 1 action { (x, c) =>
+    opt[Int]('m', "min_mapping_quality") maxOccurs 1 action { (_, c) =>
       c.copy(minMapQual = c.minMapQual)
     } text "minimum mapping quality score for a read to be taken into account"
   }
@@ -120,28 +120,6 @@ object CheckAllelesVcfInBam extends ToolCommand {
           vcfRecord.getStart + refAllele.length - 1)
         val bamIter = bamReader.query(Array(queryInterval), false)
 
-        def filterRead(samRecord: SAMRecord): Boolean = {
-          if (samRecord.getDuplicateReadFlag) {
-            countReports(sample).duplicateReads += 1
-            return true
-          }
-          if (samRecord.getSupplementaryAlignmentFlag) return true
-          if (samRecord.getNotPrimaryAlignmentFlag) return true
-          if (samRecord.getMappingQuality < commandArgs.minMapQual) {
-            countReports(sample).lowMapQualReads += 1
-            return true
-          }
-          false
-        }
-
-        val counts = for (samRecord <- bamIter if !filterRead(samRecord)) {
-          checkAlleles(samRecord, vcfRecord) match {
-            case Some(a) =>
-              if (countReports(sample).aCounts.contains(a)) countReports(sample).aCounts(a) += 1
-              else countReports(sample).aCounts += (a -> 1)
-            case _ => countReports(sample).notFound += 1
-          }
-        }
         bamIter.close()
       }
 

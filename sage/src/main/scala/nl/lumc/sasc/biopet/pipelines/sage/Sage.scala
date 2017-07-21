@@ -36,7 +36,7 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
   def this() = this(null)
 
   var countBed: Option[File] = config("count_bed")
-  var squishedCountBed: File = null
+  var squishedCountBed: File = _
   var transcriptome: Option[File] = config("transcriptome")
   var tagsLibrary: Option[File] = config("tags_library")
 
@@ -149,7 +149,7 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
 
   def biopetScript() {
     val squishBed = new SquishBed(this)
-    squishBed.input = countBed.getOrElse(null)
+    squishBed.input = countBed.orNull
     squishBed.output = new File(
       outputDir,
       countBed.getOrElse(new File("fake")).getName.stripSuffix(".bed") + ".squish.bed")
@@ -158,7 +158,7 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
 
     if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
-      cdl.input = transcriptome.getOrElse(null)
+      cdl.input = transcriptome.orNull
       cdl.output = new File(outputDir, "taglib/tag.lib")
       cdl.noAntiTagsOutput = new File(outputDir, "taglib/no_antisense_genes.txt")
       cdl.noTagsOutput = new File(outputDir, "taglib/no_sense_genes.txt")
@@ -178,9 +178,8 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
       bamFile,
       squishedCountBed,
       output = Some(new File(outputDir, outputPrefix + ".genome.sense.coverage")),
-      depth = false,
-      sameStrand = true,
-      diffStrand = false)
+      sameStrand = true
+    )
     val countSense = new BedtoolsCoverageToCounts(this)
     countSense.input = bedtoolsSense.output
     countSense.output = new File(outputDir, outputPrefix + ".genome.sense.counts")
@@ -190,8 +189,6 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
       bamFile,
       squishedCountBed,
       output = Some(new File(outputDir, outputPrefix + ".genome.antisense.coverage")),
-      depth = false,
-      sameStrand = false,
       diffStrand = true)
     val countAntisense = new BedtoolsCoverageToCounts(this)
     countAntisense.input = bedtoolsAntisense.output
@@ -201,10 +198,7 @@ class Sage(val parent: Configurable) extends QScript with MultiSampleQScript { q
                                     bamFile,
                                     squishedCountBed,
                                     output =
-                                      Some(new File(outputDir, outputPrefix + ".genome.coverage")),
-                                    depth = false,
-                                    sameStrand = false,
-                                    diffStrand = false)
+                                      Some(new File(outputDir, outputPrefix + ".genome.coverage")))
     val count = new BedtoolsCoverageToCounts(this)
     count.input = bedtools.output
     count.output = new File(outputDir, outputPrefix + ".genome.counts")

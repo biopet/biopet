@@ -61,19 +61,20 @@ object VcfStatsForSv extends ToolCommand {
 
   /** Parses a vcf-file and counts sv-s by type and size. Sv-s are divided to different size classes, the parameter histogramBinBoundaries gives the boundaries between these classes. */
   def getVariantCounts(vcfFile: File, histogramBinBoundaries: Array[Int]): Map[String, Any] = {
-    val delCounts, insCounts, dupCounts, invCounts = Array.fill(histogramBinBoundaries.size + 1) {
-      0
-    }
+    val delCounts, insCounts, dupCounts, invCounts =
+      Array.fill(histogramBinBoundaries.length + 1) {
+        0
+      }
     var traCount = 0
 
     val reader = new VCFFileReader(vcfFile, false)
     for (record <- reader) {
       record.getAttributeAsString("SVTYPE", "") match {
         case "TRA" | "CTX" | "ITX" => traCount += 1
-        case svType => {
+        case svType =>
           val size = record.getEnd - record.getStart
           var i = 0
-          while (i < histogramBinBoundaries.size && size > histogramBinBoundaries(i)) i += 1
+          while (i < histogramBinBoundaries.length && size > histogramBinBoundaries(i)) i += 1
           svType match {
             case "DEL" => delCounts(i) += 1
             case "INS" => insCounts(i) += 1
@@ -83,7 +84,6 @@ object VcfStatsForSv extends ToolCommand {
               logger.warn(
                 s"Vcf file contains a record of unknown type: file-$vcfFile, type-$svType")
           }
-        }
       }
     }
     reader.close()

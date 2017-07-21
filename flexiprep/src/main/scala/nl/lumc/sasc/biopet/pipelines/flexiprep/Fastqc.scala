@@ -288,7 +288,7 @@ object Fastqc {
     if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.length - 6)
     fastqcCommand.getVersion.flatMap(SemanticVersion.getSemanticVersion) match {
       case Some(v) if v >= SemanticVersion(0, 11, 4) =>
-        if (filename.endsWith(".fq")) filename = filename.substring(0, filename.size - 3)
+        if (filename.endsWith(".fq")) filename = filename.substring(0, filename.length - 3)
       case _ =>
     }
     fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")

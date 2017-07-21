@@ -42,7 +42,7 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   def variantcallers = List("unifiedgenotyper")
 
-  val numBoot = config("boot_runs", default = 100, namespace = "raxml").asInt
+  val numBoot: Int = config("boot_runs", default = 100, namespace = "raxml").asInt
 
   override def defaults = Map(
     "ploidy" -> 1,

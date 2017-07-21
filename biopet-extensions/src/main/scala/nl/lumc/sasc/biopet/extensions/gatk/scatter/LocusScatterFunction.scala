@@ -12,7 +12,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.scatter
 
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.interval.IntervalUtils
@@ -23,7 +23,7 @@ import scala.collection.JavaConversions._
  * A scatter function that divides down to the locus level.
  */
 class LocusScatterFunction extends GATKScatterFunction with InProcessFunction {
-  protected override def maxIntervals = scatterCount
+  protected override def maxIntervals: Int = scatterCount
 
   def run() {
     val gi = GATKScatterFunction.getGATKIntervals(this.originalGATK)

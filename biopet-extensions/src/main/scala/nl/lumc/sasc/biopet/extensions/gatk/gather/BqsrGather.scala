@@ -12,14 +12,14 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.gather
 
 import java.io.File
 import java.util
 
 import org.broadinstitute.gatk.engine.recalibration.BQSRGatherer
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /**
  * Created by pjvanthof on 05/04/2017.
@@ -34,7 +34,7 @@ class BqsrGather extends InProcessFunction {
 
   def run(): Unit = {
     val l = new util.ArrayList[File]()
-    inputBqsrFiles.foreach(l.add(_))
+    inputBqsrFiles.foreach(l.add)
     val gather = new BQSRGatherer
     gather.gather(l, outputBqsrFile)
   }

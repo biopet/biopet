@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the htseq-count command line tool
@@ -31,15 +33,15 @@ class HtseqCount(val parent: Configurable) extends BiopetCommandLineFunction wit
 
   /** input file */
   @Input(doc = "Input alignment file", required = true)
-  var inputAlignment: File = null
+  var inputAlignment: File = _
 
   /** input GFF / GTF annotation file */
   @Input(doc = "Input GFF / GTF annotation file", required = true)
-  var inputAnnotation: File = null
+  var inputAnnotation: File = _
 
   /** output file */
   @Output(doc = "Output count file", required = true)
-  var output: File = null
+  var output: File = _
 
   /** type of input alignment */
   var format: Option[String] = config("format")
@@ -69,10 +71,10 @@ class HtseqCount(val parent: Configurable) extends BiopetCommandLineFunction wit
   /** suppress progress report */
   var quiet: Boolean = config("quiet", default = false)
 
-  def versionRegex = """.*, version (.*)\.""".r
-  def versionCommand = executable + " --help"
+  def versionRegex: Regex = """.*, version (.*)\.""".r
+  def versionCommand: String = executable + " --help"
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       optional("--format", format) +
       optional("--order", order) +

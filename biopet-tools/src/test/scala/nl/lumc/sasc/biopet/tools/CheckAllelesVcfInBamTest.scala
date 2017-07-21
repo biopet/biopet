@@ -38,12 +38,12 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vcf = resourcePath("/chrQ.vcf")
-  val bam = resourcePath("/single01.bam")
+  val vcf: String = resourcePath("/chrQ.vcf")
+  val bam: String = resourcePath("/single01.bam")
   val vcf2 = new File(resourcePath("/chrQ2.vcf.gz"))
   val rand = new Random()
 
-  @Test def testOutputTypeVcf() = {
+  @Test def testOutputTypeVcf(): Unit = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -51,7 +51,7 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
     main(arguments)
   }
 
-  @Test def testOutputTypeVcfGz() = {
+  @Test def testOutputTypeVcfGz(): Unit = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf.gz")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -59,7 +59,7 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
     main(arguments)
   }
 
-  @Test def testOutputTypeBcf() = {
+  @Test def testOutputTypeBcf(): Unit = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".bcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
@@ -68,7 +68,7 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
   }
 
   @Test
-  def testCheckAllelesNone() = {
+  def testCheckAllelesNone(): Unit = {
     val variant = new File(vcf)
     val samRecord = SamReaderFactory.makeDefault().open(new File(bam)).iterator().next()
     val varRecord = new VCFFileReader(variant, false).iterator().next()
@@ -76,7 +76,7 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
   }
 
   @Test
-  def testCheckAlleles() = {
+  def testCheckAlleles(): Unit = {
     val samRecord = SamReaderFactory.makeDefault().open(new File(bam)).iterator().next()
     val varRecord = new VCFFileReader(vcf2).iterator().next()
     checkAlleles(samRecord, varRecord) shouldBe Some("T")

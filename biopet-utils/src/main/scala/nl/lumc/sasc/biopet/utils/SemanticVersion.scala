@@ -1,4 +1,5 @@
 package nl.lumc.sasc.biopet.utils
+import scala.util.matching.Regex
 
 /**
   * Created by pjvanthof on 29/04/2017.
@@ -34,7 +35,7 @@ case class SemanticVersion(major: Int, minor: Int, patch: Int, build: Option[Str
 }
 
 object SemanticVersion {
-  val semanticVersionRegex = "[vV]?(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
+  val semanticVersionRegex: Regex = "[vV]?(\\d+)\\.(\\d+)\\.(\\d+)(-.*)?".r
 
   /**
     * Check whether a version string is a semantic version.

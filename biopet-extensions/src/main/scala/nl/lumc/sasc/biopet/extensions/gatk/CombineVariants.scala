@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class CombineVariants(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "CombineVariants"
@@ -33,7 +35,7 @@ class CombineVariants(val parent: Configurable) extends CommandLineGATK with Sca
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** Determines how we should merge genotype records for samples shared across the ROD files */
@@ -111,25 +113,25 @@ class CombineVariants(val parent: Configurable) extends CommandLineGATK with Sca
       outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-genotypeMergeOptions", genotypemergeoption, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-filteredRecordsMergeType", filteredrecordsmergetype, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-multipleAllelesMergeType", multipleallelesmergetype, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-priority", rod_priority_list, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(printComplexMerges, "-printComplexMerges", escape = true, format = "%s") +
-    conditional(filteredAreUncalled, "-filteredAreUncalled", escape = true, format = "%s") +
-    conditional(minimalVCF, "-minimalVCF", escape = true, format = "%s") +
-    conditional(excludeNonVariants, "-env", escape = true, format = "%s") +
-    optional("-setKey", setKey, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(assumeIdenticalSamples, "-assumeIdenticalSamples", escape = true, format = "%s") +
-    optional("-minN", minimumN, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(suppressCommandLineHeader, "-suppressCommandLineHeader", escape = true, format = "%s") +
-    conditional(mergeInfoWithMaxAC, "-mergeInfoWithMaxAC", escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-o", out) +
+    optional("-genotypeMergeOptions", genotypemergeoption) +
+    optional("-filteredRecordsMergeType", filteredrecordsmergetype) +
+    optional("-multipleAllelesMergeType", multipleallelesmergetype) +
+    optional("-priority", rod_priority_list) +
+    conditional(printComplexMerges, "-printComplexMerges") +
+    conditional(filteredAreUncalled, "-filteredAreUncalled") +
+    conditional(minimalVCF, "-minimalVCF") +
+    conditional(excludeNonVariants, "-env") +
+    optional("-setKey", setKey) +
+    conditional(assumeIdenticalSamples, "-assumeIdenticalSamples") +
+    optional("-minN", minimumN) +
+    conditional(suppressCommandLineHeader, "-suppressCommandLineHeader") +
+    conditional(mergeInfoWithMaxAC, "-mergeInfoWithMaxAC") +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object CombineVariants {

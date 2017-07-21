@@ -16,13 +16,14 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{ MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ NoLibrary, NoModule, SampleId }
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoLibrary, NoModule, SampleId}
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 /**
@@ -40,7 +41,7 @@ object GearsReport extends MultisampleReportBuilder {
 
   def reportName = "Gears Report"
 
-  override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
+  override def extFiles: List[gears.GearsReport.ExtFile] = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage: Future[ReportPage] = Future {
@@ -51,29 +52,29 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
 
-    val centrifugePage = (if (centrifugeExecuted) Some("Centrifuge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
+    val centrifugePage = if (centrifugeExecuted) Some("Centrifuge analysis" -> Future.successful(ReportPage(List("Non-unique" ->
       Future.successful(ReportPage(List(), List("All mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_report")
       )), Map()))), List(
       "Unique mappings" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
         Map("summaryStatsTag" -> "centrifuge_unique_report")
       )), Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge")))))
-    else None)
+    else None
 
-    val krakenPage = (if (krakenExecuted) Some("Kraken analysis" -> Future.successful(ReportPage(List(), List(
+    val krakenPage = if (krakenExecuted) Some("Kraken analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       ))), Map())))
-    else None)
+    else None
 
-    val qiimeClosedPage = (if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
+    val qiimeClosedPage = if (qiimeClosesOtuTable.isDefined) Some("Qiime closed reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> Future.successful(ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       ))), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeClosesOtuTable.get.path)))))
-    else None)
+    else None
 
-    val qiimeOpenPage = (if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
+    val qiimeOpenPage = if (qiimeOpenOtuTable.isDefined) Some("Qiime open reference analysis" -> Future.successful(ReportPage(List(), List(
       "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
       )), Map("biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path)))))
-    else None)
+    else None
 
     ReportPage(
       List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
@@ -124,8 +125,6 @@ object GearsReport extends MultisampleReportBuilder {
 
   /** Library page */
   def libraryPage(sampleId: Int, libId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
-    val sName = Await.result(summary.getSampleName(sampleId), Duration.Inf)
-    val lName = Await.result(summary.getLibraryName(libId), Duration.Inf)
 
     val flexiprepExecuted = Await.result(summary.getStatsSize(runId, "flexiprep", sample = sampleId, library = libId), Duration.Inf) >= 1
 

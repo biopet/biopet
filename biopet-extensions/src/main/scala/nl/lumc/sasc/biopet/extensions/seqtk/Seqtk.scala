@@ -14,13 +14,15 @@
   */
 package nl.lumc.sasc.biopet.extensions.seqtk
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 /** Abstract class for all seqtk wrappers. */
 abstract class Seqtk extends BiopetCommandLineFunction with Version {
-  override def subPath = "seqtk" :: super.subPath
+  override def subPath: List[String] = "seqtk" :: super.subPath
   executable = config("exe", default = "seqtk", freeVar = true)
-  def versionCommand = executable
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 }

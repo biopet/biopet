@@ -34,7 +34,7 @@ object SquishBed extends ToolCommand {
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
     }
-    opt[Unit]('s', "strandSensitive") unbounded () valueName "<file>" action { (x, c) =>
+    opt[Unit]('s', "strandSensitive") unbounded () valueName "<file>" action { (_, c) =>
       c.copy(strandSensitive = true)
     }
   }

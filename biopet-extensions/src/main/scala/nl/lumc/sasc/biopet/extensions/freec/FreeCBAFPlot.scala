@@ -24,10 +24,10 @@ class FreeCBAFPlot(val parent: Configurable) extends RscriptCommandLineFunction 
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_BAFPlot.R")
 
   @Input(doc = "Output file from FreeC. *_BAF.txt")
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Destination for the PNG file")
-  var output: File = null
+  var output: File = _
 
   /* cmdLine to execute R-script and with arguments
    * Arguments should be pasted in the same order as the script is expecting it.

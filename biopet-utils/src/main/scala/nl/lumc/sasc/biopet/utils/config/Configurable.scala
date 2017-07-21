@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
 
-  /** Should be object of parant object */
+  /** Should be object of parent object */
   def parent: Configurable
   def globalConfig: Config = if (parent != null) parent.globalConfig else Config.global
 
@@ -32,7 +32,7 @@ trait Configurable extends ImplicitConversions {
   def configPath: List[String] = if (parent != null) parent.configFullPath else Nil
 
   /** Gets name of module for config */
-  def configNamespace = getClass.getSimpleName.toLowerCase
+  def configNamespace: String = getClass.getSimpleName.toLowerCase
 
   /** ull path with module in there */
   def configFullPath: List[String] = configPath ::: configNamespace :: Nil
@@ -68,7 +68,9 @@ trait Configurable extends ImplicitConversions {
     * Creates path with a prefix for sample and library
     * "samples" -> "sampleID" -> "libraries" -> "libraryID" -> rest of path
     */
-  def getConfigPath(sample: String = null, library: String = null, submodule: String = null) = {
+  def getConfigPath(sample: String = null,
+                    library: String = null,
+                    submodule: String = null): List[String] = {
     (if (sample != null) "samples" :: sample :: Nil else Nil) :::
       (if (library != null) "libraries" :: library :: Nil else Nil) :::
       (if (submodule != null) configPath ::: configNamespace :: Nil else configPath)
@@ -138,7 +140,7 @@ trait Configurable extends ImplicitConversions {
                  sample: String = null,
                  library: String = null,
                  extraSubPath: List[String] = Nil,
-                 path: List[String] = null) = {
+                 path: List[String] = null): Boolean = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (namespace != null) namespace else configNamespace

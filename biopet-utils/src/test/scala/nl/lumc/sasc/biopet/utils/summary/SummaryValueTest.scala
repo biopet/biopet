@@ -26,10 +26,10 @@ import org.testng.annotations.Test
   */
 class SummaryValueTest extends TestNGSuite with Matchers {
   @Test
-  def testConstructor: Unit = {
+  def testConstructor(): Unit = {
     val summary = new Summary(SummaryValueTest.testSummaryFile)
-    new SummaryValue(None).value shouldBe None
-    new SummaryValue(Some(1)).value shouldBe Some(1)
+    SummaryValue(None).value shouldBe None
+    SummaryValue(Some(1)).value shouldBe Some(1)
     new SummaryValue(List("key_1"), summary, None, None).value shouldBe Some("test_1")
     new SummaryValue(List("key_2"), summary, Some("sample1"), None).value shouldBe Some("test_2")
     new SummaryValue(List("key_3"), summary, Some("sample1"), Some("lib1")).value shouldBe Some(
@@ -37,53 +37,53 @@ class SummaryValueTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testPlus: Unit = {
-    new SummaryValue(Some(1.0)) + new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(1.0)) + new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(1)) + new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2))
-    new SummaryValue(Some("1")) + new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some("1")) + new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(None) + new SummaryValue(Some(1.0)) shouldBe new SummaryValue(None)
+  def testPlus(): Unit = {
+    SummaryValue(Some(1.0)) + SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(1.0)) + SummaryValue(Some(1)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(1)) + SummaryValue(Some(1)) shouldBe SummaryValue(Some(2))
+    SummaryValue(Some("1")) + SummaryValue(Some(1)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some("1")) + SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(None) + SummaryValue(Some(1.0)) shouldBe SummaryValue(None)
   }
 
   @Test
-  def testMin: Unit = {
-    new SummaryValue(Some(1.0)) - new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(0.0))
-    new SummaryValue(Some(1.0)) - new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0.0))
-    new SummaryValue(Some(1)) - new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(Some("1")) - new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0.0))
-    new SummaryValue(Some("1")) - new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(0.0))
-    new SummaryValue(None) - new SummaryValue(Some(1.0)) shouldBe new SummaryValue(None)
+  def testMin(): Unit = {
+    SummaryValue(Some(1.0)) - SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(0.0))
+    SummaryValue(Some(1.0)) - SummaryValue(Some(1)) shouldBe SummaryValue(Some(0.0))
+    SummaryValue(Some(1)) - SummaryValue(Some(1)) shouldBe SummaryValue(Some(0))
+    SummaryValue(Some("1")) - SummaryValue(Some(1)) shouldBe SummaryValue(Some(0.0))
+    SummaryValue(Some("1")) - SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(0.0))
+    SummaryValue(None) - SummaryValue(Some(1.0)) shouldBe SummaryValue(None)
   }
 
   @Test
-  def testMultiply: Unit = {
-    new SummaryValue(Some(1.0)) * new SummaryValue(Some(2.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(1.0)) * new SummaryValue(Some(2)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(1)) * new SummaryValue(Some(2)) shouldBe new SummaryValue(Some(2))
-    new SummaryValue(Some("1")) * new SummaryValue(Some(2)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some("1")) * new SummaryValue(Some(2.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(None) * new SummaryValue(Some(2.0)) shouldBe new SummaryValue(None)
+  def testMultiply(): Unit = {
+    SummaryValue(Some(1.0)) * SummaryValue(Some(2.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(1.0)) * SummaryValue(Some(2)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(1)) * SummaryValue(Some(2)) shouldBe SummaryValue(Some(2))
+    SummaryValue(Some("1")) * SummaryValue(Some(2)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some("1")) * SummaryValue(Some(2.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(None) * SummaryValue(Some(2.0)) shouldBe SummaryValue(None)
   }
 
   @Test
-  def testDivide: Unit = {
-    new SummaryValue(Some(2.0)) / new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(2.0)) / new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some(2)) / new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2))
-    new SummaryValue(Some("2")) / new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(Some("2")) / new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(2.0))
-    new SummaryValue(None) / new SummaryValue(Some(1.0)) shouldBe new SummaryValue(None)
+  def testDivide(): Unit = {
+    SummaryValue(Some(2.0)) / SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(2.0)) / SummaryValue(Some(1)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some(2)) / SummaryValue(Some(1)) shouldBe SummaryValue(Some(2))
+    SummaryValue(Some("2")) / SummaryValue(Some(1)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(Some("2")) / SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(2.0))
+    SummaryValue(None) / SummaryValue(Some(1.0)) shouldBe SummaryValue(None)
   }
 
   @Test
-  def testLeft: Unit = {
-    new SummaryValue(Some(2.0)) % new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(Some(2.0)) % new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(Some(2)) % new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(Some("2")) % new SummaryValue(Some(1)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(Some("2")) % new SummaryValue(Some(1.0)) shouldBe new SummaryValue(Some(0))
-    new SummaryValue(None) % new SummaryValue(Some(1.0)) shouldBe new SummaryValue(None)
+  def testLeft(): Unit = {
+    SummaryValue(Some(2.0)) % SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(0))
+    SummaryValue(Some(2.0)) % SummaryValue(Some(1)) shouldBe SummaryValue(Some(0))
+    SummaryValue(Some(2)) % SummaryValue(Some(1)) shouldBe SummaryValue(Some(0))
+    SummaryValue(Some("2")) % SummaryValue(Some(1)) shouldBe SummaryValue(Some(0))
+    SummaryValue(Some("2")) % SummaryValue(Some(1.0)) shouldBe SummaryValue(Some(0))
+    SummaryValue(None) % SummaryValue(Some(1.0)) shouldBe SummaryValue(None)
   }
 
 }
@@ -101,7 +101,7 @@ object SummaryValueTest {
     )
   )
 
-  val testSummaryFile = File.createTempFile("summary.", ".json")
+  val testSummaryFile: File = File.createTempFile("summary.", ".json")
   testSummaryFile.deleteOnExit()
 
   val writer = new PrintWriter(testSummaryFile)

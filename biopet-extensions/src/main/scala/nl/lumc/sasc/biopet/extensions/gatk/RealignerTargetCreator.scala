@@ -17,10 +17,11 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, _}
 
 class RealignerTargetCreator(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "RealignerTargetCreator"
@@ -75,16 +76,16 @@ class RealignerTargetCreator(val parent: Configurable) extends CommandLineGATK w
     deps ++= known.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
   }
 
-  override def cmdLine = super.cmdLine +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-known", known, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-window", windowSize, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mismatch", mismatchFraction, spaceSeparated = true, escape = true, format = mismatchFractionFormat) +
-    optional("-minReads", minReadsAtLocus, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxInterval", maxIntervalSize, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    optional("-o", out) +
+    repeat("-known", known, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-window", windowSize) +
+    optional("-mismatch", mismatchFraction, format = mismatchFractionFormat) +
+    optional("-minReads", minReadsAtLocus) +
+    optional("-maxInterval", maxIntervalSize) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object RealignerTargetCreator {

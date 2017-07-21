@@ -35,12 +35,12 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource("/" + p).toURI).toString
 
-  @Test def testProcessLine() = {
+  @Test def testProcessLine(): Unit = {
     val line = "a\tb\tc"
     processLine(line, Seq(0), 2) shouldBe ("a", "c")
   }
 
-  @Test def testProcessLineValIdxTooLarge() = {
+  @Test def testProcessLineValIdxTooLarge(): Unit = {
     val line = "a\tb\tc"
     val thrown = intercept[IllegalArgumentException] {
       processLine(line, Seq(0), 3)
@@ -48,7 +48,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     thrown.getMessage shouldBe "requirement failed: Value index must be smaller than number of columns"
   }
 
-  @Test def testProcessLineIdIdcesTooLarge() = {
+  @Test def testProcessLineIdIdcesTooLarge(): Unit = {
     val line = "a\tb\tc"
     val thrown = intercept[IllegalArgumentException] {
       processLine(line, Seq(0, 3), 1)
@@ -56,27 +56,27 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     thrown.getMessage shouldBe "requirement failed: All feature ID indices must be smaller than number of columns"
   }
 
-  @Test def testProcessLineMultipleIdIdces() = {
+  @Test def testProcessLineMultipleIdIdces(): Unit = {
     val line = "a\tb\tc\td\te"
     processLine(line, Seq(0, 2), 4) shouldBe ("a,c", "e")
   }
 
-  @Test def testProcessLineCustomDelimiter() = {
+  @Test def testProcessLineCustomDelimiter(): Unit = {
     val line = "a|b|c"
     processLine(line, Seq(0), 2, delimiter = '|') shouldBe ("a", "c")
   }
 
-  @Test def testProcessLineCustomIdSeparator() = {
+  @Test def testProcessLineCustomIdSeparator(): Unit = {
     val line = "a\tb\tc\td\te"
     processLine(line, Seq(0, 1), 3, idSeparator = "_") shouldBe ("a_b", "d")
   }
 
-  @Test def testProcessLineAdjacentDelimiters() = {
+  @Test def testProcessLineAdjacentDelimiters(): Unit = {
     val line = "a\t\tb\tc"
     processLine(line, Seq(0), 2) shouldBe ("a", "c")
   }
 
-  @Test def testMergeTables() = {
+  @Test def testMergeTables(): Unit = {
     val in1 = InputTable("file1", mock[BufferedSource])
     val in2 = InputTable("file2", mock[BufferedSource])
 
@@ -91,7 +91,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     result("file2") shouldBe Map("a" -> "100", "x" -> "9")
   }
 
-  @Test def testWriteOutput() = {
+  @Test def testWriteOutput(): Unit = {
     val map =
       Map("sample1" -> Map("a" -> "1", "x" -> "900"), "sample2" -> Map("a" -> "100", "x" -> "9"))
     val out = mock[BufferedWriter]
@@ -104,7 +104,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     obs.verify(out).flush()
   }
 
-  @Test def testWriteOutputHasMissingValue() = {
+  @Test def testWriteOutputHasMissingValue(): Unit = {
     val map = Map("sample1" -> Map("a" -> "1"), "sample2" -> Map("a" -> "100", "x" -> "9"))
     val out = mock[BufferedWriter]
     val obs = inOrd(out)
@@ -116,13 +116,13 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     obs.verify(out).flush()
   }
 
-  @Test def testPrepInputCustomExtension() = {
+  @Test def testPrepInputCustomExtension(): Unit = {
     // file content doesn't matter
     val inFiles = Seq(resourceFile("paired01.sam"), resourceFile("paired02.sam"))
     prepInput(inFiles, ".sam", None).map(_.name) shouldBe Seq("paired01", "paired02")
   }
 
-  @Test def testPrepInputDuplicate() = {
+  @Test def testPrepInputDuplicate(): Unit = {
     val inFiles = Seq(new File("README.txt"), new File("README.txt"))
     val thrown = intercept[IllegalArgumentException] {
       prepInput(inFiles, "", None)
@@ -130,7 +130,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     thrown.getMessage shouldBe "requirement failed: Duplicate samples exist in inputs"
   }
 
-  @Test def testArgsMinimum() = {
+  @Test def testArgsMinimum(): Unit = {
     val args = Array("-i",
                      "1,7",
                      "-a",

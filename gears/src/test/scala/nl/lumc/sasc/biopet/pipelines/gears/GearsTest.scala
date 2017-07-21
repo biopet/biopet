@@ -48,7 +48,7 @@ abstract class GearsTest extends TestNGSuite with Matchers {
   def libraryGears: Boolean = false
 
   @DataProvider(name = "gearsOptions")
-  def gearsOptions = {
+  def gearsOptions: Array[Array[Any]] = {
     val bool = Array(true, false)
 
     for (s1 <- bool; s2 <- bool) yield Array("", s1, s2)
@@ -112,9 +112,9 @@ class GearsLibraryTest extends GearsTest {
 }
 
 object GearsTest {
-  def outputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
 
-  val inputDir = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   val r1 = new File(inputDir, "R1.fq")
   Files.touch(r1)

@@ -32,7 +32,7 @@ class ReferenceTest extends TestNGSuite with Matchers {
   import ReferenceTest._
 
   @Test
-  def testDefault: Unit = {
+  def testDefault(): Unit = {
     Logging.errors.clear()
     make(config :: testReferenceNoIndex :: Nil).referenceFasta()
     Logging.checkErrors(true)
@@ -42,7 +42,7 @@ class ReferenceTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testIndexes: Unit = {
+  def testIndexes(): Unit = {
     make(config :: testReferenceNoIndex :: Nil, fai = true, dict = true).referenceFasta()
 
     intercept[IllegalStateException] {
@@ -60,7 +60,7 @@ class ReferenceTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDbpsnp: Unit = {
+  def testDbpsnp(): Unit = {
     val a = make(config :: Map("dbsnp_version" -> 1) :: testReferenceNoIndex :: Nil,
                  fai = true,
                  dict = true)
@@ -111,12 +111,12 @@ object ReferenceTest {
            r: Configurable = null,
            fai: Boolean = false,
            dict: Boolean = false) = new Reference {
-    val parent = r
+    val parent: Configurable = r
     override def globalConfig =
       new Config(
         configs
           .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
-    override def dictRequired = if (dict) true else super.dictRequired
-    override def faiRequired = if (fai) true else super.faiRequired
+    override def dictRequired: Boolean = if (dict) true else super.dictRequired
+    override def faiRequired: Boolean = if (fai) true else super.faiRequired
   }
 }

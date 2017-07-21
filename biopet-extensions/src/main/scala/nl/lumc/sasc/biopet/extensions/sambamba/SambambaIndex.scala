@@ -30,7 +30,7 @@ class SambambaIndex(val parent: Configurable) extends Sambamba {
   var output: File = _
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("index") +
       optional("-t", nCoresRequest) +

@@ -58,7 +58,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  val geneRegex = """ENSG[0-9]{11}""".r
+  val geneRegex: Regex = """ENSG[0-9]{11}""".r
 
   val tagGenesMap: mutable.Map[String, TagGenes] = mutable.Map()
 
@@ -143,7 +143,7 @@ object SageCreateLibrary extends ToolCommand {
   }
 
   private def addTagresultToTaglib(name: String, tagResult: TagResult) {
-    val id = name.split(" ").head //.stripPrefix("hg19_ensGene_")
+    //.stripPrefix("hg19_ensGene_")
     val geneID = geneRegex.findFirstIn(name).getOrElse("unknown_gene")
     allGenes.add(geneID)
 

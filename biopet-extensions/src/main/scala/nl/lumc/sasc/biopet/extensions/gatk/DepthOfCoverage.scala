@@ -101,7 +101,7 @@ class DepthOfCoverage(val parent: Configurable) extends CommandLineGATK {
 
   var printBinEndpointsAndExit: Boolean = config("print_bin_endpoint_and_exit", namespace = "depth_of_coverage", default = false)
 
-  override def beforeGraph() = {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (out == null) {
       throw new IllegalStateException("You must set the <out> variable")
@@ -116,7 +116,7 @@ class DepthOfCoverage(val parent: Configurable) extends CommandLineGATK {
     _cumulativeCoverageProportionsFile = cumulativeCoverageProportionsFile
   }
 
-  override def cmdLine = {
+  override def cmdLine: String = {
     super.cmdLine + required("--out", out) +
       optional("--calculateCoverageOverGenes", calculateCoverageOverGenes) +
       optional("--countType", countType) +

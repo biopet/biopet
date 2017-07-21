@@ -34,25 +34,25 @@ class AnnotateVcfWithBedTest extends TestNGSuite with MockitoSugar with Matchers
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val veppedPath = resourcePath("/VEP_oneline.vcf")
-  val bed = resourcePath("/rrna01.bed")
+  val veppedPath: String = resourcePath("/VEP_oneline.vcf")
+  val bed: String = resourcePath("/rrna01.bed")
   val rand = new Random()
 
-  @Test def testOutputTypeVcf() = {
+  @Test def testOutputTypeVcf(): Unit = {
     val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf"
     val arguments: Array[String] =
       Array("-I", veppedPath, "-o", tmpPath, "-B", bed, "-f", "testing")
     main(arguments)
   }
 
-  @Test def testOutputTypeBcf() = {
+  @Test def testOutputTypeBcf(): Unit = {
     val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".bcf"
     val arguments: Array[String] =
       Array("-I", veppedPath, "-o", tmpPath, "-B", bed, "-f", "testing")
     main(arguments)
   }
 
-  @Test def testOutputTypeVcfGz() = {
+  @Test def testOutputTypeVcfGz(): Unit = {
     val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
     val arguments: Array[String] =
       Array("-I", veppedPath, "-o", tmpPath, "-B", bed, "-f", "testing")

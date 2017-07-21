@@ -49,7 +49,7 @@ class RefflatStats(val parent: Configurable) extends ToolCommandFunction with Re
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-a", refflatFile) +
       required("-R", reference) +

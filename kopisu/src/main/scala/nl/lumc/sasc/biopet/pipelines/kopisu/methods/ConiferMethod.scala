@@ -34,7 +34,7 @@ class ConiferMethod(val parent: Configurable) extends CnvMethod {
   /**Enable RPKM only mode, generate files for reference db */
   var RPKMonly: Boolean = false
 
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     val RPKMdir = new File(outputDir, "rpkm")
 
     val rpkmFiles: List[File] = inputBams.map {
@@ -53,7 +53,7 @@ class ConiferMethod(val parent: Configurable) extends CnvMethod {
     }
 
     inputBams.foreach {
-      case (sampleName, bamFile) =>
+      case (sampleName, _) =>
         val sampleDir = new File(outputDir, "samples" + File.separator + sampleName)
 
         val coniferAnalyze = new ConiferAnalyze(this)
@@ -65,7 +65,7 @@ class ConiferMethod(val parent: Configurable) extends CnvMethod {
 
         val coniferCall = new ConiferCall(this)
         coniferCall.input = coniferAnalyze.output
-        coniferCall.output = new File(sampleDir, s"${sampleName}.calls.txt")
+        coniferCall.output = new File(sampleDir, s"$sampleName.calls.txt")
         add(coniferCall)
         addOutput(sampleName, coniferCall.output)
     }
@@ -73,5 +73,6 @@ class ConiferMethod(val parent: Configurable) extends CnvMethod {
     addSummaryJobs()
   }
 
-  override def summaryFiles = super.summaryFiles ++ Map("probe_file" -> probeFile)
+  override def summaryFiles: Map[String, File] =
+    super.summaryFiles ++ Map("probe_file" -> probeFile)
 }

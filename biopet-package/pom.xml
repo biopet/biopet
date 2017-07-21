@@ -120,6 +120,11 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Tarmac</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetToolsPackage</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -131,6 +136,8 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.4.1</version>
                 <configuration>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <shadedClassifierName>allinone</shadedClassifierName>
                     <!--suppress MavenModelInspection -->
                     <finalName>Biopet-${project.version}-${git.commit.id.abbrev}</finalName>
                     <transformers>
@@ -142,6 +149,9 @@
                                 <!--suppress MavenModelInspection -->
                                 <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
                             </manifestEntries>
+                        </transformer>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                            <resource>reference.conf</resource>
                         </transformer>
                     </transformers>
                     <filters>

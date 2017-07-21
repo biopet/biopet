@@ -26,13 +26,13 @@ import scala.io.Source
 class BedtoolsCoverage(val parent: Configurable) extends Bedtools with Reference {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
-  var input: File = null
+  var input: File = _
 
   @Input(doc = "Intersect file (bed/gff/vcf)")
-  var intersectFile: File = null
+  var intersectFile: File = _
 
   @Output(doc = "output File")
-  var output: File = null
+  var output: File = _
 
   @Argument(doc = "depth", required = false)
   var depth: Boolean = false
@@ -49,7 +49,7 @@ class BedtoolsCoverage(val parent: Configurable) extends Bedtools with Reference
   override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) + required("coverage") +
       required("-a", input) +
       required("-b", intersectFile) +

@@ -237,6 +237,8 @@ class Gentrap(val parent: Configurable)
       new File(outputDir, "expression_measures" + File.separator + "transcript.stats")
     refflatStats.exonOutput =
       new File(outputDir, "expression_measures" + File.separator + "exon.stats")
+    refflatStats.intronOutput =
+      new File(outputDir, "expression_measures" + File.separator + "intron.stats")
     refflatStats.jobOutputFile = new File(outputDir, ".reflatstats.out")
     add(refflatStats)
 

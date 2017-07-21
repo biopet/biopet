@@ -25,7 +25,7 @@ trait ToolCommand extends MainCommand with Logging {
   protected abstract class AbstractArgs {}
 
   /**
-    * Abstract opt parser to add efault args to each biopet tool
+    * Abstract opt parser to add default args to each biopet tool
     */
   protected abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
     opt[String]('l', "log_level") foreach { x =>

@@ -38,7 +38,7 @@ class ValidateVcf(val parent: Configurable) extends ToolCommandFunction with Ref
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", inputVcf) +
       required("-R", reference) +

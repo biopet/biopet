@@ -51,7 +51,7 @@ class GearsSingle(val parent: Configurable)
   @Argument(required = false)
   var outputName: String = _
 
-  def getOutputName = {
+  def getOutputName: String = {
     if (outputName == null) {
       sampleId.getOrElse("noName") + libId.map("-" + _).getOrElse("")
     } else outputName
@@ -74,7 +74,7 @@ class GearsSingle(val parent: Configurable)
 
   }
 
-  lazy val krakenScript = {
+  lazy val krakenScript: Option[GearsKraken] = {
     if (config("gears_use_kraken", default = false)) {
       val kraken = new GearsKraken(this)
       kraken.outputDir = new File(outputDir, "kraken")
@@ -83,7 +83,7 @@ class GearsSingle(val parent: Configurable)
     } else None
   }
 
-  lazy val centrifugeScript = {
+  lazy val centrifugeScript: Option[GearsCentrifuge] = {
     if (config("gears_use_centrifuge", default = true)) {
       val centrifuge = new GearsCentrifuge(this)
       centrifuge.outputDir = new File(outputDir, "centrifuge")
@@ -92,7 +92,7 @@ class GearsSingle(val parent: Configurable)
     } else None
   }
 
-  lazy val qiimeRatx = {
+  lazy val qiimeRatx: Option[GearsQiimeRtax] = {
     if (config("gears_use_qiime_rtax", default = false)) {
       val qiimeRatx = new GearsQiimeRtax(this)
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
@@ -100,23 +100,23 @@ class GearsSingle(val parent: Configurable)
     } else None
   }
 
-  lazy val qiimeClosed =
+  lazy val qiimeClosed: Option[GearsQiimeClosed] =
     if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this))
     else None
-  lazy val qiimeOpen =
+  lazy val qiimeOpen: Option[GearsQiimeOpen] =
     if (config("gears_use_qiime_open", default = false)) Some(new GearsQiimeOpen(this)) else None
-  lazy val seqCount =
+  lazy val seqCount: Option[GearsSeqCount] =
     if (config("gears_use_seq_count", default = false)) Some(new GearsSeqCount(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
-    if (fastqR1.isEmpty && !bamFile.isDefined)
+    if (fastqR1.isEmpty && bamFile.isEmpty)
       Logging.addError("Please specify fastq-file(s) or bam file")
     if (fastqR1.nonEmpty == bamFile.isDefined)
       Logging.addError("Provide either a bam file or a R1/R2 file")
     if (fastqR2.nonEmpty && fastqR1.size != fastqR2.size)
       Logging.addError("R1 and R2 has not the same number of files")
-    if (sampleId == null || sampleId == None)
+    if (sampleId == null || sampleId.isEmpty)
       Logging.addError("Missing sample ID on GearsSingle module")
 
     if (!skipFlexiprep) {
@@ -145,7 +145,7 @@ class GearsSingle(val parent: Configurable)
     } else bamFile.foreach(inputFiles :+= InputFile(_))
   }
 
-  override def reportClass = {
+  override def reportClass: Some[GearsSingleReport] = {
     val gears = new GearsSingleReport(this)
     gears.outputDir = new File(outputDir, "report")
     gears.summaryDbFile = summaryDbFile

@@ -70,28 +70,6 @@ class Impute2Vcf(val parent: Configurable) extends QScript with BiopetQScript wi
     val cvTotal = new CatVariants(this)
     cvTotal.assumeSorted = true
     cvTotal.outputFile = new File(outputDir, "merge.gens.vcf.gz")
-    val chrGens = inputGens.groupBy(_.contig).map {
-      case (contig, gens) =>
-        val cvChr = new CatVariants(this)
-        cvChr.assumeSorted = true
-        //cvChr.isIntermediate = true
-        cvChr.outputFile = new File(outputDir, s"$contig.merge.gens.vcf.gz")
-        gens.zipWithIndex.foreach { gen =>
-          val gensToVcf = new GensToVcf(this)
-          gensToVcf.inputGens = gen._1.genotypes
-          gensToVcf.inputInfo = gen._1.info
-          gensToVcf.contig = gen._1.contig
-          gensToVcf.samplesFile = phenotypeFile
-          gensToVcf.outputVcf =
-            new File(outputDir, gen._1.genotypes.getName + s".${gen._2}.vcf.gz")
-          gensToVcf.isIntermediate = true
-          add(gensToVcf)
-          cvChr.variant :+= gensToVcf.outputVcf
-        }
-        add(cvChr)
-        cvTotal.variant :+= cvChr.outputFile
-        contig -> cvChr.outputFile
-    }
     add(cvTotal)
   }
 }

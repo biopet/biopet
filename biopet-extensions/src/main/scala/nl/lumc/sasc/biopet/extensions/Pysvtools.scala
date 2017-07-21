@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
+import scala.util.matching.Regex
+
 /**
   * Created by wyleung on 8-1-16.
   */
@@ -43,8 +45,8 @@ class Pysvtools(val parent: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "vcf_merge_sv_events")
 
-  def versionRegex = """PySVtools (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """PySVtools (.*)""".r
+  def versionCommand: String = executable + " --version"
   override def defaultThreads = 2
 
   override def beforeGraph(): Unit = {
@@ -61,7 +63,7 @@ class Pysvtools(val parent: Configurable) extends BiopetCommandLineFunction {
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       repeat("-c", exclusionRegions) +
       optional("-f", flanking) +

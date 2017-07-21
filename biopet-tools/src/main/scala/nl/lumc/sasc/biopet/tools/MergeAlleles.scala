@@ -86,7 +86,7 @@ object MergeAlleles extends ToolCommand {
         else output += variant.getStart -> List(variant)
       }
 
-      for ((k, v) <- SortedMap(output.toSeq: _*)) {
+      for ((_, v) <- SortedMap(output.toSeq: _*)) {
         writer.add(mergeAlleles(v))
       }
     }

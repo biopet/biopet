@@ -31,10 +31,10 @@ class SageCountFastqTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val fq = resourcePath("/paired01a.fq")
+  val fq: String = resourcePath("/paired01a.fq")
 
   @Test
-  def testMain() = {
+  def testMain(): Unit = {
     val temp = File.createTempFile("out", ".fastq")
     temp.deleteOnExit()
 

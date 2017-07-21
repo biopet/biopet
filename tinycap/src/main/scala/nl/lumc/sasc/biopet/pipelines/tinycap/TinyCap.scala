@@ -19,7 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.annotations.{AnnotationGff, AnnotationGtf, AnnotationRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.pipelines.gentrap.measures.{BaseCounts, FragmentsPerGene}
+import nl.lumc.sasc.biopet.pipelines.gentrap.measures.{BaseCounts, FragmentsPerGene, Measurement}
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.tinycap.measures.FragmentsPerSmallRna
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -89,9 +89,10 @@ class TinyCap(val parent: Configurable)
   lazy val fragmentsPerSmallRna = new FragmentsPerSmallRna(this)
   lazy val baseCounts = new BaseCounts(this)
 
-  def executedMeasures = (fragmentsPerGene :: fragmentsPerSmallRna :: baseCounts :: Nil)
+  def executedMeasures: List[QScript with Measurement] =
+    fragmentsPerGene :: fragmentsPerSmallRna :: baseCounts :: Nil
 
-  override def init = {
+  override def init(): Unit = {
     super.init()
     executedMeasures.foreach(x =>
       x.outputDir = new File(outputDir, "expression_measures" + File.separator + x.name))
@@ -122,8 +123,8 @@ class TinyCap(val parent: Configurable)
     Some(report)
   }
 
-  override def addMultiSampleJobs = {
-    super.addMultiSampleJobs
+  override def addMultiSampleJobs(): Unit = {
+    super.addMultiSampleJobs()
     executedMeasures.foreach(add)
   }
 }

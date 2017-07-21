@@ -49,13 +49,13 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
   def strandProtocols = Array("non_specific", "dutp")
 
   def aligner: Option[String] = None
-  def removeRiboReads: Option[Boolean] = Some(false)
+  def removeRiboReads(): Option[Boolean] = Some(false)
   def sample1: Boolean = true
   def sample2: Boolean = true
   def callVariants: Option[Boolean] = None
 
   @DataProvider(name = "expMeasuresstrandProtocol")
-  def expMeasuresStrandProtocolProvider = {
+  def expMeasuresStrandProtocolProvider: Array[Array[String]] = {
     for {
       strandProtocol <- strandProtocols
     } yield Array(strandProtocol)
@@ -64,7 +64,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
   private var dirs: List[File] = Nil
 
   @Test(dataProvider = "expMeasuresstrandProtocol")
-  def testGentrap(strandProtocol: String) = {
+  def testGentrap(strandProtocol: String): Unit = {
     val outputDir = GentrapTest.outputDir
     dirs :+= outputDir
     val settings = Map(
@@ -74,7 +74,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
       "strand_protocol" -> strandProtocol
     ) ++
       aligner.map("aligner" -> _) ++
-      removeRiboReads.map("remove_ribosomal_reads" -> _) ++
+      removeRiboReads().map("remove_ribosomal_reads" -> _) ++
       callVariants.map("call_variants" -> _)
     val configs: List[Option[Map[String, Any]]] = List(
       Some(settings),
@@ -113,10 +113,10 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
         .getOrElse("expression_measures", List())
         .asInstanceOf[List[String]]
         .sorted shouldBe
-        expressionMeasures.map(camelize(_)).sorted
+        expressionMeasures.map(camelize).sorted
       gentrap.summarySettings.get("call_variants") shouldBe Some(callVariants.getOrElse(false))
       gentrap.summarySettings.get("remove_ribosomal_reads") shouldBe Some(
-        removeRiboReads.getOrElse(false))
+        removeRiboReads().getOrElse(false))
       gentrap.summarySettings.get("strand_protocol") shouldBe Some(camelize(strandProtocol))
 
       if (expressionMeasures.contains("fragments_per_gene"))
@@ -143,8 +143,9 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
         assert(gentrap.functions.exists(_.isInstanceOf[Ln]))
       }
 
-      gentrap.removeRibosomalReads shouldBe removeRiboReads.getOrElse(false)
-      gentrap.functions.exists(_.isInstanceOf[WipeReads]) shouldBe removeRiboReads.getOrElse(false)
+      gentrap.removeRibosomalReads shouldBe removeRiboReads().getOrElse(false)
+      gentrap.functions.exists(_.isInstanceOf[WipeReads]) shouldBe removeRiboReads().getOrElse(
+        false)
 
       val classMap = Map(
         "gsnap" -> classOf[Gsnap],
@@ -158,13 +159,13 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String])
 
       alignerClass.foreach(c => assert(functions.keys.exists(_ == c)))
       classMap.values
-        .filterNot(Some(_) == alignerClass)
+        .filterNot(alignerClass.contains(_))
         .foreach(x => assert(!functions.keys.exists(_ == x)))
     }
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.filter(_.exists()).foreach { dir =>
       try {
         FileUtils.deleteDirectory(dir)
@@ -194,15 +195,15 @@ class GentrapNoSamplesTest extends GentrapTestAbstract(List("fragments_per_gene"
   override def sample2 = false
 }
 class GentrapRemoveRibosomeTest extends GentrapTestAbstract(List("fragments_per_gene")) {
-  override def removeRiboReads = Some(true)
+  override def removeRiboReads() = Some(true)
 }
 class GentrapCallVariantsTest extends GentrapTestAbstract(List("fragments_per_gene")) {
   override def callVariants = Some(true)
 }
 
 object GentrapTest {
-  def outputDir = Files.createTempDir()
-  val inputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
+  val inputDir: File = Files.createTempDir()
 
   def inputTouch(name: String): String = {
     val file = new File(inputDir, name)
@@ -257,7 +258,7 @@ object GentrapTest {
     "md5sum",
     // bam2wig executables
     "wigtobigwig"
-  ).map { case exe => exe -> Map("exe" -> "test") }.toMap
+  ).map(exe => exe -> Map("exe" -> "test")).toMap
 
   val sample1: Map[String, Any] = Map(
     "samples" -> Map(

@@ -34,7 +34,7 @@ class RunGubbins(val parent: Configurable) extends BiopetCommandLineFunction {
   var fastafile: File = _
 
   @Argument(required = true)
-  var outputDirectory: File = null
+  var outputDirectory: File = _
 
   executable = config("exe", default = "run_gubbins.py")
   var outgroup: Option[String] = config("outgroup")
@@ -72,7 +72,7 @@ class RunGubbins(val parent: Configurable) extends BiopetCommandLineFunction {
   }
 
   /** Return command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required("cd", outputDirectory) + " && " + required(executable) +
       optional("--outgroup", outgroup) +
       optional("--starting_tree", startingTree) +

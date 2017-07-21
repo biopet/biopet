@@ -98,7 +98,7 @@ object BiopetQCommandLine extends GatkLogging {
       System.exit(CommandLineProgram.result)
   }
 
-  val timestamp = System.currentTimeMillis
+  val timestamp: Long = System.currentTimeMillis
 }
 
 /**
@@ -135,7 +135,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
 
     // override createByType to pass the correct exceptions
     new PluginManager[QScript](qPluginType, List(qScriptClasses.toURI.toURL)) {
-      override def createByType(plugintype: Class[_ <: QScript]) = {
+      override def createByType(plugintype: Class[_ <: QScript]): QScript = {
         val noArgsConstructor = plugintype.getDeclaredConstructor()
         noArgsConstructor.setAccessible(true)
         noArgsConstructor.newInstance()
@@ -157,7 +157,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     * Takes the QScripts passed in, runs their script() methods, retrieves their generated
     * functions, and then builds and runs a QGraph based on the dependencies.
     */
-  def execute = {
+  def execute: Int = {
     var success = false
     var result = 1
     var functionsAndStatusSize = 0
@@ -181,7 +181,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       }
 
       qGraph.messengers =
-        allCommandPlugins.filter(_.statusMessenger != null).map(_.statusMessenger).toSeq
+        allCommandPlugins.filter(_.statusMessenger != null).map(_.statusMessenger)
 
       // TODO: Default command plugin argument?
       val remoteFileConverter =
@@ -270,7 +270,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     * so that their arguments can be inspected before QScript.script is called.
     * @return Array of dynamic sources
     */
-  override def getArgumentSources = {
+  override def getArgumentSources: Array[Class[_]] = {
     var plugins = Seq.empty[Class[_]]
     plugins ++= qScriptPluginManager.getPlugins
     plugins ++= qCommandPlugin.getPlugins
@@ -281,7 +281,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     * Returns the name of a script/plugin
     * @return The name of a script/plugin
     */
-  override def getArgumentSourceName(source: Class[_]) = {
+  override def getArgumentSourceName(source: Class[_]): String = {
     if (classOf[QScript].isAssignableFrom(source))
       qScriptPluginManager.getName(source.asSubclass(classOf[QScript]))
     else if (classOf[QCommandPlugin].isAssignableFrom(source))
@@ -294,7 +294,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     * Returns a ScalaCompoundArgumentTypeDescriptor that can parse argument sources into scala collections.
     * @return a ScalaCompoundArgumentTypeDescriptor
     */
-  override def getArgumentTypeDescriptors =
+  override def getArgumentTypeDescriptors: util.List[ArgumentTypeDescriptor] =
     util.Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
 
   override def getApplicationDetails: ApplicationDetails = {
@@ -338,7 +338,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     }
   }
 
-  def shutdown() = {
+  def shutdown(): AnyVal = {
     shuttingDown = true
     qGraph.shutdown()
     if (qScriptClasses != null) IOUtils.tryDelete(qScriptClasses)

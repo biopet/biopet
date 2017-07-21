@@ -39,7 +39,7 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", input) +
       required("-o", output) +
@@ -66,25 +66,20 @@ object CleverFixVCF extends ToolCommand {
                         toCheckFor: String,
                         replacement: String,
                         extraHeader: String): String = {
-    (inHeaderLine == toCheckFor) match {
-      case true => {
-        extraHeader + "\n" + replacement + "\n"
-      }
-      case _ => {
-        // We have to deal with matching records
-        // these don't start with #
+    if (inHeaderLine == toCheckFor) {
+      extraHeader + "\n" + replacement + "\n"
+    } else {
+      // We have to deal with matching records
+      // these don't start with #
 
-        inHeaderLine.startsWith("#") match {
-          case true =>
-            inHeaderLine + "\n"
-          case _ => {
-            // this should be a record
-            // Ensure the REF field is at least an N
-            val cols = inHeaderLine.split("\t")
-            cols(3) = "N"
-            cols.mkString("\t") + "\n"
-          }
-        }
+      if (inHeaderLine.startsWith("#")) {
+        inHeaderLine + "\n"
+      } else {
+        // this should be a record
+        // Ensure the REF field is at least an N
+        val cols = inHeaderLine.split("\t")
+        cols(3) = "N"
+        cols.mkString("\t") + "\n"
       }
     }
   }

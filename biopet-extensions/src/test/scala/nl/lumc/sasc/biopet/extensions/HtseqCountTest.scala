@@ -23,14 +23,14 @@ import scala.sys.process.{Process, ProcessLogger}
 
 class HtseqCountTest extends TestNGSuite with Matchers {
 
-  @BeforeClass def checkExecutable() = {
+  @BeforeClass def checkExecutable(): Unit = {
     val wrapper = new HtseqCount(null)
     val proc = Process(wrapper.versionCommand)
     val exitCode =
       try {
-        proc.run(ProcessLogger(lines => (), lines => ())).exitValue()
+        proc.run(ProcessLogger(_ => (), _ => ())).exitValue()
       } catch {
-        case e: java.io.IOException => -1
+        case _: java.io.IOException => -1
         // rethrow if it's not IOException (we only expect IOException if the executable is missing)
         case e: Exception => throw e
       }
@@ -39,5 +39,5 @@ class HtseqCountTest extends TestNGSuite with Matchers {
   }
 
   @Test(description = "htseq-count version number capture from executable")
-  def testVersion() = new HtseqCount(null).getVersion should not be "N/A"
+  def testVersion(): Unit = new HtseqCount(null).getVersion should not be "N/A"
 }

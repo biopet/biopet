@@ -37,7 +37,7 @@ class XcnvToBed(val parent: Configurable) extends ToolCommandFunction {
 
   override def defaultCoreMemory = 4
 
-  override def cmdLine = {
+  override def cmdLine: String = {
     super.cmdLine + required("-I", inputXcnv) + required("-O", outpuBed) + required("-S", sample)
   }
 

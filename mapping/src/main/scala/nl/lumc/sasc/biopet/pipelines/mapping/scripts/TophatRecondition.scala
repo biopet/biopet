@@ -30,10 +30,10 @@ class TophatRecondition(val parent: Configurable) extends PythonCommandLineFunct
   setPythonScript("tophat-recondition.py")
 
   @Input(doc = "Path to input accepted_hits.bam", required = true)
-  var inputBam: File = null
+  var inputBam: File = _
 
   @Output(doc = "Path to output unmapped_fixup.bam", required = false)
-  var outputSam: File = null
+  var outputSam: File = _
 
   private def inputDir: File = inputBam.getAbsoluteFile.getParentFile
 

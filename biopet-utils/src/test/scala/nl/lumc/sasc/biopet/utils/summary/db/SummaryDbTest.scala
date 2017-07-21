@@ -29,7 +29,7 @@ import SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoLibrary, NoModule, NoSample}
 
 /**
-  * Testing voor [[SummaryDb]]
+  * Testing for [[SummaryDb]]
   * Created by pjvanthof on 14/02/2017.
   */
 class SummaryDbTest extends TestNGSuite with Matchers {

@@ -245,7 +245,7 @@ object WipeReads extends ToolCommand {
     /** filter function for read IDs */
     val rgFilter =
       if (readGroupIds.isEmpty)
-        (r: SAMRecord) => true
+        (_: SAMRecord) => true
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
 
@@ -306,7 +306,7 @@ object WipeReads extends ToolCommand {
   def writeFilteredBam(filterFunc: (SAMRecord => Boolean),
                        inBam: SamReader,
                        outBam: SAMFileWriter,
-                       filteredOutBam: Option[SAMFileWriter] = None) = {
+                       filteredOutBam: Option[SAMFileWriter] = None): Unit = {
 
     logger.info("Writing output file(s) ...")
     try {

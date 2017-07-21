@@ -24,7 +24,7 @@ class Bcftools(val parent: Configurable) extends Variantcaller {
   val name = "bcftools"
   protected def defaultPrio = 8
 
-  def biopetScript {
+  def biopetScript() {
     val mp = new SamtoolsMpileup(this)
     mp.input = inputBams.values.toList
     mp.u = true

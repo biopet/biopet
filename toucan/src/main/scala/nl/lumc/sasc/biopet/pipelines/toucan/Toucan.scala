@@ -123,7 +123,7 @@ class Toucan(val parent: Configurable)
         logger.warn("Chunking combined with do_not_remove possibly leads to mangled CSQ fields")
 
       val cv = new CatVariants(this)
-      cv.variant = outputVcfFiles.toList
+      cv.variant = outputVcfFiles
       cv.outputFile = outputVcf
       add(cv)
     } else runChunk(useVcf, outputDir, outputName)
@@ -273,7 +273,7 @@ class Toucan(val parent: Configurable)
               xs.traverse[Option, String] { x =>
                 Option(x.toString).filter(_ == x)
               }
-            case otherwise => None
+            case _ => None
           }
       }
       val sampleGroup = maybeSampleGroup

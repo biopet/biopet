@@ -100,10 +100,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
         gears.outputDir = new File(sampleDir, "gears")
         Some(gears)
       case "none" => None
-      case x => {
+      case x =>
         Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
         None
-      }
     }
 
     def metricsPreprogressBam = true

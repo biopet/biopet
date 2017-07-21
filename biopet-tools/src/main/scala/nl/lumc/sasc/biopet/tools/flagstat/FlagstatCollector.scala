@@ -30,7 +30,7 @@ class FlagstatCollector {
   protected[FlagstatCollector] val names: mutable.Map[Int, String] = mutable.Map()
   protected[FlagstatCollector] var functions: Array[SAMRecord => Boolean] = Array()
   protected[FlagstatCollector] var totalCounts: Array[Long] = Array()
-  protected[FlagstatCollector] var crossCounts = Array.ofDim[Long](1, 1)
+  protected[FlagstatCollector] var crossCounts: Array[Array[Long]] = Array.ofDim[Long](1, 1)
 
   def writeAsTsv(file: File): Unit = {
     val writer = new PrintWriter(file)
@@ -39,7 +39,7 @@ class FlagstatCollector {
   }
 
   def loadDefaultFunctions() {
-    addFunction("All", record => true)
+    addFunction("All", _ => true)
     addFunction("Mapped", record => !record.getReadUnmappedFlag)
     addFunction("Duplicates", record => record.getDuplicateReadFlag)
     addFunction("FirstOfPair",
@@ -69,7 +69,7 @@ class FlagstatCollector {
   /**
     * The method will aditional checks based on  mapping quality of the sam records.
     *
-    * @param m steps of qaulity
+    * @param m steps of quality
     * @param max maximum quality
     */
   def loadQualityFunctions(m: Int = 10, max: Int = 60): Unit = {
@@ -80,7 +80,7 @@ class FlagstatCollector {
   /**
     * This method will add functions to check orientation, for this a combination of flags and read positions are used.
     */
-  def loadOrientationFunctions = {
+  def loadOrientationFunctions(): Unit = {
     this.addFunction(
       "First normal, second read inverted (paired end orientation)",
       record => {
@@ -182,9 +182,9 @@ class FlagstatCollector {
     val buffer = new StringBuilder
     buffer.append("Number\tTotal Flags\tFraction\tName\n")
     for (t <- 0 until names.size) {
-      val precentage = (totalCounts(t).toFloat / readsCount) * 100
+      val percentage = (totalCounts(t).toFloat / readsCount) * 100
       buffer.append(
-        "#" + (t + 1) + "\t" + totalCounts(t) + "\t" + f"$precentage%.4f" + "%\t" + names(t) + "\n")
+        "#" + (t + 1) + "\t" + totalCounts(t) + "\t" + f"$percentage%.4f" + "%\t" + names(t) + "\n")
     }
     buffer.append("\n")
 
@@ -228,8 +228,8 @@ class FlagstatCollector {
       for (t2 <- 0 until names.size) {
         val reads = crossCounts(t)(t2)
         if (fraction) {
-          val precentage = (reads.toFloat / totalCounts(t).toFloat) * 100
-          buffer.append(f"$precentage%.4f" + "%")
+          val percentage = (reads.toFloat / totalCounts(t).toFloat) * 100
+          buffer.append(f"$percentage%.4f" + "%")
         } else buffer.append(reads)
         if (t2 == names.size - 1) buffer.append("\n")
         else buffer.append("\t")
@@ -238,7 +238,7 @@ class FlagstatCollector {
     buffer.toString()
   }
 
-  def toSummaryMap = {
+  def toSummaryMap: Map[String, Any] = {
     val sortedKeys = names.keys.toArray.sorted
     sortedKeys.map(x => names(x) -> totalCounts(x)).toMap ++
       Map("cross_counts" -> crossCounts)
@@ -251,12 +251,12 @@ class FlagstatCollector {
     this.readsCount += other.readsCount
 
     this.totalCounts.zipWithIndex.foreach {
-      case (v, i) => this.totalCounts(i) += other.totalCounts(i)
+      case (_, i) => this.totalCounts(i) += other.totalCounts(i)
     }
     this.crossCounts.zipWithIndex.foreach {
       case (v1, i1) =>
         v1.zipWithIndex.foreach {
-          case (v2, i2) =>
+          case (_, i2) =>
             this.crossCounts(i1)(i2) += other.crossCounts(i1)(i2)
         }
     }

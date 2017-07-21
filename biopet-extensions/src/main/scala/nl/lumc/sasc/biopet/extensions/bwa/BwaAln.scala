@@ -32,7 +32,7 @@ class BwaAln(val parent: Configurable) extends Bwa with Reference {
   var fastq: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = null
+  var reference: File = _
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _
@@ -69,7 +69,7 @@ class BwaAln(val parent: Configurable) extends Bwa with Reference {
   }
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("aln") +
       optional("-t", threads) +

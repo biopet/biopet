@@ -23,13 +23,13 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 class ReorderSam(val parent: Configurable) extends Picard with Reference {
 
   @Input(doc = "Input SAM or BAM file", required = true)
-  var input: File = null
+  var input: File = _
 
   @Input(doc = "Reference sequence to reorder reads to match", required = true)
-  var reference: File = null
+  var reference: File = _
 
   @Output(doc = "Output SAM or BAM file", required = true)
-  var output: File = null
+  var output: File = _
 
   @Output(doc = "The output file to bam file to", required = true)
   lazy val outputIndex: File = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
@@ -47,7 +47,7 @@ class ReorderSam(val parent: Configurable) extends Picard with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +
       conditional(allowContigLengthDiscordance, "ALLOW_CONTIG_LENGTH_DISCORDANCE=TRUE") +

@@ -62,7 +62,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     if (qscript == root) { // This initialize the database
       qscript match {
-        case s: MultiSampleQScript => s.initSummaryDb
+        case s: MultiSampleQScript => s.initSummaryDb()
         case t: SampleLibraryTag =>
           t.sampleId.foreach { sampleName =>
             val sampleId = Await

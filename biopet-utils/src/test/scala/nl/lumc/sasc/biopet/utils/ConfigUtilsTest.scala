@@ -206,28 +206,28 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testMergeConflict: Unit = {
+  @Test def testMergeConflict(): Unit = {
     val map1 = Map("c" -> "1")
     val map2 = Map("c" -> "2")
     mergeMaps(map1, map2) shouldBe Map("c" -> "1")
-    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "12")
-    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "21")
-    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "22")
+    mergeMaps(map1, map2, (a, b, _) => a.toString + b.toString) shouldBe Map("c" -> "12")
+    mergeMaps(map2, map1, (a, b, _) => a.toString + b.toString) shouldBe Map("c" -> "21")
+    mergeMaps(map2, map2, (a, b, _) => a.toString + b.toString) shouldBe Map("c" -> "22")
   }
 
-  @Test def testNestedMergeConflict: Unit = {
+  @Test def testNestedMergeConflict(): Unit = {
     val map1 = Map("c" -> Map("x" -> "1"))
     val map2 = Map("c" -> Map("x" -> "2"))
     mergeMaps(map1, map2) shouldBe Map("c" -> Map("x" -> "1"))
-    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map(
+    mergeMaps(map1, map2, (a, b, _) => a.toString + b.toString) shouldBe Map(
       "c" -> Map("x" -> "12"))
-    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map(
+    mergeMaps(map2, map1, (a, b, _) => a.toString + b.toString) shouldBe Map(
       "c" -> Map("x" -> "21"))
-    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map(
+    mergeMaps(map2, map2, (a, b, _) => a.toString + b.toString) shouldBe Map(
       "c" -> Map("x" -> "22"))
   }
 
-  @Test def testFilterEmtpyMapValues: Unit = {
+  @Test def testFilterEmtpyMapValues(): Unit = {
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> "bla")) shouldBe Map("bla" -> "bla")
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map())) shouldBe Map()
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map(
@@ -239,7 +239,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
       "bla2" -> "bla")
   }
 
-  @Test def testUniqeKeys: Unit = {
+  @Test def testUniqueKeys(): Unit = {
     ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
     ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
     ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
@@ -258,7 +258,7 @@ object ConfigUtilsTest {
     file
   }
 
-  val jsonText1 =
+  val jsonText1: String =
     """
        |{
        | "int": 1337,
@@ -274,9 +274,9 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file1 = writeTemp(jsonText1, ".json")
+  val file1: File = writeTemp(jsonText1, ".json")
 
-  val json1 = {
+  val json1: Json = {
     ("int" := 1337) ->:
       ("double" := 13.37) ->:
       ("string" := "bla") ->:
@@ -297,7 +297,7 @@ object ConfigUtilsTest {
     "nested3" -> Map("nested2" -> Map("nested1" -> Map("dummy" -> 1)))
   )
 
-  val jsonText2 =
+  val jsonText2: String =
     """
        |{
        | "int": 7331,
@@ -309,9 +309,9 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file2 = writeTemp(jsonText2, ".yaml")
+  val file2: File = writeTemp(jsonText2, ".yaml")
 
-  val json2 = {
+  val json2: Json = {
     ("int" := 7331) ->:
       ("nested" := (("2" := 2) ->: ("3" := 2) ->: jEmptyObject)) ->:
       ("dummy" := 1) ->:
@@ -321,7 +321,7 @@ object ConfigUtilsTest {
   val map2: Map[String, Any] =
     Map("int" -> 7331, "nested" -> Map("2" -> 2, "3" -> 2), "dummy" -> 1)
 
-  val corruptJson =
+  val corruptJson: String =
     """
        |{
        | "int": 1337
@@ -329,5 +329,5 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val corruptFile = writeTemp(corruptJson, ".json")
+  val corruptFile: File = writeTemp(corruptJson, ".json")
 }

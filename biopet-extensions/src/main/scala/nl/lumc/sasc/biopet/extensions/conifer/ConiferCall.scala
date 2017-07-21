@@ -27,7 +27,7 @@ class ConiferCall(val parent: Configurable) extends Conifer {
   @Output(doc = "Output calls.txt", shortName = "out")
   var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       " call " +
       " --input" + required(input) +

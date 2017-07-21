@@ -28,7 +28,7 @@ class RawVcf(val parent: Configurable) extends Variantcaller {
 
   val keepRefCalls: Boolean = config("keep_ref_calls", default = false)
 
-  def biopetScript {
+  def biopetScript() {
     val rawFiles = inputBams.map {
       case (sample, bamFile) =>
         val mp = new SamtoolsMpileup(this) {

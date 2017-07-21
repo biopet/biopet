@@ -114,18 +114,14 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
         .filter(_.isInstanceOf[BiopetCommandLineFunction])
         .flatMap(_.asInstanceOf[BiopetCommandLineFunction].pipesJobs)
 
-      if (merge == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates) {
-        ""
-      }
-
       import MultisampleMapping.MergeStrategy
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
         (if (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)
            numberSamples
          else 0))
-      pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe ((if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam))
-                                                                           1
-                                                                         else 0) )
+      pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam))
+                                                                          1
+                                                                        else 0)
       pipeline.functions.count(_.isInstanceOf[SambambaMarkdup]) shouldBe
         (if (merge == MergeStrategy.PreProcessSambambaMarkdup) numberSamples else 0)
       pipeline.samples.foreach {
@@ -138,13 +134,13 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
           }
       }
       pipesJobs.count(_.isInstanceOf[Centrifuge]) shouldBe (if (unmappedToGears)
-                                                              (numberFastqLibs + numberSamples)
+                                                              numberFastqLibs + numberSamples
                                                             else if (mappingToGears != "none" && mappingToGears != "unmapped")
-                                                              (numberSamples)
+                                                              numberSamples
                                                             else 0)
 
       pipeline.functions.count(_.isInstanceOf[TaxExtractExtract]) shouldBe (if (extractTaxonomies)
-                                                                              (numberFastqLibs)
+                                                                              numberFastqLibs
                                                                             else 0)
 
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
@@ -158,20 +154,20 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 }
 
 class MultisampleMappingTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(true)
+  override def sample1 = Array(x = true)
 }
 
 class MultisampleMappingNoSamplesTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(false)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = false)
+  override def sample2 = Array(x = false)
   override def mergeStrategies =
     MultisampleMapping.MergeStrategy.values
       .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 class MultisampleMappingGearsTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(true)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = true)
+  override def sample2 = Array(x = false)
   override def unmappedToGears = true
   override def mergeStrategies =
     MultisampleMapping.MergeStrategy.values
@@ -181,15 +177,15 @@ class MultisampleMappingGearsTest extends MultisampleMappingTestTrait {
 class MultiSampleMappingExtractionTest extends MultisampleMappingTestTrait {
   override def mappingToGears = "all"
   override def extractTaxonomies = true
-  override def sample1 = Array(true)
+  override def sample1 = Array(x = true)
   MultisampleMapping.MergeStrategy.values
     .filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 
 }
 
 class MultisampleMappingBamTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(false)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = false)
+  override def sample2 = Array(x = false)
   override def sample3 = true
   override def mergeStrategies =
     MultisampleMapping.MergeStrategy.values
@@ -197,8 +193,8 @@ class MultisampleMappingBamTest extends MultisampleMappingTestTrait {
 }
 
 class MultisampleMappingWrongBamTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(false)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = false)
+  override def sample2 = Array(x = false)
   override def sample4 = true
   override def mergeStrategies =
     MultisampleMapping.MergeStrategy.values
@@ -206,8 +202,8 @@ class MultisampleMappingWrongBamTest extends MultisampleMappingTestTrait {
 }
 
 class MultisampleMappingCorrectBamTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(false)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = false)
+  override def sample2 = Array(x = false)
   override def correctReadgroups = true
   override def sample4 = true
   override def mergeStrategies =
@@ -216,8 +212,8 @@ class MultisampleMappingCorrectBamTest extends MultisampleMappingTestTrait {
 }
 
 class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
-  override def sample1 = Array(false)
-  override def sample2 = Array(false)
+  override def sample1 = Array(x = false)
+  override def sample2 = Array(x = false)
   override def bamToFastq = true
   override def sample3 = true
   override def sample4 = true

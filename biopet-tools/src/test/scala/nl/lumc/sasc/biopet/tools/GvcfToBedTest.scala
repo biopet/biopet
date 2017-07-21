@@ -31,6 +31,7 @@ import scala.io.Source
 /**
   * Created by ahbbollen on 13-10-15.
   */
+//noinspection TypeAnnotation,TypeAnnotation,TypeAnnotation,TypeAnnotation
 class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
 
   private def resourcePath(p: String): String = {
@@ -43,7 +44,7 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
 
   val veppedPath = resourcePath("/VEP_oneline.vcf")
 
-  @Test def testMinQuality = {
+  @Test def testMinQuality() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
@@ -57,7 +58,7 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
   }
 
   @Test
-  def testGvcfToBedOutput = {
+  def testGvcfToBedOutput() = {
     val tmp = File.createTempFile("gvcf2bedtest", ".bed")
     tmp.deleteOnExit()
     val args: Array[String] = Array("-I",
@@ -88,7 +89,7 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
   }
 
   @Test
-  def testGvcfToBedInvertedOutput = {
+  def testGvcfToBedInvertedOutput() = {
     val tmp = File.createTempFile("gvcf2bedtest", ".bed")
     val tmpInv = File.createTempFile("gvcf2bedtest", ".bed")
     tmp.deleteOnExit()
