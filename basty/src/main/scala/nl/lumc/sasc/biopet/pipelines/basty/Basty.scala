@@ -87,17 +87,15 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   def init() {
     shiva.outputDir = outputDir
-    shiva.init()
   }
 
   def biopetScript() {
-    shiva.biopetScript()
-    addAll(shiva.functions)
-    addSummaryQScript(shiva)
+    add(shiva)
 
     inputFiles :::= shiva.inputFiles
 
     addSamplesJobs()
+    addSummaryJobs()
   }
 
   def addMultiSampleJobs(): Unit = {
