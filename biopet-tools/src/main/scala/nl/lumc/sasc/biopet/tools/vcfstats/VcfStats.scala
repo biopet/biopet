@@ -89,7 +89,8 @@ object VcfStats extends ToolCommand {
                          samples,
                          adGenotypeTags,
                          adInfoTags,
-                         sampleDistributions))
+                         sampleDistributions,
+                         None))
 
     regionStats
       .flatMap(_._2)
@@ -100,7 +101,8 @@ object VcfStats extends ToolCommand {
                            samples,
                            adGenotypeTags,
                            adInfoTags,
-                           sampleDistributions)
+                           sampleDistributions,
+                           Some(k))
       }
     regionStats.unpersist()
 
@@ -159,7 +161,8 @@ object VcfStats extends ToolCommand {
             samples,
             adGenotypeTags,
             adInfoTags,
-            sampleDistributions)
+            sampleDistributions,
+            Some(bedRecord.chr))
           None
         }
       } else Future.successful(Some(bedRecord.chr -> stats))

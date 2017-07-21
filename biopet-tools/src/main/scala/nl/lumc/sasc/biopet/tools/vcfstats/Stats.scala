@@ -17,11 +17,10 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.{File, FileOutputStream, IOException, PrintWriter}
 
 import nl.lumc.sasc.biopet.tools.vcfstats.Stats.plotHeatmap
-import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.{getClass, logger, sampleDistributions}
-
-import scala.collection.mutable
+import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.logger
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, sortAnyAny}
 
+import scala.collection.mutable
 import scala.sys.process.{Process, ProcessLogger}
 
 /**
@@ -161,26 +160,32 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
 
   def writeAllOutput(outputDir: File,
                      samples: List[String],
-                     genotypeFields: List[String] = Nil,
-                     infoFields: List[String] = Nil,
-                     sampleDistributions: List[String] = Nil): Unit = {
+                     genotypeFields: List[String],
+                     infoFields: List[String],
+                     sampleDistributions: List[String],
+                     contig: Option[String]): Unit = {
     outputDir.mkdirs()
     this.writeToFile(new File(outputDir, "stats.json"),
                      samples,
                      genotypeFields,
                      infoFields,
-                     sampleDistributions)
+                     sampleDistributions,
+                     contig)
     writeOverlap(outputDir, samples)
   }
 
   def writeToFile(outputFile: File,
                   samples: List[String],
-                  genotypeFields: List[String] = Nil,
-                  infoFields: List[String] = Nil,
-                  sampleDistributions: List[String] = Nil): Unit = {
+                  genotypeFields: List[String],
+                  infoFields: List[String],
+                  sampleDistributions: List[String],
+                  contig: Option[String]): Unit = {
     val allWriter = new PrintWriter(outputFile)
-    val json = ConfigUtils.mapToJson(
-      this.getStatsAsMap(samples, genotypeFields, infoFields, sampleDistributions))
+    val map = this.getStatsAsMap(samples, genotypeFields, infoFields, sampleDistributions)
+    val json = contig match {
+      case Some(c) => ConfigUtils.mapToJson(Map("contigs" -> Map(c -> map)))
+      case _ => ConfigUtils.mapToJson(Map("total" -> map))
+    }
     allWriter.println(json.nospaces)
     allWriter.close()
   }
