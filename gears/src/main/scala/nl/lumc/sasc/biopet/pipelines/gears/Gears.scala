@@ -17,10 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
-import nl.lumc.sasc.biopet.extensions.{Gzip, Ln, Zcat}
-import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
+import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Ln, Zcat}
+import nl.lumc.sasc.biopet.extensions.qiime.{MergeOtuTables, PickOpenReferenceOtus}
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -41,12 +42,20 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
+  val qiimeMultisampleOpenReference: Boolean =
+    config("qiime_multisample_open_reference", default = false)
+
   /** Init for pipeline */
   def init(): Unit = {}
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
     addSamplesJobs()
+
+    if (qiimeMultisampleOpenReference && !samples.exists(_._2.gearsSingle.qiimeOpen.isDefined))
+      Logging.addError(
+        "You selected 'qiime_multisample_open_reference' but qiime_open_reference is not enabled")
+
     addSummaryJobs()
   }
 
@@ -114,6 +123,21 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
         add(Ln(qscript, openOtuMaps.head, qiimeOpenOtuMap.get))
         add(Ln(qscript, openOtuTables.head, qiimeOpenOtuTable.get))
       }
+
+    }
+
+    if (qiimeMultisampleOpenReference) {
+      val dir = new File(outputDir, "qiime_open_reference_multisample")
+
+      val cat = new Cat(this)
+      cat.input = samples.flatMap(_._2.gearsSingle.qiimeOpen).map(_.fastaInput).toList
+      cat.output = new File(dir, "combined.fna")
+      add(cat)
+
+      val openReference = new PickOpenReferenceOtus(this)
+      openReference.inputFasta = cat.output
+      openReference.outputDir = new File(dir, "pick_open_reference_otus")
+      add(openReference)
 
     }
   }

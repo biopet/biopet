@@ -36,16 +36,10 @@ class GearsQiimeClosed(val parent: Configurable)
     with SummaryQScript
     with SampleLibraryTag {
 
-  var fastqInput: File = _
-
-  override def defaults = Map(
-    "splitlibrariesfastq" -> Map(
-      "barcode_type" -> "not-barcoded"
-    )
-  )
+  var fastaInput: File = _
 
   def init(): Unit = {
-    require(fastqInput != null)
+    require(fastaInput != null)
     require(sampleId.isDefined)
   }
 
@@ -57,17 +51,9 @@ class GearsQiimeClosed(val parent: Configurable)
 
   def biopetScript(): Unit = {
 
-    val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= fastqInput
-    splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
-    sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
-    splitLib.isIntermediate = true
-    add(splitLib)
-
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = addDownsample(
-      splitLib.outputSeqs,
-      new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
+    closedReference.inputFasta =
+      addDownsample(fastaInput, new File(outputDir, s"${sampleId.get}.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
