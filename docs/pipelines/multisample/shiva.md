@@ -84,7 +84,7 @@ At this moment the following variant callers can be used
 
 ##### Germline
 
-When doing variantcalling mostly germline is used. This will detect variants based on the assumption that there is a fixed number of alleles. Mostly the default used is a ploidy of 2. When this assumption does not hold for your data somatic variantcalling can be a better solution.
+When doing variant calling most often germline is used. This will detect variants based on the assumption that there is a fixed number of alleles. Mostly the default used is a ploidy of 2. When this assumption does not hold for your data, somatic variant calling can be a better solution.
 
 | ConfigName | Tool | Description |
 | ---------- | ---- | ----------- |
@@ -101,7 +101,7 @@ When doing variantcalling mostly germline is used. This will detect variants bas
 
 ##### Somatic
 
-In contrast to germline variantcalling does somatic variantcalling does not have a direct assumption about the number of alleles. Some can also take a control into account, like MuTect2. Having a control is useful when analysing tumor samples.
+In contrast to germline variant calling, somatic variant calling does not have a direct assumption about the number of alleles. Some can also take a control into account, like MuTect2. Having a control is useful when analysing tumor samples.
 
 | ConfigName | Tool | Description |
 | ---------- | ---- | ----------- |
