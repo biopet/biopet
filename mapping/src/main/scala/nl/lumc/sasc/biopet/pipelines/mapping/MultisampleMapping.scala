@@ -231,14 +231,15 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
             } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get): _*)
           }
 
-          val bamMetrics = new BamMetrics(qscript)
-          bamMetrics.sampleId = Some(sampleId)
-          bamMetrics.libId = Some(libId)
-          bamMetrics.inputBam = bamFile.get
-          bamMetrics.outputDir = new File(libDir, "metrics")
-          bamMetrics.paired = inputR2.isDefined || inputBam.isDefined
-          add(bamMetrics)
-
+          if (!bamToFastq) {
+            val bamMetrics = new BamMetrics(qscript)
+            bamMetrics.sampleId = Some(sampleId)
+            bamMetrics.libId = Some(libId)
+            bamMetrics.inputBam = bamFile.get
+            bamMetrics.outputDir = new File(libDir, "metrics")
+            bamMetrics.paired = inputR2.isDefined || inputBam.isDefined
+            add(bamMetrics)
+          }
           if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, bamFile.get))
 
         } else logger.warn(s"Sample '$sampleId' does not have any input files")
