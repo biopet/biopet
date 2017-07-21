@@ -82,6 +82,10 @@ unifiedgenotyper:
 ## Supported variant callers
 At this moment the following variant callers can be used
 
+##### Germline
+
+When doing variant calling most often germline is used. This will detect variants based on the assumption that there is a fixed number of alleles. Mostly the default used is a ploidy of 2. When this assumption does not hold for your data, somatic variant calling can be a better solution.
+
 | ConfigName | Tool | Description |
 | ---------- | ---- | ----------- |
 | haplotypecaller_gvcf | <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a> | Running HaplotypeCaller in gvcf mode |
@@ -94,6 +98,31 @@ At this moment the following variant callers can be used
 | bcftools | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
 | bcftools_singlesample | <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a> |  |
 | varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
+
+##### Somatic
+
+In contrast to germline variant calling, somatic variant calling does not have a direct assumption about the number of alleles. Some can also take a control into account, like MuTect2. Having a control is useful when analysing tumor samples.
+
+| ConfigName | Tool | Description |
+| ---------- | ---- | ----------- |
+| mutect2 | <a href="https://software.broadinstitute.org/gatk/gatkdocs/3.7-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php">MuTect2</a> | Running mutect2, requires tumor normal pairs |
+| varscan_cns_singlesample | <a href="http://varscan.sourceforge.net/">varscan</a> |  |
+| raw | [Naive variant caller](../../tools/MpileupToVcf) |  |
+
+###### Config for tumor-normal pairs
+
+To define the tumor-normal pairs, the config can look like this:
+
+```yaml
+samples:
+  sample1:
+    tags:
+      type: tumor
+      normal: sample2
+  sample2:
+    tags:
+      type: normal
+```
 
 ## Config options
 
