@@ -21,9 +21,10 @@ package nl.lumc.sasc.biopet.pipelines.basty
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.{Cat, Raxml, RunGubbins}
-import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+import nl.lumc.sasc.biopet.pipelines.shiva.{Shiva, ShivaReport}
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -50,6 +51,13 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
   )
 
   lazy val shiva = new Shiva(qscript)
+
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val shiva = new ShivaReport(this)
+    shiva.outputDir = new File(outputDir, "report")
+    shiva.summaryDbFile = summaryDbFile
+    Some(shiva)
+  }
 
   def summaryFiles: Map[String, File] = Map()
 
