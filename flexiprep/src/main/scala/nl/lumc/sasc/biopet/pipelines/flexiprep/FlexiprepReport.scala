@@ -326,6 +326,7 @@ object FlexiprepReadSummaryReportPage {
       }
 
     }
+
     Map(
       "summary" -> summary,
       "outputDir" -> outputDir,
@@ -342,6 +343,44 @@ object FlexiprepReadSummaryReportPage {
     )
   }
 
+/* Todo: Map these values to some iterable over map */
+  def sortableThemeBootstrap(
+                              samples: Seq[Sample],
+                              libraries: Seq[Library],
+                              settings: Map[(Int, Int), Map[String, Option[Any]]],
+                              summary: SummaryDb,
+                              runId: Int
+                            ): Unit = {
+    for (sample <- samples.sortBy(_.name)) {
+      val sampleRowspan = {
+        libraries.filter(_.sampleId == sample.id).size +
+          settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
+      }
 
+      for (lib <- libraries.filter(_.sampleId == sample.id)) {
+        val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true)
+        val reads = if (paired == true) List("R1", "R2") else List("R1")
+        for (read <- reads)
+          if (read != "R2") {
+            val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
+            val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = seqstatPaths)
+            val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = seqstatPaths)
 
+            val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
+              "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
+            val clippingStats = summary.getStatKeys(runId, "flexiprep", "clipping_" + read, sample = sample.id, library = lib.id, keyValues = clippingPaths)
+
+            val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
+            val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming_" + read, sample = sample.id, library = lib.id, keyValues = trimmingPaths)
+
+            val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
+            val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
+            val clippingDiscardedToShort = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
+            val clippingDiscardedToLong = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
+            val trimmingDiscarded = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
+          }
+
+      }
+    }
+  }
 }
