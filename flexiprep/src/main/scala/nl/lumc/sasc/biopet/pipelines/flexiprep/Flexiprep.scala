@@ -208,7 +208,8 @@ class Flexiprep(val parent: Configurable)
       qcCmdR2.compress = false
 
       val fqSync = new FastqSync(this)
-      fqSync.refFastq = R1_in
+      fqSync.refFastq1 = R1_in
+      fqSync.refFastq2 = R2_in.get
       fqSync.inputFastq1 = qcCmdR1.output
       fqSync.inputFastq2 = qcCmdR2.output
       fqSync.outputFastq1 = new File(outDir, fastqR1Qc.getName)
