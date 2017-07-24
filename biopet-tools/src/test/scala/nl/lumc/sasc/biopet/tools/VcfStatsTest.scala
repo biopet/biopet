@@ -246,24 +246,24 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   def testCheckGeneral(): Unit = {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
-    val blah = checkGeneral(record, List())
+    val generalStats = checkGeneral(record, List())
 
-    blah.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
-    blah.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-Hom") shouldEqual Some(Map(1 -> 1))
-    blah.get("SampleDistribution-HomRef") shouldEqual Some(Map(1 -> 1))
-    blah.get("SampleDistribution-Available") shouldEqual Some(Map(3 -> 1))
-    blah.get("QUAL") shouldEqual Some(Map(1541 -> 1))
-    blah.get("SampleDistribution-HetNonRef") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-Het") shouldEqual Some(Map(2 -> 1))
-    blah.get("SampleDistribution-NoCall") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-Filtered") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
-    blah.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
+    generalStats.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
+    generalStats.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-Hom") shouldEqual Some(Map(1 -> 1))
+    generalStats.get("SampleDistribution-HomRef") shouldEqual Some(Map(1 -> 1))
+    generalStats.get("SampleDistribution-Available") shouldEqual Some(Map(3 -> 1))
+    generalStats.get("QUAL") shouldEqual Some(Map(1541 -> 1))
+    generalStats.get("SampleDistribution-HetNonRef") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-Het") shouldEqual Some(Map(2 -> 1))
+    generalStats.get("SampleDistribution-NoCall") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-Filtered") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
+    generalStats.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
 
-    blah.get("general") should not be empty
-    val general = blah("general")
+    generalStats.get("general") should not be empty
+    val general = generalStats("general")
 
     general.get("PolymorphicInSamples") shouldEqual Some(1)
     general.get("ComplexIndel") shouldEqual Some(0)
@@ -285,7 +285,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Symbolic") shouldEqual Some(0)
     general.get("SimpleInsertion") shouldEqual Some(1)
 
-    val total = blah
+    val total = generalStats
     total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
     total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
     total.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
@@ -300,8 +300,8 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     total.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
     total.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
 
-    blah.get("general") should not be empty
-    val totGeneral = blah("general")
+    generalStats.get("general") should not be empty
+    val totGeneral = generalStats("general")
 
     totGeneral.get("PolymorphicInSamples") shouldEqual Some(1)
     totGeneral.get("ComplexIndel") shouldEqual Some(0)
@@ -330,17 +330,17 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
     val genotype = record.getGenotype(0)
 
-    val blah = checkGenotype(record, genotype, List())
+    val genotypeStats = checkGenotype(record, genotype, List())
 
-    blah.get("GQ") shouldEqual Some(Map(99 -> 1))
-    blah.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
-    blah.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
-    blah.get("DP") shouldEqual Some(Map(45 -> 1))
-    blah.get("AD-alt") shouldEqual Some(Map(21 -> 1))
-    blah.get("AD-ref") shouldEqual Some(Map(24 -> 1))
-    blah.get("general") should not be empty
+    genotypeStats.get("GQ") shouldEqual Some(Map(99 -> 1))
+    genotypeStats.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    genotypeStats.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    genotypeStats.get("DP") shouldEqual Some(Map(45 -> 1))
+    genotypeStats.get("AD-alt") shouldEqual Some(Map(21 -> 1))
+    genotypeStats.get("AD-ref") shouldEqual Some(Map(24 -> 1))
+    genotypeStats.get("general") should not be empty
 
-    val general = blah("general")
+    val general = genotypeStats("general")
     general.get("Hom") shouldEqual Some(0)
     general.get("NoCall") shouldEqual Some(0)
     general.get("Variant") shouldEqual Some(1)
@@ -355,7 +355,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Het") shouldEqual Some(1)
     general.get("HetNonRef") shouldEqual Some(0)
 
-    val total = blah
+    val total = genotypeStats
     total.get("GQ") shouldEqual Some(Map(99 -> 1))
     total.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
     total.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
@@ -364,7 +364,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     total.get("AD-ref") shouldEqual Some(Map(24 -> 1))
     total.get("general") should not be empty
 
-    val totGeneral = blah("general")
+    val totGeneral = genotypeStats("general")
     totGeneral.get("Hom") shouldEqual Some(0)
     totGeneral.get("NoCall") shouldEqual Some(0)
     totGeneral.get("Variant") shouldEqual Some(1)
