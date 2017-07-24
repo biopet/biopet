@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.qiime.SplitLibrariesFastq
 import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.Logging
@@ -50,6 +51,12 @@ class GearsSingle(val parent: Configurable)
 
   @Argument(required = false)
   var outputName: String = _
+
+  override def defaults = Map(
+    "splitlibrariesfastq" -> Map(
+      "barcode_type" -> "not-barcoded"
+    )
+  )
 
   def getOutputName: String = {
     if (outputName == null) {
@@ -221,6 +228,16 @@ class GearsSingle(val parent: Configurable)
       }
     }
 
+    lazy val splitLibrariesFastq: File = {
+      val splitLib = new SplitLibrariesFastq(this)
+      splitLib.input :+= combinedFastq
+      splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
+      sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
+      splitLib.isIntermediate = true
+      add(splitLib)
+      splitLib.outputSeqs
+    }
+
     krakenScript foreach { kraken =>
       kraken.fastqR1 = mergedR1
       kraken.fastqR2 = mergedR2
@@ -242,14 +259,14 @@ class GearsSingle(val parent: Configurable)
 
     qiimeClosed foreach { qiimeClosed =>
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
-      qiimeClosed.fastqInput = combinedFastq
+      qiimeClosed.fastaInput = splitLibrariesFastq
       add(qiimeClosed)
       outputFiles += "qiime_closed_otu_table" -> qiimeClosed.otuTable
     }
 
     qiimeOpen foreach { qiimeOpen =>
       qiimeOpen.outputDir = new File(outputDir, "qiime_open")
-      qiimeOpen.fastqInput = combinedFastq
+      qiimeOpen.fastaInput = splitLibrariesFastq
       add(qiimeOpen)
       outputFiles += "qiime_open_otu_table" -> qiimeOpen.otuTable
     }
