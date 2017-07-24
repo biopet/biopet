@@ -33,6 +33,8 @@
 <%@ var librariesCount: Int %>
 <%@ var clipCount: Int %>
 <%@ var trimCount: Int %>
+<%@ var flexiprepReportPlotRead1: Option[Unit] %>
+<%@ var flexiprepReportPlotRead2: Option[Unit] %>
 <%@ var %>
 
 #if (showIntro)
@@ -76,8 +78,8 @@
 
 #if (showPlot)
     #{
-        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
-        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
+        flexiprepReportPlotRead1.getOrElse(None)
+        if (paired) flexiprepReportPlotRead2.getOrElse(None)
     }#
     <div class="panel-body">
     <div class="row">

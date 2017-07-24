@@ -296,11 +296,13 @@ object FlexiprepReadSummary {
 
 object FlexiprepReadSummaryReportPage {
   def values(summary: SummaryDb,
+             outputDir: File,
              runId: Int,
              allSamples: Seq[Sample],
              allLibraries: Seq[Library],
              sampleId: Option[Int] = None,
-             libId: Option[Int] = None) = {
+             libId: Option[Int] = None,
+             showPlot: Boolean = false )= {
 
     val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map("skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
@@ -314,11 +316,23 @@ object FlexiprepReadSummaryReportPage {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
     val librariesCount = libraries.size
 
+    /* Todo: Map this conditionally */
+    if (showPlot){
+      val flexiprepReportPlotRead1: Option[Unit]  = Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId))
+      if (paired) {
+        val flexiprepReportPlotRead2: Option[Unit] = Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId))
+        else val flexiprepReportPlotRead2: Option[Unit] = None
+      else val flexiprepReportPlotRead1: Option[Unit] = None
+      }
+
+    }
     Map(
       "summary" -> summary,
+      "outputDir" -> outputDir,
       "runId" -> runId,
       "sampleId" -> sampleId,
       "libId" -> libId,
+      "showPlot"
       "settings" -> settings,
       "samples" -> samples,
       "libraries" -> libraries,
@@ -327,13 +341,7 @@ object FlexiprepReadSummaryReportPage {
       "librariesCount" -> librariesCount
     )
   }
-  def settings(summary: SummaryDb,
-               runId: Int) = {  }
 
-  def paired(summary: SummaryDb,
-             runId: Int,
-             sampleId: Option[Int],
-             libId: Option[Int]) =
 
 
 }
