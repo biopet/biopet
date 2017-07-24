@@ -207,15 +207,18 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     for (inputFile <- inputFiles) {
       inputFile.md5 match {
         case Some(checksum) =>
-          val checkMd5 = new CheckChecksum
-          checkMd5.inputFile = inputFile.file
-          if (!SummaryQScript.md5sumCache.contains(inputFile.file))
-            addChecksum(inputFile.file)
-          checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
-          checkMd5.checksum = checksum
-          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile,
-                                            checkMd5.checksumFile.getName + ".check.out")
-          add(checkMd5)
+          if (!SummaryQScript.checkChecksumCache.contains(inputFile.file)) {
+            val checkMd5 = new CheckChecksum
+            checkMd5.inputFile = inputFile.file
+            if (!SummaryQScript.md5sumCache.contains(inputFile.file))
+              addChecksum(inputFile.file)
+            checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
+            checkMd5.checksum = checksum
+            checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile,
+                                              checkMd5.checksumFile.getName + ".check.out")
+            add(checkMd5)
+            SummaryQScript.checkChecksumCache.add(inputFile.file)
+          }
         case _ =>
       }
     }
@@ -238,4 +241,5 @@ object SummaryQScript {
 
   /** Cache to have no duplicate jobs */
   protected[summary] val md5sumCache: mutable.Map[File, File] = mutable.Map()
+  protected[summary] val checkChecksumCache: mutable.Set[File] = mutable.Set()
 }

@@ -21,9 +21,10 @@ package nl.lumc.sasc.biopet.pipelines.basty
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.{Cat, Raxml, RunGubbins}
-import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+import nl.lumc.sasc.biopet.pipelines.shiva.{Shiva, ShivaReport}
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -44,12 +45,21 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   val numBoot: Int = config("boot_runs", default = 100, namespace = "raxml").asInt
 
+  val executeGubbins: Boolean = config("execute_gubbins", default = true)
+
   override def defaults = Map(
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
   )
 
   lazy val shiva = new Shiva(qscript)
+
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val shiva = new ShivaReport(this)
+    shiva.outputDir = new File(outputDir, "report")
+    shiva.summaryDbFile = summaryDbFile
+    Some(shiva)
+  }
 
   def summaryFiles: Map[String, File] = Map()
 
@@ -87,17 +97,15 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   def init() {
     shiva.outputDir = outputDir
-    shiva.init()
   }
 
   def biopetScript() {
-    shiva.biopetScript()
-    addAll(shiva.functions)
-    addSummaryQScript(shiva)
+    add(shiva)
 
     inputFiles :::= shiva.inputFiles
 
     addSamplesJobs()
+    addSummaryJobs()
   }
 
   def addMultiSampleJobs(): Unit = {
@@ -186,11 +194,13 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
       raxmlBi.w = dirSufixRaxml
       add(raxmlBi)
 
-      val gubbins = new RunGubbins(this)
-      gubbins.fastafile = concensusVariants
-      gubbins.startingTree = raxmlBi.getBipartitionsFile
-      gubbins.outputDirectory = dirSufixGubbins
-      add(gubbins)
+      if (executeGubbins) {
+        val gubbins = new RunGubbins(this)
+        gubbins.fastafile = concensusVariants
+        gubbins.startingTree = raxmlBi.getBipartitionsFile
+        gubbins.outputDirectory = dirSufixGubbins
+        add(gubbins)
+      }
     }
 
     addTreeJobs(catVariantsSnps.output,
