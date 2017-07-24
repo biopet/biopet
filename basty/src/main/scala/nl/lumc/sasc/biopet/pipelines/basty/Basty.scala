@@ -45,6 +45,8 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   val numBoot: Int = config("boot_runs", default = 100, namespace = "raxml").asInt
 
+  val executeGubbins: Boolean = config("execute_gubbins", default = true)
+
   override def defaults = Map(
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
@@ -192,11 +194,13 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
       raxmlBi.w = dirSufixRaxml
       add(raxmlBi)
 
-      val gubbins = new RunGubbins(this)
-      gubbins.fastafile = concensusVariants
-      gubbins.startingTree = raxmlBi.getBipartitionsFile
-      gubbins.outputDirectory = dirSufixGubbins
-      add(gubbins)
+      if (executeGubbins) {
+        val gubbins = new RunGubbins(this)
+        gubbins.fastafile = concensusVariants
+        gubbins.startingTree = raxmlBi.getBipartitionsFile
+        gubbins.outputDirectory = dirSufixGubbins
+        add(gubbins)
+      }
     }
 
     addTreeJobs(catVariantsSnps.output,
