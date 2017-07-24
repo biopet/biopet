@@ -24,12 +24,13 @@ import scala.collection.JavaConverters._
 
 object FastqSync extends ToolCommand {
 
-  /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
-  private val idRegex = """[_/][12]$""".r
-
   /** Implicit class to allow for lazy retrieval of FastqRecord ID without any read pair mark */
   private implicit class FastqPair(fq: FastqRecord) {
-    lazy val fragId: String = idRegex.split(fq.getReadHeader.split(" ")(0))(0)
+    lazy val fragId: String = fq.getReadHeader.split(" ").head match {
+      case x if x.endsWith(idSufixes._1) => x.stripSuffix(idSufixes._1)
+      case x if x.endsWith(idSufixes._2) => x.stripSuffix(idSufixes._2)
+      case x => x
+    }
   }
 
   /**
@@ -106,11 +107,12 @@ object FastqSync extends ToolCommand {
     (numDiscA, numDiscB, numKept)
   }
 
-  case class Args(refFastq: File = new File(""),
-                  inputFastq1: File = new File(""),
-                  inputFastq2: File = new File(""),
-                  outputFastq1: File = new File(""),
-                  outputFastq2: File = new File(""))
+  case class Args(refFastq1: File = null,
+                  refFastq2: File = null,
+                  inputFastq1: File = null,
+                  inputFastq2: File = null,
+                  outputFastq1: File = null,
+                  outputFastq2: File = null)
 
   class OptParser extends AbstractOptParser[Args](commandName) {
 
@@ -121,29 +123,35 @@ object FastqSync extends ToolCommand {
         |file will be gzipped when the input is also gzipped.
       """.stripMargin)
 
-    opt[File]('r', "ref") required () valueName "<fastq>" action { (x, c) =>
-      c.copy(refFastq = x)
+    opt[File]('r', "ref1") unbounded () required () valueName "<fastq>" action { (x, c) =>
+      c.copy(refFastq1 = x)
     } validate { x =>
       if (x.exists) success else failure("Reference FASTQ file not found")
-    } text "Reference FASTQ file"
+    } text "Reference R1 FASTQ file"
 
-    opt[File]('i', "in1") required () valueName "<fastq>" action { (x, c) =>
+    opt[File]("ref2") unbounded () required () valueName "<fastq>" action { (x, c) =>
+      c.copy(refFastq2 = x)
+    } validate { x =>
+      if (x.exists) success else failure("Reference FASTQ file not found")
+    } text "Reference R2 FASTQ file"
+
+    opt[File]('i', "in1") unbounded () required () valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq1 = x)
     } validate { x =>
       if (x.exists) success else failure("Input FASTQ file 1 not found")
     } text "Input FASTQ file 1"
 
-    opt[File]('j', "in2") required () valueName "<fastq[.gz]>" action { (x, c) =>
+    opt[File]('j', "in2") unbounded () required () valueName "<fastq[.gz]>" action { (x, c) =>
       c.copy(inputFastq2 = x)
     } validate { x =>
       if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2"
 
-    opt[File]('o', "out1") required () valueName "<fastq[.gz]>" action { (x, c) =>
+    opt[File]('o', "out1") unbounded () required () valueName "<fastq[.gz]>" action { (x, c) =>
       c.copy(outputFastq1 = x)
     } text "Output FASTQ file 1"
 
-    opt[File]('p', "out2") required () valueName "<fastq>" action { (x, c) =>
+    opt[File]('p', "out2") unbounded () required () valueName "<fastq>" action { (x, c) =>
       c.copy(outputFastq2 = x)
     } text "Output FASTQ file 2"
   }
@@ -163,7 +171,9 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    val refReader = new FastqReader(commandArgs.refFastq)
+    idSufixes = findR1R2Suffixes(commandArgs.refFastq1, commandArgs.refFastq2)
+
+    val refReader = new FastqReader(commandArgs.refFastq1)
     val AReader = new FastqReader(commandArgs.inputFastq1)
     val BReader = new FastqReader(commandArgs.inputFastq2)
     val AWriter = new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000)
@@ -182,4 +192,28 @@ object FastqSync extends ToolCommand {
       BWriter.close()
     }
   }
+
+  /**
+    * This method will look up the unique suffix for R1 and R2
+    *
+    * @param fastqR1 input R1 file
+    * @param fastqR2 Input R2 file
+    * @return suffix for (R1, R2)
+    */
+  def findR1R2Suffixes(fastqR1: File, fastqR2: File): (String, String) = {
+    val refReader1 = new FastqReader(fastqR1)
+    val refReader2 = new FastqReader(fastqR2)
+    val r1Name = refReader1.next().getReadHeader.split(" ").head
+    val r2Name = refReader2.next().getReadHeader.split(" ").head
+    refReader1.close()
+    refReader2.close()
+
+    val genericName = new String(r1Name.zip(r2Name).takeWhile(x => x._1 == x._2).map(_._1).toArray)
+
+    (r1Name.stripPrefix(genericName), r2Name.stripPrefix(genericName))
+  }
+
+  /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
+  private[tools] var idSufixes: (String, String) = _
+
 }

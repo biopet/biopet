@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, ToolCommandFunction}
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
@@ -35,7 +35,11 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
 
   /** Original FASTQ file (read 1 or 2) */
   @Input(required = true)
-  var refFastq: File = _
+  var refFastq1: File = _
+
+  /** Original FASTQ file (read 1 or 2) */
+  @Input(required = true)
+  var refFastq2: File = _
 
   /** "Input read 1 FASTQ file" */
   @Input(required = true)
@@ -61,7 +65,8 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
 
   override def cmdLine: String =
     super.cmdLine +
-      required("-r", refFastq) +
+      required("-r", refFastq1) +
+      required("--ref2", refFastq2) +
       required("-i", inputFastq1) +
       required("-j", inputFastq2) +
       required("-o", outputFastq1) +
