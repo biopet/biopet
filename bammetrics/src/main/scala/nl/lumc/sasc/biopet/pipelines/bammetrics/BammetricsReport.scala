@@ -284,6 +284,9 @@ object BammetricsReport extends ReportBuilder {
           .getOrElse(throw new IllegalStateException("Sample must be there"))
         val libraryName =
           library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
+        if (yKeyList.find(x => map.contains(x) && map(x).isDefined).isEmpty) {
+          ""
+        }
         val yKey = yKeyList.find(x => map.contains(x) && map(x).isDefined).get
         val xKey = xKeyList.find(x => map.contains(x) && map(x).isDefined).get
         Map(
