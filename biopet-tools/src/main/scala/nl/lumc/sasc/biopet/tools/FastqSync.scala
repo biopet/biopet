@@ -172,7 +172,7 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    idSufixes = findR1R2Subfixes(commandArgs.refFastq1, commandArgs.refFastq2)
+    idSufixes = findR1R2Suffixes(commandArgs.refFastq1, commandArgs.refFastq2)
 
     val refReader = new FastqReader(commandArgs.refFastq1)
     val AReader = new FastqReader(commandArgs.inputFastq1)
@@ -199,9 +199,9 @@ object FastqSync extends ToolCommand {
     *
     * @param fastqR1 input R1 file
     * @param fastqR2 Input R2 file
-    * @return subfix for (R1, R2)
+    * @return suffix for (R1, R2)
     */
-  def findR1R2Subfixes(fastqR1: File, fastqR2: File): (String, String) = {
+  def findR1R2Suffixes(fastqR1: File, fastqR2: File): (String, String) = {
     val refReader1 = new FastqReader(fastqR1)
     val refReader2 = new FastqReader(fastqR2)
     val r1Name = refReader1.next().getReadHeader.split(" ").head
