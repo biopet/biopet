@@ -293,3 +293,47 @@ object FlexiprepReadSummary {
     }
   }
 }
+
+object FlexiprepReadSummaryReportPage {
+  def values(summary: SummaryDb,
+             runId: Int,
+             allSamples: Seq[Sample],
+             allLibraries: Seq[Library],
+             sampleId: Option[Int] = None,
+             libId: Option[Int] = None) = {
+
+    val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map("skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
+    settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
+    val paired = if (sampleId.isDefined && libId.isDefined){
+      summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)}
+    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
+
+    val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
+    val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
+    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
+    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
+    val librariesCount = libraries.size
+
+    Map(
+      "summary" -> summary,
+      "runId" -> runId,
+      "sampleId" -> sampleId,
+      "libId" -> libId,
+      "settings" -> settings,
+      "samples" -> samples,
+      "libraries" -> libraries,
+      "trimCount" -> trimCount,
+      "clipCount" -> clipCount,
+      "librariesCount" -> librariesCount
+    )
+  }
+  def settings(summary: SummaryDb,
+               runId: Int) = {  }
+
+  def paired(summary: SummaryDb,
+             runId: Int,
+             sampleId: Option[Int],
+             libId: Option[Int]) =
+
+
+}
