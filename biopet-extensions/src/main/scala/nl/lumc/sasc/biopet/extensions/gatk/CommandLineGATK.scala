@@ -420,11 +420,3 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
     optional("-l", logging_level) +
     optional("-log", log_to_file)
 }
-
-object CommandLineGATK {
-
-  def isFileWithTag(file: File, tag: String): Boolean = file match {
-    case f:TaggedFile => f.tag == tag
-    case _ => false
-  }
-}

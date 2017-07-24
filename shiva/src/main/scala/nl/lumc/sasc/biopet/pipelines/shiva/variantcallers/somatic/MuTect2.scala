@@ -47,8 +47,8 @@ class MuTect2(val parent: Configurable) extends SomaticVariantCaller {
       if (runConEst) {
         val namePrefix = outputFile.getAbsolutePath.stripSuffix(".vcf.gz")
         val contEst = new gatk.ContEst(this)
-        inputBams.get(pair.tumorSample).foreach(contEst.input_file :+= _)
-        inputBams.get(pair.normalSample).foreach(contEst.input_file :+= _)
+        inputBams.get(pair.tumorSample).foreach(contEst.input_file :+= TaggedFile(_, "eval"))
+        inputBams.get(pair.normalSample).foreach(contEst.input_file :+= TaggedFile(_, "genotype"))
         contEst.output = new File(s"$namePrefix.contamination.txt")
         contEst.BQSR = bqsrFile
         add(contEst)
