@@ -421,7 +421,7 @@ object ReportBuilder {
       }
     )
   )
-    */
+   */
   /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
   engine.allowReload = false

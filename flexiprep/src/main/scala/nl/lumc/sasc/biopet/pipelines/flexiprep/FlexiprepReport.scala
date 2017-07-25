@@ -30,6 +30,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.Schema.Library
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
+import scala.collection.mutable
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
@@ -225,77 +226,6 @@ object FlexiprepReport extends ReportBuilder {
 
 object FlexiprepReadSummary {
   def values(summary: SummaryDb,
-             runId: Int,
-             allSamples: Seq[Sample],
-             allLibraries: Seq[Library],
-             multisample: Boolean = true,
-             sampleId: Option[Int] = None,
-             libId: Option[Int] = None): Map[String, Any] = {
-    val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
-    val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
-    val settings = summary.getSettingsForLibraries(runId,
-                                                   "flexiprep",
-                                                   keyValues =
-                                                     Map("skip_trim" -> List("skip_trim"),
-                                                         "skip_clip" -> List("skip_clip"),
-                                                         "paired" -> List("paired")))
-
-    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
-    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
-    val librariesCount = libraries.size
-    val paired: Boolean =
-      if (sampleId.isDefined && libId.isDefined)
-        summary
-          .getSettingKeys(runId,
-                          "flexiprep",
-                          NoModule,
-                          SampleId(sampleId.get),
-                          LibraryId(libId.get),
-                          keyValues = Map("paired" -> List("paired")))
-          .getOrElse("paired", None) == Some(true)
-      else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
-
-/* TODO make this an iterable map object that kan be accessed in flexiprepReadSummary.ssp **/
-    def placeHolder = {
-      for (sample <- samples.sortBy(_.name))
-        {
-        val sampleRowspan = {
-          libraries.filter(_.sampleId == sample.id).size +
-            settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
-        }
-
-        if (multisample)
-          for (lib <- libraries.filter(_.sampleId == sample.id))
-            val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true)
-            val reads = if (paired == true) List("R1", "R2") else List("R1")
-            for (read <- reads)
-              if (read == "R2"){
-
-                val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-                val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-                val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-
-                val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
-              "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-                val clippingStats = summary.getStatKeys(runId, "flexiprep", "clipping_" + read, sample = sample.id, library = lib.id, keyValues = clippingPaths)
-
-                val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
-                val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming_" + read, sample = sample.id, library = lib.id, keyValues = trimmingPaths)
-
-                val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
-                val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
-                val clippingDiscardedToShort = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
-                val clippingDiscardedToLong = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
-                val trimmingDiscarded = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
-
-              }
-         }
-    }
-  }
-}
-
-object FlexiprepReadSummaryReportPage {
-  def values(summary: SummaryDb,
              outputDir: File,
              runId: Int,
              allSamples: Seq[Sample],
@@ -305,26 +235,57 @@ object FlexiprepReadSummaryReportPage {
              showPlot: Boolean = false,
              showTable: Boolean = true,
              showIntro: Boolean = true,
-             multisample: Boolean = true
-              )= {
+             multisample: Boolean = true): Map[String, Any] = {
 
-    val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map("skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
-    settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
-    val paired = if (sampleId.isDefined && libId.isDefined){
-      summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)}
-    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
+    val settings = summary.getSettingsForLibraries(runId,
+                                                   "flexiprep",
+                                                   keyValues =
+                                                     Map("skip_trim" -> List("skip_trim"),
+                                                         "skip_clip" -> List("skip_clip"),
+                                                         "paired" -> List("paired")))
+    settings.count(_._2.getOrElse("skip_trim", None).contains(true))
+    val paired =
+      if (sampleId.isDefined && libId.isDefined)
+        summary
+          .getSettingKeys(runId,
+                          "flexiprep",
+                          NoModule,
+                          SampleId(sampleId.get),
+                          LibraryId(libId.get),
+                          keyValues = Map("paired" -> List("paired")))
+          .getOrElse("paired", None)
+          .contains(true)
+      else settings.count(_._2.getOrElse("paired", None).contains(true)) >= 1
 
     val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
     val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
-    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
-    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
+    val trimCount = settings.count(_._2.getOrElse("skip_trim", None).contains(false))
+    val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
-    val flexiprepReportPlotRead1: Option[Unit] = if (showPlot){Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId))}
-    val flexiprepReportPlotRead2: Option[Unit] = if (showPlot){ if (paired){Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId))}}
+    if (showPlot) {
+      FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1", "R1", summary, sampleId = sampleId)
+      if (paired)
+        FlexiprepReport.readSummaryPlot(outputDir,
+                                        "QC_Reads_R2",
+                                        "R2",
+                                        summary,
+                                        sampleId = sampleId)
+    }
 
+    val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
+    val clippingPaths = Map(
+      "num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"))
+    val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
 
-    val sortableThemeBootstrapValues = sortableThemeBootstrap(samples,libraries,settings,summary,runId)
+    val seqstatStats: Map[(Int, Int), Map[String, Option[Any]]] =
+      summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1", sampleId, seqstatPaths)
+    val seqstatQCStats =
+      summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1_QC", sampleId, seqstatPaths)
+    val clippingStats =
+      summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1", sampleId, clippingPaths)
+    val trimmingStats =
+      summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1", sampleId, trimmingPaths)
 
     Map(
       "summary" -> summary,
@@ -332,67 +293,17 @@ object FlexiprepReadSummaryReportPage {
       "runId" -> runId,
       "sampleId" -> sampleId,
       "libId" -> libId,
-      "showPlot"
+      "showPlot" -> showPlot,
       "settings" -> settings,
       "samples" -> samples,
       "libraries" -> libraries,
       "trimCount" -> trimCount,
       "clipCount" -> clipCount,
       "librariesCount" -> librariesCount,
-      "flexipreprReportPlotRead1" -> flexiprepReportPlotRead1,
-      "flexipreprReportPlotRead2" -> flexiprepReportPlotRead2,
-      "sortableThemeBootstrap" -> sortableThemeBootstrapValues
+      "seqstatStats" -> seqstatStats,
+      "seqstatQCStats" -> seqstatQCStats,
+      "clippingStats" -> clippingStats,
+      "trimmingStats" -> trimmingStats
     )
-  }
-
-  def sortableThemeBootstrap(
-                              samples: Seq[Sample],
-                              libraries: Seq[Library],
-                              settings: Map[(Int, Int), Map[String, Option[Any]]],
-                              summary: SummaryDb,
-                              runId: Int
-                            ):scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]] = {
-
-    var sortableThemeBootstrap = scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]]() /* iterable map */
-
-    for (sample <- samples.sortBy(_.name)) {
-      val sampleRowspan = {
-        libraries.filter(_.sampleId == sample.id).size +
-          settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
-      }
-
-      for (lib <- libraries.filter(_.sampleId == sample.id)) {
-        val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true)
-        val reads = if (paired == true) List("R1", "R2") else List("R1")
-        for (read <- reads)
-          if (read != "R2") {
-            val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-            val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-            val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-
-            val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
-              "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-            val clippingStats = summary.getStatKeys(runId, "flexiprep", "clipping_" + read, sample = sample.id, library = lib.id, keyValues = clippingPaths)
-
-            val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
-            val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming_" + read, sample = sample.id, library = lib.id, keyValues = trimmingPaths)
-
-            val beforeTotal: Long = seqstatStats("num_total").getOrElse(0).toString.toLong
-            val afterTotal: Long = seqstatQcStats("num_total").getOrElse(0).toString.toLong
-            val clippingDiscardedTooShort: Long = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
-            val clippingDiscardedTooLong: Long = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
-            val trimmingDiscarded: Long = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
-          sortableThemeBootstrap(sample.id)(lib.id)(read) = Map(
-            "beforeTotal" -> beforeTotal,
-            "afterTotal" -> afterTotal,
-            "clippingDiscardedTooShort" -> clippingDiscardedTooShort,
-            "clippingDiscardedTooLong" -> clippingDiscardedTooLong,
-            "trimmingDiscarded" -> trimmingDiscarded
-          )
-          }
-
-      }
-    }
-  sortableThemeBootstrap
   }
 }

@@ -1,14 +1,8 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
 #import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
-#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
-#import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
-#import(scala.concurrent.Await)
-#import(scala.concurrent.duration.Duration)
 #import(java.io.File)
 #import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
-<%@ var summary: SummaryDb %>
 <%@ var runId: Int %>
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
@@ -28,11 +22,12 @@
 <%@ var librariesCount: Int %>
 <%@ var clipCount: Int %>
 <%@ var trimCount: Int %>
-<%@ var flexiprepReportPlotRead1: Option[Unit] %>
-<%@ var flexiprepReportPlotRead2: Option[Unit] %>
-<%@ var sortableThemeBootstrap: scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]] %>
+<%@ var seqstatStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+<%@ var seqstatQCStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+<%@ var clippingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+<%@ var trimmingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 
-#if (showIntro)
+#if showIntro
     <br/>
     <div class="row">
     <div class="col-md-1"></div>
@@ -72,10 +67,6 @@
 #end
 
 #if (showPlot)
-    #{
-        flexiprepReportPlotRead1.getOrElse(None)
-        if (paired) flexiprepReportPlotRead2.getOrElse(None)
-    }#
     <div class="panel-body">
     <div class="row">
         <div class="col-sm-6 col-md-6">
@@ -121,7 +112,7 @@
             #{
                 val sampleRowspan = {
                 libraries.filter(_.sampleId == sample.id).size +
-                 settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
+                settings.filter(_._1._1 == sample.id).count(_._2("paired").getOrElse(false) == true)
                 }
             }#
             <tr><td rowspan="${sampleRowspan}">
@@ -134,27 +125,27 @@
             #for (lib <- libraries.filter(_.sampleId == sample.id))
                 #{ val paired = settings.filter(_._1._1 == sample.id).filter(_._1._2 == lib.id).head._2("paired") == Some(true) }#
                 <td #if (paired == true) rowspan="2" #end>
-                #if (multisample)
-                    <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>
-                #else
-                    ${lib.name}
-                #end
+                    #if (multisample)
+                        <a href="${rootPath}Samples/${sample.name}/Libraries/${lib.name}/index.html">${lib.name}</a>
+                    #else
+                        ${lib.name}
+                    #end
                 </td>
-                #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
+                #{ val reads = if (paired) List("R1", "R2") else List("R1") }#
                 #for (read <- reads)
                     #if (read == "R2") </tr><tr> #end
                     #{
-                        val beforeTotal = sortableThemeBootstrap(sample.id)(lib.id)(read)("beforeTotal")
-                        val afterTotal = sortableThemeBootstrap(sample.id)(lib.id)(read)("afterTotal")
-                        val clippingDiscardedTooShort = sortableThemeBootstrap(sample.id)(lib.id)(read)("clippingDiscardedTooShort")
-                        val clippingDiscardedTooLong: Long = sortableThemeBootstrap(sample.id)(lib.id)(read)("clippingDiscardedTooLong")
-                        val trimmingDiscarded: Long = sortableThemeBootstrap(sample.id)(lib.id)(read)("trimmingDiscarded")
+                        val beforeTotal = seqstatStats(sample.id,lib.id)("num_total").getOrElse(0).toString.toLong
+                        val afterTotal = seqstatQCStats(sample.id,lib.id)("num_total").getOrElse(0).toString.toLong
+                        val clippingDiscardedToShort = clippingStats(sample.id,lib.id)("num_reads_discarded_too_short").getOrElse(0).toString.toLong
+                        val clippingDiscardedToLong = clippingStats(sample.id,lib.id)("num_reads_discarded_too_long").getOrElse(0).toString.toLong
+                        val trimmingDiscarded = trimmingStats(sample.id,lib.id)("num_reads_discarded").getOrElse(0).toString.toLong
                     }#
                     <td>${read}</td>
                     <td>${beforeTotal}</td>
-                    <td>${clippingDiscardedTooShort + clippingDiscardedTooLong}</td>
+                    <td>${clippingDiscardedToShort + clippingDiscardedToLong}</td>
                     <td>${trimmingDiscarded}</td>
-                    #if (paired == true) <td>${beforeTotal - clippingDiscardedTooShort - clippingDiscardedTooLong - trimmingDiscarded - afterTotal}</td> #end
+                    #if (paired == true) <td>${beforeTotal - clippingDiscardedToShort - clippingDiscardedToLong - trimmingDiscarded - afterTotal}</td> #end
                     <td>${afterTotal}</td>
                 #end
                 </tr>
