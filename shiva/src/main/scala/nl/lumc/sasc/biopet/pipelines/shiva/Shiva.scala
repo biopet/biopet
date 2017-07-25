@@ -101,17 +101,13 @@ class Shiva(val parent: Configurable)
     /** Sample specific settings */
     override def summarySettings: Map[String, Any] =
       super.summarySettings ++
-        Map(
-          "single_sample_variantcalling" -> variantcalling.isDefined,
-          "use_indel_realigner" -> useIndelRealigner
-        )
+        Map("use_indel_realigner" -> useIndelRealigner)
 
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
 
       override def summaryFiles: Map[String, File] =
         super.summaryFiles ++
-          variantcalling.map("final" -> _.finalFile) ++
           bqsrFile.map("baserecal" -> _) ++
           bqsrAfterFile.map("baserecal_after" -> _)
 
@@ -140,19 +136,9 @@ class Shiva(val parent: Configurable)
 
       /** Library specific settings */
       override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
-        "library_variantcalling" -> variantcalling.isDefined,
         "use_base_recalibration" -> useBaseRecalibration,
         "useAnalyze_covariates" -> useAnalyzeCovariates
       )
-
-      lazy val variantcalling: Option[ShivaVariantcalling with QScript] =
-        if (config("library_variantcalling", default = false).asBoolean &&
-            (bamFile.isDefined || preProcessBam.isDefined)) {
-          Some(
-            makeVariantcalling(multisample = false,
-                               sample = Some(sampleId),
-                               library = Some(libId)))
-        } else None
 
       /** This will add jobs for this library */
       override def addJobs(): Unit = {
@@ -164,15 +150,6 @@ class Shiva(val parent: Configurable)
                               useIndelRealigner || libraries.size > 1,
                               usePrintReads)
         }
-
-        variantcalling.foreach(vc => {
-          vc.sampleId = Some(sampleId)
-          vc.libId = Some(libId)
-          vc.outputDir = new File(libDir, "variantcalling")
-          if (preProcessBam.isDefined) vc.inputBams = Map(sampleId -> preProcessBam.get)
-          else vc.inputBams = Map(sampleId -> bamFile.get)
-          add(vc)
-        })
       }
 
       /** Adds base recalibration jobs */
@@ -220,11 +197,6 @@ class Shiva(val parent: Configurable)
       }
     }
 
-    lazy val variantcalling: Option[ShivaVariantcalling with QScript] =
-      if (config("single_sample_variantcalling", default = false).asBoolean) {
-        Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
-      } else None
-
     override def keepMergedFiles: Boolean =
       config("keep_merged_files", default = !useIndelRealigner)
 
@@ -235,24 +207,12 @@ class Shiva(val parent: Configurable)
         bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
       } else bamFile
 
-    override def summaryFiles: Map[String, File] =
-      super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
-
     /** This will add sample jobs */
     override def addJobs(): Unit = {
       super.addJobs()
 
       if (useIndelRealigner) {
         addIndelRealign(bamFile.get, sampleDir, isIntermediate = false)
-      }
-
-      preProcessBam.foreach { bam =>
-        variantcalling.foreach(vc => {
-          vc.sampleId = Some(sampleId)
-          vc.outputDir = new File(sampleDir, "variantcalling")
-          vc.inputBams = Map(sampleId -> bam)
-          add(vc)
-        })
       }
     }
   } // End of sample
