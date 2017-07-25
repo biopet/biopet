@@ -16,11 +16,13 @@ class StringtieMerge(val parent: Configurable)
     executable = config("exe", "stringtie")
 
     @Input(required = true)
-    var inputBam: File = _
+    var inputGtfs: List[File] = Nil
+
+    @Input(required = false)
+    var referenceGtf: Option[File] = None
 
     @Output
     var outputGtf: File = _
-
 
     var v: Boolean = config("v", default = logger.isDebugEnabled)
     var l: Option[String] = None
@@ -38,6 +40,7 @@ class StringtieMerge(val parent: Configurable)
     def versionRegex: Regex = ".*".r
 
     def cmdLine: String = required(executable) +
+      required("--merge")
       conditional(v, "-v") +
       required("-p", threads) +
       optional("-l", l) +
@@ -46,6 +49,8 @@ class StringtieMerge(val parent: Configurable)
       optional("-c", c) +
       optional("-F", F) +
       conditional(i, "-i") +
-      (if (outputAsStdout) "" else required("-o", outputGtf))
+      optional("-G", referenceGtf) +
+      (if (outputAsStdout) "" else required("-o", outputGtf)) +
+      repeat(inputGtfs)
 
   }

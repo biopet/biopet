@@ -18,6 +18,9 @@ class Stringtie(val parent: Configurable)
   @Input(required = true)
   var inputBam: File = _
 
+  @Input(required = false)
+  var referenceGtf: Option[File] = None
+
   @Output
   var outputGtf: File = _
 
@@ -52,6 +55,7 @@ class Stringtie(val parent: Configurable)
   def versionRegex: Regex = ".*".r
 
   def cmdLine: String = required(executable) +
+    required(inputBam) +
     conditional(v, "-v") +
     required("-p", threads) +
     conditional(rf, "--rf") +
@@ -70,6 +74,7 @@ class Stringtie(val parent: Configurable)
     optional("-b", b) +
     conditional(e, "-e") +
     optional("-M", M) +
+    optional("-G", referenceGtf) +
     (if (x.nonEmpty) optional("-x", x.mkString(",")) else "") +
     (if (outputAsStdout) "" else required("-o", outputGtf))
 
