@@ -60,8 +60,6 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def realignProvider = Array(false, true)
   def baseRecalibrationProvider = Array(false, true)
   def multisampleCalling: Boolean = true
-  def sampleCalling = false
-  def libraryCalling = false
   def dbsnp = true
   def svCalling = false
   def cnvCalling = false
@@ -86,8 +84,6 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       ConfigUtils.mergeMaps(
         Map(
           "multisample_variantcalling" -> multisampleCalling,
-          "single_sample_variantcalling" -> sampleCalling,
-          "library_variantcalling" -> libraryCalling,
           "use_indel_realigner" -> realign,
           "use_base_recalibration" -> baseRecalibration,
           "sv_calling" -> svCalling,
@@ -133,26 +129,23 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
       pipeline.samples foreach {
         case (_, sample) =>
-          sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
+          sample.summarySettings.get("single_sample_variantcalling") shouldBe None
           sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
           sample.libraries.foreach {
             case (_, lib) =>
-              lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
+              lib.summarySettings.get("library_variantcalling") shouldBe None
               lib.summarySettings.get("use_indel_realigner") shouldBe None // Should not exist anymore
               lib.summarySettings.get("use_base_recalibration") shouldBe Some(
                 baseRecalibration && dbsnp)
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe ((if (multisampleCalling) 2
-                                                                    else 0) +
-        (if (sampleCalling) numberSamples * 2 else 0) +
-        (if (libraryCalling) numberLibs * 2 else 0))
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multisampleCalling) 2 else 0)
     }
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.filter(_.exists()).foreach { dir =>
       try {
         FileUtils.deleteDirectory(dir)
@@ -174,20 +167,6 @@ class ShivaNoDbsnpTest extends ShivaTestTrait {
 class ShivaNoPrintReadsTest extends ShivaTestTrait {
   override def realignProvider = Array(x = false)
   override def usePrintReads = false
-}
-class ShivaLibraryCallingTest extends ShivaTestTrait {
-  override def sample1 = Array(true, false)
-  override def sample2 = Array(false, true)
-  override def realignProvider = Array(x = false)
-  override def baseRecalibrationProvider = Array(x = false)
-  override def libraryCalling = true
-}
-class ShivaSampleCallingTest extends ShivaTestTrait {
-  override def sample1 = Array(true, false)
-  override def sample2 = Array(false, true)
-  override def realignProvider = Array(x = false)
-  override def baseRecalibrationProvider = Array(x = false)
-  override def sampleCalling = true
 }
 class ShivaWithSvCallingTest extends ShivaTestTrait {
   override def sample1 = Array(x = true)
