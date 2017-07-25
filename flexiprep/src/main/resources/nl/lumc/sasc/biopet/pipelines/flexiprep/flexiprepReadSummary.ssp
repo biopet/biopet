@@ -67,6 +67,10 @@
 #end
 
 #if (showPlot)
+    #{
+        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
+        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
+    }#
     <div class="panel-body">
     <div class="row">
         <div class="col-sm-6 col-md-6">

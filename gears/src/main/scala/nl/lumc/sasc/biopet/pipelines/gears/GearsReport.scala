@@ -16,13 +16,8 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{
-  MultisampleReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{FlexiprepReadSummary, FlexiprepReport}
 import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -145,6 +140,8 @@ object GearsReport extends MultisampleReportBuilder {
               "biomFile" -> new File(run.outputDir + File.separator + qiimeOpenOtuTable.get.path))
           )))
       else None
+
+    val flexiprepReadSummary = FlexiprepReadSummary.values(summary,,runId,samples,libraries,sampleId,libId, true, false)
     Future {
       ReportPage(
         List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
@@ -154,7 +151,7 @@ object GearsReport extends MultisampleReportBuilder {
           List(
             "QC reads" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-              Map("showPlot" -> true, "showTable" -> false)),
+              flexiprepReadSummary),
             "QC bases" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
               Map("showPlot" -> true, "showTable" -> false))
