@@ -23,11 +23,6 @@
 <%-- variables to be added to remove dependency upon futures --%>
 <%@ var settings: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var paired: Boolean %>
-<%@ var seqstatPaths: Map[String, List[String]] %>
-<%@ var seqstatStats: Map[String, Option[Any]] %>
-<%@ var seqstatQcStats: Map[String, Option[Any]] %>
-<%@ var clippingStats: Map[String, Option[Any]] %>
-<%@ var trimmingStats: Map[String, Option[Any]] %>
 <%@ var samples: Seq[Sample] %>
 <%@ var libraries: Seq[Library] %>
 <%@ var librariesCount: Int %>
@@ -35,7 +30,7 @@
 <%@ var trimCount: Int %>
 <%@ var flexiprepReportPlotRead1: Option[Unit] %>
 <%@ var flexiprepReportPlotRead2: Option[Unit] %>
-<%@ var sortableThemeBootstrap: scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]] %>
+<%@ var sortableThemeBootstrap: scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]] %>
 
 #if (showIntro)
     <br/>
@@ -149,28 +144,17 @@
                 #for (read <- reads)
                     #if (read == "R2") </tr><tr> #end
                     #{
-                        val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-                        val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-                        val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = seqstatPaths)
-
-                        val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
-                        "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
-                        val clippingStats = summary.getStatKeys(runId, "flexiprep", "clipping_" + read, sample = sample.id, library = lib.id, keyValues = clippingPaths)
-
-                        val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
-                        val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming_" + read, sample = sample.id, library = lib.id, keyValues = trimmingPaths)
-
-                        val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
-                        val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
-                        val clippingDiscardedToShort = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
-                        val clippingDiscardedToLong = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
-                        val trimmingDiscarded = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
+                        val beforeTotal = sortableThemeBootstrap(sample.id)(lib.id)(read)("beforeTotal")
+                        val afterTotal = sortableThemeBootstrap(sample.id)(lib.id)(read)("afterTotal")
+                        val clippingDiscardedTooShort = sortableThemeBootstrap(sample.id)(lib.id)(read)("clippingDiscardedTooShort")
+                        val clippingDiscardedTooLong: Long = sortableThemeBootstrap(sample.id)(lib.id)(read)("clippingDiscardedTooLong")
+                        val trimmingDiscarded: Long = sortableThemeBootstrap(sample.id)(lib.id)(read)("trimmingDiscarded")
                     }#
                     <td>${read}</td>
                     <td>${beforeTotal}</td>
-                    <td>${clippingDiscardedToShort + clippingDiscardedToLong}</td>
+                    <td>${clippingDiscardedTooShort + clippingDiscardedTooLong}</td>
                     <td>${trimmingDiscarded}</td>
-                    #if (paired == true) <td>${beforeTotal - clippingDiscardedToShort - clippingDiscardedToLong - trimmingDiscarded - afterTotal}</td> #end
+                    #if (paired == true) <td>${beforeTotal - clippingDiscardedTooShort - clippingDiscardedTooLong - trimmingDiscarded - afterTotal}</td> #end
                     <td>${afterTotal}</td>
                 #end
                 </tr>
