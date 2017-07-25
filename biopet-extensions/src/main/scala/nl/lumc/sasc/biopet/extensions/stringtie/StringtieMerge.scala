@@ -41,8 +41,8 @@ class StringtieMerge(val parent: Configurable)
 
   def cmdLine: String =
     required(executable) +
-      required("--merge")
-  conditional(v, "-v") +
+    required("--merge") +
+    conditional(v, "-v") +
     required("-p", threads) +
     optional("-l", l) +
     optional("-f", f) +
