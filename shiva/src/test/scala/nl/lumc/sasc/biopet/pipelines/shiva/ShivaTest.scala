@@ -140,7 +140,8 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
           }
       }
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multisampleCalling) 2 else 0)
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multisampleCalling) 2
+                                                                   else 0)
     }
   }
 
