@@ -44,12 +44,15 @@ class Stringtie(val parent: Configurable) extends QScript with Measurement with 
     val stringtieMerge = new StringtieMerge(this)
     stringtieMerge.inputGtfs = sampleGtfFiles
     stringtieMerge.referenceGtf = Some(annotationGtf)
-    stringtieMerge.outputGtf = new File(outputDir, "stringtie.merged.gtf")
+    stringtieMerge.outputGtf = stringtieMergeOutput
     add(stringtieMerge)
 
     addSummaryJobs()
   }
 
+  def stringtieMergeOutput: File = new File(outputDir, "stringtie.merged.gtf")
+
   override def summaryFiles: Map[String, File] =
-    super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf)
+    super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf,
+                              "stringtie_merged" -> stringtieMergeOutput)
 }
