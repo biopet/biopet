@@ -41,17 +41,17 @@ class StringtieMerge(val parent: Configurable)
 
   def cmdLine: String =
     required(executable) +
-    required("--merge") +
-    conditional(v, "-v") +
-    required("-p", threads) +
-    optional("-l", l) +
-    optional("-f", f) +
-    optional("-m", m) +
-    optional("-c", c) +
-    optional("-F", F) +
-    conditional(i, "-i") +
-    optional("-G", referenceGtf) +
-    (if (outputAsStdout) "" else required("-o", outputGtf)) +
-    repeat(inputGtfs)
+      required("--merge") +
+      conditional(v, "-v") +
+      required("-p", threads) +
+      optional("-l", l) +
+      optional("-f", f) +
+      optional("-m", m) +
+      optional("-c", c) +
+      optional("-F", F) +
+      conditional(i, "-i") +
+      optional("-G", referenceGtf) +
+      (if (outputAsStdout) "" else required("-o", outputGtf)) +
+      repeat(inputGtfs)
 
 }
