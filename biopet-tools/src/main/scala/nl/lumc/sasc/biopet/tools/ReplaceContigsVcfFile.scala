@@ -8,7 +8,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 
@@ -20,9 +20,8 @@ object ReplaceContigsVcfFile extends ToolCommand {
                   output: File = null,
                   referenceFile: File = null,
                   contigs: Map[String, String] = Map())
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     } text "Input vcf file"

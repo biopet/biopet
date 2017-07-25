@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.annotation.Feature
 
 import scala.io.Source
@@ -15,9 +15,8 @@ object ReplaceContigsGtfFile extends ToolCommand {
                   output: File = null,
                   contigs: Map[String, String] = Map(),
                   writeAsGff: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     } text "Input gtf file"

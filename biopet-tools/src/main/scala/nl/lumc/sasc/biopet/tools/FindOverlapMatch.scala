@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintStream}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -35,9 +35,8 @@ object FindOverlapMatch extends ToolCommand {
                   filterSameNames: Boolean = true,
                   rowSampleRegex: Option[Regex] = None,
                   columnSampleRegex: Option[Regex] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputMetrics = x)
     } text "Input should be a table where the first row and column have the ID's, those can be different"

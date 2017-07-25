@@ -16,15 +16,15 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.{SortedMap, mutable}
 import scala.io.Source
 
 object BedtoolsCoverageToCounts extends ToolCommand {
-  case class Args(input: File = null, output: File = null) extends AbstractArgs
+  case class Args(input: File = null, output: File = null)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     } text "Coverage file produced with bedtools"

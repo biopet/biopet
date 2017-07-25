@@ -16,10 +16,10 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import htsjdk.samtools.{SAMSequenceRecord, SamReaderFactory}
-import nl.lumc.sasc.biopet.utils.ToolCommand
-import scala.collection.JavaConversions._
+import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
+import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
@@ -28,9 +28,8 @@ import scala.io.Source
 object BedToInterval extends ToolCommand {
 
   case class Args(inputFile: File = null, outputFile: File = null, bamFile: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }

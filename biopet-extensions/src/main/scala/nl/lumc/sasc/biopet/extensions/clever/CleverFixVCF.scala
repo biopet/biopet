@@ -20,7 +20,7 @@ package nl.lumc.sasc.biopet.extensions.clever
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
@@ -48,9 +48,8 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
 object CleverFixVCF extends ToolCommand {
   case class Args(inputVCF: File = null, sampleLabel: String = "", outputVCF: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputvcf") required () valueName "<vcffile/path>" action { (x, c) =>
       c.copy(inputVCF = x)
     } text "Please specify the input Clever VCF file"

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
 import nl.lumc.sasc.biopet.tools.VepNormalizer.Args
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
@@ -61,9 +61,8 @@ object XcnvToBed extends ToolCommand {
   }
 
   case class Args(inputXcnv: File = null, outputBed: File = null, sample: String = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     head(
       "Convert a sample track within an XHMM XCNV file to a BED track. Fourt column indicates deletion (-1), normal (0) or duplication (1) of region")
 

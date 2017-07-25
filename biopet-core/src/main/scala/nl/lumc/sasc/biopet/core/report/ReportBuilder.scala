@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.core.report
 import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Sample, Run}
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Run, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
-import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
@@ -82,9 +82,8 @@ trait ReportBuilder extends ToolCommand {
                   outputDir: File = null,
                   runId: Int = 0,
                   pageArgs: mutable.Map[String, Any] = mutable.Map())
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(
       s"""

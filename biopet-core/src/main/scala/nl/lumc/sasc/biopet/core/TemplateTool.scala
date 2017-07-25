@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Question, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, Question, ToolCommand}
 
 import scala.io.Source
 
@@ -30,9 +30,8 @@ trait TemplateTool extends ToolCommand {
                   runScript: Option[File] = None,
                   expert: Boolean = false,
                   template: Option[File] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('o', "outputConfig") required () valueName "<file>" action { (x, c) =>
       c.copy(outputConfig = x)
     } text "Path to output config"

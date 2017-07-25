@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 import picard.annotation.{Gene, GeneAnnotationReader}
 
 import scala.collection.JavaConversions._
@@ -23,9 +23,8 @@ object RefflatStats extends ToolCommand {
                   transcriptOutput: File = null,
                   exonOutput: File = null,
                   intronOutput: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('a', "annotationRefflat") required () maxOccurs 1 valueName "<file>" action {
       (x, c) =>
         c.copy(refflatFile = x)

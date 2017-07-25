@@ -24,7 +24,7 @@ import htsjdk.variant.variantcontext.writer.{
 }
 import htsjdk.variant.variantcontext.{Allele, GenotypeBuilder, VariantContextBuilder}
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -41,9 +41,8 @@ object GensToVcf extends ToolCommand {
                   referenceFasta: File = null,
                   contig: String = null,
                   sortInput: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('g', "inputGenotypes") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputGenotypes = x)
     } text "Input genotypes"

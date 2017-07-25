@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
@@ -34,9 +34,9 @@ object ValidateFastq extends ToolCommand {
     * @param input input first fastq file (R1) (can be zipped)
     * @param input2 input second fastq file (R2) (can be zipped)
     */
-  case class Args(input: File = null, input2: Option[File] = None) extends AbstractArgs
+  case class Args(input: File = null, input2: Option[File] = None)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "fastq1") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }

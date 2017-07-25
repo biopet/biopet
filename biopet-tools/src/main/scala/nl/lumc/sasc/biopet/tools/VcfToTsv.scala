@@ -18,7 +18,7 @@ import java.io.{File, PrintStream}
 import java.text.DecimalFormat
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -37,9 +37,8 @@ object VcfToTsv extends ToolCommand {
                   separator: String = "\t",
                   listSeparator: String = ",",
                   maxDecimals: Int = 2)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "Input vcf file"

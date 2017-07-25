@@ -20,7 +20,7 @@ import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 
 import scala.collection.JavaConversions._
@@ -38,9 +38,8 @@ object BastyGenerateFasta extends ToolCommand {
                   minAD: Int = 8,
                   minDepth: Int = 8,
                   reference: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('V', "inputVcf") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "vcf file, needed for outputVariants and outputConsensusVariants" validate { x =>

@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -49,9 +49,8 @@ object CheckAllelesVcfInBam extends ToolCommand {
                   samples: List[String] = Nil,
                   bamFiles: List[File] = Nil,
                   minMapQual: Int = 1)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "VCF file"

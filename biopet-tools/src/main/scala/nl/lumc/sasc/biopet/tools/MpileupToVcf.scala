@@ -18,7 +18,7 @@ import java.io.{File, PrintWriter}
 
 import cern.jet.random.Binomial
 import cern.jet.random.engine.RandomEngine
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -35,9 +35,8 @@ object MpileupToVcf extends ToolCommand {
                   ploidy: Int = 2,
                   seqError: Double = 0.005,
                   refCalls: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     } text "input, default is stdin"

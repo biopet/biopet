@@ -20,7 +20,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -60,9 +60,8 @@ object KrakenReportToJson extends ToolCommand {
   case class Args(krakenreport: File = null,
                   outputJson: Option[File] = None,
                   skipNames: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""
          |$commandName - Convert Kraken-report (full) output to JSON

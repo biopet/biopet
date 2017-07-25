@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -113,9 +113,8 @@ object FastqSync extends ToolCommand {
                   inputFastq2: File = null,
                   outputFastq1: File = null,
                   outputFastq2: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""
         |$commandName - Sync paired-end FASTQ files.

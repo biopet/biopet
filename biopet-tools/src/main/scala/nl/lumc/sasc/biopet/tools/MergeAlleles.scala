@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.writer.{
 }
 import htsjdk.variant.variantcontext.{Allele, VariantContext, VariantContextBuilder}
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeader}
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
@@ -32,9 +32,8 @@ import scala.collection.{SortedMap, mutable}
 object MergeAlleles extends ToolCommand {
 
   case class Args(inputFiles: List[File] = Nil, outputFile: File = null, reference: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputVcf") minOccurs 2 required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(inputFiles = x :: c.inputFiles)

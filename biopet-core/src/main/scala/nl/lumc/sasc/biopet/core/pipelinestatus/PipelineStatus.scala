@@ -20,7 +20,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import nl.lumc.sasc.biopet.utils.pim._
 import nl.lumc.sasc.biopet.utils.pim.{Job => PimJob}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 import play.api.libs.ws.ahc.AhcWSClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,9 +41,8 @@ object PipelineStatus extends ToolCommand {
                   compressPlots: Boolean = true,
                   pimHost: Option[String] = None,
                   pimRunId: Option[String] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('d', "pipelineDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(pipelineDir = x)
     } text "Output directory of the pipeline"

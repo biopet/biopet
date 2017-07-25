@@ -114,4 +114,14 @@ package object utils {
       case _ => a.toString < b.toString
     }
   }
+
+  def loadBiopetProperties(): Unit = {
+    val is = getClass.getClassLoader.getResourceAsStream("biopet.properties")
+    if (is != null) {
+      val prop = System.getProperties
+      prop.load(is)
+      System.setProperties(prop)
+    }
+
+  }
 }

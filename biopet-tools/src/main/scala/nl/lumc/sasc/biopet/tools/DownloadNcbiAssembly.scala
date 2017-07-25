@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
@@ -31,9 +31,8 @@ object DownloadNcbiAssembly extends ToolCommand {
                   contigNameHeader: Option[String] = None,
                   mustHaveOne: List[(String, String)] = List(),
                   mustNotHave: List[(String, String)] = List())
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(assemblyReport = x)
