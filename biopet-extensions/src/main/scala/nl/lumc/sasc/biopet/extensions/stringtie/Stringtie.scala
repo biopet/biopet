@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import scala.util.matching.Regex
 
 class Stringtie(val parent: Configurable)
-  extends BiopetCommandLineFunction
+    extends BiopetCommandLineFunction
     with Reference
     with Version {
 
@@ -54,28 +54,29 @@ class Stringtie(val parent: Configurable)
   /** Regex to get version from version command output */
   def versionRegex: Regex = ".*".r
 
-  def cmdLine: String = required(executable) +
-    required(inputBam) +
-    conditional(v, "-v") +
-    required("-p", threads) +
-    conditional(rf, "--rf") +
-    conditional(fr, "--fr") +
-    optional("-l", l) +
-    optional("-f", f) +
-    optional("-m", m) +
-    optional("-A", geneAbundances) +
-    optional("-C", referenceCoverage) +
-    optional("-a", a) +
-    optional("-j", j) +
-    conditional(t, "-t") +
-    optional("-c", c) +
-    optional("-g", g) +
-    conditional(B, "-B") +
-    optional("-b", b) +
-    conditional(e, "-e") +
-    optional("-M", M) +
-    optional("-G", referenceGtf) +
-    (if (x.nonEmpty) optional("-x", x.mkString(",")) else "") +
-    (if (outputAsStdout) "" else required("-o", outputGtf))
+  def cmdLine: String =
+    required(executable) +
+      required(inputBam) +
+      conditional(v, "-v") +
+      required("-p", threads) +
+      conditional(rf, "--rf") +
+      conditional(fr, "--fr") +
+      optional("-l", l) +
+      optional("-f", f) +
+      optional("-m", m) +
+      optional("-A", geneAbundances) +
+      optional("-C", referenceCoverage) +
+      optional("-a", a) +
+      optional("-j", j) +
+      conditional(t, "-t") +
+      optional("-c", c) +
+      optional("-g", g) +
+      conditional(B, "-B") +
+      optional("-b", b) +
+      conditional(e, "-e") +
+      optional("-M", M) +
+      optional("-G", referenceGtf) +
+      (if (x.nonEmpty) optional("-x", x.mkString(",")) else "") +
+      (if (outputAsStdout) "" else required("-o", outputGtf))
 
 }

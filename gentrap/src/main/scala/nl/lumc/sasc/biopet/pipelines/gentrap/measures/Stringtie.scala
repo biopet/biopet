@@ -22,10 +22,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
   * Created by pjvan_thof on 1/12/16.
   */
-class Stringtie(val parent: Configurable)
-    extends QScript
-    with Measurement
-    with AnnotationGtf {
+class Stringtie(val parent: Configurable) extends QScript with Measurement with AnnotationGtf {
   def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, fallback = "0")
 
   /** Pipeline itself */
