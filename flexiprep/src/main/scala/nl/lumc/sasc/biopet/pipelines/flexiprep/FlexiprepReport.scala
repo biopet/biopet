@@ -351,9 +351,9 @@ object FlexiprepReadSummaryReportPage {
                               settings: Map[(Int, Int), Map[String, Option[Any]]],
                               summary: SummaryDb,
                               runId: Int
-                            ): scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]] = {
+                            ):scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]] = {
 
-    var sortableThemeBootstrap = scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]]() /* iterable map */
+    var sortableThemeBootstrap = scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Map[String,Long]]]]() /* iterable map */
 
     for (sample <- samples.sortBy(_.name)) {
       val sampleRowspan = {
@@ -377,22 +377,16 @@ object FlexiprepReadSummaryReportPage {
             val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
             val trimmingStats = summary.getStatKeys(runId, "flexiprep", "trimming_" + read, sample = sample.id, library = lib.id, keyValues = trimmingPaths)
 
-            val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
-            val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
-            val clippingDiscardedToShort = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
-            val clippingDiscardedToLong = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
-            val trimmingDiscarded = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
+            val beforeTotal: Long = seqstatStats("num_total").getOrElse(0).toString.toLong
+            val afterTotal: Long = seqstatQcStats("num_total").getOrElse(0).toString.toLong
+            val clippingDiscardedTooShort: Long = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
+            val clippingDiscardedTooLong: Long = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
+            val trimmingDiscarded: Long = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
           sortableThemeBootstrap(sample.id)(lib.id)(read) = Map(
-            "seqstatPaths" -> seqstatPaths,
-            "seqstatStats" -> seqstatStats,
-            "seqstatQcStats" -> seqstatQcStats,
-            "clippingPaths" -> clippingPaths,
-            "clippingStats" -> clippingStats,
-            "trimmingPaths" -> trimmingPaths,
             "beforeTotal" -> beforeTotal,
             "afterTotal" -> afterTotal,
-            "clippingDiscardedToShort" -> clippingDiscardedToShort,
-            "clippingDiscardedToLong" -> clippingDiscardedToLong,
+            "clippingDiscardedTooShort" -> clippingDiscardedTooShort,
+            "clippingDiscardedTooLong" -> clippingDiscardedTooLong,
             "trimmingDiscarded" -> trimmingDiscarded
           )
           }
