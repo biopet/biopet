@@ -54,7 +54,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     require(bamFiles.nonEmpty)
   }
 
-  lazy val mergeCountFiles: Boolean = config("merge_count_files", default = true)
+  lazy val mergeCountFiles: Boolean = config("merge_count_files", default = bamFiles.size > 1)
 
   private var extraSummaryFiles: Map[String, File] = Map()
 

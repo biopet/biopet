@@ -177,6 +177,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         val libId = tag.libId.flatMap(name =>
           sampleId.flatMap(sampleId =>
             Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
+        if (tag.sampleId.isDefined)
+          require(sampleId.isDefined, s"Sample '${tag.sampleId.get}' is not found in database yet")
+        if (tag.libId.isDefined)
+          require(libId.isDefined,
+                  s"Library '${tag.libId.get}' for '${tag.sampleId}' is not found in database yet")
         for ((key, file) <- qscript.summaryFiles.par)
           Await.result(WriteSummary.createFile(db,
                                                qscript.summaryRunId,
@@ -353,7 +358,10 @@ object WriteSummary {
 
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
-    Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
+    val reader = Source.fromFile(checksumFile)
+    val lines = reader.getLines().toList
+    reader.close()
+    lines.head.split(" ")(0)
   }
 
   def createFile(db: SummaryDbWrite,
