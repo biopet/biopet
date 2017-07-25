@@ -80,7 +80,7 @@ class Star(val parent: Configurable)
   var genomeSAindexNbases: Option[Long] = config("genomesaindexnbases")
   var genomeSAsparseD: Option[Int] = config("genomesasparsed")
 
-  val defaultGtf: Option[File] = config("annotation_gtf")
+  private def defaultGtf: Option[File] = config("annotation_gtf")
   @Input(required = false)
   var sjdbGTFfile: Option[File] = defaultGtf match {
     case Some(file) => config("sjdbgtfile", default = file)
