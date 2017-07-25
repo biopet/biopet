@@ -44,6 +44,8 @@ class RefflatStats(val parent: Configurable) extends ToolCommandFunction with Re
   @Output(required = true)
   var intronOutput: File = _
 
+  override def defaultCoreMemory = 5.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
