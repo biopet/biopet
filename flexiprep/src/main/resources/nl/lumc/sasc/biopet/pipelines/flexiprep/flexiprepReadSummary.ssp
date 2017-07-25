@@ -35,7 +35,7 @@
 <%@ var trimCount: Int %>
 <%@ var flexiprepReportPlotRead1: Option[Unit] %>
 <%@ var flexiprepReportPlotRead2: Option[Unit] %>
-<%@ var %>
+<%@ var sortableThemeBootstrap: scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]] %>
 
 #if (showIntro)
     <br/>

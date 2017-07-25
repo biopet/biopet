@@ -302,7 +302,11 @@ object FlexiprepReadSummaryReportPage {
              allLibraries: Seq[Library],
              sampleId: Option[Int] = None,
              libId: Option[Int] = None,
-             showPlot: Boolean = false )= {
+             showPlot: Boolean = false,
+             showTable: Boolean = true,
+             showIntro: Boolean = true,
+             multisample: Boolean = true
+              )= {
 
     val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map("skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
@@ -316,16 +320,11 @@ object FlexiprepReadSummaryReportPage {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
     val librariesCount = libraries.size
 
-    /* Todo: Map this conditionally */
-    if (showPlot){
-      val flexiprepReportPlotRead1: Option[Unit]  = Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId))
-      if (paired) {
-        val flexiprepReportPlotRead2: Option[Unit] = Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId))
-        else val flexiprepReportPlotRead2: Option[Unit] = None
-      else val flexiprepReportPlotRead1: Option[Unit] = None
-      }
+    val flexiprepReportPlotRead1: Option[Unit] = if (showPlot){Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId))}
+    val flexiprepReportPlotRead2: Option[Unit] = if (showPlot){ if (paired){Some(FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId))}}
 
-    }
+
+    val sortableThemeBootstrapValues = sortableThemeBootstrap(samples,libraries,settings,summary,runId)
 
     Map(
       "summary" -> summary,
@@ -339,18 +338,23 @@ object FlexiprepReadSummaryReportPage {
       "libraries" -> libraries,
       "trimCount" -> trimCount,
       "clipCount" -> clipCount,
-      "librariesCount" -> librariesCount
+      "librariesCount" -> librariesCount,
+      "flexipreprReportPlotRead1" -> flexiprepReportPlotRead1,
+      "flexipreprReportPlotRead2" -> flexiprepReportPlotRead2,
+      "sortableThemeBootstrap" -> sortableThemeBootstrapValues
     )
   }
 
-/* Todo: Map these values to some iterable over map */
   def sortableThemeBootstrap(
                               samples: Seq[Sample],
                               libraries: Seq[Library],
                               settings: Map[(Int, Int), Map[String, Option[Any]]],
                               summary: SummaryDb,
                               runId: Int
-                            ): Unit = {
+                            ): scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]] = {
+
+    var sortableThemeBootstrap = scala.collection.mutable.Map[Int,scala.collection.mutable.Map[Int,Map[String,Any]]]() /* iterable map */
+
     for (sample <- samples.sortBy(_.name)) {
       val sampleRowspan = {
         libraries.filter(_.sampleId == sample.id).size +
@@ -378,9 +382,23 @@ object FlexiprepReadSummaryReportPage {
             val clippingDiscardedToShort = clippingStats("num_reads_discarded_too_short").getOrElse(0).toString.toLong
             val clippingDiscardedToLong = clippingStats("num_reads_discarded_too_long").getOrElse(0).toString.toLong
             val trimmingDiscarded = trimmingStats("num_reads_discarded").getOrElse(0).toString.toLong
+          sortableThemeBootstrap(sample.id)(lib.id)(read) = Map(
+            "seqstatPaths" -> seqstatPaths,
+            "seqstatStats" -> seqstatStats,
+            "seqstatQcStats" -> seqstatQcStats,
+            "clippingPaths" -> clippingPaths,
+            "clippingStats" -> clippingStats,
+            "trimmingPaths" -> trimmingPaths,
+            "beforeTotal" -> beforeTotal,
+            "afterTotal" -> afterTotal,
+            "clippingDiscardedToShort" -> clippingDiscardedToShort,
+            "clippingDiscardedToLong" -> clippingDiscardedToLong,
+            "trimmingDiscarded" -> trimmingDiscarded
+          )
           }
 
       }
     }
+  sortableThemeBootstrap
   }
 }
