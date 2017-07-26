@@ -17,12 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{
-  ReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport.runId
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
@@ -31,6 +27,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
 import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
@@ -87,40 +84,30 @@ object FlexiprepReport extends ReportBuilder {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp",
                           Map("plot" -> tag))
   }
-
-  /**
-    * Generated a stacked bar plot for reads QC
-    * @param outputDir OutputDir for plot
-    * @param prefix prefix for tsv and png file
-    * @param read Must give "R1" or "R2"
-    * @param summary Summary class
-    * @param sampleId Default selects all samples, when given plot is limits on given sample
-    */
-  def readSummaryPlot(outputDir: File,
-                      prefix: String,
-                      read: String,
-                      summary: SummaryDb,
-                      sampleId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
+/**
+  * Generates the lines for readSummaryPlot
+  *  @param read Must give "R1" or "R2"
+  * @param summary Summary class
+  * @param sampleId Default selects all samples, when given plot is limits on given sample
+  */
+                    def summaryPlotLines(read: String,
+                         summary: SummaryDb,
+                         sampleId: Option[Int] = None) : Seq[String] = {
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val seqstatStats =
       summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = seqstatPaths)
     val seqstatQcStats = summary.getStatsForLibraries(runId,
-                                                      "flexiprep",
-                                                      "seqstat_" + read + "_qc",
-                                                      keyValues = seqstatPaths)
-
+      "flexiprep",
+      "seqstat_" + read + "_qc",
+      keyValues = seqstatPaths)
     val clippingPaths = Map(
       "num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
       "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
     val clippingStats = summary.getStatsForLibraries(runId,
-                                                     "flexiprep",
-                                                     "clipping_" + read,
-                                                     keyValues = clippingPaths)
+      "flexiprep",
+      "clipping_" + read,
+      keyValues = clippingPaths)
 
     val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
     val trimmingStats =
@@ -128,6 +115,8 @@ object FlexiprepReport extends ReportBuilder {
 
     val libraries =
       Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
+
+    val summaryPlotLines = ArrayBuffer[String]()
 
     for (lib <- libraries) {
       val beforeTotal =
@@ -151,10 +140,30 @@ object FlexiprepReport extends ReportBuilder {
       sb.append(trimmingDiscarded + "\t")
       sb.append(
         beforeTotal - afterTotal - trimmingDiscarded - clippingDiscardedToShort - clippingDiscardedToLong)
-
-      tsvWriter.println(sb.toString)
+      summaryPlotLines += sb.toString
     }
+    summaryPlotLines
+  }
 
+  /**
+    * Generated a stacked bar plot for reads QC
+    * @param outputDir OutputDir for plot
+    * @param prefix prefix for tsv and png file
+    * @param read Must give "R1" or "R2"
+    * @param summaryPlotLines the lines for the tsv
+    */
+  def readSummaryPlot(outputDir: File,
+                      prefix: String,
+                      read: String,
+                      summaryPlotLines: Seq[String])
+                      : Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
+
+    for (line <- summaryPlotLines)
+      tsvWriter.println(line)
     tsvWriter.close()
 
     val plot = new StackedBarPlot(null)
@@ -263,15 +272,8 @@ object FlexiprepReadSummary {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
-    if (showPlot) {
-      FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1", "R1", summary, sampleId = sampleId)
-      if (paired)
-        FlexiprepReport.readSummaryPlot(outputDir,
-                                        "QC_Reads_R2",
-                                        "R2",
-                                        summary,
-                                        sampleId = sampleId)
-    }
+    val summaryPlotLinesR1 = if (showPlot) FlexiprepReport.summaryPlotLines("R1", summary, sampleId = sampleId)
+    val summaryPlotlinesR2 = if (showPlot && paired) FlexiprepReport.summaryPlotLines("R2", summary, sampleId = sampleId)
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val clippingPaths = Map(
@@ -303,7 +305,9 @@ object FlexiprepReadSummary {
       "seqstatStats" -> seqstatStats,
       "seqstatQCStats" -> seqstatQCStats,
       "clippingStats" -> clippingStats,
-      "trimmingStats" -> trimmingStats
+      "trimmingStats" -> trimmingStats,
+      "summaryPlotLinesR1" -> summaryPlotLinesR1,
+      "summaryPlotLinesR2" -> summaryPlotlinesR2
     )
   }
 }
