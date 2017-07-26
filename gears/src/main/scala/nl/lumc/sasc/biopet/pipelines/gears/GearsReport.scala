@@ -16,7 +16,12 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{
+  MultisampleReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.report.{
@@ -57,8 +62,13 @@ object GearsReport extends MultisampleReportBuilder {
 
   def reportName = "Gears Report"
 
-  override def extFiles: List[gears.GearsReport.ExtFile] = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
-    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+  override def extFiles: List[gears.GearsReport.ExtFile] =
+    super.extFiles ++ List("js/gears.js",
+                           "js/krona-2.0.js",
+                           "img/krona/loading.gif",
+                           "img/krona/hidden.png",
+                           "img/krona/favicon.ico")
+      .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage: Future[ReportPage] = {
     val run = Await.result(summary.getRuns(runId).map(_.head), Duration.Inf)
