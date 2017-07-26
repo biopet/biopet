@@ -16,7 +16,12 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{
+  ReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
@@ -288,10 +293,10 @@ object FlexiprepReadSummary {
       if (showPlot)
         Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
       else None
-    val summaryPlotlinesR2: Some[Seq[String]]  =
+    val summaryPlotlinesR2: Some[Seq[String]] =
       if (showPlot && paired)
         Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
-        else None
+      else None
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val clippingPaths = Map(
@@ -371,7 +376,7 @@ object FlexiprepBaseSummary {
       if (showPlot)
         Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
       else None
-    val summaryPlotlinesR2: Some[Seq[String]]  =
+    val summaryPlotlinesR2: Some[Seq[String]] =
       if (showPlot && paired)
         Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
       else None
