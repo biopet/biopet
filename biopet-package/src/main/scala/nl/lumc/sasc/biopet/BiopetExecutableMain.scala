@@ -14,6 +14,7 @@
   */
 package nl.lumc.sasc.biopet
 
+import nl.lumc.sasc.biopet.core.jobreport.MergeQueueJobReports
 import nl.lumc.sasc.biopet.core.pipelinestatus.PipelineStatus
 import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
 
@@ -46,7 +47,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.generateindexes.ValidateAnnotations
   )
 
-  def tools: List[MainCommand] = PipelineStatus :: BiopetToolsExecutable.tools
+  def tools: List[MainCommand] = MergeQueueJobReports :: PipelineStatus :: BiopetToolsExecutable.tools
 
   def templates: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.mapping.template.MultiSampleMapping,
