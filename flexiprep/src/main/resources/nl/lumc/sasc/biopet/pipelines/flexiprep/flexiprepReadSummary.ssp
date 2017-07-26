@@ -25,8 +25,8 @@
 <%@ var seqstatQCStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var clippingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var trimmingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
-<%@ var summaryPlotLinesR1: Seq[String] %>
-<%@ var summaryPlotLinesR2: Seq[String] %>
+<%@ var summaryPlotLinesR1: Some[Seq[String]] %>
+<%@ var summaryPlotLinesR2: Some[Seq[String]] %>
 
 #if (showIntro)
     <br/>
@@ -69,8 +69,8 @@
 
 #if (showPlot)
     #{
-        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summaryPlotLinesR1)
-        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summaryPlotLinesR2)
+        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summaryPlotLinesR1.getOrElse(Seq("")))
+        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summaryPlotLinesR2.getOrElse(Seq("")))
     }#
     <div class="panel-body">
     <div class="row">

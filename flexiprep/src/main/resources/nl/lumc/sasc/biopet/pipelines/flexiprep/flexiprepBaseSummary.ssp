@@ -26,8 +26,8 @@
 <%@ var librariesCount: Int %>
 <%@ var clipCount: Int %>
 <%@ var paired: Boolean %>
-<%@ var summaryPlotLinesR1: Seq[String] %>
-<%@ var summaryPlotLinesR2: Seq[String] %>
+<%@ var summaryPlotLinesR1: Some[Seq[String]] %>
+<%@ var summaryPlotLinesR2: Some[Seq[String]] %>
 <%@ var samples: Seq[Sample] %>
 <%@ var libraries: Seq[Library] %>
 <%@ var settings: Map[(Int, Int), Map[String, Option[Any]]]%>
@@ -70,8 +70,8 @@
 #end
 #if (showPlot)
     #{
-        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summaryPlotLinesR1)
-        if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summaryPlotLinesR2)
+        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summaryPlotLinesR1.getOrElse(Seq("")))
+        if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summaryPlotLinesR2.getOrElse(Seq("")))
     }#
     <div class="panel-body">
         <div class="row">

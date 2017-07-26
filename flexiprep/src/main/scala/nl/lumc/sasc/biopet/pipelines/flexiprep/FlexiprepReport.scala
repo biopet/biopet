@@ -16,12 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.core.report.{
-  ReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
@@ -29,6 +24,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -288,11 +284,14 @@ object FlexiprepReadSummary {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
-    val summaryPlotLinesR1 =
-      if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
-    val summaryPlotlinesR2 =
+    val summaryPlotLinesR1: Some[Seq[String]] =
+      if (showPlot)
+        Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
+      else None
+    val summaryPlotlinesR2: Some[Seq[String]]  =
       if (showPlot && paired)
-        FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
+        Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
+        else None
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val clippingPaths = Map(
@@ -368,11 +367,14 @@ object FlexiprepBaseSummary {
           .getOrElse("paired", None) == Some(true)
       else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 
-    val summaryPlotLinesR1 =
-      if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
-    val summaryPlotlinesR2 =
+    val summaryPlotLinesR1: Some[Seq[String]] =
+      if (showPlot)
+        Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
+      else None
+    val summaryPlotlinesR2: Some[Seq[String]]  =
       if (showPlot && paired)
-        FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
+        Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
+      else None
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
 
