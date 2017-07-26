@@ -16,8 +16,17 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{FlexiprepReadSummary, FlexiprepReport}
+import nl.lumc.sasc.biopet.core.report.{
+  MultisampleReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{
+  FlexiprepBaseSummary,
+  FlexiprepReadSummary,
+  FlexiprepReport
+}
 import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -67,54 +76,57 @@ object GearsReport extends MultisampleReportBuilder {
                                                   mustHaveSample = true) >= samples.size
     val qiimeClosesOtuTable = summary.getFile(runId, "gears", key = "qiime_closed_otu_table")
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
+    val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                   runId,
+                                                                   "centrifuge_report",
+                                                                   "centrifuge_report",
+                                                                   samples,
+                                                                   libraries,
+                                                                   sampleId,
+                                                                   libId,
+                                                                   Some("centrifuge"))
+    val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                      runId,
+                                                                      "centrifuge_unique_report",
+                                                                      "centrifuge_unique_report",
+                                                                      samples,
+                                                                      libraries,
+                                                                      sampleId,
+                                                                      libId)
 
     val centrifugePage =
       if (centrifugeExecuted)
         Some(
           "Centrifuge analysis" -> Future.successful(ReportPage(
-            List("Non-unique" ->
-              Future.successful(ReportPage(
-                List(),
-                List("All mappings" -> ReportSection(
-                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                  GearsKronaPlot.values(summary,
-                                        runId,
-                                        "centrifuge_report",
-                                        "centrifuge_report",
-                                        samples,
-                                        libraries,
-                                        sampleId,
-                                        libId,
-                                        Some("centrifuge"))
-                )),
-                Map()
-              ))),
+            List(
+              "Non-unique" ->
+                Future.successful(
+                  ReportPage(
+                    List(),
+                    List("All mappings" -> ReportSection(
+                      "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                      centrifugePageAllMappingsKronaPlot)),
+                    Map()
+                  ))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-              Map("summaryStatsTag" -> "centrifuge_unique_report"))),
+              centrifugePageUniqueMappingsKronaPlot)),
             Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
           )))
       else None
-
+    val krakenPageKronaPlot = GearsKronaPlot
+      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
     val krakenPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(ReportPage(
-            List(),
-            List(
-              "Krona plot" -> Future.successful(
+          "Kraken analysis" -> Future.successful(
+            ReportPage(
+              List(),
+              List("Krona plot" -> Future.successful(
                 ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                              GearsKronaPlot
-                                .values(summary,
-                                        runId,
-                                        "Krona",
-                                        "krakenkrona",
-                                        samples,
-                                        libraries,
-                                        sampleId,
-                                        libId)))),
-            Map()
-          )))
+                              krakenPageKronaPlot))),
+              Map()
+            )))
       else None
 
     val qiimeClosedPage =
@@ -141,7 +153,10 @@ object GearsReport extends MultisampleReportBuilder {
           )))
       else None
 
-    val flexiprepReadSummary = FlexiprepReadSummary.values(summary,runId,samples,libraries,sampleId,libId, true, false)
+    val flexiprepReadSummary =
+      FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId, libId, true, false)
+    val flexiprepBaseSummary =
+      FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId, libId, true, false)
     Future {
       ReportPage(
         List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
@@ -154,7 +169,7 @@ object GearsReport extends MultisampleReportBuilder {
               flexiprepReadSummary),
             "QC bases" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-              Map("showPlot" -> true, "showTable" -> false))
+              flexiprepBaseSummary)
           ),
         pageArgs
       )
@@ -186,51 +201,55 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeOpenOtuTable = Await.result(
       summary.getFile(runId, "gearssingle", NoModule, sampleId, NoLibrary, "qiime_open_otu_table"),
       Duration.Inf)
-
+    val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                   runId,
+                                                                   "centrifuge_report",
+                                                                   "centrifuge_report",
+                                                                   samples,
+                                                                   libraries,
+                                                                   sampleId,
+                                                                   libId,
+                                                                   Some("centrifuge"))
+    val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                      runId,
+                                                                      "centrifuge_unique_report",
+                                                                      "centrifuge_unique_report",
+                                                                      samples,
+                                                                      libraries,
+                                                                      sampleId,
+                                                                      libId)
     val gearsCentrifugePage = if (centrifugeExecuted) {
       Some(
         "Centrifuge analysis" -> Future.successful(ReportPage(
-          List("Non-unique" -> Future.successful(ReportPage(
-            List(),
-            List("All mappings" -> ReportSection(
-              "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-              GearsKronaPlot.values(summary,
-                                    runId,
-                                    "centrifuge_report",
-                                    "centrifuge_report",
-                                    samples,
-                                    libraries,
-                                    sampleId,
-                                    libId,
-                                    Some("centrifuge"))
-            )),
-            Map()
-          ))),
+          List(
+            "Non-unique" -> Future.successful(
+              ReportPage(
+                List(),
+                List("All mappings" -> ReportSection(
+                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                  centrifugePageAllMappingsKronaPlot
+                )),
+                Map()
+              ))),
           List("Unique mappings" -> ReportSection(
             "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-            Map("summaryStatsTag" -> "centrifuge_unique_report"))),
+            centrifugePageUniqueMappingsKronaPlot)),
           Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
         )))
     } else None
-
+    val krakenPageKronaPlot = GearsKronaPlot
+      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(ReportPage(
-            List(),
-            List(
-              "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                                            GearsKronaPlot
-                                              .values(summary,
-                                                      runId,
-                                                      "Krona",
-                                                      "krakenkrona",
-                                                      samples,
-                                                      libraries,
-                                                      sampleId,
-                                                      libId))),
-            Map()
-          )))
+          "Kraken analysis" -> Future.successful(
+            ReportPage(
+              List(),
+              List("Krona plot" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                krakenPageKronaPlot)),
+              Map()
+            )))
       else None
 
     val qiimeClosesOtuTablePage =
@@ -257,6 +276,10 @@ object GearsReport extends MultisampleReportBuilder {
           )))
       else None
 
+    val flexiprepReadSummary =
+      FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId)
+    val flexiprepBaseSummary =
+      FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId)
     Future {
       ReportPage(
         subPages =
@@ -268,9 +291,11 @@ object GearsReport extends MultisampleReportBuilder {
           ),
         sections = List(
           "QC reads" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+            flexiprepReadSummary),
           "QC bases" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            flexiprepBaseSummary)
         ),
         args = args
       )
@@ -308,51 +333,56 @@ object GearsReport extends MultisampleReportBuilder {
     val flexiprepReportPage =
       if (flexiprepExecuted) Some("QC" -> FlexiprepReport.flexiprepPage) else None
 
+    val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                   runId,
+                                                                   "centrifuge_report",
+                                                                   "centrifuge_report",
+                                                                   samples,
+                                                                   libraries,
+                                                                   sampleId,
+                                                                   libId,
+                                                                   Some("centrifuge"))
+    val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
+                                                                      runId,
+                                                                      "centrifuge_unique_report",
+                                                                      "centrifuge_unique_report",
+                                                                      samples,
+                                                                      libraries,
+                                                                      sampleId,
+                                                                      libId)
     val centrifugeReportPage =
       if (centrifugeExecuted)
         Some(
           "Centrifuge analysis" -> Future.successful(ReportPage(
-            List("Non-unique" -> Future.successful(ReportPage(
-              List(),
-              List("All mappings" -> ReportSection(
-                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                GearsKronaPlot.values(summary,
-                                      runId,
-                                      "centrifuge_report",
-                                      "centrifuge_report",
-                                      samples,
-                                      libraries,
-                                      sampleId,
-                                      libId,
-                                      Some("centrifuge"))
-              )),
-              Map()
-            ))),
+            List(
+              "Non-unique" -> Future.successful(
+                ReportPage(
+                  List(),
+                  List("All mappings" -> ReportSection(
+                    "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                    centrifugePageAllMappingsKronaPlot
+                  )),
+                  Map()
+                ))),
             List("Unique mappings" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-              Map("summaryStatsTag" -> "centrifuge_unique_report"))),
+              centrifugePageUniqueMappingsKronaPlot)),
             Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
           )))
       else None
-
+    val krakenPageKronaPlot = GearsKronaPlot
+      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
-          "Kraken analysis" -> Future.successful(ReportPage(
-            List(),
-            List(
-              "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                                            GearsKronaPlot
-                                              .values(summary,
-                                                      runId,
-                                                      "Krona",
-                                                      "krakenkrona",
-                                                      samples,
-                                                      libraries,
-                                                      sampleId,
-                                                      libId))),
-            Map()
-          )))
+          "Kraken analysis" -> Future.successful(
+            ReportPage(
+              List(),
+              List("Krona plot" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                krakenPageKronaPlot)),
+              Map()
+            )))
       else None
 
     val qiimeClosesOtuTablePage =
@@ -375,7 +405,10 @@ object GearsReport extends MultisampleReportBuilder {
                          "/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp")),
                        Map("biomFile" -> new File(qiimeOpenOtuTable.get.path)))))
       else None
-
+    val flexiprepReadSummary =
+      FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId)
+    val flexiprepBaseSummary =
+      FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId)
     Future {
       ReportPage(
         List(flexiprepReportPage,
@@ -385,9 +418,11 @@ object GearsReport extends MultisampleReportBuilder {
              qiimeOpenOtuTablePage).flatten,
         List(
           "QC reads" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+            flexiprepReadSummary),
           "QC bases" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            flexiprepBaseSummary)
         ),
         args
       )

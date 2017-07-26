@@ -16,20 +16,22 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{File, PrintWriter}
 
+import nl.lumc.sasc.biopet.core.report.{
+  ReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport.runId
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.Library
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.concurrent.{Await, Future}
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 class FlexiprepReport(val parent: Configurable) extends ReportBuilderExtension {
   def builder = FlexiprepReport
@@ -84,30 +86,31 @@ object FlexiprepReport extends ReportBuilder {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp",
                           Map("plot" -> tag))
   }
-/**
-  * Generates the lines for readSummaryPlot
-  *  @param read Must give "R1" or "R2"
-  * @param summary Summary class
-  * @param sampleId Default selects all samples, when given plot is limits on given sample
-  */
-def readSummaryPlotLines(read: String,
-                         summary: SummaryDb,
-                         sampleId: Option[Int] = None) : Seq[String] = {
+
+  /**
+    * Generates the lines for readSummaryPlot
+    *  @param read Must give "R1" or "R2"
+    * @param summary Summary class
+    * @param sampleId Default selects all samples, when given plot is limits on given sample
+    */
+  def readSummaryPlotLines(read: String,
+                           summary: SummaryDb,
+                           sampleId: Option[Int] = None): Seq[String] = {
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val seqstatStats =
       summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = seqstatPaths)
     val seqstatQcStats = summary.getStatsForLibraries(runId,
-      "flexiprep",
-      "seqstat_" + read + "_qc",
-      keyValues = seqstatPaths)
+                                                      "flexiprep",
+                                                      "seqstat_" + read + "_qc",
+                                                      keyValues = seqstatPaths)
     val clippingPaths = Map(
       "num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
       "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
     val clippingStats = summary.getStatsForLibraries(runId,
-      "flexiprep",
-      "clipping_" + read,
-      keyValues = clippingPaths)
+                                                     "flexiprep",
+                                                     "clipping_" + read,
+                                                     keyValues = clippingPaths)
 
     val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_" + read))
     val trimmingStats =
@@ -155,8 +158,7 @@ def readSummaryPlotLines(read: String,
   def readSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,
-                      summaryPlotLines: Seq[String])
-                      : Unit = {
+                      summaryPlotLines: Seq[String]): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -181,19 +183,17 @@ def readSummaryPlotLines(read: String,
     * @param summary Summary class
     * @param sampleId Default selects all samples, when given plot is limits on given sample
     */
-
-
-  def baseSummaryPlotLines (read: String,
-                            summary: SummaryDb,
-                            sampleId: Option[Int] = None): Seq[String] = {
+  def baseSummaryPlotLines(read: String,
+                           summary: SummaryDb,
+                           sampleId: Option[Int] = None): Seq[String] = {
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
     val seqstatStats =
       summary.getStatsForLibraries(runId, "flexiprep", "seqstat_" + read, keyValues = statsPaths)
     val seqstatQcStats = summary.getStatsForLibraries(runId,
-      "flexiprep",
-      "seqstat_" + read + "_qc",
-      keyValues = statsPaths)
+                                                      "flexiprep",
+                                                      "seqstat_" + read + "_qc",
+                                                      keyValues = statsPaths)
 
     val libraries =
       Await.result(summary.getLibraries(runId = runId, sampleId = sampleId), Duration.Inf)
@@ -215,7 +215,7 @@ def readSummaryPlotLines(read: String,
 
       summaryPlotLines += sb.toString
     }
-   summaryPlotLines
+    summaryPlotLines
   }
 
   /**
@@ -224,7 +224,7 @@ def readSummaryPlotLines(read: String,
     * @param prefix prefix for tsv and png file
     * @param read Must give "R1" or "R2"
     * @param summaryPlotLines A sequence of strings written to the summary tsv
- */
+    */
   def baseSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,
@@ -234,7 +234,7 @@ def readSummaryPlotLines(read: String,
     val tsvWriter = new PrintWriter(tsvFile)
     tsvWriter.println("Library\tAfter_QC\tDiscarded")
 
-    for (line <- summaryPlotLines){
+    for (line <- summaryPlotLines) {
       tsvWriter.println(line)
     }
 
@@ -288,8 +288,11 @@ object FlexiprepReadSummary {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
-    val summaryPlotLinesR1 = if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
-    val summaryPlotlinesR2 = if (showPlot && paired) FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
+    val summaryPlotLinesR1 =
+      if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
+    val summaryPlotlinesR2 =
+      if (showPlot && paired)
+        FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
     val clippingPaths = Map(
@@ -306,7 +309,6 @@ object FlexiprepReadSummary {
       summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1", sampleId, trimmingPaths)
 
     Map(
-      "summary" -> summary,
       "runId" -> runId,
       "sampleId" -> sampleId,
       "libId" -> libId,
@@ -337,24 +339,38 @@ object FlexiprepBaseSummary {
              showPlot: Boolean = false,
              showTable: Boolean = true,
              showIntro: Boolean = true,
-             multisample: Boolean = true): Map[String,Any] = {
-
+             multisample: Boolean = true): Map[String, Any] = {
 
     val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
     val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
     val librariesCount = libraries.size
-    val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
-      "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
+    val settings = summary.getSettingsForLibraries(runId,
+                                                   "flexiprep",
+                                                   keyValues =
+                                                     Map("skip_trim" -> List("skip_trim"),
+                                                         "skip_clip" -> List("skip_clip"),
+                                                         "paired" -> List("paired")))
     settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
     val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
 
-    val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-      summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
-    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
+    val paired: Boolean =
+      if (sampleId.isDefined && libId.isDefined)
+        summary
+          .getSettingKeys(runId,
+                          "flexiprep",
+                          NoModule,
+                          SampleId(sampleId.get),
+                          LibraryId(libId.get),
+                          keyValues = Map("paired" -> List("paired")))
+          .getOrElse("paired", None) == Some(true)
+      else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 
-    val summaryPlotLinesR1 = if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
-    val summaryPlotlinesR2 = if (showPlot && paired) FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
+    val summaryPlotLinesR1 =
+      if (showPlot) FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId)
+    val summaryPlotlinesR2 =
+      if (showPlot && paired)
+        FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
 
@@ -363,14 +379,21 @@ object FlexiprepBaseSummary {
     val seqstatQCStats =
       summary.getStatsForLibraries(runId, "flexiprep", "seqstat_R1_QC", sampleId, statsPaths)
 
-
     Map(
-    "trimCount" -> trimCount,
-    "librariesCount" -> librariesCount,
-    "clipCount" -> clipCount,
-    "paired" -> paired,
-    "summaryPlotLinesR1" -> summaryPlotLinesR1,
-    "summaryPlotLinesR2" -> summaryPlotlinesR2
+      "runId" -> runId,
+      "sampleId" -> sampleId,
+      "libId" -> libId,
+      "showPlot" -> showPlot,
+      "settings" -> settings,
+      "samples" -> samples,
+      "libraries" -> libraries,
+      "trimCount" -> trimCount,
+      "clipCount" -> clipCount,
+      "librariesCount" -> librariesCount,
+      "seqstatStats" -> seqstatStats,
+      "seqstatQCStats" -> seqstatQCStats,
+      "summaryPlotLinesR1" -> summaryPlotLinesR1,
+      "summaryPlotLinesR2" -> summaryPlotlinesR2
     )
   }
 }
