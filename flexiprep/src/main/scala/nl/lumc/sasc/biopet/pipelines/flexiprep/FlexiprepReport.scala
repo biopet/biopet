@@ -324,7 +324,8 @@ object FlexiprepReadSummary {
       "clippingStats" -> clippingStats,
       "trimmingStats" -> trimmingStats,
       "summaryPlotLinesR1" -> summaryPlotLinesR1,
-      "summaryPlotLinesR2" -> summaryPlotlinesR2
+      "summaryPlotLinesR2" -> summaryPlotlinesR2,
+      "paired" -> paired
     )
   }
 }
@@ -393,7 +394,8 @@ object FlexiprepBaseSummary {
       "seqstatStats" -> seqstatStats,
       "seqstatQCStats" -> seqstatQCStats,
       "summaryPlotLinesR1" -> summaryPlotLinesR1,
-      "summaryPlotLinesR2" -> summaryPlotlinesR2
+      "summaryPlotLinesR2" -> summaryPlotlinesR2,
+      "paired" -> paired
     )
   }
 }
