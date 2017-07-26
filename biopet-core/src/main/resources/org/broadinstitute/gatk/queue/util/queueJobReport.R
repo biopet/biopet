@@ -31,7 +31,7 @@ ORIGINAL_UNITS_TO_RUNTIME_UNITS = 1/1000/60/60
 # Helper function to aggregate all of the jobs in the report across all tables
 #
 allJobsFromReport <- function(report) {
-  names <- c("jobName", "startTime", "analysisName", "doneTime", "exechosts", "runtime")
+  names <- c("jobName", "startTime", "analysisName", "doneTime", "exechosts", "runtime", "cores")
   sub <- lapply(report, function(table) table[,names])
   do.call("rbind", sub)
 }
@@ -102,6 +102,43 @@ plotProgressByTime <- function(gatkReport) {
   print(p)
 }
 
+plotCoresByTime <- function(gatkReport) {
+  allJobs = allJobsFromReport(gatkReport)
+  nJobs = sum(allJobs$cores)
+  allJobs = allJobs[order(allJobs$startTime, decreasing=F),]
+  allJobs$index = 1:nrow(allJobs)
+  
+  minTime = min(allJobs$startTime)
+  allJobs$relStartTime = allJobs$startTime - minTime
+  allJobs$relDoneTime = allJobs$doneTime - minTime
+  
+  times = sort(c(allJobs$relStartTime, allJobs$relDoneTime))
+  
+  countJobs <- function(p) {
+    s = allJobs$relStartTime
+    e = allJobs$relDoneTime
+    cpu = allJobs$cores
+    x = c() # I wish I knew how to make this work with apply
+    for ( time in times )
+      x = c(x, sum(p(s, e, time) * cpu))
+    x
+  }
+  
+  pending = countJobs(function(s, e, t) s > t)
+  done = countJobs(function(s, e, t) e < t)
+  running = nJobs - pending - done
+  
+  d = data.frame(times=times, running=running)
+  
+  p <- ggplot(data=melt(d, id.vars=c("times")), aes(x=times, y=value, color=variable))
+  p <- p + facet_grid(variable ~ ., scales="free")
+  p <- p + geom_line(size=2)
+  p <- p + xlab(paste("Time since start of first job", RUNTIME_UNITS))
+  p <- p + ggtitle("Cores used in time")
+  print(p)
+}
+
+
 # 
 # Creates tables for each job in this group
 #
@@ -113,13 +150,13 @@ plotGroup <- function(groupTable) {
   sub = sub[order(sub$iteration, sub$jobName, decreasing=F), ]
   
   # create a table showing each job and all annotations
-  textplot(sub, show.rownames=F)
-  title(paste("Job summary for", name, "full itemization"), cex=3)
+#  textplot(sub, show.rownames=F)
+#  title(paste("Job summary for", name, "full itemization"), cex=3)
 
   # create the table for each combination of values in the group, listing iterations in the columns
-  sum = cast(melt(sub, id.vars=groupAnnotations, measure.vars=c("runtime")), ... ~ iteration, fun.aggregate=mean)
-  textplot(as.data.frame(sum), show.rownames=F)
-  title(paste("Job summary for", name, "itemizing each iteration"), cex=3)
+#  sum = cast(melt(sub, id.vars=groupAnnotations, measure.vars=c("runtime")), ... ~ iteration, fun.aggregate=mean)
+#  textplot(as.data.frame(sum), show.rownames=F)
+#  title(paste("Job summary for", name, "itemizing each iteration"), cex=3)
 
   # histogram of job times by groupAnnotations
   if ( length(groupAnnotations) == 1 && dim(sub)[1] > 1 ) {
@@ -131,14 +168,14 @@ plotGroup <- function(groupTable) {
   }
   
   # as above, but averaging over all iterations
-  groupAnnotationsNoIteration = setdiff(groupAnnotations, "iteration")
-  if ( dim(sub)[1] > 1 ) {
-    try({ # need a try here because we will fail to reduce when there's just a single iteration
-      sum = cast(melt(sub, id.vars=groupAnnotationsNoIteration, measure.vars=c("runtime")), ... ~ ., fun.aggregate=c(mean, sd))
-      textplot(as.data.frame(sum), show.rownames=F)
-      title(paste("Job summary for", name, "averaging over all iterations"), cex=3)
-    }, silent=T)
-  }
+#  groupAnnotationsNoIteration = setdiff(groupAnnotations, "iteration")
+#  if ( dim(sub)[1] > 1 ) {
+#    try({ # need a try here because we will fail to reduce when there's just a single iteration
+#      sum = cast(melt(sub, id.vars=groupAnnotationsNoIteration, measure.vars=c("runtime")), ... ~ ., fun.aggregate=c(mean, sd))
+#      textplot(as.data.frame(sum), show.rownames=F)
+#      title(paste("Job summary for", name, "averaging over all iterations"), cex=3)
+#    }, silent=T)
+#  }
 }
     
 # print out some useful basic information
@@ -147,6 +184,7 @@ print(paste("Project          :", inputFileName))
 
 convertUnits <- function(gatkReportData) {
   convertGroup <- function(g) {
+    if (is.null(g$cores)) {g$cores = 1}
     g$runtime = g$runtime * ORIGINAL_UNITS_TO_RUNTIME_UNITS
     g$startTime = g$startTime * ORIGINAL_UNITS_TO_RUNTIME_UNITS
     g$doneTime = g$doneTime * ORIGINAL_UNITS_TO_RUNTIME_UNITS
@@ -195,7 +233,8 @@ mergeScattersForAnalysis <- function(table) {
         intermediate = intermediate[1],
         startTime = min(startTime),
         doneTime = min(startTime) + sum(runtime),
-        runtime = sum(runtime))
+        runtime = sum(runtime), 
+        cores = min(cores))
 }
 
 mergeScatters <- function(report) {
@@ -218,18 +257,26 @@ if ( ! is.na(outputPDF) ) {
 plotJobsGantt(gatkReportData, T, "All jobs, by analysis, by start time", F)
 plotJobsGantt(gatkReportData, F, "All jobs, sorted by start time", F)
 plotProgressByTime(gatkReportData)
+plotCoresByTime(gatkReportData)
 
 # plots summarizing overall costs, merging scattered counts
 merged.by.scatter = mergeScatters(gatkReportData) 
 plotJobsGantt(merged.by.scatter, F, "Jobs merged by scatter by start time", T)
 
-merged.as.df = do.call(rbind.data.frame, merged.by.scatter)[,c("analysisName", "runtime")]
-merged.as.df$percent = merged.as.df$runtime / sum(merged.as.df$runtime) * 100
-merged.as.df.formatted = data.frame(analysisName=merged.as.df$analysisName,runtime=prettyNum(merged.as.df$runtime), percent=prettyNum(merged.as.df$percent,digits=2))
+merged.as.df = do.call(rbind.data.frame, merged.by.scatter)[,c("analysisName", "runtime", "cores")]
+merged.as.df$cputime = merged.as.df$runtime * merged.as.df$cores
+merged.as.df$percent = merged.as.df$cputime / sum(merged.as.df$cputime) * 100
+merged.as.df.formatted = data.frame(
+  analysisName=merged.as.df$analysisName,
+  walltime=prettyNum(merged.as.df$runtime), 
+  cores=merged.as.df$cores, 
+  cputime=prettyNum(merged.as.df$cputime), 
+  percent=prettyNum(merged.as.df$percent,digits=2))
 textplot(merged.as.df.formatted[order(merged.as.df$runtime),], show.rownames=F)
+
 title("Total runtime for each analysis")
 
-plotTimeByHost(gatkReportData)
+#plotTimeByHost(gatkReportData)
 for ( group in gatkReportData ) {
   #print(group)
   plotGroup(group)
