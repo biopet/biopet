@@ -25,8 +25,8 @@
 <%@ var seqstatQCStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var clippingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var trimmingStats: Map[(Int, Int), Map[String, Option[Any]]] %>
-<%@ var summaryPlotLinesR1: Some[Seq[String]] %>
-<%@ var summaryPlotLinesR2: Some[Seq[String]] %>
+<%@ var summaryPlotLinesR1: Option[Seq[String]] %>
+<%@ var summaryPlotLinesR2: Option[Seq[String]] %>
 
 #if (showIntro)
     <br/>

@@ -289,11 +289,11 @@ object FlexiprepReadSummary {
     val clipCount = settings.count(_._2.getOrElse("skip_clip", None).contains(false))
     val librariesCount = libraries.size
 
-    val summaryPlotLinesR1: Some[Seq[String]] =
+    val summaryPlotLinesR1: Option[Seq[String]] =
       if (showPlot)
         Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
       else None
-    val summaryPlotlinesR2: Some[Seq[String]] =
+    val summaryPlotlinesR2: Option[Seq[String]] =
       if (showPlot && paired)
         Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
       else None
@@ -372,11 +372,11 @@ object FlexiprepBaseSummary {
           .getOrElse("paired", None) == Some(true)
       else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
 
-    val summaryPlotLinesR1: Some[Seq[String]] =
+    val summaryPlotLinesR1: Option[Seq[String]] =
       if (showPlot)
         Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
       else None
-    val summaryPlotlinesR2: Some[Seq[String]] =
+    val summaryPlotlinesR2: Option[Seq[String]] =
       if (showPlot && paired)
         Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
       else None

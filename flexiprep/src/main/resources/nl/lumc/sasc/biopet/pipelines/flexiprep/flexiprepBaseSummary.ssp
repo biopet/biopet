@@ -26,8 +26,8 @@
 <%@ var librariesCount: Int %>
 <%@ var clipCount: Int %>
 <%@ var paired: Boolean %>
-<%@ var summaryPlotLinesR1: Some[Seq[String]] %>
-<%@ var summaryPlotLinesR2: Some[Seq[String]] %>
+<%@ var summaryPlotLinesR1: Option[Seq[String]] %>
+<%@ var summaryPlotLinesR2: Option[Seq[String]] %>
 <%@ var samples: Seq[Sample] %>
 <%@ var libraries: Seq[Library] %>
 <%@ var settings: Map[(Int, Int), Map[String, Option[Any]]]%>
