@@ -265,14 +265,16 @@ plotJobsGantt(merged.by.scatter, F, "Jobs merged by scatter by start time", T)
 
 merged.as.df = do.call(rbind.data.frame, merged.by.scatter)[,c("analysisName", "runtime", "cores")]
 merged.as.df$cputime = merged.as.df$runtime * merged.as.df$cores
-merged.as.df$percent = merged.as.df$cputime / sum(merged.as.df$cputime) * 100
+merged.as.df$percent = merged.as.df$runtime / sum(merged.as.df$runtime) * 100
+merged.as.df$percentCpu = merged.as.df$cputime / sum(merged.as.df$cputime) * 100
 merged.as.df.formatted = data.frame(
   analysisName=merged.as.df$analysisName,
-  walltime=prettyNum(merged.as.df$runtime), 
+  walltime=prettyNum(merged.as.df$runtime),
+  percent=prettyNum(merged.as.df$percent,digits=2),
   cores=merged.as.df$cores, 
   cputime=prettyNum(merged.as.df$cputime), 
-  percent=prettyNum(merged.as.df$percent,digits=2))
-textplot(merged.as.df.formatted[order(merged.as.df$runtime),], show.rownames=F)
+  percentCpu=prettyNum(merged.as.df$percentCpu,digits=2))
+textplot(merged.as.df.formatted[order(merged.as.df$percentCpu),], show.rownames=F)
 
 title("Total runtime for each analysis")
 
