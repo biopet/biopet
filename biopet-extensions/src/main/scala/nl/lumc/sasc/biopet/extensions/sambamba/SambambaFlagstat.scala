@@ -30,7 +30,7 @@ class SambambaFlagstat(val parent: Configurable) extends Sambamba {
   var output: File = _
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("flagstat") +
       optional("-t", nCoresRequest) +

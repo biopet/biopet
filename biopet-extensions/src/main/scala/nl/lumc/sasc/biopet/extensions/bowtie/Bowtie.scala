@@ -18,8 +18,10 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Extension for bowtie 1
@@ -31,18 +33,18 @@ class Bowtie(val parent: Configurable)
     with Reference
     with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
-  var R1: File = null
+  var R1: File = _
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
   var R2: Option[File] = None
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
-  var output: File = null
+  var output: File = _
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex: Regex = """.*[Vv]ersion:? (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " --version"
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
@@ -81,7 +83,7 @@ class Bowtie(val parent: Configurable)
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       optional("--threads", threads) +
       conditional(sam, "--sam") +

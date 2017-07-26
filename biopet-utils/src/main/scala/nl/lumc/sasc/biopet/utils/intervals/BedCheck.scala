@@ -15,15 +15,16 @@
 package nl.lumc.sasc.biopet.utils.intervals
 
 import java.io.File
-import scala.collection.mutable.Set
 
 import nl.lumc.sasc.biopet.utils.Logging
+
+import scala.collection.mutable
 
 /**
   * Created by pjvanthof on 14/05/16.
   */
 object BedCheck {
-  private val cache: Set[(File, File)] = Set()
+  private val cache: mutable.Set[(File, File)] = mutable.Set()
 
   def checkBedFileToReference(bedFile: File,
                               reference: File,

@@ -22,7 +22,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
@@ -51,9 +51,8 @@ object AnnotateVcfWithBed extends ToolCommand {
                   fieldName: String = null,
                   fieldDescription: String = "",
                   fieldType: String = "String")
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "Input VCF file. Mandatory field"

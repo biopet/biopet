@@ -38,7 +38,7 @@ class ScatterPlot(val parent: Configurable) extends Rscript {
   var title: Option[String] = config("title")
   var removeZero: Boolean = config("removeZero", default = false)
 
-  override def cmd =
+  override def cmd: Seq[String] =
     super.cmd ++
       Seq("--input", input.getAbsolutePath) ++
       Seq("--output", output.getAbsolutePath) ++

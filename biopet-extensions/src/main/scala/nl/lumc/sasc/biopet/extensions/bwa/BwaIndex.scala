@@ -48,7 +48,7 @@ class BwaIndex(val parent: Configurable) extends Bwa {
   }
 
   /** Returns command to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("index") +
       optional("-a", a) +

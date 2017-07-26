@@ -42,7 +42,7 @@
             val tabIndex = if (first) " tabindex='-1'" else ""
 //            val listGroupA = if(subPage._2.subPages.nonEmpty) "list-group-item" else ""
 
-            var menuItem: String = "<li class='%s'>".format(listSubmenu) +
+            val menuItem: String = "<li class='%s'>".format(listSubmenu) +
             "<a href='%s' class='%s'%s>".format(href, "", tabIndex) +
             "%s".format(subPageName) +
             "</a>" +
@@ -93,7 +93,7 @@
         <script language="JavaScript">
             <!--
             $(document).ready(function() {
-                Sortable.init()
+                Sortable.init();
 
                 $('body').scrollspy({
                     target: '.bs-sidebar'
@@ -135,14 +135,14 @@
                         <a href="${rootPath}index.html">Home
                             #if (iPage.subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
-                        ${unescape(createMenu(iPage, Nil, false))}
+                        ${unescape(createMenu(iPage, Nil, first = false))}
                     </li>
                 #else
                     <li class="root #if (t == path.size) active #end">
                         <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}
                             #if (getSubPage(path.slice(0, t)).subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
-                        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t), false))}
+                        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t), first = false))}
                     </li>
                 #end
             #end

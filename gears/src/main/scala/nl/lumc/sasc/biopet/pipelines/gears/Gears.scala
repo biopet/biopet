@@ -17,10 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
-import nl.lumc.sasc.biopet.extensions.{Gzip, Ln, Zcat}
-import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
+import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Ln, Zcat}
+import nl.lumc.sasc.biopet.extensions.qiime.{MergeOtuTables, PickOpenReferenceOtus}
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -30,7 +31,7 @@ import org.broadinstitute.gatk.queue.QScript
 class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { qscript =>
   def this() = this(null)
 
-  override def reportClass = {
+  override def reportClass: Some[GearsReport] = {
     val gearsReport = new GearsReport(this)
     gearsReport.outputDir = new File(outputDir, "report")
     gearsReport.summaryDbFile = summaryDbFile
@@ -41,12 +42,20 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
   override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
+  val qiimeMultisampleOpenReference: Boolean =
+    config("qiime_multisample_open_reference", default = false)
+
   /** Init for pipeline */
   def init(): Unit = {}
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
     addSamplesJobs()
+
+    if (qiimeMultisampleOpenReference && !samples.exists(_._2.gearsSingle.qiimeOpen.isDefined))
+      Logging.addError(
+        "You selected 'qiime_multisample_open_reference' but qiime_open_reference is not enabled")
+
     addSummaryJobs()
   }
 
@@ -116,6 +125,21 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
       }
 
     }
+
+    if (qiimeMultisampleOpenReference) {
+      val dir = new File(outputDir, "qiime_open_reference_multisample")
+
+      val cat = new Cat(this)
+      cat.input = samples.flatMap(_._2.gearsSingle.qiimeOpen).map(_.fastaInput).toList
+      cat.output = new File(dir, "combined.fna")
+      add(cat)
+
+      val openReference = new PickOpenReferenceOtus(this)
+      openReference.inputFasta = cat.output
+      openReference.outputDir = new File(dir, "pick_open_reference_otus")
+      add(openReference)
+
+    }
   }
 
   /**
@@ -143,7 +167,8 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
       lazy val skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
-      lazy val flexiprep = if (skipFlexiprep) None else Some(new Flexiprep(qscript))
+      lazy val flexiprep: Option[Flexiprep] =
+        if (skipFlexiprep) None else Some(new Flexiprep(qscript))
       flexiprep.foreach(_.sampleId = Some(sampleId))
       flexiprep.foreach(_.libId = Some(libId))
       flexiprep.foreach(_.inputR1 = inputR1)
@@ -155,7 +180,8 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
 
       val libraryGears: Boolean = config("library_gears", default = false)
 
-      lazy val gearsSingle = if (libraryGears) Some(new GearsSingle(qscript)) else None
+      lazy val gearsSingle: Option[GearsSingle] =
+        if (libraryGears) Some(new GearsSingle(qscript)) else None
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
@@ -188,8 +214,6 @@ class Gears(val parent: Configurable) extends QScript with MultiSampleQScript { 
     /** Function to add sample jobs */
     protected def addJobs(): Unit = {
       addPerLibJobs()
-
-      val flexipreps = libraries.values.map(_.flexiprep).toList
 
       val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
       add(Zcat(qscript, libraries.values.map(_.qcR1).toList) | new Gzip(qscript) > mergeR1)

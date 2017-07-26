@@ -33,7 +33,7 @@ class CreateSequenceDictionary(val parent: Configurable) extends Picard {
   var truncateAtWhiteSpace: Boolean = config("truncateAtWhiteSpace", default = false)
   var numSequences: Option[Int] = config("numSequences")
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("REFERENCE=", reference, spaceSeparated = false) +
       required("OUTPUT=", output, spaceSeparated = false) +

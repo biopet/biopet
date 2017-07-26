@@ -14,7 +14,9 @@
   */
 package nl.lumc.sasc.biopet.extensions.bwa
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 /**
   * General bwa extension
@@ -22,9 +24,9 @@ import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
   * Created by pjvan_thof on 1/16/15.
   */
 abstract class Bwa extends BiopetCommandLineFunction with Version {
-  override def subPath = "bwa" :: super.subPath
+  override def subPath: List[String] = "bwa" :: super.subPath
   executable = config("exe", default = "bwa")
-  def versionRegex = """Version: (.*)""".r
+  def versionRegex: Regex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable
+  def versionCommand: String = executable
 }

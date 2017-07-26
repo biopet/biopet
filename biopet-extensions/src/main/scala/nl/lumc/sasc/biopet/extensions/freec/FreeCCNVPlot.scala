@@ -24,12 +24,12 @@ class FreeCCNVPlot(val parent: Configurable) extends PythonCommandLineFunction {
   setPythonScript("freec_CNVPlot.py")
 
   @Input(doc = "Output file from FreeC. *_CNV", required = true)
-  var input: File = null
+  var input: File = _
 
   @Output(doc = "Destination for the PNG file", required = true)
-  var output: File = null
+  var output: File = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     getPythonCommand +
       required("-I", input) +
       required("-O", output)

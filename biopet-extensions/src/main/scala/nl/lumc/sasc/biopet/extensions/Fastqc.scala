@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.utils.SemanticVersion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Extension for fastqc
   * Based on version 0.10.1 and 0.11.2
@@ -34,10 +36,10 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   var adapters: Option[File] = None
 
   @Input(doc = "Fastq file", shortName = "FQ")
-  var fastqfile: File = null
+  var fastqfile: File = _
 
   @Output(doc = "Output", shortName = "out", required = true)
-  var output: File = null
+  var output: File = _
 
   executable = config("exe", default = "fastqc")
   var javaExe: String = config("exe", default = "java", namespace = "java", freeVar = false)
@@ -47,8 +49,8 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   var nogroup: Boolean = config("nogroup", default = false)
   var extract: Boolean = config("extract", default = true)
 
-  def versionRegex = """FastQC (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """FastQC (.*)""".r
+  def versionCommand: String = executable + " --version"
   override def defaultThreads = 4
 
   /** Sets contaminants and adapters when not yet set */
@@ -86,7 +88,7 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       optional("--java", javaExe) +
       optional("--threads", threads) +

@@ -44,7 +44,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
 
   /** Name of the pipeline in the summary */
-  var summaryName = configNamespace
+  var summaryName: String = configNamespace
 
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any]
@@ -98,7 +98,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       Await.result(
         SummaryDb.openSqliteSummary(summaryDbFile).getRuns(runId = Some(id)).map(_.headOption),
         Duration.Inf) match {
-        case Some(x) => id
+        case Some(_) => id
         case _ =>
           logger.warn(
             s"Run id found in '$runIdFile' does not exist in summary, creating a new run")
@@ -191,32 +191,34 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     qscript match {
       case q: MultiSampleQScript =>
         // Global level
-        for ((key, file) <- qscript.summaryFiles) addChecksum(file)
+        for ((_, file) <- qscript.summaryFiles) addChecksum(file)
 
-        for ((sampleName, sample) <- q.samples) {
+        for ((_, sample) <- q.samples) {
           // Sample level
-          for ((key, file) <- sample.summaryFiles) addChecksum(file)
-          for ((libName, lib) <- sample.libraries) {
+          for ((_, file) <- sample.summaryFiles) addChecksum(file)
+          for ((_, lib) <- sample.libraries) {
             // Library level
-            for ((key, file) <- lib.summaryFiles) addChecksum(file)
+            for ((_, file) <- lib.summaryFiles) addChecksum(file)
           }
         }
-      case q => for ((key, file) <- q.summaryFiles) addChecksum(file)
+      case q => for ((_, file) <- q.summaryFiles) addChecksum(file)
     }
 
     for (inputFile <- inputFiles) {
       inputFile.md5 match {
-        case Some(checksum) => {
-          val checkMd5 = new CheckChecksum
-          checkMd5.inputFile = inputFile.file
-          if (!SummaryQScript.md5sumCache.contains(inputFile.file))
-            addChecksum(inputFile.file)
-          checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
-          checkMd5.checksum = checksum
-          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile,
-                                            checkMd5.checksumFile.getName + ".check.out")
-          add(checkMd5)
-        }
+        case Some(checksum) =>
+          if (!SummaryQScript.checkChecksumCache.contains(inputFile.file)) {
+            val checkMd5 = new CheckChecksum
+            checkMd5.inputFile = inputFile.file
+            if (!SummaryQScript.md5sumCache.contains(inputFile.file))
+              addChecksum(inputFile.file)
+            checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
+            checkMd5.checksum = checksum
+            checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile,
+                                              checkMd5.checksumFile.getName + ".check.out")
+            add(checkMd5)
+            SummaryQScript.checkChecksumCache.add(inputFile.file)
+          }
         case _ =>
       }
     }
@@ -239,4 +241,5 @@ object SummaryQScript {
 
   /** Cache to have no duplicate jobs */
   protected[summary] val md5sumCache: mutable.Map[File, File] = mutable.Map()
+  protected[summary] val checkChecksumCache: mutable.Set[File] = mutable.Set()
 }

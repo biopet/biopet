@@ -14,14 +14,16 @@
   */
 package nl.lumc.sasc.biopet.extensions.varscan
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetJavaCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Version}
+
+import scala.util.matching.Regex
 
 abstract class Varscan extends BiopetJavaCommandLineFunction with Version {
 
-  override def subPath = "varscan" :: super.subPath
+  override def subPath: List[String] = "varscan" :: super.subPath
 
   jarFile = config("varscan_jar")
 
   def versionCommand = s"$executable -jar $jarFile"
-  def versionRegex = """VarScan v(.*)""".r
+  def versionRegex: Regex = """VarScan v(.*)""".r
 }

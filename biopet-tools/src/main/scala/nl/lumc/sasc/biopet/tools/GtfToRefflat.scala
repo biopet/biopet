@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.annotation.{Exon, Feature, Gene, Transcript}
@@ -14,9 +14,8 @@ import scala.io.Source
 object GtfToRefflat extends ToolCommand {
 
   case class Args(refFlat: File = null, gtfFile: File = null, referenceFasta: Option[File] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('r', "refFlat") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
     } text "Input refFlat file. Mandatory"
@@ -174,7 +173,7 @@ object GtfToRefflat extends ToolCommand {
     val writer = new PrintWriter(refflatFile)
 
     for {
-      (contig, genes) <- genesBuffer.values.toList.groupBy(_.contig).toList.sortBy(_._1)
+      (_, genes) <- genesBuffer.values.toList.groupBy(_.contig).toList.sortBy(_._1)
       gene <- genes.sortBy(_.start)
       transcript <- gene.transcripts
     } {

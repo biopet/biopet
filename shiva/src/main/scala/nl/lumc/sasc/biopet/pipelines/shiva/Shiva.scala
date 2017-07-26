@@ -20,11 +20,14 @@ import nl.lumc.sasc.biopet.core.extensions.CheckValidateVcf
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
+import nl.lumc.sasc.biopet.extensions.gatk.gather.BqsrGather
 import nl.lumc.sasc.biopet.extensions.tools.ValidateVcf
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
 import nl.lumc.sasc.biopet.pipelines.mapping.{Mapping, MultisampleMappingTrait}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.somatic.TumorNormalPair
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -59,7 +62,24 @@ class Shiva(val parent: Configurable)
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
-      genders = samples.map { case (sampleName, sample) => sampleName -> sample.gender }
+      genders = samples.map { case (sampleName, s) => sampleName -> s.gender }
+
+      //TODO: this needs changed when the sample/library refactoring is beeing done
+      tumorSamples = samples
+        .filter(_._2.sampleTags.get("type").contains("tumor"))
+        .flatMap {
+          case (tumorName, tumorSample) =>
+            tumorSample.sampleTags.get("control") match {
+              case Some(normal: String) =>
+                if (!samples.contains(normal))
+                  Logging.addError(s"Normal sample '$normal' does not exist")
+                Some(TumorNormalPair(tumorName, normal))
+              case _ =>
+                Logging.addError(s"Control is missing for tumor sample '$tumorName'")
+                None
+            }
+        }
+        .toList
     } else
       new ShivaVariantcalling(qscript) {
         override def configNamespace = "shivavariantcalling"
@@ -81,17 +101,13 @@ class Shiva(val parent: Configurable)
     /** Sample specific settings */
     override def summarySettings: Map[String, Any] =
       super.summarySettings ++
-        Map(
-          "single_sample_variantcalling" -> variantcalling.isDefined,
-          "use_indel_realigner" -> useIndelRealigner
-        )
+        Map("use_indel_realigner" -> useIndelRealigner)
 
     /** Class to generate jobs for a library */
     class Library(libId: String) extends super.Library(libId) {
 
       override def summaryFiles: Map[String, File] =
         super.summaryFiles ++
-          variantcalling.map("final" -> _.finalFile) ++
           bqsrFile.map("baserecal" -> _) ++
           bqsrAfterFile.map("baserecal_after" -> _)
 
@@ -120,19 +136,9 @@ class Shiva(val parent: Configurable)
 
       /** Library specific settings */
       override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
-        "library_variantcalling" -> variantcalling.isDefined,
         "use_base_recalibration" -> useBaseRecalibration,
         "useAnalyze_covariates" -> useAnalyzeCovariates
       )
-
-      lazy val variantcalling: Option[ShivaVariantcalling with QScript] =
-        if (config("library_variantcalling", default = false).asBoolean &&
-            (bamFile.isDefined || preProcessBam.isDefined)) {
-          Some(
-            makeVariantcalling(multisample = false,
-                               sample = Some(sampleId),
-                               library = Some(libId)))
-        } else None
 
       /** This will add jobs for this library */
       override def addJobs(): Unit = {
@@ -144,15 +150,6 @@ class Shiva(val parent: Configurable)
                               useIndelRealigner || libraries.size > 1,
                               usePrintReads)
         }
-
-        variantcalling.foreach(vc => {
-          vc.sampleId = Some(sampleId)
-          vc.libId = Some(libId)
-          vc.outputDir = new File(libDir, "variantcalling")
-          if (preProcessBam.isDefined) vc.inputBams = Map(sampleId -> preProcessBam.get)
-          else vc.inputBams = Map(sampleId -> bamFile.get)
-          add(vc)
-        })
       }
 
       /** Adds base recalibration jobs */
@@ -200,11 +197,6 @@ class Shiva(val parent: Configurable)
       }
     }
 
-    lazy val variantcalling: Option[ShivaVariantcalling with QScript] =
-      if (config("single_sample_variantcalling", default = false).asBoolean) {
-        Some(makeVariantcalling(multisample = false, sample = Some(sampleId)))
-      } else None
-
     override def keepMergedFiles: Boolean =
       config("keep_merged_files", default = !useIndelRealigner)
 
@@ -215,24 +207,12 @@ class Shiva(val parent: Configurable)
         bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
       } else bamFile
 
-    override def summaryFiles: Map[String, File] =
-      super.summaryFiles ++ variantcalling.map("final" -> _.finalFile)
-
     /** This will add sample jobs */
     override def addJobs(): Unit = {
       super.addJobs()
 
       if (useIndelRealigner) {
         addIndelRealign(bamFile.get, sampleDir, isIntermediate = false)
-      }
-
-      preProcessBam.foreach { bam =>
-        variantcalling.foreach(vc => {
-          vc.sampleId = Some(sampleId)
-          vc.outputDir = new File(sampleDir, "variantcalling")
-          vc.inputBams = Map(sampleId -> bam)
-          add(vc)
-        })
       }
     }
   } // End of sample

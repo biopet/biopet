@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Module, Pipeline, Run, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{LibraryId, SampleId}
-import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.TemplateEngine
 
@@ -75,7 +75,7 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  implicit lazy val ec = ReportBuilder.ec
+  implicit lazy val ec: ExecutionContextExecutor = ReportBuilder.ec
   implicit def toOption[T](x: T): Option[T] = Option(x)
   implicit def autoWait[T](x: Future[T]): T = Await.result(x, Duration.Inf)
 
@@ -83,9 +83,8 @@ trait ReportBuilder extends ToolCommand {
                   outputDir: File = null,
                   runId: Int = 0,
                   pageArgs: mutable.Map[String, Any] = mutable.Map())
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(
       s"""
@@ -243,9 +242,8 @@ trait ReportBuilder extends ToolCommand {
       try {
         Await.result(Future.sequence(futures), Duration.fromNanos(30000000000L))
       } catch {
-        case e: TimeoutException =>
+        case _: TimeoutException =>
       }
-      val dones = futures.filter(_.isCompleted)
       val notDone = futures.filter(!_.isCompleted)
       done += futures.size - notDone.size
       if (notDone.nonEmpty) {
@@ -365,8 +363,7 @@ trait ReportBuilder extends ToolCommand {
           dbFiles
             .map(
               x =>
-                x.get(pipelinelineId.get)
-                  .getOrElse(Seq())
+                x.getOrElse(pipelinelineId.get, Seq())
                   .filter(_.moduleId.isEmpty)))
 
     modulePages
@@ -404,7 +401,7 @@ object ReportBuilder {
   val numWorkers: Int = maxThreads.getOrElse(2)
   val queueCapacity = 100
 
-  implicit lazy val ec = ExecutionContext.global
+  implicit lazy val ec: ExecutionContextExecutor = ExecutionContext.global
 
   /* TODO enable new queueing execution context when restructuring of report section is complete.
   implicit lazy val ec = ExecutionContext.fromExecutorService(

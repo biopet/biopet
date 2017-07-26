@@ -22,24 +22,24 @@ object Question {
   def string(name: String,
              default: Option[String] = None,
              description: Option[String] = None,
-             posibleValues: List[String] = Nil,
+             possibleValues: List[String] = Nil,
              validation: List[(String) => Boolean] = Nil): String = {
     description.foreach(println)
-    if (posibleValues.nonEmpty) println(s"possible values: ${posibleValues.mkString(", ")}")
+    if (possibleValues.nonEmpty) println(s"possible values: ${possibleValues.mkString(", ")}")
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name > ")
-    (Console.readLine.trim, default) match {
+    (scala.io.StdIn.readLine.trim, default) match {
       case (a, Some(d)) if a.isEmpty => d
       case (a, None) if a.isEmpty =>
         println("ERROR: Value is required")
-        string(name, default, description, posibleValues, validation)
+        string(name, default, description, possibleValues, validation)
       case (a, _) =>
         if (!validation.forall(_(a))) {
           println("ERROR: Validation of failed")
-          string(name, default, description, posibleValues, validation)
-        } else if (posibleValues.nonEmpty && !posibleValues.contains(a)) {
+          string(name, default, description, possibleValues, validation)
+        } else if (possibleValues.nonEmpty && !possibleValues.contains(a)) {
           println("ERROR: Value not allowed")
-          string(name, default, description, posibleValues, validation)
+          string(name, default, description, possibleValues, validation)
         } else a
     }
   }
@@ -50,7 +50,7 @@ object Question {
     description.foreach(println)
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name (y/n) > ")
-    Console.readLine.trim.toLowerCase match {
+    scala.io.StdIn.readLine.trim.toLowerCase match {
       case "" =>
         default match {
           case Some(d) => d
@@ -69,24 +69,24 @@ object Question {
   def list(name: String,
            default: Option[List[String]] = None,
            description: Option[String] = None,
-           posibleValues: List[String] = Nil,
-           validation: (String) => Boolean = String => true): List[String] = {
+           possibleValues: List[String] = Nil,
+           validation: (String) => Boolean = _ => true): List[String] = {
     description.foreach(println)
-    if (posibleValues.nonEmpty) println(s"possible values: ${posibleValues.mkString(", ")}")
+    if (possibleValues.nonEmpty) println(s"possible values: ${possibleValues.mkString(", ")}")
     default.foreach(x => println(s"Default value: $x"))
     print(s"$name > ")
-    (Console.readLine.split(",").toList.map(_.trim), default) match {
+    (scala.io.StdIn.readLine.split(",").toList.map(_.trim), default) match {
       case (List(""), Some(d)) => d
       case (List(""), None) =>
         println("ERROR: Value is required")
-        list(name, default, description, posibleValues, validation)
+        list(name, default, description, possibleValues, validation)
       case (a, _) =>
         if (!a.forall(validation)) {
           println("ERROR: Validation of failed")
-          list(name, default, description, posibleValues, validation)
-        } else if (posibleValues.nonEmpty && !a.forall(posibleValues.contains)) {
+          list(name, default, description, possibleValues, validation)
+        } else if (possibleValues.nonEmpty && !a.forall(possibleValues.contains)) {
           println("ERROR: Value not allowed")
-          list(name, default, description, posibleValues, validation)
+          list(name, default, description, possibleValues, validation)
         } else a
     }
   }

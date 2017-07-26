@@ -58,11 +58,11 @@ class GearsQiimeRtax(val parent: Configurable)
     )
   )
 
-  def init() = {
+  def init(): Unit = {
     require(fastqR1 != null)
   }
 
-  def biopetScript() = {
+  def biopetScript(): Unit = {
 
     val slfR1 = new SplitLibrariesFastq(this)
     slfR1.input :+= fastqR1

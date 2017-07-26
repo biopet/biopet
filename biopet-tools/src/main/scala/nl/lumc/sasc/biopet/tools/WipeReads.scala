@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import com.google.common.hash.{PrimitiveSink, Funnel, BloomFilter}
+import com.google.common.hash.{BloomFilter, Funnel, PrimitiveSink}
 import htsjdk.samtools.{
   QueryInterval,
   SAMFileWriter,
@@ -27,7 +27,7 @@ import htsjdk.samtools.{
   ValidationStringency
 }
 import htsjdk.samtools.util.{Interval, IntervalTreeMap}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.apache.commons.io.FilenameUtils.getExtension
 
@@ -245,7 +245,7 @@ object WipeReads extends ToolCommand {
     /** filter function for read IDs */
     val rgFilter =
       if (readGroupIds.isEmpty)
-        (r: SAMRecord) => true
+        (_: SAMRecord) => true
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
 
@@ -306,7 +306,7 @@ object WipeReads extends ToolCommand {
   def writeFilteredBam(filterFunc: (SAMRecord => Boolean),
                        inBam: SamReader,
                        outBam: SAMFileWriter,
-                       filteredOutBam: Option[SAMFileWriter] = None) = {
+                       filteredOutBam: Option[SAMFileWriter] = None): Unit = {
 
     logger.info("Writing output file(s) ...")
     try {
@@ -341,10 +341,9 @@ object WipeReads extends ToolCommand {
                   featureType: String = "exon",
                   bloomSize: Long = 70000000,
                   bloomFp: Double = 4e-7)
-      extends AbstractArgs
 
   /** Command line argument parser */
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""
         |$commandName - Region-based reads removal from an indexed BAM file

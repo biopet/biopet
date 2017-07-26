@@ -42,7 +42,7 @@ class Sed(val parent: Configurable) extends BiopetCommandLineFunction with Versi
 
   var expressions: List[String] = Nil
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       repeat("-e", expressions) +
       (if (inputAsStdin) "" else required(inputFile)) +

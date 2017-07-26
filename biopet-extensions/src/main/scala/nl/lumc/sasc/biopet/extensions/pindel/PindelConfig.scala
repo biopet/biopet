@@ -18,7 +18,7 @@ import java.io.{File, PrintWriter}
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{BamUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, BamUtils, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 class PindelConfig(val parent: Configurable) extends BiopetJavaCommandLineFunction {
@@ -34,7 +34,7 @@ class PindelConfig(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
   var sampleName: String = _
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", input) +
       required("-n", sampleName) + { if (insertSize == 0) "" else s" -s $insertSize " } +
@@ -46,9 +46,8 @@ object PindelConfig extends ToolCommand {
                   sampleLabel: Option[String] = None,
                   insertSize: Option[Int] = None,
                   output: Option[File] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputbam") required () valueName "<bamfile/path>" action { (x, c) =>
       c.copy(inputBam = x)
     } text "Please specify the input bam file"

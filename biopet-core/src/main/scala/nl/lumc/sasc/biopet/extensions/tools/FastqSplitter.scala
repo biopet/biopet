@@ -36,7 +36,7 @@ class FastqSplitter(val parent: Configurable) extends ToolCommandFunction {
   override def defaultCoreMemory = 4.0
 
   /** * Generate command to execute */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", input) +
       repeat("-o", output)

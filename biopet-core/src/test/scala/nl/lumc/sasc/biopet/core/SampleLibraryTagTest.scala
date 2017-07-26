@@ -24,7 +24,7 @@ import org.testng.annotations.Test
   */
 class SampleLibraryTagTest extends TestNGSuite with Matchers {
   @Test
-  def testDefault: Unit = {
+  def testDefault(): Unit = {
     val o = new SampleLibraryTag {
       override def parent: Configurable = null
       override def globalConfig = new Config(Map())
@@ -34,7 +34,7 @@ class SampleLibraryTagTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testInherit: Unit = {
+  def testInherit(): Unit = {
     val o1 = new SampleLibraryTag {
       override def parent: Configurable = null
       override def globalConfig = new Config(Map())

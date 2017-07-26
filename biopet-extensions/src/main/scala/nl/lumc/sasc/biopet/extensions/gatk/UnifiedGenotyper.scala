@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "UnifiedGenotyper"
@@ -221,7 +223,7 @@ class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with Sc
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file */
@@ -274,58 +276,58 @@ class UnifiedGenotyper(val parent: Configurable) extends CommandLineGATK with Sc
       outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
-  override def cmdLine = super.cmdLine +
-    optional("-glm", genotype_likelihoods_model, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pcr_error", pcr_error_rate, spaceSeparated = true, escape = true, format = pcr_error_rateFormat) +
-    conditional(computeSLOD, "-slod", escape = true, format = "%s") +
-    optional("-pairHMM", pair_hmm_implementation, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-mbq", min_base_quality_score, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-deletions", max_deletion_fraction, spaceSeparated = true, escape = true, format = max_deletion_fractionFormat) +
-    optional("-minIndelCnt", min_indel_count_for_genotyping, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-minIndelFrac", min_indel_fraction_per_sample, spaceSeparated = true, escape = true, format = min_indel_fraction_per_sampleFormat) +
-    optional("-indelGCP", indelGapContinuationPenalty, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-indelGOP", indelGapOpenPenalty, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-indelHSize", indelHaplotypeSize, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(indelDebug, "-indelDebug", escape = true, format = "%s") +
-    conditional(ignoreSNPAlleles, "-ignoreSNPAlleles", escape = true, format = "%s") +
-    conditional(allReadsSP, "-dl", escape = true, format = "%s") +
-    conditional(ignoreLaneInfo, "-ignoreLane", escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-referenceCalls", reference_sample_calls.getOrElse(null)), reference_sample_calls, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-refsample", reference_sample_name, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-minqs", min_quality_score, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxqs", max_quality_score, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-site_prior", site_quality_prior, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-min_call_power", min_power_threshold_for_calling, spaceSeparated = true, escape = true, format = min_power_threshold_for_callingFormat) +
-    conditional(annotateNDA, "-nda", escape = true, format = "%s") +
-    optional("-hets", heterozygosity, spaceSeparated = true, escape = true, format = heterozygosityFormat) +
-    optional("-indelHeterozygosity", indel_heterozygosity, spaceSeparated = true, escape = true, format = indel_heterozygosityFormat) +
-    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_callingFormat) +
-    optional("-maxAltAlleles", max_alternate_alleles, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-gt_mode", genotyping_mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.getOrElse(null)), alleles, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-contamination", contamination_fraction_to_filter, spaceSeparated = true, escape = true, format = contamination_fraction_to_filterFormat) +
-    optional("-contaminationFile", contamination_fraction_per_sample_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pnrm", p_nonref_model, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-logExactCalls", exactcallslog, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-out_mode", output_mode, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(allSitePLs, "-allSitePLs", escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-onlyEmitSamples", onlyEmitSamples, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-debug_file", debug_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-metrics", metrics_file, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-XA", excludeAnnotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s") +
+  override def cmdLine: String = super.cmdLine +
+    optional("-glm", genotype_likelihoods_model) +
+    optional("-pcr_error", pcr_error_rate, format = pcr_error_rateFormat) +
+    conditional(computeSLOD, "-slod") +
+    optional("-pairHMM", pair_hmm_implementation) +
+    optional("-mbq", min_base_quality_score) +
+    optional("-deletions", max_deletion_fraction, format = max_deletion_fractionFormat) +
+    optional("-minIndelCnt", min_indel_count_for_genotyping) +
+    optional("-minIndelFrac", min_indel_fraction_per_sample, format = min_indel_fraction_per_sampleFormat) +
+    optional("-indelGCP", indelGapContinuationPenalty) +
+    optional("-indelGOP", indelGapOpenPenalty) +
+    optional("-indelHSize", indelHaplotypeSize) +
+    conditional(indelDebug, "-indelDebug") +
+    conditional(ignoreSNPAlleles, "-ignoreSNPAlleles") +
+    conditional(allReadsSP, "-dl") +
+    conditional(ignoreLaneInfo, "-ignoreLane") +
+    optional(TaggedFile.formatCommandLineParameter("-referenceCalls", reference_sample_calls.orNull), reference_sample_calls) +
+    optional("-refsample", reference_sample_name) +
+    optional("-minqs", min_quality_score) +
+    optional("-maxqs", max_quality_score) +
+    optional("-site_prior", site_quality_prior) +
+    optional("-min_call_power", min_power_threshold_for_calling, format = min_power_threshold_for_callingFormat) +
+    conditional(annotateNDA, "-nda") +
+    optional("-hets", heterozygosity, format = heterozygosityFormat) +
+    optional("-indelHeterozygosity", indel_heterozygosity, format = indel_heterozygosityFormat) +
+    optional("-stand_call_conf", standard_min_confidence_threshold_for_calling, format = standard_min_confidence_threshold_for_callingFormat) +
+    optional("-maxAltAlleles", max_alternate_alleles) +
+    repeat("-inputPrior", input_prior) +
+    optional("-ploidy", sample_ploidy) +
+    optional("-gt_mode", genotyping_mode) +
+    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.orNull), alleles) +
+    optional("-contamination", contamination_fraction_to_filter, format = contamination_fraction_to_filterFormat) +
+    optional("-contaminationFile", contamination_fraction_per_sample_file) +
+    optional("-pnrm", p_nonref_model) +
+    optional("-logExactCalls", exactcallslog) +
+    optional("-out_mode", output_mode) +
+    conditional(allSitePLs, "-allSitePLs") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.orNull), dbsnp) +
+    repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-o", out) +
+    repeat("-onlyEmitSamples", onlyEmitSamples) +
+    optional("-debug_file", debug_file) +
+    optional("-metrics", metrics_file) +
+    repeat("-A", annotation) +
+    repeat("-XA", excludeAnnotation) +
+    repeat("-G", group) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases") +
     (this.getVersion match {
       case Some(s) if s.contains("3.0") | s.contains("3.1") | s.contains("3.2") | s.contains("3.3") | s.contains("3.4") | s.contains("3.5") | s.contains("3.6") =>
-        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, spaceSeparated = true, escape = true, format = standard_min_confidence_threshold_for_emittingFormat)
+        optional("-stand_emit_conf", standard_min_confidence_threshold_for_emitting, format = standard_min_confidence_threshold_for_emittingFormat)
       case _ => ""
     })
 }

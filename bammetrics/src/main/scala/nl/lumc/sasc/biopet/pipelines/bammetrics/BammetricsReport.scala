@@ -284,6 +284,9 @@ object BammetricsReport extends ReportBuilder {
           .getOrElse(throw new IllegalStateException("Sample must be there"))
         val libraryName =
           library.flatMap(l => Await.result(summary.getLibraryName(l), Duration.Inf))
+        if (yKeyList.find(x => map.contains(x) && map(x).isDefined).isEmpty) {
+          ""
+        }
         val yKey = yKeyList.find(x => map.contains(x) && map(x).isDefined).get
         val xKey = xKeyList.find(x => map.contains(x) && map(x).isDefined).get
         Map(
@@ -487,7 +490,7 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def writeTableToTsv(tsvFile: File, table: Map[String, Array[Any]], firstColumn: String): Unit = {
-    require(table.map(_._2.size).toList.distinct.size == 1,
+    require(table.map(_._2.length).toList.distinct.size == 1,
             "Not all values has the same number or rows")
     val keys = table.keys.filterNot(_ == firstColumn).toList.sorted
     val writer = new PrintWriter(tsvFile)

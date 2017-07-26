@@ -18,7 +18,7 @@ import java.io.{File, PrintWriter}
 import java.util
 
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.rscript.ScatterPlot
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
@@ -32,9 +32,8 @@ object RegionAfCount extends ToolCommand {
                   outputPrefix: String = null,
                   scatterpPlot: Boolean = false,
                   vcfFiles: List[File] = Nil)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('b', "bedFile") unbounded () required () maxOccurs 1 valueName "<file>" action {
       (x, c) =>
         c.copy(bedFile = x)
@@ -43,7 +42,7 @@ object RegionAfCount extends ToolCommand {
       (x, c) =>
         c.copy(outputPrefix = x)
     }
-    opt[Unit]('s', "scatterPlot") unbounded () action { (x, c) =>
+    opt[Unit]('s', "scatterPlot") unbounded () action { (_, c) =>
       c.copy(scatterpPlot = true)
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
@@ -116,7 +115,7 @@ object RegionAfCount extends ToolCommand {
           afCounts.toMap
         }).toMap
 
-    logger.info(s"Done reading, ${c} regions")
+    logger.info(s"Done reading, $c regions")
 
     logger.info("Writing output files")
 

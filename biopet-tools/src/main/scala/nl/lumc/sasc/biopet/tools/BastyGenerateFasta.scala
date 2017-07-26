@@ -20,7 +20,7 @@ import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 
 import scala.collection.JavaConversions._
@@ -38,9 +38,8 @@ object BastyGenerateFasta extends ToolCommand {
                   minAD: Int = 8,
                   minDepth: Int = 8,
                   reference: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('V', "inputVcf") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "vcf file, needed for outputVariants and outputConsensusVariants" validate { x =>
@@ -61,7 +60,7 @@ object BastyGenerateFasta extends ToolCommand {
       (x, c) =>
         c.copy(outputConsensusVariants = x)
     } text "Consensus fasta from bam with variants from vcf file, always reference bases else 'N'"
-    opt[Unit]("snpsOnly") unbounded () action { (x, c) =>
+    opt[Unit]("snpsOnly") unbounded () action { (_, c) =>
       c.copy(snpsOnly = true)
     } text "Only use snps from vcf file"
     opt[String]("sampleName") unbounded () action { (x, c) =>
@@ -87,7 +86,7 @@ object BastyGenerateFasta extends ToolCommand {
         val err: ListBuffer[String] = ListBuffer()
         if (c.outputConsensus != null || c.outputConsensusVariants != null) {
           if (c.reference == null)
-            err.add("No reference suplied")
+            err.add("No reference supplied")
           else {
             val index = new File(c.reference.getAbsolutePath + ".fai")
             if (!index.exists) err.add("Reference does not have index")
@@ -178,10 +177,10 @@ object BastyGenerateFasta extends ToolCommand {
             if (variant.isDefined) {
               logger.info(variant.get._2)
               val stripPrefix = if (variant.get._1._1 < begin) begin - variant.get._1._1 else 0
-              val stripSufix = if (variant.get._1._2 > end) variant.get._1._2 - end else 0
+              val stripSuffix = if (variant.get._1._2 > end) variant.get._1._2 - end else 0
               val allele = getMaxAllele(variant.get._2)
               consensusPos += variant.get._2.getReference.getBases.length
-              buffer.append(allele.substring(stripPrefix, allele.length - stripSufix))
+              buffer.append(allele.substring(stripPrefix, allele.length - stripSuffix))
             } else {
               buffer.append(consensus(consensusPos))
               consensusPos += 1

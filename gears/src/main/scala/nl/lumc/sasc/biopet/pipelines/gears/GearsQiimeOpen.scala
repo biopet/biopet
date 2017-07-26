@@ -29,38 +29,23 @@ class GearsQiimeOpen(val parent: Configurable)
     with SummaryQScript
     with SampleLibraryTag {
 
-  var fastqInput: File = _
+  var fastaInput: File = _
 
-  override def defaults = Map(
-    "splitlibrariesfastq" -> Map(
-      "barcode_type" -> "not-barcoded"
-    )
-  )
-
-  def init() = {
-    require(fastqInput != null)
+  def init(): Unit = {
+    require(fastaInput != null)
     require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
-  def otuMap = _otuMap
+  def otuMap: File = _otuMap
 
   private var _otuTable: File = _
-  def otuTable = _otuTable
+  def otuTable: File = _otuTable
 
-  def biopetScript() = {
-
-    val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= fastqInput
-    splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
-    sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
-    splitLib.isIntermediate = true
-    add(splitLib)
+  def biopetScript(): Unit = {
 
     val openReference = new PickOpenReferenceOtus(this)
-    openReference.inputFasta = addDownsample(
-      splitLib.outputSeqs,
-      new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
+    openReference.inputFasta = addDownsample(fastaInput, new File(outputDir, s"downsample.fna"))
     openReference.outputDir = new File(outputDir, "pick_open_reference_otus")
     add(openReference)
     _otuMap = openReference.otuMap

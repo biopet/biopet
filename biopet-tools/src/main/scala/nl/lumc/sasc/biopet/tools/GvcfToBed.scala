@@ -18,7 +18,7 @@ import java.io.{File, PrintWriter}
 
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{VcfUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand, VcfUtils}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.JavaConversions._
@@ -35,9 +35,8 @@ object GvcfToBed extends ToolCommand {
                   sample: Option[String] = None,
                   minGenomeQuality: Int = 0,
                   inverse: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "Input vcf file"

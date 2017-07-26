@@ -33,7 +33,7 @@ class ManweSamplesAdd(val parent: Configurable) extends Manwe {
   @Argument(doc = "pool size")
   var poolSize: Option[Int] = _
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("add") +
       required(name) +

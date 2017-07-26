@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
+import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
 import nl.lumc.sasc.biopet.utils._
@@ -50,15 +51,15 @@ trait Reference extends Configurable {
     }
   }
 
-  def referenceDict = FastaUtils.getCachedDict(referenceFasta())
+  def referenceDict: SAMSequenceDictionary = FastaUtils.getCachedDict(referenceFasta())
 
   /** All config values will get a prefix */
-  override def subPath = {
+  override def subPath: List[String] = {
     referenceConfigPath ::: super.subPath
   }
 
   lazy val geneAnnotationVersion: Option[String] = config("gene_annotation_name")
-  lazy val geneAnnotationSubPath =
+  lazy val geneAnnotationSubPath: List[String] =
     geneAnnotationVersion.map(List("gene_annotations", _)).getOrElse(Nil)
   lazy val dbsnpVersion: Option[String] = config("dbsnp_version")
   lazy val dbsnpSubPath: List[String] =
@@ -66,7 +67,7 @@ trait Reference extends Configurable {
   def dbsnpVcfFile: Option[File] = config("dbsnp_vcf", extraSubPath = dbsnpSubPath)
 
   /** Returns the reference config path */
-  def referenceConfigPath = {
+  def referenceConfigPath: List[String] = {
     List("references", referenceSpecies, referenceName)
   }
 
@@ -74,7 +75,7 @@ trait Reference extends Configurable {
   def faiRequired = false
 
   /** When set override this on true the pipeline with raise an exception when dict index is not found */
-  def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
+  def dictRequired: Boolean = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
 
   /** Returns the dict file belonging to the fasta file */
   def referenceDictFile =

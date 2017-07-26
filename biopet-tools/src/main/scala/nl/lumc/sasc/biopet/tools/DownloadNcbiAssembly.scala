@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
@@ -31,9 +31,8 @@ object DownloadNcbiAssembly extends ToolCommand {
                   contigNameHeader: Option[String] = None,
                   mustHaveOne: List[(String, String)] = List(),
                   mustNotHave: List[(String, String)] = List())
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(assemblyReport = x)
@@ -68,14 +67,14 @@ object DownloadNcbiAssembly extends ToolCommand {
     */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdargs
+    val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    logger.info(s"Reading ${cmdargs.assemblyReport}")
-    val reader = Source.fromFile(cmdargs.assemblyReport)
+    logger.info(s"Reading ${cmdArgs.assemblyReport}")
+    val reader = Source.fromFile(cmdArgs.assemblyReport)
     val assamblyReport = reader.getLines().toList
     reader.close()
-    cmdargs.reportFile.foreach { file =>
+    cmdArgs.reportFile.foreach { file =>
       val writer = new PrintWriter(file)
       assamblyReport.foreach(writer.println)
       writer.close()
@@ -88,12 +87,12 @@ object DownloadNcbiAssembly extends ToolCommand {
       .split("\t")
       .zipWithIndex
       .toMap
-    val nameId = cmdargs.contigNameHeader.map(x => headers(x))
+    val nameId = cmdArgs.contigNameHeader.map(x => headers(x))
     val lengthId = headers.get("Sequence-Length")
 
     val baseUrlEutils = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
-    val fastaWriter = new PrintWriter(cmdargs.outputFile)
+    val fastaWriter = new PrintWriter(cmdArgs.outputFile)
 
     val allContigs = assamblyReport
       .filter(!_.startsWith("#"))
@@ -101,23 +100,23 @@ object DownloadNcbiAssembly extends ToolCommand {
     val totalLength = lengthId.map(id => allContigs.map(_.apply(id).toLong).sum)
 
     logger.info(s"${allContigs.size} contigs found")
-    totalLength.foreach(l => logger.info(s"Total length: ${l}"))
+    totalLength.foreach(l => logger.info(s"Total length: $l"))
 
     val filterContigs = allContigs
-      .filter(values => cmdargs.mustNotHave.forall(x => values(headers(x._1)) != x._2))
+      .filter(values => cmdArgs.mustNotHave.forall(x => values(headers(x._1)) != x._2))
       .filter(values =>
-        cmdargs.mustHaveOne
-          .exists(x => values(headers(x._1)) == x._2) || cmdargs.mustHaveOne.isEmpty)
+        cmdArgs.mustHaveOne
+          .exists(x => values(headers(x._1)) == x._2) || cmdArgs.mustHaveOne.isEmpty)
     val filterLength = lengthId.map(id => filterContigs.map(_.apply(id).toLong).sum)
 
     logger.info(s"${filterContigs.size} contigs left after filtering")
-    filterLength.foreach(l => logger.info(s"Filtered length: ${l}"))
+    filterLength.foreach(l => logger.info(s"Filtered length: $l"))
 
     filterContigs.foreach { values =>
       val id = if (values(6) == "na") values(4) else values(6)
-      logger.info(s"Start download ${id}")
-      val fastaReader = Source.fromURL(
-        s"${baseUrlEutils}/efetch.fcgi?db=nuccore&id=${id}&retmode=text&rettype=fasta")
+      logger.info(s"Start download $id")
+      val fastaReader =
+        Source.fromURL(s"$baseUrlEutils/efetch.fcgi?db=nuccore&id=$id&retmode=text&rettype=fasta")
       fastaReader
         .getLines()
         .map(x => nameId.map(y => x.replace(">", s">${values(y)} ")).getOrElse(x))

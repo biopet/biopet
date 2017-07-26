@@ -24,7 +24,7 @@ import org.testng.annotations.Test
 class CnmopsTest extends TestNGSuite with Matchers {
 
   @Test
-  def testVersionCommand() = {
+  def testVersionCommand(): Unit = {
     val cn = new Cnmops(null)
     cn.versionCommand.endsWith("--version") shouldBe true
     cn.versionCommand.split(" ").head.endsWith("Rscript") shouldBe true

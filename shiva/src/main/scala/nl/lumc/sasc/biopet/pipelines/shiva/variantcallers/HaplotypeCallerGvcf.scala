@@ -57,9 +57,9 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
 
   protected val genotypeGvcfs = new GenotypeGvcfs(this)
 
-  override def outputFile: genotypeGvcfs.File = genotypeGvcfs.finalVcfFile
+  override def outputFile: File = genotypeGvcfs.finalVcfFile
 
-  def finalGvcfFile: genotypeGvcfs.File = genotypeGvcfs.finalGvcfFile
+  def finalGvcfFile: File = genotypeGvcfs.finalGvcfFile
 
   def biopetScript() {
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {

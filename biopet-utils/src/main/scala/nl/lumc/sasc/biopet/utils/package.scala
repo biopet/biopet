@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet
 
 import scala.util.{Failure, Success, Try}
 import scala.math._
+import scala.util.matching.Regex
 
 /**
   * General utility functions.
@@ -25,10 +26,10 @@ import scala.math._
 package object utils {
 
   /** Regular expression for matching entire integer numbers (numbers without decimals / fractions) */
-  val isInteger = """^([-+]?\d+)L?$""".r
+  val isInteger: Regex = """^([-+]?\d+)L?$""".r
 
   /** Regular expression for matching entire decimal numbers (compatible with the scientific notation) */
-  val isDecimal = """^([-+]?\d*\.?\d+(?:[eE][-+]?[0-9]+)?)$""".r
+  val isDecimal: Regex = """^([-+]?\d*\.?\d+(?:[eE][-+]?[0-9]+)?)$""".r
 
   def textToSize(text: String): Long = {
     text.last match {
@@ -53,7 +54,7 @@ package object utils {
     if (funcs.isEmpty) Try(throw new Exception(s"Can not extract value from string $raw"))
     else
       Try(funcs.head(raw))
-        .transform(s => Success(s), f => tryToConvert(raw, funcs.tail: _*))
+        .transform(s => Success(s), _ => tryToConvert(raw, funcs.tail: _*))
   }
 
   /**
@@ -69,7 +70,7 @@ package object utils {
     * @param fallBack Allows also to return the string itself when converting fails, default false.
     * @return a [[Try]] object encapsulating the conversion result.
     */
-  def tryToParseNumber(raw: String, fallBack: Boolean = false) = raw match {
+  def tryToParseNumber(raw: String, fallBack: Boolean = false): Try[Any] = raw match {
     case isInteger(i) => tryToConvert(i, x => x.toInt, x => x.toLong, x => BigInt(x))
     case isDecimal(f) => tryToConvert(f, x => x.toDouble, x => BigDecimal(x))
     case _ if fallBack => Try(raw)
@@ -112,5 +113,15 @@ package object utils {
         }
       case _ => a.toString < b.toString
     }
+  }
+
+  def loadBiopetProperties(): Unit = {
+    val is = getClass.getClassLoader.getResourceAsStream("biopet.properties")
+    if (is != null) {
+      val prop = System.getProperties
+      prop.load(is)
+      System.setProperties(prop)
+    }
+
   }
 }

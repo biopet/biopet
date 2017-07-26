@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.{SortedMap, mutable}
 import scala.io.Source
@@ -28,9 +28,8 @@ object SageCreateTagCounts extends ToolCommand {
                   countAllSense: File = null,
                   countAntiSense: File = null,
                   countAllAntiSense: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }

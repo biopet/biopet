@@ -16,10 +16,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference, Version }
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
-import org.broadinstitute.gatk.utils.interval.{ IntervalMergingRule, IntervalSetRule }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
+import org.broadinstitute.gatk.utils.interval.{IntervalMergingRule, IntervalSetRule}
+
+import scala.util.matching.Regex
 
 trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with Version {
   analysisName = analysis_type
@@ -322,23 +324,23 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var log_to_file: File = _
 
-  def versionRegex = """(.*)""".r
+  def versionRegex: Regex = """(.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " -jar " + jarFile + " -version"
+  def versionCommand: String = executable + " -jar " + jarFile + " -version"
 
   override def defaultCoreMemory = 4.0
   override def faiRequired = true
   override def dictRequired = true
 
-  override def beforeGraph() {
+  override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (interval_set_rule.isEmpty) {
+    if (interval_set_rule != null && interval_set_rule.isEmpty) {
       val v: Option[String] = config("interval_set_rule")
-      interval_set_rule = v.map(IntervalSetRule.valueOf(_))
+      interval_set_rule = v.map(IntervalSetRule.valueOf)
     }
-    if (interval_merging.isEmpty) {
+    if (interval_merging != null && interval_merging.isEmpty) {
       val v: Option[String] = config("interval_merging")
-      interval_merging = v.map(IntervalMergingRule.valueOf(_))
+      interval_merging = v.map(IntervalMergingRule.valueOf)
     }
     if (reference_sequence == null) reference_sequence = referenceFasta()
     input_fileIndexes ++= input_file.filter(orig => orig != null && orig.getName.endsWith(".bam")).flatMap(orig => Array(new File(orig.getPath.stripSuffix(".bam") + ".bai")))
@@ -346,75 +348,75 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
     if (num_cpu_threads_per_data_thread.isDefined) nCoresRequest = Some(nCoresRequest.getOrElse(1) * num_cpu_threads_per_data_thread.getOrElse(1))
   }
 
-  override def cmdLine = super.cmdLine +
-    required("-T", analysis_type, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-I", input_file, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(showFullBamList, "--showFullBamList", escape = true, format = "%s") +
-    optional("-rbs", read_buffer_size, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-et", phone_home, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-K", gatk_key, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-tag", tag, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-rf", read_filter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-drf", disable_read_filter, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-L", intervals, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-L", intervalsString, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-XL", excludeIntervals, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-XL", excludeIntervalsString, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-isr", interval_set_rule, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-im", interval_merging, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ip", interval_padding, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-R", reference_sequence, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(nonDeterministicRandomSeed, "-ndrs", escape = true, format = "%s") +
-    conditional(disableDithering, "--disableDithering", escape = true, format = "%s") +
-    optional("-maxRuntime", maxRuntime, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-maxRuntimeUnits", maxRuntimeUnits, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-dt", downsampling_type, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-dfrac", downsample_to_fraction, spaceSeparated = true, escape = true, format = downsample_to_fractionFormat) +
-    optional("-dcov", downsample_to_coverage, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-baq", baq, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-baqGOP", baqGapOpenPenalty, spaceSeparated = true, escape = true, format = baqGapOpenPenaltyFormat) +
-    conditional(refactor_NDN_cigar_string, "-fixNDN", escape = true, format = "%s") +
-    conditional(fix_misencoded_quality_scores, "-fixMisencodedQuals", escape = true, format = "%s") +
-    conditional(allow_potentially_misencoded_quality_scores, "-allowPotentiallyMisencodedQuals", escape = true, format = "%s") +
-    conditional(useOriginalQualities, "-OQ", escape = true, format = "%s") +
-    optional("-DBQ", defaultBaseQualities, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-PF", performanceLog, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-BQSR", BQSR, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-qq", quantize_quals, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-SQQ", static_quantized_quals, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(round_down_quantized, "-RDQ", escape = true, format = "%s") +
-    conditional(disable_indel_quals, "-DIQ", escape = true, format = "%s") +
-    conditional(emit_original_quals, "-EOQ", escape = true, format = "%s") +
-    optional("-preserveQ", preserve_qscores_less_than, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-globalQScorePrior", globalQScorePrior, spaceSeparated = true, escape = true, format = globalQScorePriorFormat) +
-    optional("-S", validation_strictness, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(remove_program_records, "-rpr", escape = true, format = "%s") +
-    conditional(keep_program_records, "-kpr", escape = true, format = "%s") +
-    optional("-sample_rename_mapping_file", sample_rename_mapping_file, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-U", unsafe, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(disable_auto_index_creation_and_locking_when_reading_rods, "-disable_auto_index_creation_and_locking_when_reading_rods", escape = true, format = "%s") +
-    conditional(no_cmdline_in_header, "-no_cmdline_in_header", escape = true, format = "%s") +
-    conditional(sites_only, "-sites_only", escape = true, format = "%s") +
-    conditional(never_trim_vcf_format_field, "-writeFullFormat", escape = true, format = "%s") +
-    conditional(bcf, "-bcf", escape = true, format = "%s") +
-    optional("-compress", bam_compression, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(simplifyBAM, "-simplifyBAM", escape = true, format = "%s") +
-    conditional(disable_bam_indexing, "--disable_bam_indexing", escape = true, format = "%s") +
-    conditional(generate_md5, "--generate_md5", escape = true, format = "%s") +
-    optional("-nt", num_threads, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-nct", num_cpu_threads_per_data_thread, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-nit", num_io_threads, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(monitorThreadEfficiency, "-mte", escape = true, format = "%s") +
-    optional("-bfh", num_bam_file_handles, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-rgbl", read_group_black_list, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-ped", pedigree, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-pedString", pedigreeString, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-pedValidationType", pedigreeValidationType, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(allow_intervals_with_unindexed_bam, "--allow_intervals_with_unindexed_bam", escape = true, format = "%s") +
-    conditional(generateShadowBCF, "-generateShadowBCF", escape = true, format = "%s") +
-    optional("-variant_index_type", variant_index_type, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-variant_index_parameter", variant_index_parameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-ref_win_stop", reference_window_stop, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-l", logging_level, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-log", log_to_file, spaceSeparated = true, escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    required("-T", analysis_type) +
+    repeat("-I", input_file, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    conditional(showFullBamList, "--showFullBamList") +
+    optional("-rbs", read_buffer_size) +
+    optional("-et", phone_home) +
+    optional("-K", gatk_key) +
+    optional("-tag", tag) +
+    repeat("-rf", read_filter) +
+    repeat("-drf", disable_read_filter) +
+    repeat("-L", intervals) +
+    repeat("-L", intervalsString) +
+    repeat("-XL", excludeIntervals) +
+    repeat("-XL", excludeIntervalsString) +
+    optional("-isr", interval_set_rule) +
+    optional("-im", interval_merging) +
+    optional("-ip", interval_padding) +
+    optional("-R", reference_sequence) +
+    conditional(nonDeterministicRandomSeed, "-ndrs") +
+    conditional(disableDithering, "--disableDithering") +
+    optional("-maxRuntime", maxRuntime) +
+    optional("-maxRuntimeUnits", maxRuntimeUnits) +
+    optional("-dt", downsampling_type) +
+    optional("-dfrac", downsample_to_fraction, format = downsample_to_fractionFormat) +
+    optional("-dcov", downsample_to_coverage) +
+    optional("-baq", baq) +
+    optional("-baqGOP", baqGapOpenPenalty, format = baqGapOpenPenaltyFormat) +
+    conditional(refactor_NDN_cigar_string, "-fixNDN") +
+    conditional(fix_misencoded_quality_scores, "-fixMisencodedQuals") +
+    conditional(allow_potentially_misencoded_quality_scores, "-allowPotentiallyMisencodedQuals") +
+    conditional(useOriginalQualities, "-OQ") +
+    optional("-DBQ", defaultBaseQualities) +
+    optional("-PF", performanceLog) +
+    optional("-BQSR", BQSR) +
+    optional("-qq", quantize_quals) +
+    repeat("-SQQ", static_quantized_quals) +
+    conditional(round_down_quantized, "-RDQ") +
+    conditional(disable_indel_quals, "-DIQ") +
+    conditional(emit_original_quals, "-EOQ") +
+    optional("-preserveQ", preserve_qscores_less_than) +
+    optional("-globalQScorePrior", globalQScorePrior, format = globalQScorePriorFormat) +
+    optional("-S", validation_strictness) +
+    conditional(remove_program_records, "-rpr") +
+    conditional(keep_program_records, "-kpr") +
+    optional("-sample_rename_mapping_file", sample_rename_mapping_file) +
+    optional("-U", unsafe) +
+    conditional(disable_auto_index_creation_and_locking_when_reading_rods, "-disable_auto_index_creation_and_locking_when_reading_rods") +
+    conditional(no_cmdline_in_header, "-no_cmdline_in_header") +
+    conditional(sites_only, "-sites_only") +
+    conditional(never_trim_vcf_format_field, "-writeFullFormat") +
+    conditional(bcf, "-bcf") +
+    optional("-compress", bam_compression) +
+    conditional(simplifyBAM, "-simplifyBAM") +
+    conditional(disable_bam_indexing, "--disable_bam_indexing") +
+    conditional(generate_md5, "--generate_md5") +
+    optional("-nt", num_threads) +
+    optional("-nct", num_cpu_threads_per_data_thread) +
+    optional("-nit", num_io_threads) +
+    conditional(monitorThreadEfficiency, "-mte") +
+    optional("-bfh", num_bam_file_handles) +
+    repeat("-rgbl", read_group_black_list) +
+    repeat("-ped", pedigree) +
+    repeat("-pedString", pedigreeString) +
+    optional("-pedValidationType", pedigreeValidationType) +
+    conditional(allow_intervals_with_unindexed_bam, "--allow_intervals_with_unindexed_bam") +
+    conditional(generateShadowBCF, "-generateShadowBCF") +
+    optional("-variant_index_type", variant_index_type) +
+    optional("-variant_index_parameter", variant_index_parameter) +
+    optional("-ref_win_stop", reference_window_stop) +
+    optional("-l", logging_level) +
+    optional("-log", log_to_file)
 }

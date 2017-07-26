@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 
 import scala.collection.mutable
 import scala.io.Source
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -40,7 +40,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   require(parent != null)
 
   /** To access qscript for this summary */
-  val qscript = parent
+  val qscript: SummaryQScript = parent
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
@@ -62,30 +62,29 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
     val db = SummaryDb.openSqliteSummary(qscript.summaryDbFile)
     if (qscript == root) { // This initialize the database
       qscript match {
-        case s: MultiSampleQScript => s.initSummaryDb
+        case s: MultiSampleQScript => s.initSummaryDb()
         case t: SampleLibraryTag =>
-          t.sampleId.foreach {
-            case sampleName =>
-              val sampleId = Await
-                .result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId))
+          t.sampleId.foreach { sampleName =>
+            val sampleId = Await
+              .result(db.getSamples(name = Some(sampleName), runId = Some(qscript.summaryRunId))
+                        .map(_.headOption.map(_.id)),
+                      Duration.Inf)
+              .getOrElse {
+                Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId),
+                             Duration.Inf)
+              }
+            t.libId.foreach { libName =>
+              Await
+                .result(db.getSamples(name = Some(libName),
+                                      runId = Some(qscript.summaryRunId),
+                                      sampleId = Some(sampleId))
                           .map(_.headOption.map(_.id)),
                         Duration.Inf)
                 .getOrElse {
-                  Await.result(db.createOrUpdateSample(sampleName, qscript.summaryRunId),
+                  Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId),
                                Duration.Inf)
                 }
-              t.libId.foreach { libName =>
-                val libId = Await
-                  .result(db.getSamples(name = Some(libName),
-                                        runId = Some(qscript.summaryRunId),
-                                        sampleId = Some(sampleId))
-                            .map(_.headOption.map(_.id)),
-                          Duration.Inf)
-                  .getOrElse {
-                    Await.result(db.createOrUpdateLibrary(libName, qscript.summaryRunId, sampleId),
-                                 Duration.Inf)
-                  }
-              }
+            }
           }
         case _ => qscript.summaryRunId
       }
@@ -102,7 +101,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
           try {
             deps :+= f.firstOutput
           } catch {
-            case e: NullPointerException => logger.debug("Queue values are not initialized")
+            case _: NullPointerException => logger.debug("Queue values are not initialized")
           }
         case _ =>
       }
@@ -178,6 +177,11 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
         val libId = tag.libId.flatMap(name =>
           sampleId.flatMap(sampleId =>
             Await.result(db.getLibraryId(qscript.summaryRunId, sampleId, name), Duration.Inf)))
+        if (tag.sampleId.isDefined)
+          require(sampleId.isDefined, s"Sample '${tag.sampleId.get}' is not found in database yet")
+        if (tag.libId.isDefined)
+          require(libId.isDefined,
+                  s"Library '${tag.libId.get}' for '${tag.sampleId}' is not found in database yet")
         for ((key, file) <- qscript.summaryFiles.par)
           Await.result(WriteSummary.createFile(db,
                                                qscript.summaryRunId,
@@ -328,7 +332,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   }
 
   /** Convert summarizable to a summary map */
-  def parseSummarizable(summarizable: Summarizable, name: String) = {
+  def parseSummarizable(summarizable: Summarizable, name: String): Map[String, Any] = {
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
@@ -354,7 +358,10 @@ object WriteSummary {
 
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
-    Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
+    val reader = Source.fromFile(checksumFile)
+    val lines = reader.getLines().toList
+    reader.close()
+    lines.head.split(" ")(0)
   }
 
   def createFile(db: SummaryDbWrite,
@@ -365,11 +372,11 @@ object WriteSummary {
                  libId: Option[Int],
                  key: String,
                  file: File,
-                 outputDir: File) = {
+                 outputDir: File): Future[Int] = {
     val path = if (file.getAbsolutePath.startsWith(outputDir.getAbsolutePath + File.separator)) {
       "." + file.getAbsolutePath.stripPrefix(s"${outputDir.getAbsolutePath}")
     } else file.getAbsolutePath
-    val md5 = SummaryQScript.md5sumCache.get(file).map(WriteSummary.parseChecksum(_))
+    val md5 = SummaryQScript.md5sumCache.get(file).map(WriteSummary.parseChecksum)
     val size = if (file.exists()) file.length() else 0L
     val link = if (file.exists()) java.nio.file.Files.isSymbolicLink(file.toPath) else false
     db.createOrUpdateFile(runId,

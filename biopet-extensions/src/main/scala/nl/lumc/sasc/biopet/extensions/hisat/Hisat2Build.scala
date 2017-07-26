@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
+import scala.util.matching.Regex
+
 /**
   * Created by pjvan_thof on 7-6-16.
   */
@@ -43,8 +45,8 @@ class Hisat2Build(val parent: Configurable) extends BiopetCommandLineFunction wi
   var exon: Option[File] = config("exon")
 
   executable = config("exe", default = "hisat2-build", freeVar = false)
-  def versionRegex = """.*hisat.*version (.*)""".r
-  def versionCommand = executable + " --version"
+  def versionRegex: Regex = """.*hisat.*version (.*)""".r
+  def versionCommand: String = executable + " --version"
 
   var bmax: Option[Int] = config("bmax")
   var bmaxdivn: Option[Int] = config("bmaxdivn")
@@ -69,7 +71,7 @@ class Hisat2Build(val parent: Configurable) extends BiopetCommandLineFunction wi
     jobOutputFile = new File(indexDir, s".$indexName.hisat2-build.out")
   }
 
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       optional("-p", threads) +
       optional("--bmax", bmax) +

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.annotation.Feature
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 
 import scala.io.Source
 
@@ -29,19 +29,19 @@ object ValidateAnnotation extends ToolCommand {
                   reference: File = null,
                   failOnError: Boolean = true,
                   gtfFiles: List[File] = Nil)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
-    opt[File]('r', "refflatFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
+  class OptParser extends AbstractOptParser[Args](commandName) {
+    opt[File]('r', "refflatFile") unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(refflatFile = Some(x))
     } text "Refflat file to check"
-    opt[File]('g', "gtfFile") valueName "<file>" action { (x, c) =>
+    opt[File]('g', "gtfFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(gtfFiles = x :: c.gtfFiles)
     } text "Gtf files to check"
-    opt[File]('R', "reference") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(reference = x)
+    opt[File]('R', "reference") unbounded () required () maxOccurs 1 valueName "<file>" action {
+      (x, c) =>
+        c.copy(reference = x)
     } text "Reference fasta to check vcf file against"
-    opt[Unit]("disableFail") maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[Unit]("disableFail") unbounded () maxOccurs 1 valueName "<file>" action { (_, c) =>
       c.copy(failOnError = false)
     } text "Do not fail on error. The tool will still exit when encountering an error, but will do so with exit code 0"
   }

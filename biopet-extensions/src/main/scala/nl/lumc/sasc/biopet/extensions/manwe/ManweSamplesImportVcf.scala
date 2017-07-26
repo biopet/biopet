@@ -42,7 +42,7 @@ class ManweSamplesImportVcf(val parent: Configurable) extends Manwe {
   @Argument(doc = " Flag whether to wait for import to complete on server")
   var waitToComplete: Boolean = false
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("import-vcf") +
       required(uri) + required(vcf) +

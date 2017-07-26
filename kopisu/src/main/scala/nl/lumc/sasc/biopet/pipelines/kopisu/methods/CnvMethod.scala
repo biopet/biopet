@@ -37,13 +37,13 @@ trait CnvMethod extends QScript with SummaryQScript with Reference {
   def summaryFiles: Map[String, File] =
     inputBams.map(x => s"inputbam_${x._1}" -> x._2) ++ cnvOutputFiles
 
-  def init() = {}
+  def init(): Unit = {}
 
   protected var cnvOutputFiles: Map[String, File] = Map.empty
 
   def getCnvOutputFiles: Map[String, File] = cnvOutputFiles
 
-  protected def addOutput(sample: String, outputFile: File) = {
+  protected def addOutput(sample: String, outputFile: File): Unit = {
     cnvOutputFiles += (sample -> outputFile)
   }
 }

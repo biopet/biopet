@@ -39,8 +39,8 @@ class BamStats(val parent: Configurable)
 
   var outputDir: File = _
 
-  var binSize: Option[Int] = config("bin_size")
-  var threadBinSize: Option[Int] = config("thread_bin_size")
+  val binSize: Option[Int] = config("bin_size")
+  val threadBinSize: Option[Int] = config("thread_bin_size")
 
   override def defaultThreads = 3
   override def defaultCoreMemory = 5.0
@@ -68,7 +68,7 @@ class BamStats(val parent: Configurable)
   }
 
   /** Creates command to execute extension */
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-b", bamFile) +
       required("-o", outputDir) +

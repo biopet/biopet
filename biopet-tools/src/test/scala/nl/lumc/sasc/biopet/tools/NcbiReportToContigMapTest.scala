@@ -16,7 +16,7 @@ class NcbiReportToContigMapTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def test: Unit = {
+  def test(): Unit = {
     val report = new File(resourcePath("/GCF_000844745.1.report"))
     val output = File.createTempFile("test.", ".tsv")
     output.deleteOnExit()

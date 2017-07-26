@@ -20,7 +20,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import nl.lumc.sasc.biopet.extensions.gatk
-import nl.lumc.sasc.biopet.extensions.gatk.BqsrGather
+import nl.lumc.sasc.biopet.extensions.gatk.gather.BqsrGather
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Default mode for UnifiedGenotyper */

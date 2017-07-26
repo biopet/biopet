@@ -25,7 +25,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
 
   val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
 
-  def finalGvcfFile = new File(outputDir, s"$namePrefix.gvcf.vcf.gz")
+  def finalGvcfFile = new File(outputDir, s"$namePrefix.g.vcf.gz")
   def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
 
   /** Init for pipeline */
@@ -55,7 +55,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     job.out = outputFile
     job.isIntermediate = group.nonEmpty
     val subJobs: ListBuffer[CombineJob] = ListBuffer()
-    val groupedInput = makeEqualGroups(allInput)
+    val groupedInput: List[List[File]] = makeEqualGroups(allInput)
     if (groupedInput.size == 1) job.variant = groupedInput.head
     else {
       for ((list, i) <- groupedInput.zipWithIndex) {
@@ -71,7 +71,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
       val groupSize = if (files.size > (maxNumberOfFiles * maxNumberOfFiles)) {
         files.size / maxNumberOfFiles
       } else if (files.size < maxNumberOfFiles) files.size
-      else files.size / (files.size / maxNumberOfFiles)
+      else (files.size.toDouble / (files.size.toDouble / maxNumberOfFiles).ceil).ceil.toInt
       files.grouped(groupSize).toList
     }
 

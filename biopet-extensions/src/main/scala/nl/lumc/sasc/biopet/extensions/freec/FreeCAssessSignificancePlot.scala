@@ -25,13 +25,13 @@ class FreeCAssessSignificancePlot(val parent: Configurable) extends RscriptComma
     "/nl/lumc/sasc/biopet/extensions/freec/freec_assess_significance.R")
 
   @Input(doc = "Output file from FreeC. *_CNV", required = true)
-  var cnv: File = null
+  var cnv: File = _
 
   @Input(doc = "Output file from FreeC. *_ratio.txt", required = true)
-  var ratios: File = null
+  var ratios: File = _
 
   @Output(doc = "Destination for the PNG file", required = true)
-  var output: File = null
+  var output: File = _
 
   /* cmdLine to execute R-script and with arguments
    * Arguments should be pasted in the same order as the script is expecting it.

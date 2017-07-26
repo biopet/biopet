@@ -32,7 +32,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def defaultThreads = 1
 
   /** This method will get and set the cores requested */
-  final def threads = nCoresRequest match {
+  final def threads: Int = nCoresRequest match {
     case Some(i) => i
     case _ =>
       val t = getThreads
@@ -47,14 +47,15 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   def defaultCoreMemory: Double = 2.0
   def defaultVmemFactor: Double = 1.4
   def defaultResidentFactor: Double = 1.2
-  var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
+
+  val vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
   val useSge: Boolean = config("use_sge", default = true)
 
-  var residentFactor: Double = config("resident_factor", default = defaultResidentFactor)
+  val residentFactor: Double = config("resident_factor", default = defaultResidentFactor)
 
   private var _coreMemory: Double = 2.0
-  def coreMemory = _coreMemory
+  def coreMemory: Double = _coreMemory
 
   /** This value is for SGE and is defined in seconds */
   wallTime = config("max_walltime")
@@ -92,7 +93,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     val firstOutput = try {
       this.firstOutput
     } catch {
-      case e: NullPointerException => null
+      case _: NullPointerException => null
     }
 
     nCoresRequest = Option(threads)

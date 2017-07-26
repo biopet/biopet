@@ -100,10 +100,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
         gears.outputDir = new File(sampleDir, "gears")
         Some(gears)
       case "none" => None
-      case x => {
+      case x =>
         Logging.addError(s"$x is not a valid value for 'mapping_to_gears'")
         None
-      }
     }
 
     def metricsPreprogressBam = true
@@ -121,8 +120,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
 
       lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
       lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
-      lazy val qcFastqR1 = mapping.map(_.flexiprep.fastqR1Qc)
-      lazy val qcFastqR2 = mapping.flatMap(_.flexiprep.fastqR2Qc)
+      lazy val qcFastqR1: Option[File] = mapping.map(_.flexiprep.fastqR1Qc)
+      lazy val qcFastqR2: Option[File] = mapping.flatMap(_.flexiprep.fastqR2Qc)
       lazy val inputBam: Option[File] =
         MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
@@ -230,17 +229,19 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
                 qscript.add(aorrg)
               }
             } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get): _*)
+          }
 
+          if (!bamToFastq) {
             val bamMetrics = new BamMetrics(qscript)
             bamMetrics.sampleId = Some(sampleId)
             bamMetrics.libId = Some(libId)
             bamMetrics.inputBam = bamFile.get
             bamMetrics.outputDir = new File(libDir, "metrics")
-            bamMetrics.paired = inputR2.isDefined
+            bamMetrics.paired = inputR2.isDefined || inputBam.isDefined
             add(bamMetrics)
-
-            if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, bamFile.get))
           }
+          if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, bamFile.get))
+
         } else logger.warn(s"Sample '$sampleId' does not have any input files")
       }
     }
@@ -341,7 +342,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript with Reference { qscrip
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = if (metricsPreprogressBam) preProcessBam.get else bamFile.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
-        bamMetrics.paired = libraries.exists(_._2.inputR1.isDefined)
+        bamMetrics.paired =
+          libraries.exists(x => x._2.inputR1.isDefined || x._2.inputBam.isDefined)
         add(bamMetrics)
 
         if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, preProcessBam.get))

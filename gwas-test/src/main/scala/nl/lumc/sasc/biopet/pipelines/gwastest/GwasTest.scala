@@ -81,7 +81,7 @@ class GwasTest(val parent: Configurable) extends QScript with BiopetQScript with
       }
 
     val cv = new CatVariants(this)
-    cv.variant = snpTests.map(_._2).toList
+    cv.variant = snpTests.map(_._2)
     cv.outputFile = new File(outputDir, "snptest" + File.separator + "snptest.vcf.gz")
     add(cv)
   }

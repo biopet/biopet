@@ -27,16 +27,16 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 class CollectRnaSeqMetrics(val parent: Configurable) extends Picard with Summarizable {
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
-  var input: File = null
+  var input: File = _
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
-  var refFlat: File = null
+  var refFlat: File = _
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
   var ribosomalIntervals: Option[File] = None
 
   @Output(doc = "Output metrics file", required = true)
-  var output: File = null
+  var output: File = _
 
   @Output(doc = "PDF output of the coverage chart", required = false)
   var chartOutput: Option[File] = config("chart_output")
@@ -93,7 +93,7 @@ class CollectRnaSeqMetrics(val parent: Configurable) extends Picard with Summari
     Map("metrics" -> Picard.getMetrics(output).getOrElse(Map()),
         "histogram" -> Picard.getHistogram(output).getOrElse(Map()))
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("INPUT=", input, spaceSeparated = false) +
       required("REF_FLAT=", refFlat, spaceSeparated = false) +

@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
+import scala.util.matching.Regex
+
 /**
   * Extension for bowtie 2
   *
@@ -31,18 +33,18 @@ class Bowtie2(val parent: Configurable)
     with Reference
     with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
-  var R1: File = null
+  var R1: File = _
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
   var R2: Option[File] = None
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
-  var output: File = null
+  var output: File = _
 
   executable = config("exe", default = "bowtie2", freeVar = false)
-  def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex: Regex = """.*[Vv]ersion:? (.*)""".r
   override def versionExitcode = List(0, 1)
-  def versionCommand = executable + " --version"
+  def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
@@ -165,7 +167,7 @@ class Bowtie2(val parent: Configurable)
   }
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       conditional(q, "-q") +
       conditional(qseq, "--qseq") +

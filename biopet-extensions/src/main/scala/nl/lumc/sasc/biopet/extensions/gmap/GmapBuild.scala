@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions.gmap
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
+
+import scala.util.matching.Regex
 
 /**
   * Wrapper for the gsnap command line tool
@@ -44,16 +46,16 @@ class GmapBuild(val parent: Configurable)
 
   override def defaultCoreMemory = 25.0
 
-  def versionRegex = """.* version (.*)""".r
-  def versionCommand = executable
+  def versionRegex: Regex = """.* version (.*)""".r
+  def versionCommand: String = executable
   override def versionExitcode = List(0, 1, 255)
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     jobOutputFile = new File(dir, ".log.out")
   }
 
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) +
       required("--dir", dir) +
       optional("--db", db) +

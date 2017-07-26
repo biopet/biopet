@@ -36,38 +36,24 @@ class GearsQiimeClosed(val parent: Configurable)
     with SummaryQScript
     with SampleLibraryTag {
 
-  var fastqInput: File = _
+  var fastaInput: File = _
 
-  override def defaults = Map(
-    "splitlibrariesfastq" -> Map(
-      "barcode_type" -> "not-barcoded"
-    )
-  )
-
-  def init() = {
-    require(fastqInput != null)
+  def init(): Unit = {
+    require(fastaInput != null)
     require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
-  def otuMap = _otuMap
+  def otuMap: File = _otuMap
 
   private var _otuTable: File = _
-  def otuTable = _otuTable
+  def otuTable: File = _otuTable
 
-  def biopetScript() = {
-
-    val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= fastqInput
-    splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
-    sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
-    splitLib.isIntermediate = true
-    add(splitLib)
+  def biopetScript(): Unit = {
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = addDownsample(
-      splitLib.outputSeqs,
-      new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
+    closedReference.inputFasta =
+      addDownsample(fastaInput, new File(outputDir, s"${sampleId.get}.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
@@ -149,7 +135,7 @@ object GearsQiimeClosed {
     biom("data")
       .asInstanceOf[List[List[Any]]]
       .map { data =>
-        val row = data(0).asInstanceOf[Long]
+        val row = data.head.asInstanceOf[Long]
         val column = data(1).asInstanceOf[Long]
         val value = data(2).asInstanceOf[Long]
         val sample = samples(column.toInt).toString

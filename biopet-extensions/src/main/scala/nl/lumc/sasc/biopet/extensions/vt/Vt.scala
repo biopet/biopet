@@ -22,6 +22,6 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
   * Created by pjvan_thof on 1/16/15.
   */
 abstract class Vt extends BiopetCommandLineFunction {
-  override def subPath = "vt" :: super.subPath
+  override def subPath: List[String] = "vt" :: super.subPath
   executable = config("exe", default = "vt")
 }

@@ -44,12 +44,14 @@ class RefflatStats(val parent: Configurable) extends ToolCommandFunction with Re
   @Output(required = true)
   var intronOutput: File = _
 
+  override def defaultCoreMemory = 5.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-a", refflatFile) +
       required("-R", reference) +

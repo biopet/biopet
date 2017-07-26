@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 /**
@@ -25,16 +25,15 @@ import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 object SquishBed extends ToolCommand {
 
   case class Args(input: File = null, output: File = null, strandSensitive: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
     }
-    opt[Unit]('s', "strandSensitive") unbounded () valueName "<file>" action { (x, c) =>
+    opt[Unit]('s', "strandSensitive") unbounded () valueName "<file>" action { (_, c) =>
       c.copy(strandSensitive = true)
     }
   }

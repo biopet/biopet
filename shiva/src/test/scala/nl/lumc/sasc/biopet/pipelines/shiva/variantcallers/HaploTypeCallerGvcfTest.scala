@@ -26,7 +26,7 @@ import org.testng.annotations.Test
 class HaploTypeCallerGvcfTest extends TestNGSuite with Matchers {
 
   @Test
-  def testGvcfFiles = {
+  def testGvcfFiles(): Unit = {
     val samples = List("sample01", "sample02", "sample03")
     val hc = new HaplotypeCallerGvcf(null)
     hc.inputBams = createInputMap(samples)

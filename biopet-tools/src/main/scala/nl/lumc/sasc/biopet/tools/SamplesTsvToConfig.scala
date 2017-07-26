@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, ToolCommand}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -29,9 +29,8 @@ object SamplesTsvToConfig extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil,
                   tagFiles: List[File] = Nil,
                   outputFile: Option[File] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputFiles") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputFiles = x :: c.inputFiles)
     } text "Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed"
@@ -56,11 +55,10 @@ object SamplesTsvToConfig extends ToolCommand {
     cmdArgs.outputFile match {
       case Some(file) if file.getName.endsWith(".yml") || file.getName.endsWith(".yaml") =>
         ConfigUtils.mapToYamlFile(configMap, file)
-      case Some(file) => {
+      case Some(file) =>
         val writer = new PrintWriter(file)
         writer.println(ConfigUtils.mapToJson(configMap).spaces2)
         writer.close()
-      }
       case _ => println(ConfigUtils.mapToYaml(configMap))
     }
   }

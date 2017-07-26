@@ -31,15 +31,15 @@ import scala.io.Source
 class BedToolsTest extends TestNGSuite with Matchers {
 
   @Test
-  def testBedtoolsCoverageCreateGenomeFile() = {
+  def testBedtoolsCoverageCreateGenomeFile(): Unit = {
     val file = new File(Paths.get(this.getClass.getResource("/ref.fa.fai").toURI).toString)
     val tmp = File.createTempFile("test", ".bed")
     tmp.deleteOnExit()
     class TestCov(override val parent: Configurable) extends BedtoolsCoverage(parent) {
       jobTempDir = tmp
-      override def referenceFai = file
+      override def referenceFai: File = file
 
-      def genome = BedtoolsCoverage.createGenomeFile(file, file.getParentFile)
+      def genome: File = BedtoolsCoverage.createGenomeFile(file, file.getParentFile)
     }
     val cov = new TestCov(null)
     val genome = cov.genome

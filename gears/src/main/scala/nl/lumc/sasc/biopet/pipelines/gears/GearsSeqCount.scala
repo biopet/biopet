@@ -30,7 +30,7 @@ class GearsSeqCount(val parent: Configurable)
 
   var fastqInput: File = _
 
-  def countFile = swapExt(outputDir, fastqInput, ".fastq.gz", ".counts.txt")
+  def countFile: File = swapExt(outputDir, fastqInput, ".fastq.gz", ".counts.txt")
 
   /** Init for pipeline */
   def init(): Unit = {}

@@ -92,7 +92,7 @@ class Flash(val parent: Configurable) extends BiopetCommandLineFunction with Ver
     _outputHistogram = outputHistogram
   }
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       optional("-m", minOverlap) +
       optional("-M", maxOverlap) +

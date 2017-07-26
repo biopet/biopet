@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, ToolCommandFunction}
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
@@ -35,33 +35,38 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
 
   /** Original FASTQ file (read 1 or 2) */
   @Input(required = true)
-  var refFastq: File = null
+  var refFastq1: File = _
+
+  /** Original FASTQ file (read 1 or 2) */
+  @Input(required = true)
+  var refFastq2: File = _
 
   /** "Input read 1 FASTQ file" */
   @Input(required = true)
-  var inputFastq1: File = null
+  var inputFastq1: File = _
 
   /** Input read 2 FASTQ file */
   @Input(required = true)
-  var inputFastq2: File = null
+  var inputFastq2: File = _
 
   /** Output read 1 FASTQ file */
   @Output(required = true)
-  var outputFastq1: File = null
+  var outputFastq1: File = _
 
   /** Output read 2 FASTQ file */
   @Output(required = true)
-  var outputFastq2: File = null
+  var outputFastq2: File = _
 
   /** Sync statistics */
   @Output(required = true)
-  var outputStats: File = null
+  var outputStats: File = _
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
-      required("-r", refFastq) +
+      required("-r", refFastq1) +
+      required("--ref2", refFastq2) +
       required("-i", inputFastq1) +
       required("-j", inputFastq2) +
       required("-o", outputFastq1) +
@@ -98,7 +103,7 @@ class FastqSync(val parent: Configurable) extends ToolCommandFunction with Summa
         "num_reads_kept" -> countRLeft)
   }
 
-  override def summaryDeps = outputStats :: super.summaryDeps
+  override def summaryDeps: List[File] = outputStats :: super.summaryDeps
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {

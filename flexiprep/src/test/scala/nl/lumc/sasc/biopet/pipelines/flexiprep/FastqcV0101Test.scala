@@ -35,14 +35,14 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
   // the file doesn't actually exist, we just need it so the outputDir value can be computed correctly
   private[flexiprep] val outputv0101: File = resourceFile("v0101.fq_fastqc.zip")
 
-  @Test def testOutputDir() = {
+  @Test def testOutputDir(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.outputDir shouldBe new File(resourceDir, "v0101.fq_fastqc")
   }
 
   @Test
-  def testGcDistro: Unit = {
+  def testGcDistro(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     val x = fqc.gcDistribution.get
@@ -54,7 +54,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
 
   }
 
-  @Test def testQcModules() = {
+  @Test def testQcModules(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     // 11 QC modules
@@ -67,7 +67,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     fqc.qcModules.keySet should contain("Kmer Content")
   }
 
-  @Test def testSingleQcModule() = {
+  @Test def testSingleQcModule(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.qcModules("Basic Statistics").name should ===("Basic Statistics")
@@ -75,13 +75,13 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     fqc.qcModules("Basic Statistics").lines.size shouldBe 8
   }
 
-  @Test def testEncoding() = {
+  @Test def testEncoding(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.encoding shouldBe "Sanger / Illumina 1.9"
   }
 
-  @Test def testFoundAdapter() = {
+  @Test def testFoundAdapter(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.contaminants = Option(resourceFile("fqc_contaminants_v0101.txt"))
@@ -102,7 +102,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
 
   }
 
-  @Test def testPerBaseSequenceQuality() = {
+  @Test def testPerBaseSequenceQuality(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
 
@@ -111,7 +111,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     perBaseSequenceQuality.keys should contain("54-55")
   }
 
-  @Test def testPerBaseSequenceContent() = {
+  @Test def testPerBaseSequenceContent(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
 
@@ -120,7 +120,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     perBaseSequenceContent.keys should contain("1")
   }
 
-  @Test def testSummaryStats() = {
+  @Test def testSummaryStats(): Unit = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     val summary = fqc.summaryStats

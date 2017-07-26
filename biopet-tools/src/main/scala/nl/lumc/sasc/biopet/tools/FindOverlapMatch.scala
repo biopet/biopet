@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintStream}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -35,9 +35,8 @@ object FindOverlapMatch extends ToolCommand {
                   filterSameNames: Boolean = true,
                   rowSampleRegex: Option[Regex] = None,
                   columnSampleRegex: Option[Regex] = None)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputMetrics = x)
     } text "Input should be a table where the first row and column have the ID's, those can be different"
@@ -47,7 +46,7 @@ object FindOverlapMatch extends ToolCommand {
     opt[Double]('c', "cutoff") required () unbounded () valueName "<value>" action { (x, c) =>
       c.copy(cutoff = x)
     } text "minimum value to report it as pair"
-    opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (x, c) =>
+    opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (_, c) =>
       c.copy(filterSameNames = false)
     } text "Do not compare samples with the same name"
     opt[String]("rowSampleRegex") unbounded () valueName "<regex>" action { (x, c) =>
@@ -82,12 +81,11 @@ object FindOverlapMatch extends ToolCommand {
       case _ => sys.process.stdout
     }
 
-    for (columnSample <- samplesColumnHeader if cmdArgs.columnSampleRegex
-           .map(_.findFirstIn(columnSample._1).isDefined)
-           .getOrElse(true)) {
+    for (columnSample <- samplesColumnHeader
+         if cmdArgs.columnSampleRegex.forall(_.findFirstIn(columnSample._1).isDefined)) {
       val buffer = ListBuffer[(String, Double)]()
       for (rowSample <- samplesRowHeader
-           if cmdArgs.rowSampleRegex.map(_.findFirstIn(rowSample._1).isDefined).getOrElse(true)) {
+           if cmdArgs.rowSampleRegex.forall(_.findFirstIn(rowSample._1).isDefined)) {
         val value = data(columnSample._2)(rowSample._2).toDouble
         if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || columnSample._2 != rowSample._2)) {
           buffer.+=((rowSample._1, value))

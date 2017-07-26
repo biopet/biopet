@@ -20,7 +20,7 @@ package nl.lumc.sasc.biopet.extensions.clever
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
@@ -39,7 +39,7 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-i", input) +
       required("-o", output) +
@@ -48,9 +48,8 @@ class CleverFixVCF(val parent: Configurable) extends BiopetJavaCommandLineFuncti
 
 object CleverFixVCF extends ToolCommand {
   case class Args(inputVCF: File = null, sampleLabel: String = "", outputVCF: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "inputvcf") required () valueName "<vcffile/path>" action { (x, c) =>
       c.copy(inputVCF = x)
     } text "Please specify the input Clever VCF file"
@@ -66,25 +65,20 @@ object CleverFixVCF extends ToolCommand {
                         toCheckFor: String,
                         replacement: String,
                         extraHeader: String): String = {
-    (inHeaderLine == toCheckFor) match {
-      case true => {
-        extraHeader + "\n" + replacement + "\n"
-      }
-      case _ => {
-        // We have to deal with matching records
-        // these don't start with #
+    if (inHeaderLine == toCheckFor) {
+      extraHeader + "\n" + replacement + "\n"
+    } else {
+      // We have to deal with matching records
+      // these don't start with #
 
-        inHeaderLine.startsWith("#") match {
-          case true =>
-            inHeaderLine + "\n"
-          case _ => {
-            // this should be a record
-            // Ensure the REF field is at least an N
-            val cols = inHeaderLine.split("\t")
-            cols(3) = "N"
-            cols.mkString("\t") + "\n"
-          }
-        }
+      if (inHeaderLine.startsWith("#")) {
+        inHeaderLine + "\n"
+      } else {
+        // this should be a record
+        // Ensure the REF field is at least an N
+        val cols = inHeaderLine.split("\t")
+        cols(3) = "N"
+        cols.mkString("\t") + "\n"
       }
     }
   }

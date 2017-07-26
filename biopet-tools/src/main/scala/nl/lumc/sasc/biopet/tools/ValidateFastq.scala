@@ -16,11 +16,12 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.fastq.{FastqRecord, FastqReader}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
+import scala.util.matching.Regex
 
 /**
   * Created by sajvanderzeeuw on 2-2-16.
@@ -33,9 +34,9 @@ object ValidateFastq extends ToolCommand {
     * @param input input first fastq file (R1) (can be zipped)
     * @param input2 input second fastq file (R2) (can be zipped)
     */
-  case class Args(input: File = null, input2: Option[File] = None) extends AbstractArgs
+  case class Args(input: File = null, input2: Option[File] = None)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('i', "fastq1") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
@@ -68,7 +69,7 @@ object ValidateFastq extends ToolCommand {
       var lastRecordR2: Option[FastqRecord] = None
       for (recordR1 <- readFq1.iterator()) {
         counter += 1
-        if (readFq2.map(_.hasNext) == Some(false))
+        if (!readFq2.forall(_.hasNext))
           throw new IllegalStateException("R2 contains less reads then R1")
 
         //Getting R2 record, None if it's single end
@@ -92,7 +93,7 @@ object ValidateFastq extends ToolCommand {
       }
 
       //if R2 is longer then R1 print an error code and exit the tool
-      if (readFq2.map(_.hasNext) == Some(true))
+      if (readFq2.exists(_.hasNext))
         throw new IllegalStateException("R2 contains more reads then R1")
 
       getPossibleEncodings match {
@@ -156,7 +157,7 @@ object ValidateFastq extends ToolCommand {
     buffer.toList
   }
 
-  val allowedBases = """([actgnACTGN+]+)""".r
+  val allowedBases: Regex = """([actgnACTGN+]+)""".r
 
   /**
     * This function checks for duplicates.
@@ -177,7 +178,7 @@ object ValidateFastq extends ToolCommand {
   def validFastqRecord(record: FastqRecord): Unit = {
     checkQualEncoding(record)
     record.getReadString match {
-      case allowedBases(m) =>
+      case allowedBases(_) =>
       case _ => throw new IllegalStateException(s"Non IUPAC symbols identified")
     }
     if (record.getReadString.length != record.getBaseQualityString.length)

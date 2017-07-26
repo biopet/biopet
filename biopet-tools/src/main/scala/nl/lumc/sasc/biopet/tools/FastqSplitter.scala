@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{AsyncFastqWriter, BasicFastqWriter, FastqReader}
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 object FastqSplitter extends ToolCommand {
 
@@ -26,9 +26,9 @@ object FastqSplitter extends ToolCommand {
     * @param inputFile input fastq file
     * @param outputFile output fastq files
     */
-  case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
+  case class Args(inputFile: File = null, outputFile: List[File] = Nil)
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "Path to input file"
@@ -58,7 +58,7 @@ object FastqSplitter extends ToolCommand {
     var counter: Long = 0
     while (reader.hasNext) {
       for (writer <- output) {
-        for (t <- 1 to groupSize if reader.hasNext) {
+        for (_ <- 1 to groupSize if reader.hasNext) {
           writer.write(reader.next())
           counter += 1
           if (counter % 1000000 == 0) logger.info(counter + " reads processed")

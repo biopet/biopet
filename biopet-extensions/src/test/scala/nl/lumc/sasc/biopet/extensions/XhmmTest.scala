@@ -28,7 +28,7 @@ import org.testng.annotations.Test
 class XhmmTest extends TestNGSuite with Matchers {
 
   @Test
-  def testXcnvSummaryTest() = {
+  def testXcnvSummaryTest(): Unit = {
     val file = new File(Paths.get(getClass.getResource("/test.xcnv").toURI).toString)
     val cnv = new XhmmDiscover(null)
     cnv.outputXcnv = file

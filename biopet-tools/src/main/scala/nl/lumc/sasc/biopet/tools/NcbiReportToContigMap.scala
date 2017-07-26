@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
@@ -17,9 +17,8 @@ object NcbiReportToContigMap extends ToolCommand {
                   contigNameHeader: String = null,
                   names: List[String] =
                     List("Sequence-Name", "UCSC-style-name", "GenBank-Accn", "RefSeq-Accn"))
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(assemblyReport = x)
@@ -66,10 +65,6 @@ object NcbiReportToContigMap extends ToolCommand {
       .split("\t")
       .zipWithIndex
       .toMap
-
-    val allContigs = assamblyReport
-      .filter(!_.startsWith("#"))
-      .map(_.split("\t"))
 
     val altNameIds = cmdargs.names.filter(_ != cmdargs.contigNameHeader).map(headers)
     val nameId = headers(cmdargs.contigNameHeader)

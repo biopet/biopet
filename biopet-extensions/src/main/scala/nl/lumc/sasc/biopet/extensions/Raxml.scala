@@ -16,10 +16,11 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
+import scala.util.matching.Regex
 import scalaz.std.boolean.option
 
 /**
@@ -29,8 +30,8 @@ import scalaz.std.boolean.option
 class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   override def defaultThreads = 1
-  def versionCommand = executable + " -v"
-  def versionRegex = """.*version ([\w\.]*) .*""".r
+  def versionCommand: String = executable + " -v"
+  def versionRegex: Regex = """.*version ([\w\.]*) .*""".r
 
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _
@@ -54,7 +55,7 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   var f: String = "d"
 
   @Argument(doc = "Output directory", required = true)
-  var w: File = null
+  var w: File = _
 
   @Input(required = false)
   var t: Option[File] = _
@@ -91,19 +92,21 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   }
 
   /** Returns bestTree file */
-  def getBestTreeFile = option(f == "d" && b.isEmpty, new File(w, "RAxML_bestTree." + n))
+  def getBestTreeFile: Option[File] =
+    option(f == "d" && b.isEmpty, new File(w, "RAxML_bestTree." + n))
 
   /** Returns bootstrap file */
-  def getBootstrapFile = option(f == "d" && b.isDefined, new File(w, "RAxML_bootstrap." + n))
+  def getBootstrapFile: Option[File] =
+    option(f == "d" && b.isDefined, new File(w, "RAxML_bootstrap." + n))
 
   /** Returns bipartitions file */
-  def getBipartitionsFile = option(f == "b", new File(w, "RAxML_bipartitions." + n))
+  def getBipartitionsFile: Option[File] = option(f == "b", new File(w, "RAxML_bipartitions." + n))
 
   /** Returns info file */
   def getInfoFile = new File(w, "RAxML_info." + n)
 
   /** return commandline to execute */
-  def cmdLine =
+  def cmdLine: String =
     required(executable) +
       required("-m", m) +
       required("-s", input) +

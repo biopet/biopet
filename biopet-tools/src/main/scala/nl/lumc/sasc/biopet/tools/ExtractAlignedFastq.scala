@@ -19,7 +19,7 @@ import java.io.File
 import htsjdk.samtools.{QueryInterval, SamReaderFactory, ValidationStringency}
 import htsjdk.samtools.fastq.{BasicFastqWriter, FastqReader, FastqRecord}
 import htsjdk.samtools.util.Interval
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Set => MSet}
@@ -30,7 +30,7 @@ object ExtractAlignedFastq extends ToolCommand {
   type FastqInput = (FastqRecord, Option[FastqRecord])
 
   /** Get the FastqRecord ID */
-  def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
+  def fastqId(rec: FastqRecord): String = rec.getReadHeader.split(" ")(0)
 
   /**
     * Function to create iterator over Interval given input interval string
@@ -97,7 +97,7 @@ object ExtractAlignedFastq extends ToolCommand {
       inAlnReader.getFileHeader.getSequenceIndex(name) match {
         case x if x >= 0 =>
           x
-        case otherwise =>
+        case _ =>
           throw new IllegalArgumentException(
             "Chromosome " + name + " is not found in the alignment file")
       }
@@ -181,10 +181,9 @@ object ExtractAlignedFastq extends ToolCommand {
                   outputFastq2: Option[File] = None,
                   minMapQ: Int = 0,
                   commonSuffixLength: Int = 0)
-      extends AbstractArgs
 
   /** Command line argument parser */
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     head(s"""
         |$commandName - Select aligned FASTQ records

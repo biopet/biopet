@@ -85,7 +85,7 @@ class Macs2CallPeak(val parent: Configurable) extends Macs2 {
   }
 
   /** Returns command to execute */
-  def cmdLine = {
+  def cmdLine: String = {
     required(executable) + required("callpeak") +
       required("--treatment", treatment) + /* Treatment sample */
     optional("--control", control) + /* Control sample */

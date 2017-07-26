@@ -25,6 +25,7 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.matching.Regex
 
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
@@ -84,7 +85,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
                namespace = libId,
                path = List("samples", sampleId, "libraries"))
 
-      def sampleId = sample.sampleId
+      def sampleId: String = sample.sampleId
 
       lazy val libGroups: List[String] = libTags.get("groups") match {
         case Some(g: List[_]) => g.map(_.toString)
@@ -109,40 +110,44 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
              namespace = sampleId,
              path = List("samples"))
 
-    lazy val gender = {
+    lazy val gender: MultiSampleQScript.Gender.Value = {
       val g: Option[String] = sampleTags.get("gender").map(_.toString)
       g.map(_.toLowerCase) match {
         case Some("male") => Gender.Male
         case Some("female") => Gender.Female
-        case Some(s) =>
+        case Some(_) =>
           logger.warn(s"Could not convert '$g' to a gender")
           Gender.Unknown
         case _ => Gender.Unknown
       }
     }
 
-    lazy val father = {
+    lazy val father: Option[String] = {
       val g: Option[String] = sampleTags.get("father").map(_.toString)
       g.foreach { father =>
-        if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
-        if (samples.contains(father))
-          if (samples(father).gender == Gender.Male)
-            Logging.addError(s"Father of $sampleId is not a female")
-          else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
+        if (sampleId == father) Logging.addError(s"Father for $sampleId can not be itself")
+        if (samples.contains(father)) {
+          if (samples(father).gender != Gender.Male)
+            Logging.addError(s"Father of $sampleId is not a male")
+        } else logger.warn(s"For sample '$sampleId', its father '$father' not found in config")
       }
       g
     }
 
-    lazy val mother = {
+    lazy val mother: Option[String] = {
       val g: Option[String] = sampleTags.get("mother").map(_.toString)
       g.foreach { mother =>
-        if (sampleId != mother) Logging.addError(s"mother for $sampleId can not be itself")
-        if (samples.contains(mother))
-          if (samples(mother).gender == Gender.Female)
+        if (sampleId == mother) Logging.addError(s"mother for $sampleId can not be itself")
+        if (samples.contains(mother)) {
+          if (samples(mother).gender != Gender.Female)
             Logging.addError(s"Mother of $sampleId is not a female")
-          else logger.warn(s"For sample '$sampleId' is mother '$mother' not found in config")
+        } else logger.warn(s"For sample '$sampleId', its mother '$mother' not found in config")
       }
       g
+    }
+
+    lazy val family: Option[String] = {
+      sampleTags.get("family").map(_.toString)
     }
 
     lazy val sampleGroups: List[String] = sampleTags.get("groups") match {
@@ -195,7 +200,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
     /** function add all libraries in one call */
     protected final def addPerLibJobs(): Unit = {
-      for ((libId, library) <- libraries) {
+      for ((_, library) <- libraries) {
         library.addAndTrackJobs()
       }
     }
@@ -224,8 +229,8 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
   protected def sampleIds: Set[String] =
     ConfigUtils.any2map(globalConfig.map.getOrElse("samples", Map())).keySet
 
-  protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
-  protected lazy val nameError = "has an invalid name. " +
+  protected lazy val nameRegex: Regex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
+  protected lazy val nameError: String = "has an invalid name. " +
     "Sample names must have at least 3 characters, " +
     "must begin and end with an alphanumeric character, " +
     "and must not have whitespace and special characters. " +
@@ -277,7 +282,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     sample ::: lib ::: super.configFullPath
   }
 
-  def initSummaryDb: Unit = {
+  def initSummaryDb(): Unit = {
     val db = SummaryDb.openSqliteSummary(summaryDbFile)
     val namesOld = Await.result(db.getSamples(runId = Some(summaryRunId)).map(_.map(_.name).toSet),
                                 Duration.Inf)

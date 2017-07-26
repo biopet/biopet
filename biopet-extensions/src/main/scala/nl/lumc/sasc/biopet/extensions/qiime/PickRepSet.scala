@@ -16,9 +16,11 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+
+import scala.util.matching.Regex
 
 /**
   * Created by pjvan_thof on 12/4/15.
@@ -43,12 +45,12 @@ class PickRepSet(val parent: Configurable) extends BiopetCommandLineFunction wit
 
   var sortBy: Option[String] = config("sort_by")
 
-  def versionCommand = executable + " --version"
-  def versionRegex = """Version: (.*)""".r
+  def versionCommand: String = executable + " --version"
+  def versionRegex: Regex = """Version: (.*)""".r
 
   var repSetPickingMethod: Option[String] = config("rep_set_picking_method")
 
-  def cmdLine =
+  def cmdLine: String =
     executable +
       required("-i", inputFile) +
       required("-o", outputFasta) +

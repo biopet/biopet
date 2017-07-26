@@ -21,25 +21,24 @@
     "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
     val run = Await.result(summary.getRuns(runId = Some(runId)).map(_.head), Duration.Inf)
 
-    val paired: Boolean = settings("paired") == Some(true)
-    val skipClip: Boolean = settings("skip_clip") == Some(true)
-    val skipTrim: Boolean = settings("skip_trim") == Some(true)
+    val paired: Boolean = settings("paired").contains(true)
+    val skipClip: Boolean = settings("skip_clip").contains(true)
+    val skipTrim: Boolean = settings("skip_trim").contains(true)
 
     def getPlot(read:String) = {
         val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
         file.collect {
-            case path => {
+            case path =>
                 val file = new File(run.outputDir + File.separator + path.path)
                 val newFile = new File(outputDir, read + "_" + file.getName)
                 if (file.exists()) FileUtils.copyFile(file, newFile)
                 newFile.getName
-            }
         }
     }
 
     def plotAvailable(read:String) = {
         val file = Await.result(summary.getFile(runId, "flexiprep", read, SampleId(sampleId.get), LibraryId(libId.get), plot), Duration.Inf)
-        file.map(x => new File(run.outputDir + File.separator + x.path).exists()).getOrElse(false)
+        file.exists(x => new File(run.outputDir + File.separator + x.path).exists())
     }
 
 }#

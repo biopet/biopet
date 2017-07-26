@@ -112,7 +112,7 @@ class ToucanTest extends TestNGSuite with Matchers {
   }
 
   // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
+  @AfterClass def removeTempOutputDir(): Unit = {
     dirs.foreach(FileUtils.deleteDirectory)
   }
 }
@@ -122,7 +122,7 @@ object ToucanTest {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  def outputDir = Files.createTempDir()
+  def outputDir: File = Files.createTempDir()
 
   val gonlVcfFile: File = File.createTempFile("gonl.", ".vcf.gz")
   gonlVcfFile.deleteOnExit()

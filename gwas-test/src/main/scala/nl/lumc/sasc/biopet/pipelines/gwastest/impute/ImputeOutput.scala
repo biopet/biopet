@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.gwastest.impute
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.Logging
-
 import Spec.SpecDecoderOps
 
 import scala.io.Source
+import scala.util.matching.Regex
 
 /**
   * Created by pjvan_thof on 3/25/16.
@@ -53,8 +53,8 @@ object ImputeOutput {
     chunks.flatMap(validateChunk(_, validate))
   }
 
-  val ASSESSMENT_HEADER = "-{32}\\n Imputation accuracy assessment \\n-{32}".r
-  val TOO_FEW_SNPS = "There are no SNPs in the imputation interval, so " +
+  val ASSESSMENT_HEADER: Regex = "-{32}\\n Imputation accuracy assessment \\n-{32}".r
+  val TOO_FEW_SNPS: String = "There are no SNPs in the imputation interval, so " +
     "there is nothing for IMPUTE2 to analyze; the program will quit now."
   val NO_TYPE_2 =
     "ERROR: There are no type 2 SNPs after applying the command-line settings for this run, which makes it impossible to perform imputation. One possible reason is that you have specified an analysis interval (-int) that contains reference panel SNPs but not inference panel SNPs -- e.g., this can happen at the ends of chromosomes. Another possibility is that your genotypes and the reference panel are mapped to different genome builds, which can lead the same SNPs to be assigned different positions in different panels. If you need help fixing this error, please contact the authors."
@@ -74,7 +74,7 @@ object ImputeOutput {
     } else if (!chunk.warnings.exists()) {
       addError(s"Warnings file '${chunk.warnings}' does not exist, please check Impute output")
       None
-    } else if (chunk.summary.canRead()) {
+    } else if (chunk.summary.canRead) {
       val summaryReader = Source.fromFile(chunk.summary)
       val summaryLines = summaryReader.getLines().toList
       summaryReader.close()

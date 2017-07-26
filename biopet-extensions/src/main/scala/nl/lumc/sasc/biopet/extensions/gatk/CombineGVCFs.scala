@@ -17,10 +17,12 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.extensions.gatk.gather.GatherVcfs
+import nl.lumc.sasc.biopet.extensions.gatk.scatter.{GATKScatterFunction, LocusScatterFunction}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class CombineGVCFs(val parent: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "CombineGVCFs"
@@ -45,7 +47,7 @@ class CombineGVCFs(val parent: Configurable) extends CommandLineGATK with Scatte
 
   /** File to which the combined gVCF should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which the combined gVCF should be written", required = false, exclusiveOf = "", validation = "")
-  @Gather(classOf[CatVariantsGatherer])
+  @Gather(classOf[GatherVcfs])
   var out: File = _
 
   /** If specified, convert banded gVCFs to all-sites gVCFs */
@@ -80,17 +82,17 @@ class CombineGVCFs(val parent: Configurable) extends CommandLineGATK with Scatte
       outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
-  override def cmdLine = super.cmdLine +
-    repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(convertToBasePairResolution, "-bpResolution", escape = true, format = "%s") +
-    optional("-breakBandsAtMultiplesOf", breakBandsAtMultiplesOf, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
-    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
-    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine: String = super.cmdLine +
+    repeat("-A", annotation) +
+    repeat("-G", group) +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.orNull), dbsnp) +
+    repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter) +
+    optional("-o", out) +
+    conditional(convertToBasePairResolution, "-bpResolution") +
+    optional("-breakBandsAtMultiplesOf", breakBandsAtMultiplesOf) +
+    conditional(filter_reads_with_N_cigar, "-filterRNC") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ") +
+    conditional(filter_bases_not_stored, "-filterNoBases")
 }
 
 object CombineGVCFs {

@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaReaderHelper
 
@@ -32,9 +32,8 @@ object SageCreateLibrary extends ToolCommand {
                   noTagsOutput: File = null,
                   noAntiTagsOutput: File = null,
                   allGenesOutput: File = null)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
@@ -58,7 +57,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  val geneRegex = """ENSG[0-9]{11}""".r
+  val geneRegex: Regex = """ENSG[0-9]{11}""".r
 
   val tagGenesMap: mutable.Map[String, TagGenes] = mutable.Map()
 
@@ -143,7 +142,7 @@ object SageCreateLibrary extends ToolCommand {
   }
 
   private def addTagresultToTaglib(name: String, tagResult: TagResult) {
-    val id = name.split(" ").head //.stripPrefix("hg19_ensGene_")
+    //.stripPrefix("hg19_ensGene_")
     val geneID = geneRegex.findFirstIn(name).getOrElse("unknown_gene")
     allGenes.add(geneID)
 

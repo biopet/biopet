@@ -35,7 +35,7 @@ object BamUtils {
     *
     * @throws IllegalArgumentException
     * @param bamFiles input bam files
-    * @return
+    * @return Map of sample bam files
     */
   def sampleBamMap(bamFiles: List[File]): Map[String, File] = {
     val temp = bamFiles.map { file =>
@@ -59,7 +59,7 @@ object BamUtils {
     *
     * @param inputBam input bam file
     * @param contig contig to scan for
-    * @param end postion to stop scanning
+    * @param end position to stop scanning
     * @return Int with insertsize for this contig
     */
   def contigInsertSize(inputBam: File,
@@ -82,7 +82,7 @@ object BamUtils {
 
         val counts: mutable.Map[Int, Int] = mutable.Map()
 
-        for (i <- 0 until samplingSize if samIterator.hasNext) {
+        for (_ <- 0 until samplingSize if samIterator.hasNext) {
           val rec = samIterator.next()
           val isPaired = rec.getReadPairedFlag
           val minQ10 = rec.getMappingQuality >= 10
@@ -97,27 +97,24 @@ object BamUtils {
         counts.keys.size match {
           case 1 => Some(counts.keys.head)
           case 0 => None
-          case _ => {
+          case _ =>
             Some(counts.foldLeft(0)((old, observation) => {
               observation match {
-                case (insertSize: Int, observations: Int) => {
+                case (insertSize: Int, observations: Int) =>
                   (old + (insertSize * observations)) / (observations + 1)
-                }
                 case _ => 0
               }
             }))
-          }
         }
       })
 
     insertSizesOnAllFragments.size match {
       case 1 => Some(insertSizesOnAllFragments.head)
       case 0 => None
-      case _ => {
+      case _ =>
         Some(insertSizesOnAllFragments.foldLeft(0)((old, observation) => {
           (old + observation) / 2
         }))
-      }
 
     }
   }
@@ -140,10 +137,10 @@ object BamUtils {
                                   binSize)
       })
       .toList
-    val counts = bamInsertSizes.flatMap(x => x)
+    val counts = bamInsertSizes.flatten
 
     // avoid division by zero
-    if (counts.size != 0) counts.sum / counts.size
+    if (counts.nonEmpty) counts.sum / counts.size
     else 0
   }
 
@@ -161,7 +158,7 @@ object BamUtils {
     }.toMap
 
   /** This class will add functionality to [[SAMSequenceDictionary]] */
-  implicit class SamDictCheck(samDics: SAMSequenceDictionary) {
+  implicit class SamDictCheck(samDicts: SAMSequenceDictionary) {
 
     /**
       * This method will check if all contig and sizes are the same without looking at the order of the contigs
@@ -172,15 +169,15 @@ object BamUtils {
       */
     def assertSameDictionary(that: SAMSequenceDictionary, ignoreOrder: Boolean): Unit = {
       if (ignoreOrder) {
-        assert(samDics.getReferenceLength == that.getReferenceLength)
+        assert(samDicts.getReferenceLength == that.getReferenceLength)
         val thisContigNames =
-          samDics.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
+          samDicts.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
         assert(
           thisContigNames == that.getSequences
             .map(x => (x.getSequenceName, x.getSequenceLength))
             .sorted
             .toSet)
-      } else samDics.assertSameDictionary(that)
+      } else samDicts.assertSameDictionary(that)
     }
   }
 }

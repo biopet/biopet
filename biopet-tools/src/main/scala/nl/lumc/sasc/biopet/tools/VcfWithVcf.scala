@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, FastaUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 
@@ -45,13 +45,12 @@ object VcfWithVcf extends ToolCommand {
                   secondaryVcf: File = null,
                   fields: List[Fields] = Nil,
                   matchAllele: Boolean = true)
-      extends AbstractArgs
 
   object FieldMethod extends Enumeration {
     val none, max, min, unique = Value
   }
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
@@ -238,9 +237,8 @@ object VcfWithVcf extends ToolCommand {
                     "Type of field " + attribute._1 + " is not numeric")
               }
             case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
-            case _ => {
+            case _ =>
               scalaListToJavaObjectArrayList(attribute._2)
-            }
           }
         )
       })

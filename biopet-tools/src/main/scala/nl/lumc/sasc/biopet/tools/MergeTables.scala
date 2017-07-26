@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{BufferedWriter, File, FileWriter, OutputStreamWriter}
 
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.mutable.{Set => MutSet}
 import scala.io.{BufferedSource, Source}
@@ -101,12 +101,11 @@ object MergeTables extends ToolCommand {
       .sorted
 
     output.write((featureName +: samples).mkString("\t") + "\n")
-    features.foreach {
-      case feature =>
-        // get feature values for each sample (order == order of samples in header)
-        val line = feature +: samples
-          .map(results(_).getOrElse(feature, fallback))
-        output.write(line.mkString("\t") + "\n")
+    features.foreach { feature =>
+      // get feature values for each sample (order == order of samples in header)
+      val line = feature +: samples
+        .map(results(_).getOrElse(feature, fallback))
+      output.write(line.mkString("\t") + "\n")
     }
     output.flush()
   }
@@ -122,10 +121,9 @@ object MergeTables extends ToolCommand {
                   fallbackString: String = "-",
                   delimiter: Char = '\t',
                   out: File = new File("-"))
-      extends AbstractArgs
 
   /** Command line argument parser */
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
 
     import scopt.Read
 

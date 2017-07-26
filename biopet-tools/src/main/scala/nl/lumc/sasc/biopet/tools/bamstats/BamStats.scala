@@ -18,7 +18,7 @@ import java.io.{File, PrintWriter}
 
 import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ConfigUtils, FastaUtils, ToolCommand}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
@@ -41,9 +41,8 @@ object BamStats extends ToolCommand {
                   binSize: Int = 10000,
                   threadBinSize: Int = 10000000,
                   tsvOutputs: Boolean = false)
-      extends AbstractArgs
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('R', "reference") valueName "<file>" action { (x, c) =>
       c.copy(referenceFasta = Some(x))
     } text "Fasta file of reference"
@@ -59,7 +58,7 @@ object BamStats extends ToolCommand {
     opt[Int]("threadBinSize") valueName "<int>" action { (x, c) =>
       c.copy(threadBinSize = x)
     } text "Size of region per thread"
-    opt[Unit]("tsvOutputs") action { (x, c) =>
+    opt[Unit]("tsvOutputs") action { (_, c) =>
       c.copy(tsvOutputs = true)
     } text "Also output tsv files, default there is only a json"
   }
@@ -88,7 +87,7 @@ object BamStats extends ToolCommand {
     * This will retrieve the [[SAMSequenceDictionary]] from the bam file.
     * When `referenceFasta is given he will validate this against the bam file.`
     */
-  def validateReferenceInBam(bamFile: File, referenceFasta: Option[File]) = {
+  def validateReferenceInBam(bamFile: File, referenceFasta: Option[File]): SAMSequenceDictionary = {
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     val samHeader = samReader.getFileHeader
     samReader.close()

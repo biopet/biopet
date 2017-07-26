@@ -36,7 +36,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
 
   def subCommand: String
 
-  final def cmdLine = {
+  final def cmdLine: String = {
     manweConfig = createManweConfig(Option(output).map(_.getParentFile))
     required(executable) +
       subCommand +
@@ -52,7 +52,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
     * primarily for testing
     * @return
     */
-  final def cmd = {
+  final def cmd: String = {
     val a = cmdLine
     a.replace("'", "").replace("  ", " ").trim
   }

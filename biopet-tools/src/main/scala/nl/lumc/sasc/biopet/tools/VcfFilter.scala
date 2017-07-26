@@ -22,7 +22,7 @@ import htsjdk.variant.variantcontext.writer.{
   VariantContextWriterBuilder
 }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand, VcfUtils}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -62,9 +62,8 @@ object VcfFilter extends ToolCommand {
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   iDset: Set[String] = Set(),
                   minGenomeQuality: Int = 0)
-      extends AbstractArgs {}
 
-  class OptParser extends AbstractOptParser {
+  class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
     } text "Input vcf file"
@@ -130,16 +129,16 @@ object VcfFilter extends ToolCommand {
       if (x.split(":").length == 2) success
       else failure("--filterHetVarToHomVar should be in this format: sample:sample")
     } text "If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered"
-    opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
+    opt[Unit]("filterRefCalls") unbounded () action { (_, c) =>
       c.copy(booleanArgs = c.booleanArgs.copy(filterRefCalls = true))
     } text "Filter when there are only ref calls"
-    opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
+    opt[Unit]("filterNoCalls") unbounded () action { (_, c) =>
       c.copy(booleanArgs = c.booleanArgs.copy(filterNoCalls = true))
     } text "Filter when there are only no calls"
-    opt[Unit]("uniqueOnly") unbounded () action { (x, c) =>
+    opt[Unit]("uniqueOnly") unbounded () action { (_, c) =>
       c.copy(booleanArgs = c.booleanArgs.copy(uniqueOnly = true))
     } text "Filter when there more then 1 sample have this variant"
-    opt[Unit]("sharedOnly") unbounded () action { (x, c) =>
+    opt[Unit]("sharedOnly") unbounded () action { (_, c) =>
       c.copy(booleanArgs = c.booleanArgs.copy(sharedOnly = true))
     } text "Filter when not all samples have this variant"
     opt[Double]("minQualScore") unbounded () action { (x, c) =>
@@ -183,7 +182,7 @@ object VcfFilter extends ToolCommand {
     var counterTotal = 0
     var counterLeft = 0
     for (record <- reader) {
-      if (cmdArgs.minQualScore.map(minQualscore(record, _)).getOrElse(true) &&
+      if (cmdArgs.minQualScore.forall(minQualscore(record, _)) &&
           (!cmdArgs.booleanArgs.filterRefCalls || hasNonRefCalls(record)) &&
           (!cmdArgs.booleanArgs.filterNoCalls || hasCalls(record)) &&
           (!cmdArgs.booleanArgs.uniqueOnly || hasUniqeSample(record)) &&

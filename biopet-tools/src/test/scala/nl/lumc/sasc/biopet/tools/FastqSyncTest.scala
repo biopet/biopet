@@ -58,7 +58,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                   aMock: FastqReader,
                   bMock: FastqReader,
                   aOutMock: AsyncFastqWriter,
-                  bOutMock: AsyncFastqWriter) = {
+                  bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -87,7 +88,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("1", "2")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -104,7 +105,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver()
@@ -122,7 +124,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -140,7 +143,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("2", "3")
@@ -167,7 +171,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                       aMock: FastqReader,
                       bMock: FastqReader,
                       aOutMock: AsyncFastqWriter,
-                      bOutMock: AsyncFastqWriter) = {
+                      bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
@@ -194,7 +199,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                        aMock: FastqReader,
                        bMock: FastqReader,
                        aOutMock: AsyncFastqWriter,
-                       bOutMock: AsyncFastqWriter) = {
+                       bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(aMock.iterator) thenReturn recordsOver("2", "3")
@@ -218,7 +224,7 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                     aMock: FastqReader,
                     bMock: FastqReader,
                     aOutMock: AsyncFastqWriter,
-                    bOutMock: AsyncFastqWriter) = {
+                    bOutMock: AsyncFastqWriter): Unit = {
 
     when(refMock.iterator) thenReturn recordsOver("SOLEXA12_24:6:117:1388:2001/2",
                                                   "SOLEXA12_24:6:96:470:1965/2",
@@ -244,7 +250,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                     aMock: FastqReader,
                                     bMock: FastqReader,
                                     aOutMock: AsyncFastqWriter,
-                                    bOutMock: AsyncFastqWriter) = {
+                                    bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1/1", "2/1", "3/1")
     when(aMock.iterator) thenReturn recordsOver("2/1", "3/1")
@@ -266,7 +273,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                          aMock: FastqReader,
                                          bMock: FastqReader,
                                          aOutMock: AsyncFastqWriter,
-                                         bOutMock: AsyncFastqWriter) = {
+                                         bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("_1", "_2")
 
     when(refMock.iterator) thenReturn recordsOver("1_1", "2_1", "3_1")
     when(aMock.iterator) thenReturn recordsOver("2_1", "3_1")
@@ -288,7 +296,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                                       aMock: FastqReader,
                                       bMock: FastqReader,
                                       aOutMock: AsyncFastqWriter,
-                                      bOutMock: AsyncFastqWriter) = {
+                                      bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1 desc1b", "2 desc2b", "3 desc3b")
     when(aMock.iterator) thenReturn recordsOver("2 desc2a", "3 desc3a")
@@ -310,7 +319,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
                   aMock: FastqReader,
                   bMock: FastqReader,
                   aOutMock: AsyncFastqWriter,
-                  bOutMock: AsyncFastqWriter) = {
+                  bOutMock: AsyncFastqWriter): Unit = {
+    FastqSync.idSufixes = ("/1", "/2")
 
     when(refMock.iterator) thenReturn recordsOver("1/2 yep",
                                                   "2/2 yep",
@@ -334,10 +344,12 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     numKept shouldBe 2
   }
 
-  @Test def testArgsMinimum() = {
+  @Test def testArgsMinimum(): Unit = {
     val args = Array(
       "-r",
       resourcePath("/paired01a.fq"),
+      "--ref2",
+      resourcePath("/paired01b.fq"),
       "-i",
       resourcePath("/paired01a.fq"),
       "-j",
@@ -348,10 +360,34 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
       "/tmp/mockout2.fq"
     )
     val parsed = parseArgs(args)
-    parsed.refFastq shouldBe resourceFile("/paired01a.fq")
+    parsed.refFastq1 shouldBe resourceFile("/paired01a.fq")
     parsed.inputFastq1 shouldBe resourceFile("/paired01a.fq")
     parsed.inputFastq2 shouldBe resourceFile("/paired01b.fq")
     parsed.outputFastq1 shouldBe new File("/tmp/mockout1.fq")
     parsed.outputFastq2 shouldBe new File("/tmp/mockout2.fq")
+  }
+
+  @Test
+  def testMain: Unit = {
+    val r1Output = File.createTempFile("temp.", ".fq")
+    r1Output.deleteOnExit()
+    val r2Output = File.createTempFile("temp.", ".fq")
+    r2Output.deleteOnExit()
+    val args = Array(
+      "-r",
+      resourcePath("/paired01a.fq"),
+      "--ref2",
+      resourcePath("/paired01b.fq"),
+      "-i",
+      resourcePath("/paired01a.fq"),
+      "-j",
+      resourcePath("/paired01b.fq"),
+      "-o",
+      r1Output.getAbsolutePath,
+      "-p",
+      r2Output.getAbsolutePath
+    )
+
+    FastqSync.main(args)
   }
 }

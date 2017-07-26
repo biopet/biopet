@@ -33,17 +33,17 @@ class VepNormalizer(val parent: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VepNormalizer
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
-  var inputVCF: File = null
+  var inputVCF: File = _
 
   @Output(doc = "Output VCF", shortName = "OutputFile", required = true)
-  var outputVcf: File = null
+  var outputVcf: File = _
 
-  var mode: String = config("mode", default = "standard")
-  var doNotRemove: Boolean = config("do_not_remove", default = false)
+  val mode: String = config("mode", default = "standard")
+  val doNotRemove: Boolean = config("do_not_remove", default = false)
 
   override def defaultCoreMemory = 4.0
 
-  override def cmdLine =
+  override def cmdLine: String =
     super.cmdLine +
       required("-I", inputVCF) +
       required("-O", outputVcf) +

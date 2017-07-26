@@ -58,7 +58,7 @@ class ManweSamplesImport(val parent: Configurable) extends Manwe {
   @Argument(doc = " Flag whether to wait for import to complete on server", required = false)
   var waitToComplete: Boolean = false
 
-  def subCommand = {
+  def subCommand: String = {
     required("samples") +
       required("import") +
       required(name) +

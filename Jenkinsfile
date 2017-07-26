@@ -21,10 +21,6 @@ node('local') {
             }
         }
 
-        stage('Report Tests') {
-            junit '*/target/surefire-reports/*.xml'
-        }
-
         stage('Check git on changes') {
             sh 'if [ $(git diff | wc -l) -eq 0 ]; then true; else echo "[ERROR] Git is not clean anymore after build"; git diff; echo "[ERROR] This might be caused by reformated code, if so run maven locally"; false; fi'
         }
@@ -33,7 +29,7 @@ node('local') {
             sh 'mkdocs build --clean --strict'
         }
 
-        if (currentBuild.result == null || "SUCCESS".equals(currentBuild.result)) {
+        if (currentBuild.result == null || "SUCCESS" == currentBuild.result) {
             currentBuild.result = "SUCCESS"
             slackSend(color: '#00FF00', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
         } else {
@@ -41,7 +37,7 @@ node('local') {
         }
 
     } catch (e) {
-        if (currentBuild.result == null || "FAILED".equals(currentBuild.result)) {
+        if (currentBuild.result == null || "FAILED" == currentBuild.result) {
             currentBuild.result = "FAILED"
         }
         slackSend(color: '#FF0000', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')

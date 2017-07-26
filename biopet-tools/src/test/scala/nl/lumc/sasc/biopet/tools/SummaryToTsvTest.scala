@@ -35,7 +35,7 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testMain = {
+  def testMain(): Unit = {
     val tsv = resourcePath("/test.summary.json")
     val output = File.createTempFile("main", "tsv")
     output.deleteOnExit()
@@ -70,8 +70,7 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testHeader = {
-    val tsv = resourcePath("/test.summary.json")
+  def testHeader(): Unit = {
     val path = List("something=flexiprep:settings:skip_trim")
 
     val paths = path
@@ -85,7 +84,7 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testLine = {
+  def testLine(): Unit = {
     val tsv = resourcePath("/test.summary.json")
     val path = List("something=flexiprep:settings:skip_trim")
 
@@ -101,11 +100,11 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val line = values.head._2.keys.map(x => createLine(paths, values, x)).head
     line should equal("value\t")
-    val sampleValues = fetchValues(summary, paths, true, false)
+    val sampleValues = fetchValues(summary, paths, sample = true)
     val sampleLine = sampleValues.head._2.keys.map(x => createLine(paths, sampleValues, x)).head
     sampleLine should equal("016\t")
 
-    val libValues = fetchValues(summary, paths, false, true)
+    val libValues = fetchValues(summary, paths, lib = true)
     val libLine = libValues.head._2.keys.map(x => createLine(paths, libValues, x)).head
     libLine should equal("016-L001\tfalse")
   }
