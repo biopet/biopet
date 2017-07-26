@@ -16,8 +16,17 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{FlexiprepBaseSummary, FlexiprepReadSummary, FlexiprepReport}
+import nl.lumc.sasc.biopet.core.report.{
+  MultisampleReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{
+  FlexiprepBaseSummary,
+  FlexiprepReadSummary,
+  FlexiprepReport
+}
 import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
