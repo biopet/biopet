@@ -29,7 +29,7 @@
 <%@ var summaryPlotLinesR1: Seq[String] %>
 <%@ var summaryPlotLinesR2: Seq[String] %>
 
-#if showIntro
+#if (showIntro)
     <br/>
     <div class="row">
     <div class="col-md-1"></div>
