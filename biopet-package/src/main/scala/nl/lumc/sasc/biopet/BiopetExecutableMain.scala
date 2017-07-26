@@ -47,7 +47,8 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.generateindexes.ValidateAnnotations
   )
 
-  def tools: List[MainCommand] = MergeQueueJobReports :: PipelineStatus :: BiopetToolsExecutable.tools
+  def tools: List[MainCommand] =
+    MergeQueueJobReports :: PipelineStatus :: BiopetToolsExecutable.tools
 
   def templates: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.mapping.template.MultiSampleMapping,
