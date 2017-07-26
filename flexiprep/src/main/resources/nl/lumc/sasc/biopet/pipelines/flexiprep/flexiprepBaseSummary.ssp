@@ -21,20 +21,19 @@
 <%@ var multisample: Boolean = true %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-#{
-    val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
-    val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
-    val settings = summary.getSettingsForLibraries(runId, "flexiprep", keyValues = Map(
-    "skip_trim" -> List("skip_trim"), "skip_clip" -> List("skip_clip"), "paired" -> List("paired")))
-    settings.count(_._2.getOrElse("skip_trim", None) == Some(true))
-    val trimCount = settings.count(_._2.getOrElse("skip_trim", None) == Some(false))
-    val clipCount = settings.count(_._2.getOrElse("skip_clip", None) == Some(false))
-    val librariesCount = libraries.size
 
-    val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-    summary.getSettingKeys(runId, "flexiprep", NoModule, SampleId(sampleId.get), LibraryId(libId.get), keyValues = Map("paired" -> List("paired"))).getOrElse("paired", None) == Some(true)
-    else settings.count(_._2.getOrElse("paired", None) == Some(true)) >= 1
-}#
+<%@ var trimCount: Int %>
+<%@ var librariesCount: Int %>
+<%@ var clipCount: Int %>
+<%@ var paired: Boolean %>
+<%@ var summaryPlotLinesR1: Seq[String] %>
+<%@ var summaryPlotLinesR2: Seq[String] %>
+<%@ var samples: Seq[Sample] %>
+<%@ var libraries: Seq[Library] %>
+<%@ var settings: Map[(Int, Int), Map[String, Option[Any]]]%>
+<%@ var seqstatStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+<%@ var seqstatQCStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+
 #if (showIntro)
     <br/>
     <div class="row">
@@ -71,8 +70,8 @@
 #end
 #if (showPlot)
     #{
-        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summary, sampleId = sampleId)
-        if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
+        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summaryPlotLinesR1)
+        if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summaryPlotLinesR2)
     }#
     <div class="panel-body">
         <div class="row">
@@ -142,12 +141,8 @@
                 #for (read <- reads)
                     #if (read == "R2") </tr><tr> #end
                     #{
-                        val statsPaths = Map("num_total" -> List("bases", "num_total"))
-                        val seqstatStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read, sample = sample.id, library = lib.id, keyValues = statsPaths)
-                        val seqstatQcStats = summary.getStatKeys(runId, "flexiprep", "seqstat_" + read + "_qc", sample = sample.id, library = lib.id, keyValues = statsPaths)
-
-                        val beforeTotal = seqstatStats("num_total").getOrElse(0).toString.toLong
-                        val afterTotal = seqstatQcStats("num_total").getOrElse(0).toString.toLong
+                        val beforeTotal = seqstatStats(sample.id,lib.id)("num_total").getOrElse(0).toString.toLong
+                        val afterTotal = seqstatQCStats(sample.id,lib.id)("num_total").getOrElse(0).toString.toLong
                     }#
                     <td>${read}</td>
                     <td>${beforeTotal}</td>
