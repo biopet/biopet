@@ -295,8 +295,8 @@ object FlexiprepReadSummary {
         FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId)
 
     val seqstatPaths = Map("num_total" -> List("reads", "num_total"))
-    val clippingPaths = Map(
-      "num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"))
+    val clippingPaths = Map("num_reads_discarded_too_short" -> List("num_reads_discarded_too_short"),
+      "num_reads_discarded_too_long" -> List("num_reads_discarded_too_long"))
     val trimmingPaths = Map("num_reads_discarded" -> List("num_reads_discarded_total"))
 
     val seqstatStats: Map[(Int, Int), Map[String, Option[Any]]] =

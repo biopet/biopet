@@ -14,7 +14,6 @@
 <%@ var multisample: Boolean = true %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%-- variables to be added to remove dependency upon futures --%>
 <%@ var settings: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var paired: Boolean %>
 <%@ var samples: Seq[Sample] %>

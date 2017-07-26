@@ -16,36 +16,17 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.report.{
-  MultisampleReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
-import nl.lumc.sasc.biopet.pipelines.gears
-import nl.lumc.sasc.biopet.core.report.{
-  MultisampleReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{
-  FlexiprepBaseSummary,
-  FlexiprepReadSummary,
-  FlexiprepReport
-}
+import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{FlexiprepBaseSummary, FlexiprepReadSummary, FlexiprepReport}
 import nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
-import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{NoLibrary, NoModule, SampleId}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ModuleName, NoLibrary, NoModule, SampleId}
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.Library
-import nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 /**
   * Report for Gears
