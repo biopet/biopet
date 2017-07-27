@@ -153,9 +153,23 @@ object GearsReport extends MultisampleReportBuilder {
       else None
 
     val flexiprepReadSummary =
-      FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId, libId, showPlot= true, showTable = false)
+      FlexiprepReadSummary.values(summary,
+                                  runId,
+                                  samples,
+                                  libraries,
+                                  sampleId,
+                                  libId,
+                                  showPlot = true,
+                                  showTable = false)
     val flexiprepBaseSummary =
-      FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId, libId, showPlot = true, showTable = false)
+      FlexiprepBaseSummary.values(summary,
+                                  runId,
+                                  samples,
+                                  libraries,
+                                  sampleId,
+                                  libId,
+                                  showPlot = true,
+                                  showTable = false)
     Future {
       ReportPage(
         List(centrifugePage, krakenPage, qiimeClosedPage, qiimeOpenPage).flatten ::: List(
