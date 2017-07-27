@@ -191,7 +191,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(200 + (libraries.count(s => sampleId.getOrElse(s.id) == s.id) * 10))
+    plot.width = Some(200 + (summaryPlotLines.size * 10))
     plot.title = Some("QC summary on " + read + " reads")
     plot.runLocal()
   }
@@ -263,7 +263,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Bases")
-    plot.width = Some(200 + (libraries.count(s => sampleId.getOrElse(s.id) == s.id) * 10))
+    plot.width = Some(200 + (summaryPlotLines.size * 10))
     plot.title = Some("QC summary on " + read + " bases")
     plot.runLocal()
   }
@@ -392,11 +392,11 @@ object FlexiprepBaseSummary {
 
     val summaryPlotLinesR1: Option[Seq[String]] =
       if (showPlot)
-        Some(FlexiprepReport.readSummaryPlotLines("R1", summary, sampleId = sampleId))
+        Some(FlexiprepReport.baseSummaryPlotLines("R1", summary, sampleId = sampleId))
       else None
     val summaryPlotlinesR2: Option[Seq[String]] =
       if (showPlot && paired)
-        Some(FlexiprepReport.readSummaryPlotLines("R2", summary, sampleId = sampleId))
+        Some(FlexiprepReport.baseSummaryPlotLines("R2", summary, sampleId = sampleId))
       else None
 
     val statsPaths = Map("num_total" -> List("bases", "num_total"))
