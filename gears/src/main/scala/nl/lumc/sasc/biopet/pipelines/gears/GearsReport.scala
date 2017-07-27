@@ -114,7 +114,7 @@ object GearsReport extends MultisampleReportBuilder {
           )))
       else None
     val krakenPageKronaPlot = GearsKronaPlot
-      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
+      .values(summary, runId, "gearskraken", "krakenreport", samples, libraries, sampleId, libId)
     val krakenPage =
       if (krakenExecuted)
         Some(
@@ -237,7 +237,7 @@ object GearsReport extends MultisampleReportBuilder {
         )))
     } else None
     val krakenPageKronaPlot = GearsKronaPlot
-      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
+      .values(summary, runId, "gearskraken", "krakenreport", samples, libraries, sampleId, libId)
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
@@ -371,7 +371,7 @@ object GearsReport extends MultisampleReportBuilder {
           )))
       else None
     val krakenPageKronaPlot = GearsKronaPlot
-      .values(summary, runId, "Krona", "krakenkrona", samples, libraries, sampleId, libId)
+      .values(summary, runId, "gearskraken", "krakenreport", samples, libraries, sampleId, libId)
     val krakenAnalysisPage =
       if (krakenExecuted)
         Some(
@@ -434,20 +434,20 @@ object GearsReport extends MultisampleReportBuilder {
 object GearsKronaPlot {
   def values(summary: SummaryDb,
              runId: Int,
-             summaryModuleTag: String,
-             summaryStatsTag: String,
+             summaryPipelineName: String,
+             summaryModuleName: String,
              allSamples: Seq[Sample],
              allLibraries: Seq[Library],
              sampleId: Option[Int] = None,
              libId: Option[Int] = None,
              centrifugeTag: Option[String] = None): Map[String, Any] = {
     val summariesVal =
-      summaries(summary, runId, sampleId, libId, summaryModuleTag, summaryStatsTag)
+      summaries(summary, runId, sampleId, libId, summaryPipelineName, summaryModuleName)
     val totalReadsVal = totalReads(summary,
                                    runId,
                                    sampleId,
                                    libId,
-                                   summaryModuleTag,
+                                   summaryPipelineName,
                                    centrifugeTag,
                                    allSamples,
                                    allLibraries)
@@ -456,8 +456,8 @@ object GearsKronaPlot {
       "runId" -> runId,
       "sampleId" -> sampleId,
       "libId" -> libId,
-      "summaryModuleTag" -> summaryModuleTag,
-      "summaryStatsTag" -> summaryStatsTag,
+      "summaryPipelineName" -> summaryPipelineName,
+      "summaryModuleName" -> summaryModuleName,
       "centrifugeTag" -> centrifugeTag,
       "allSamples" -> allSamples,
       "allLibraries" -> allLibraries,
@@ -470,21 +470,21 @@ object GearsKronaPlot {
                 runId: Int,
                 sampleId: Option[Int],
                 libId: Option[Int],
-                summaryModuleTag: String,
-                summaryStatsTag: String): Map[Int, Map[String, Option[Any]]] = {
+                summaryPipelineName: String,
+                summaryModuleName: String): Map[Int, Map[String, Option[Any]]] = {
     if (libId.isDefined)
       summary
         .getStatsForLibraries(runId,
-                              summaryModuleTag,
-                              summaryStatsTag,
+                              summaryPipelineName,
+                              summaryModuleName,
                               sampleId,
                               Map("all" -> Nil))
         .filter(_._1._2 == libId.get)
         .map(x => x._1._1 -> x._2)
     else
       summary.getStatsForSamples(runId,
-                                 summaryModuleTag,
-                                 summaryStatsTag,
+                                 summaryPipelineName,
+                                 summaryModuleName,
                                  sampleId.map(SampleId),
                                  Map("all" -> Nil))
   }
@@ -493,7 +493,7 @@ object GearsKronaPlot {
       runId: Int,
       sampleId: Option[Int],
       libId: Option[Int],
-      summaryModuleTag: String,
+      summaryPipelineName: String,
       centrifugeTag: Option[String],
       allSamples: Seq[Sample],
       allLibraries: Seq[Library]
@@ -502,7 +502,7 @@ object GearsKronaPlot {
       if (libId.isDefined) {
         val stats = summary
           .getStatsForLibraries(runId,
-                                summaryModuleTag,
+                                summaryPipelineName,
                                 ModuleName(tag),
                                 sampleId,
                                 Map("total" -> List("metrics", "Read")))
@@ -514,7 +514,7 @@ object GearsKronaPlot {
       } else
         summary
           .getStatsForSamples(runId,
-                              summaryModuleTag,
+                              summaryPipelineName,
                               ModuleName(tag),
                               sampleId.map(SummaryDb.SampleId),
                               Map("total" -> List("metrics", "Read")))
