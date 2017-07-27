@@ -165,7 +165,7 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
                      sampleDistributions: List[String],
                      contig: Option[String]): Unit = {
     outputDir.mkdirs()
-    this.writeToFile(new File(outputDir, "stats.json"),
+    this.writeToFile(new File(outputDir, s"${contig.getOrElse("total")}.json"),
                      samples,
                      genotypeFields,
                      infoFields,

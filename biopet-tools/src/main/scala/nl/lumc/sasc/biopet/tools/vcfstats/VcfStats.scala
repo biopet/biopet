@@ -110,11 +110,11 @@ object VcfStats extends ToolCommand {
 
     val completeStatsJson = regions
       .flatMap(_.map(_.chr))
-      .foldLeft(ConfigUtils.fileToConfigMap(new File(cmdArgs.outputDir, "stats.json"))) {
+      .foldLeft(ConfigUtils.fileToConfigMap(new File(cmdArgs.outputDir, "total.json"))) {
         case (map, contig) =>
           val contigMap = ConfigUtils.fileToConfigMap(
             new File(cmdArgs.outputDir,
-                     "contigs" + File.separator + contig + File.separator + "stats.json"))
+                     "contigs" + File.separator + contig + File.separator + s"$contig.json"))
           ConfigUtils.mergeMaps(map, contigMap)
       }
 
