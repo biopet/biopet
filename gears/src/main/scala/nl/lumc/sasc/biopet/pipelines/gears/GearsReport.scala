@@ -330,7 +330,8 @@ object GearsReport extends MultisampleReportBuilder {
       Duration.Inf)
 
     val flexiprepReportPage =
-      if (flexiprepExecuted) Some("QC" -> FlexiprepReport.flexiprepPage) else None
+      if (flexiprepExecuted) Some("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId, libId))
+      else None
 
     val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                    runId,
@@ -440,6 +441,16 @@ object GearsKronaPlot {
              sampleId: Option[Int] = None,
              libId: Option[Int] = None,
              centrifugeTag: Option[String] = None): Map[String, Any] = {
+    val summariesVal =
+      summaries(summary, runId, sampleId, libId, summaryModuleTag, summaryStatsTag)
+    val totalReadsVal = totalReads(summary,
+                                   runId,
+                                   sampleId,
+                                   libId,
+                                   summaryModuleTag,
+                                   centrifugeTag,
+                                   allSamples,
+                                   allLibraries)
     Map(
       "summary" -> summary,
       "runId" -> runId,
@@ -450,15 +461,8 @@ object GearsKronaPlot {
       "centrifugeTag" -> centrifugeTag,
       "allSamples" -> allSamples,
       "allLibraries" -> allLibraries,
-      "summaries" -> summaries(summary, runId, sampleId, libId, summaryModuleTag, summaryStatsTag),
-      "totalReads" -> totalReads(summary,
-                                 runId,
-                                 sampleId,
-                                 libId,
-                                 summaryModuleTag,
-                                 centrifugeTag,
-                                 allSamples,
-                                 allLibraries)
+      "summaries" -> summariesVal,
+      "totalReads" -> totalReadsVal
     )
   }
 

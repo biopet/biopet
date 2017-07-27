@@ -66,7 +66,8 @@ object MappingReport extends ReportBuilder {
         Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
       } else None
     ReportPage(
-      (if (skipFlexiprep) Nil else List("QC" -> FlexiprepReport.flexiprepPage)) :::
+      (if (skipFlexiprep) Nil
+       else List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId.get, libId.get))) :::
         bamMetricsPage.map(_.subPages).getOrElse(Nil),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/mappingFront.ssp")

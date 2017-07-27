@@ -20,10 +20,6 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%-- Present already in summaries and total reads and therefore not necessary
-
---%>
-<%-- Fix-BIOPET-669 addition. Removing futures from template --%>
 <%@ val summaries: Map[Int, Map[String, Option[Any]]] %>
 <%@ val totalReads: Option[Map[String, Long]] %>
 #{

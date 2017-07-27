@@ -270,7 +270,9 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
-        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
+        (if (flexiprepExecuted)
+         List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId, libId))
+       else Nil) :::
         (if (centrifugeExecuted)
          List("Centriguge analysis" -> Future.successful(ReportPage(
            List("Non-unique" -> Future.successful(

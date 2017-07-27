@@ -51,25 +51,42 @@ object FlexiprepReport extends ReportBuilder {
   override def pageArgs = Map("multisample" -> false)
 
   /** Index page for a flexiprep report */
-  def indexPage: Future[ReportPage] = this.flexiprepPage.map { flexiprepPage =>
-    ReportPage(
-      Nil,
-      List(
-        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
-      ) ::: flexiprepPage.sections,
-      Map())
+  def indexPage: Future[ReportPage] = this.flexiprepPage(summary, sampleId.get, libId.get).map {
+    page =>
+      ReportPage(
+        Nil,
+        List(
+          "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
+        ) ::: page.sections,
+        Map())
   }
 
   /** Generate a QC report page for 1 single library, sampleId and libId must be defined in the arguments */
-  def flexiprepPage: Future[ReportPage] =
+  def flexiprepPage(summary: SummaryDb, sampleId: Int, libId: Int): Future[ReportPage] = {
+    val flexiprepReadSummary = FlexiprepReadSummary.values(summary,
+                                                           runId,
+                                                           samples,
+                                                           libraries,
+                                                           sampleId,
+                                                           libId,
+                                                           multisample = false)
+    val flexiprepBaseSummary = FlexiprepBaseSummary.values(summary,
+                                                           runId,
+                                                           samples,
+                                                           libraries,
+                                                           sampleId,
+                                                           libId,
+                                                           multisample = false)
     Future(
       ReportPage(
         List(),
         List(
           "Read Summary" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+            flexiprepReadSummary),
           "Base Summary" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"),
+            "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            flexiprepBaseSummary),
           fastqcPlotSection("Base quality", "plot_per_base_quality"),
           fastqcPlotSection("Sequence quality", "plot_per_sequence_quality"),
           fastqcPlotSection("Base GC content", "plot_per_base_gc_content"),
@@ -82,6 +99,7 @@ object FlexiprepReport extends ReportBuilder {
         ),
         Map()
       ))
+  }
 
   protected def fastqcPlotSection(name: String, tag: String): (String, ReportSection) = {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp",
