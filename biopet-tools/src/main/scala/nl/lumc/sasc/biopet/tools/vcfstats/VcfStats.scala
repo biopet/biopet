@@ -6,7 +6,7 @@ import java.net.URLClassLoader
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
-import nl.lumc.sasc.biopet.utils.{FastaUtils, ToolCommand, VcfUtils}
+import nl.lumc.sasc.biopet.utils._
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
@@ -107,6 +107,19 @@ object VcfStats extends ToolCommand {
     regionStats.unpersist()
 
     Await.result(totalStats, Duration.Inf)
+
+    val completeStatsJson = regions
+      .flatMap(_.map(_.chr))
+      .foldLeft(ConfigUtils.fileToConfigMap(new File(cmdArgs.outputDir, "stats.json"))) {
+        case (map, contig) =>
+          val contigMap = ConfigUtils.fileToConfigMap(
+            new File(cmdArgs.outputDir,
+                     "contigs" + File.separator + contig + File.separator + "stats.json"))
+          ConfigUtils.mergeMaps(map, contigMap)
+      }
+
+    IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"),
+                             ConfigUtils.mapToJson(completeStatsJson).nospaces :: Nil)
 
     sc.stop
     logger.info("Done")
