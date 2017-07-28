@@ -28,11 +28,14 @@
 <%@ var paired: Boolean %>
 <%@ var summaryPlotLinesR1: Option[Seq[String]] %>
 <%@ var summaryPlotLinesR2: Option[Seq[String]] %>
-<%@ var samples: Seq[Sample] %>
-<%@ var libraries: Seq[Library] %>
 <%@ var settings: Map[(Int, Int), Map[String, Option[Any]]]%>
 <%@ var seqstatStats: Map[(Int, Int), Map[String, Option[Any]]] %>
 <%@ var seqstatQCStats: Map[(Int, Int), Map[String, Option[Any]]] %>
+
+#{
+    val samples = sampleId.map(id => allSamples.filter(_.id == id)).getOrElse(allSamples)
+    val libraries = libId.map(id => allLibraries.filter(_.id == id)).getOrElse(allLibraries)
+}#
 
 #if (showIntro)
     <br/>
