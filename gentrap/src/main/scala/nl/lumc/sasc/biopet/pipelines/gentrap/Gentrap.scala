@@ -148,6 +148,7 @@ class Gentrap(val parent: Configurable)
     cufflinksBlind.foreach(validate.gtfFile :+= _.annotationGtf)
     cufflinksGuided.foreach(validate.gtfFile :+= _.annotationGtf)
     cufflinksStrict.foreach(validate.gtfFile :+= _.annotationGtf)
+    stringtie.foreach(validate.gtfFile :+= _.annotationGtf)
     validate.jobOutputFile = new File(outputDir, ".validate.annotation.out")
     add(validate)
 
@@ -169,6 +170,11 @@ class Gentrap(val parent: Configurable)
       Some(new BaseCounts(this))
     else None
 
+  lazy val stringtie: Option[Stringtie] =
+    if (expMeasures().contains(ExpMeasures.Stringtie))
+      Some(new Stringtie(this))
+    else None
+
   lazy val cufflinksBlind: Option[CufflinksBlind] =
     if (expMeasures().contains(ExpMeasures.CufflinksBlind))
       Some(new CufflinksBlind(this))
@@ -186,7 +192,7 @@ class Gentrap(val parent: Configurable)
 
   def executedMeasures: List[QScript with Measurement] =
     (fragmentsPerGene :: baseCounts :: cufflinksBlind ::
-      cufflinksGuided :: cufflinksStrict :: Nil).flatten
+      cufflinksGuided :: cufflinksStrict :: stringtie :: Nil).flatten
 
   /** Whether to do simple variant calling on RNA or not */
   lazy val shivaVariantcalling: Option[ShivaVariantcalling] =
@@ -299,7 +305,8 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene, BaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
+    val FragmentsPerGene, BaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind, Stringtie =
+      Value
   }
 
   /** Enumeration of available strandedness */
