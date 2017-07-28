@@ -77,7 +77,7 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeOpenOtuTable = summary.getFile(runId, "gears", key = "qiime_open_otu_table")
     val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                    runId,
-                                                                   "gearskraken",
+                                                                   "gearscentrifuge",
                                                                    "centrifuge_report",
                                                                    samples,
                                                                    libraries,
@@ -86,7 +86,7 @@ object GearsReport extends MultisampleReportBuilder {
                                                                    Some("centrifuge"))
     val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                       runId,
-                                                                      "gearskraken",
+                                                                      "gearscentrifuge",
                                                                       "centrifuge_unique_report",
                                                                       samples,
                                                                       libraries,
@@ -216,7 +216,7 @@ object GearsReport extends MultisampleReportBuilder {
       Duration.Inf)
     val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                    runId,
-                                                                   "gearskraken",
+                                                                   "gearscentrifuge",
                                                                    "centrifuge_report",
                                                                    samples,
                                                                    libraries,
@@ -225,7 +225,7 @@ object GearsReport extends MultisampleReportBuilder {
                                                                    Some("centrifuge"))
     val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                       runId,
-                                                                      "gearskraken",
+                                                                      "gearscentrifuge",
                                                                       "centrifuge_unique_report",
                                                                       samples,
                                                                       libraries,
@@ -349,7 +349,7 @@ object GearsReport extends MultisampleReportBuilder {
 
     val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                    runId,
-                                                                   "gearskraken",
+                                                                   "gearscentrifuge",
                                                                    "centrifuge_report",
                                                                    samples,
                                                                    libraries,
@@ -358,7 +358,7 @@ object GearsReport extends MultisampleReportBuilder {
                                                                    Some("centrifuge"))
     val centrifugePageUniqueMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                       runId,
-                                                                      "gearskraken",
+                                                                      "gearscentrifuge",
                                                                       "centrifuge_unique_report",
                                                                       samples,
                                                                       libraries,
