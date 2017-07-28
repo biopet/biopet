@@ -284,44 +284,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("NotFiltered") shouldEqual Some(1)
     general.get("Symbolic") shouldEqual Some(0)
     general.get("SimpleInsertion") shouldEqual Some(1)
-
-    val total = generalStats
-    total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
-    total.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-Hom") shouldEqual Some(Map(1 -> 1))
-    total.get("SampleDistribution-HomRef") shouldEqual Some(Map(1 -> 1))
-    total.get("SampleDistribution-Available") shouldEqual Some(Map(3 -> 1))
-    total.get("QUAL") shouldEqual Some(Map(1541 -> 1))
-    total.get("SampleDistribution-HetNonRef") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-Het") shouldEqual Some(Map(2 -> 1))
-    total.get("SampleDistribution-NoCall") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-Filtered") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
-    total.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
-
-    generalStats.get("general") should not be empty
-    val totGeneral = generalStats("general")
-
-    totGeneral.get("PolymorphicInSamples") shouldEqual Some(1)
-    totGeneral.get("ComplexIndel") shouldEqual Some(0)
-    totGeneral.get("FullyDecoded") shouldEqual Some(0)
-    totGeneral.get("PointEvent") shouldEqual Some(0)
-    totGeneral.get("MNP") shouldEqual Some(0)
-    totGeneral.get("Indel") shouldEqual Some(1)
-    totGeneral.get("Biallelic") shouldEqual Some(1)
-    totGeneral.get("SimpleDeletion") shouldEqual Some(0)
-    totGeneral.get("Variant") shouldEqual Some(1)
-    totGeneral.get("SymbolicOrSV") shouldEqual Some(0)
-    totGeneral.get("MonomorphicInSamples") shouldEqual Some(0)
-    totGeneral.get("SNP") shouldEqual Some(0)
-    totGeneral.get("Filtered") shouldEqual Some(0)
-    totGeneral.get("StructuralIndel") shouldEqual Some(0)
-    totGeneral.get("Total") shouldEqual Some(1)
-    totGeneral.get("Mixed") shouldEqual Some(0)
-    totGeneral.get("NotFiltered") shouldEqual Some(1)
-    totGeneral.get("Symbolic") shouldEqual Some(0)
-    totGeneral.get("SimpleInsertion") shouldEqual Some(1)
   }
 
   @Test
@@ -354,29 +316,5 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Available") shouldEqual Some(1)
     general.get("Het") shouldEqual Some(1)
     general.get("HetNonRef") shouldEqual Some(0)
-
-    val total = genotypeStats
-    total.get("GQ") shouldEqual Some(Map(99 -> 1))
-    total.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
-    total.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
-    total.get("DP") shouldEqual Some(Map(45 -> 1))
-    total.get("AD-alt") shouldEqual Some(Map(21 -> 1))
-    total.get("AD-ref") shouldEqual Some(Map(24 -> 1))
-    total.get("general") should not be empty
-
-    val totGeneral = genotypeStats("general")
-    totGeneral.get("Hom") shouldEqual Some(0)
-    totGeneral.get("NoCall") shouldEqual Some(0)
-    totGeneral.get("Variant") shouldEqual Some(1)
-    totGeneral.get("Filtered") shouldEqual Some(0)
-    totGeneral.get("NonInformative") shouldEqual Some(0)
-    totGeneral.get("Called") shouldEqual Some(1)
-    totGeneral.get("Total") shouldEqual Some(1)
-    totGeneral.get("HomVar") shouldEqual Some(0)
-    totGeneral.get("HomRef") shouldEqual Some(0)
-    totGeneral.get("Mixed") shouldEqual Some(0)
-    totGeneral.get("Available") shouldEqual Some(1)
-    totGeneral.get("Het") shouldEqual Some(1)
-    totGeneral.get("HetNonRef") shouldEqual Some(0)
   }
 }

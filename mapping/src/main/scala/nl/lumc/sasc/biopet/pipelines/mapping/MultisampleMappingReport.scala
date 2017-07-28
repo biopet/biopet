@@ -110,7 +110,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                           Map())))
          else Nil) ++ (if (centrifugeExecuted)
                          List(
-                           "Centriguge analysis" -> Future.successful(ReportPage(
+                           "Centrifuge analysis" -> Future.successful(ReportPage(
                              List("Non-unique" -> Future.successful(
                                ReportPage(List(),
                                           List("All mappings" -> ReportSection(
@@ -203,7 +203,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
            "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
         (if (centrifugeExecuted)
            List(
-             "Centriguge analysis" -> Future.successful(ReportPage(
+             "Centrifuge analysis" -> Future.successful(ReportPage(
                List("Non-unique" -> Future.successful(ReportPage(
                  List(),
                  List("All mappings" -> ReportSection(
@@ -274,7 +274,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
          List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId, libId))
        else Nil) :::
         (if (centrifugeExecuted)
-         List("Centriguge analysis" -> Future.successful(ReportPage(
+         List("Centrifuge analysis" -> Future.successful(ReportPage(
            List("Non-unique" -> Future.successful(
              ReportPage(List(),
                         List("All mappings" -> ReportSection(
