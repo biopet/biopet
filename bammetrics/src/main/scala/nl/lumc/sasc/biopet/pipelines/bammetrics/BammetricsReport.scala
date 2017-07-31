@@ -342,10 +342,14 @@ object BammetricsReport extends ReportBuilder {
       "count" -> List("histogram", "All_Reads.fr_count")
     )
     val plotTables = summaryForPlot(summary,
-      statsPaths,
-      "insert_size" :: Nil,
-      "count" :: Nil,      "bammetrics",
-      "CollectInsertSizeMetrics",libraryLevel,sampleId,libraryId)
+                                    statsPaths,
+                                    "insert_size" :: Nil,
+                                    "count" :: Nil,
+                                    "bammetrics",
+                                    "CollectInsertSizeMetrics",
+                                    libraryLevel,
+                                    sampleId,
+                                    libraryId)
     plotTables
   }
 
@@ -359,15 +363,14 @@ object BammetricsReport extends ReportBuilder {
   def insertSizePlot(outputDir: File,
                      prefix: String,
                      insertSizePlotTables: Array[Map[String, Array[Any]]]): Unit = {
-    writePlotFromSummary(
-      outputDir,
-      prefix,
-      insertSizePlotTables,
-      "insert_size" :: Nil,
-      "count" :: Nil,
-    "Insert size",
-    "Reads",
-      "Insert size")
+    writePlotFromSummary(outputDir,
+                         prefix,
+                         insertSizePlotTables,
+                         "insert_size" :: Nil,
+                         "count" :: Nil,
+                         "Insert size",
+                         "Reads",
+                         "Insert size")
   }
 
   def mappingQualityPlotTables(summary: SummaryDb,
@@ -379,14 +382,14 @@ object BammetricsReport extends ReportBuilder {
       "count" -> List("mapping_quality", "histogram", "counts")
     )
     val plotTables = summaryForPlot(summary,
-                                                                    statsPaths,
-                                                                    "mapping_quality" :: Nil,
-                                                                    "count" :: Nil,
-                                                                    "bammetrics",
-                                                                    "bamstats",
-                                                                    libraryLevel,
-                                                                    sampleId,
-                                                                    libraryId)
+                                    statsPaths,
+                                    "mapping_quality" :: Nil,
+                                    "count" :: Nil,
+                                    "bammetrics",
+                                    "bamstats",
+                                    libraryLevel,
+                                    sampleId,
+                                    libraryId)
     plotTables
   }
 
