@@ -17,7 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{
+  ReportBuilder,
+  ReportBuilderExtension,
+  ReportPage,
+  ReportSection
+}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -158,7 +163,7 @@ object BammetricsReport extends ReportBuilder {
     *                     * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
     */
   def alignmentSummaryPlotLines(summary: SummaryDb,
-                       sampleId: Option[Int] = None,
+                                sampleId: Option[Int] = None,
                                 libraryLevel: Boolean = false): Seq[String] = {
     val statsPaths = Map(
       "Mapped" -> List("flagstats", "Mapped"),
@@ -170,18 +175,18 @@ object BammetricsReport extends ReportBuilder {
     val results: Map[(Int, Option[Int]), Map[String, Option[Any]]] = if (libraryLevel) {
       summary
         .getStatsForLibraries(runId,
-          "bammetrics",
-          "bamstats",
-          sampleId = sampleId,
-          keyValues = statsPaths)
+                              "bammetrics",
+                              "bamstats",
+                              sampleId = sampleId,
+                              keyValues = statsPaths)
         .map(x => (x._1._1, Some(x._1._2)) -> x._2)
     } else
       summary
         .getStatsForSamples(runId,
-          "bammetrics",
-          "bamstats",
-          sample = sampleId.map(SampleId),
-          keyValues = statsPaths)
+                            "bammetrics",
+                            "bamstats",
+                            sample = sampleId.map(SampleId),
+                            keyValues = statsPaths)
         .map(x => (x._1, None) -> x._2)
     val summaryPlotLines = ArrayBuffer[String]()
 
@@ -216,8 +221,7 @@ object BammetricsReport extends ReportBuilder {
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,
                            summaryPlotLines: Seq[String],
-                           libraryLevel: Boolean = false
-                           ): Unit = {
+                           libraryLevel: Boolean = false): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -237,6 +241,7 @@ object BammetricsReport extends ReportBuilder {
     plot.title = Some("Aligned_reads")
     plot.runLocal()
   }
+
   /**
     * This is a generic method to create plots
     * @param libraryLevel If enabled the plots will show data per library
@@ -248,16 +253,15 @@ object BammetricsReport extends ReportBuilder {
     * @param pipeline Query for the pipeline
     * @param module Query for the module
     */
-  def summaryForPlot(                                         summary: SummaryDb,
-                      statsPaths: Map[String, List[String]],
-                                        yKeyList: List[String],
-                                        xKeyList: List[String],
-                                        pipeline: PipelineQuery,
-                                        module: ModuleQuery,
-                                        libraryLevel: Boolean = false,
+  def summaryForPlot(summary: SummaryDb,
+                     statsPaths: Map[String, List[String]],
+                     yKeyList: List[String],
+                     xKeyList: List[String],
+                     pipeline: PipelineQuery,
+                     module: ModuleQuery,
+                     libraryLevel: Boolean = false,
                      sampleId: Option[Int] = None,
-                     libraryId: Option[Int] = None
-                      ): Array[Map[String, Array[Any]]]= {
+                     libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
     val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
       summary
         .getStatsForLibraries(runId, pipeline, module, sampleId = sampleId, keyValues = statsPaths)
@@ -267,10 +271,10 @@ object BammetricsReport extends ReportBuilder {
     } else
       summary
         .getStatsForSamples(runId,
-          pipeline,
-          module,
-          sample = sampleId.map(SampleId),
-          keyValues = statsPaths)
+                            pipeline,
+                            module,
+                            sample = sampleId.map(SampleId),
+                            keyValues = statsPaths)
         .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
     val tables: Array[Map[String, Array[Any]]] = results.map {
       case ((sample, library), map) =>
@@ -303,7 +307,6 @@ object BammetricsReport extends ReportBuilder {
     * @param title Title of the plot
     * @param removeZero
     */
-
   def writePlotFromSummary(outputDir: File,
                            prefix: String,
                            tables: Array[Map[String, Array[Any]]],
@@ -318,14 +321,22 @@ object BammetricsReport extends ReportBuilder {
 
     writeTableToTsv(tsvFile, mergeTables(tables, yKeyList.head), yKeyList.head)
 
-    LinePlot(tsvFile,
-             pngFile,
-             xlabel = xlabel,
-             ylabel = ylabel,
-             title = title,
-             hideLegend = tables.size > 40, /* changed from results.size. Original results in summaryForPlot*/
-             removeZero = removeZero).runLocal()
+    LinePlot(
+      tsvFile,
+      pngFile,
+      xlabel = xlabel,
+      ylabel = ylabel,
+      title = title,
+      hideLegend = tables.size > 40,
+      /* changed from results.size. Original results in summaryForPlot*/
+      removeZero = removeZero
+    ).runLocal()
   }
+
+  def insertSizePlotTables(summary: SummaryDb,
+                           libraryLevel: Boolean = false,
+                           sampleId: Option[Int] = None,
+                           libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {}
 
   /**
     * Generate a line plot for insertsize
@@ -338,10 +349,7 @@ object BammetricsReport extends ReportBuilder {
     */
   def insertSizePlot(outputDir: File,
                      prefix: String,
-                     tables: Array[Map[String, Array[Any]]],
-                     libraryLevel: Boolean = false,
-                     sampleId: Option[Int] = None,
-                     libraryId: Option[Int] = None): Unit = {
+                     insertSizePlotTables: Array[Map[String, Array[Any]]]): Unit = {
     val statsPaths = Map(
       "insert_size" -> List("histogram", "insert_size"),
       "count" -> List("histogram", "All_Reads.fr_count")
@@ -350,7 +358,7 @@ object BammetricsReport extends ReportBuilder {
     writePlotFromSummary(
       outputDir,
       prefix,
-      tables,
+      insertSizePlotTables,
       libraryLevel,
       sampleId,
       libraryId,
@@ -365,41 +373,45 @@ object BammetricsReport extends ReportBuilder {
     )
   }
 
-  def mappingQualityPlotSummary(summary: SummaryDb,
-                               ): Unit = {
+  def mappingQualityPlotTables(summary: SummaryDb,
+                               libraryLevel: Boolean = false,
+                               sampleId: Option[Int] = None,
+                               libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
     val statsPaths = Map(
       "mapping_quality" -> List("mapping_quality", "histogram", "values"),
       "count" -> List("mapping_quality", "histogram", "counts")
     )
-    val plotSummary: Array[Map[String, Array[Any]]] = summaryForPlot(summary, statsPaths,
-      "mapping_quality" :: Nil,
-      "count" :: Nil,
-      "bammetrics",
-      "bamstats"
-    )
-    plotSummary
+    val plotTables: Array[Map[String, Array[Any]]] = summaryForPlot(summary,
+                                                                    statsPaths,
+                                                                    "mapping_quality" :: Nil,
+                                                                    "count" :: Nil,
+                                                                    "bammetrics",
+                                                                    "bamstats",
+                                                                    libraryLevel,
+                                                                    sampleId,
+                                                                    libraryId)
+    plotTables
   }
 
-    def mappingQualityPlot(outputDir: File,
-                           prefix: String,
-                           mappingQualityPlotSummary: Array[Map[String, Array[Any]]],
-                           libraryLevel: Boolean = false,
-                           sampleId: Option[Int] = None,
-                           libraryId: Option[Int] = None): Unit = {
-      val statsPaths = Map(
-        "mapping_quality" -> List("mapping_quality", "histogram", "values"),
-        "count" -> List("mapping_quality", "histogram", "counts")
-      )
-      writePlotFromSummary(outputDir,
-        prefix,
-        mappingQualityPlotSummary,
-        "mapping_quality" :: Nil,
-        "count" :: Nil,"Mapping Quality", "Reads","Mapping Quality")
-    }
-
+  def mappingQualityPlot(outputDir: File,
+                         prefix: String,
+                         mappingQualityPlotTables: Array[Map[String, Array[Any]]]): Unit = {
+    writePlotFromSummary(outputDir,
+                         prefix,
+                         mappingQualityPlotTables,
+                         "mapping_quality" :: Nil,
+                         "count" :: Nil,
+                         "Mapping Quality",
+                         "Reads",
+                         "Mapping Quality")
+  }
+  def clippingPlotTables(summary: SummaryDb,
+                         libraryLevel: Boolean = false,
+                         sampleId: Option[Int] = None,
+                         libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {}
   def clippingPlot(outputDir: File,
                    prefix: String,
-                   tables: Array[Map[String, Array[Any]]],
+                   clippingPlotTables: Array[Map[String, Array[Any]]],
                    libraryLevel: Boolean = false,
                    sampleId: Option[Int] = None,
                    libraryId: Option[Int] = None): Unit = {
@@ -537,29 +549,30 @@ object BamMetricsAlignmentReport {
              sampleLevel: Boolean = false,
              showPlot: Boolean = false,
              showIntro: Boolean = true,
-             showTable: Boolean = true): Map[String,Any] = {
+             showTable: Boolean = true): Map[String, Any] = {
 
     val statsPaths = Map(
-        "All" -> List("flagstats", "All"),
-        "Mapped" -> List("flagstats", "Mapped"),
-        "Duplicates" -> List("flagstats", "Duplicates"),
-        "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
-      )
-    val alignmentSummaryResults = summary.getStatsForLibraries(runId,"bammetrics","bamstats", sampleId, statsPaths)
+      "All" -> List("flagstats", "All"),
+      "Mapped" -> List("flagstats", "Mapped"),
+      "Duplicates" -> List("flagstats", "Duplicates"),
+      "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
+    )
+    val alignmentSummaryResults =
+      summary.getStatsForLibraries(runId, "bammetrics", "bamstats", sampleId, statsPaths)
     val alignmentSummaryPlotLines: Option[Seq[String]] =
       if (showPlot)
-        Some(BammetricsReport.alignmentSummaryPlotLines(summary,sampleId,!sampleLevel))
+        Some(BammetricsReport.alignmentSummaryPlotLines(summary, sampleId, !sampleLevel))
       else None
-  Map(
-    "alignmentSummaryResults" -> alignmentSummaryResults,
-    "alignmentSummaryPlotLines" -> alignmentSummaryPlotLines,
-    "sampleLevel" -> sampleLevel,
-    "showPlot" -> showPlot,
-    "showIntro" -> showIntro,
-    "showTable" -> showTable,
-    "sampleId" -> sampleId,
-    "libId" -> libId
-  )
+    Map(
+      "alignmentSummaryResults" -> alignmentSummaryResults,
+      "alignmentSummaryPlotLines" -> alignmentSummaryPlotLines,
+      "sampleLevel" -> sampleLevel,
+      "showPlot" -> showPlot,
+      "showIntro" -> showIntro,
+      "showTable" -> showTable,
+      "sampleId" -> sampleId,
+      "libId" -> libId
+    )
   }
 }
 object BamMetricsMappingQuality {
@@ -569,15 +582,14 @@ object BamMetricsMappingQuality {
              allLibraries: Seq[Library],
              sampleId: Option[Int],
              libId: Option[Int],
-             sampleLevel: Boolean= false,
+             sampleLevel: Boolean = false,
              showPlot: Boolean = false,
              showIntro: Boolean = true,
-             showTable: Boolean = true): Map[String,Any] = {
+             showTable: Boolean = true): Map[String, Any] = {
 
     val samples = sampleId match {
       case Some(id) => allSamples.filter(_.id == id).toList
       case _ => allSamples.toList
     }
-    val
   }
 }
