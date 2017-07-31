@@ -341,16 +341,15 @@ object BammetricsReport extends ReportBuilder {
       "insert_size" -> List("histogram", "insert_size"),
       "count" -> List("histogram", "All_Reads.fr_count")
     )
-    val plotTables = summaryForPlot(summary,
-                                    statsPaths,
-                                    "insert_size" :: Nil,
-                                    "count" :: Nil,
-                                    "bammetrics",
-                                    "CollectInsertSizeMetrics",
-                                    libraryLevel,
-                                    sampleId,
-                                    libraryId)
-    plotTables
+    summaryForPlot(summary,
+                   statsPaths,
+                   "insert_size" :: Nil,
+                   "count" :: Nil,
+                   "bammetrics",
+                   "CollectInsertSizeMetrics",
+                   libraryLevel,
+                   sampleId,
+                   libraryId)
   }
 
   /**
@@ -381,16 +380,15 @@ object BammetricsReport extends ReportBuilder {
       "mapping_quality" -> List("mapping_quality", "histogram", "values"),
       "count" -> List("mapping_quality", "histogram", "counts")
     )
-    val plotTables = summaryForPlot(summary,
-                                    statsPaths,
-                                    "mapping_quality" :: Nil,
-                                    "count" :: Nil,
-                                    "bammetrics",
-                                    "bamstats",
-                                    libraryLevel,
-                                    sampleId,
-                                    libraryId)
-    plotTables
+    summaryForPlot(summary,
+                   statsPaths,
+                   "mapping_quality" :: Nil,
+                   "count" :: Nil,
+                   "bammetrics",
+                   "bamstats",
+                   libraryLevel,
+                   sampleId,
+                   libraryId)
   }
 
   def mappingQualityPlot(outputDir: File,
@@ -405,37 +403,57 @@ object BammetricsReport extends ReportBuilder {
                          "Reads",
                          "Mapping Quality")
   }
+
   def clippingPlotTables(summary: SummaryDb,
                          libraryLevel: Boolean = false,
                          sampleId: Option[Int] = None,
-                         libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {}
-  def clippingPlot(outputDir: File,
-                   prefix: String,
-                   clippingPlotTables: Array[Map[String, Array[Any]]],
-                   libraryLevel: Boolean = false,
-                   sampleId: Option[Int] = None,
-                   libraryId: Option[Int] = None): Unit = {
+                         libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
     val statsPaths = Map(
       "clipping" -> List("clipping", "histogram", "values"),
       "count" -> List("clipping", "histogram", "counts")
     )
+    summaryForPlot(summary,
+                   statsPaths,
+                   "clipping" :: Nil,
+                   "count" :: Nil,
+                   "bammetrics",
+                   "bamstats",
+                   libraryLevel,
+                   sampleId,
+                   libraryId)
 
-    writePlotFromSummary(
-      outputDir,
-      prefix,
-      summary,
-      libraryLevel,
-      sampleId,
-      libraryId,
-      statsPaths,
-      "clipping" :: Nil,
-      "count" :: Nil,
-      "bammetrics",
-      "bamstats",
-      "Clipping",
-      "Reads",
-      "Clipping"
+  }
+  def clippingPlot(outputDir: File,
+                   prefix: String,
+                   clippingPlotTables: Array[Map[String, Array[Any]]]): Unit = {
+    writePlotFromSummary(outputDir,
+                         prefix,
+                         clippingPlotTables,
+                         "clipping" :: Nil,
+                         "count" :: Nil,
+                         "Clipping",
+                         "Reads",
+                         "Clipping")
+  }
+
+  def wgsHistogramPlotTables(summary: SummaryDb,
+                             libraryLevel: Boolean = false,
+                             sampleId: Option[Int] = None,
+                             libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
+    val statsPaths = Map(
+      "coverage" -> List("histogram", "coverage"),
+      "count" -> List("histogram", "count"),
+      "high_quality_coverage_count" -> List("histogram", "high_quality_coverage_count")
     )
+    summaryForPlot(summary,
+                   statsPaths,
+                   "coverage" :: Nil,
+                   "count" :: "high_quality_coverage_count" :: Nil,
+                   "bammetrics",
+                   "wgs",
+                   libraryLevel,
+                   sampleId,
+                   libraryId)
   }
 
   /**
@@ -449,32 +467,15 @@ object BammetricsReport extends ReportBuilder {
     */
   def wgsHistogramPlot(outputDir: File,
                        prefix: String,
-                       tables: Array[Map[String, Array[Any]]],
-                       libraryLevel: Boolean = false,
-                       sampleId: Option[Int] = None,
-                       libraryId: Option[Int] = None): Unit = {
-    val statsPaths = Map(
-      "coverage" -> List("histogram", "coverage"),
-      "count" -> List("histogram", "count"),
-      "high_quality_coverage_count" -> List("histogram", "high_quality_coverage_count")
-    )
-
-    writePlotFromSummary(
-      outputDir,
-      prefix,
-      summary,
-      libraryLevel,
-      sampleId,
-      libraryId,
-      statsPaths,
-      "coverage" :: Nil,
-      "count" :: "high_quality_coverage_count" :: Nil,
-      "bammetrics",
-      "wgs",
-      "Coverage",
-      "Bases",
-      "Whole genome coverage"
-    )
+                       wgsHistogramPlotTables: Array[Map[String, Array[Any]]]): Unit = {
+    writePlotFromSummary(outputDir,
+                         prefix,
+                         wgsHistogramPlotTables,
+                         "coverage" :: Nil,
+                         "count" :: "high_quality_coverage_count" :: Nil,
+                         "Coverage",
+                         "Bases",
+                         "Whole genome coverage")
   }
 
   /**
