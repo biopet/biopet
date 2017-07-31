@@ -124,7 +124,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                                                          libraries,
                                                          sampleId,
                                                          libId)
-    val alignmentSummary = BamMetricsAlignmentReport.values(summary,
+    val alignmentSummary = BammetricsReport.alignmentReportValues(summary,
                                                             runId,
                                                             samples,
                                                             libraries,

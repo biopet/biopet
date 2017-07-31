@@ -17,12 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{
-  ReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
@@ -534,19 +529,16 @@ object BammetricsReport extends ReportBuilder {
     }
     writer.close()
   }
-}
-
-object BamMetricsAlignmentReport {
-  def values(summary: SummaryDb,
-             runId: Int,
-             allSamples: Seq[Sample],
-             allLibraries: Seq[Library],
-             sampleId: Option[Int] = None,
-             libId: Option[Int] = None,
-             sampleLevel: Boolean = false,
-             showPlot: Boolean = false,
-             showIntro: Boolean = true,
-             showTable: Boolean = true): Map[String, Any] = {
+  def alignmentReportValues(summary: SummaryDb,
+                            runId: Int,
+                            allSamples: Seq[Sample],
+                            allLibraries: Seq[Library],
+                            sampleId: Option[Int] = None,
+                            libId: Option[Int] = None,
+                            sampleLevel: Boolean = false,
+                            showPlot: Boolean = false,
+                            showIntro: Boolean = true,
+                            showTable: Boolean = true): Map[String, Any] = {
 
     val statsPaths = Map(
       "All" -> List("flagstats", "All"),
@@ -571,9 +563,7 @@ object BamMetricsAlignmentReport {
       "libId" -> libId
     )
   }
-}
-object BamMetricsMappingQuality {
-  def values(summary: SummaryDb,
+  def mappingQualityValues(summary: SummaryDb,
              runId: Int,
              allSamples: Seq[Sample],
              allLibraries: Seq[Library],
@@ -582,11 +572,19 @@ object BamMetricsMappingQuality {
              sampleLevel: Boolean = false,
              showPlot: Boolean = false,
              showIntro: Boolean = true,
-             showTable: Boolean = true): Map[String, Any] = {
+             showTable: Boolean = true
+               : Map[String, Any] = {
 
     val samples = sampleId match {
       case Some(id) => allSamples.filter(_.id == id).toList
       case _ => allSamples.toList
     }
+    val mapQualityPlotTables = mappingQualityPlotTables(summary,!sampleLevel,sampleId,libId)
+    Map("mappingQualityPlotTables" -> mapQualityPlotTables,
+    "showIntro" -> showIntro,
+    "showTable" -> showTable,
+      "showPlot" -> showPlot,
+      "sampleId" -> sampleId,
+    "libId" -> libId)
   }
 }
