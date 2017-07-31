@@ -1,4 +1,5 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -19,6 +20,8 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%@ var alignmentSummaryPlotLines: Seq[String] %>
+<%@ var alignmentSummaryResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -45,7 +48,7 @@
     </div>
 #end
 #if (showPlot)
-#{ BammetricsReport.alignmentSummaryPlot(outputDir, "alignmentSummary", summary, !sampleLevel, sampleId = sampleId) }#
+#{ BammetricsReport.alignmentSummaryPlot(outputDir, "alignmentSummary", alignmentSummaryPlotLines, !sampleLevel) }#
 
     <div class="panel-body">
         <img src="alignmentSummary.png" class="img-responsive" />
@@ -95,11 +98,10 @@
                         "Duplicates" -> List("flagstats", "Duplicates"),
                         "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
                         )
-                        val results = summary.getStatKeys(runId, "bammetrics", "bamstats", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
-                        val total = results("All").getOrElse(0L).asInstanceOf[Long]
-                        val mapped = results("Mapped").getOrElse(0L).asInstanceOf[Long]
-                        val duplicates = results("Duplicates").getOrElse(0L).asInstanceOf[Long]
-                        val secondary = results("NotPrimaryAlignment").getOrElse(0L).asInstanceOf[Long]
+                        val total = alignmentSummaryResults(sample.id,libId)("All").getOrElse(0L).asInstanceOf[Long]
+                        val mapped = alignmentSummaryResults(sample.id, libId)("Mapped").getOrElse(0L).asInstanceOf[Long]
+                        val duplicates = alignmentSummaryResults(sample.id,libId)("Duplicates").getOrElse(0L).asInstanceOf[Long]
+                        val secondary = alignmentSummaryResults(sample.id,libId)("NotPrimaryAlignment").getOrElse(0L).asInstanceOf[Long]
                     }#
                     <td>${total}</td>
                     <td>${mapped}</td>

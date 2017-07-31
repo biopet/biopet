@@ -17,18 +17,14 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{
-  ReportBuilder,
-  ReportBuilderExtension,
-  ReportPage,
-  ReportSection
-}
+import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportBuilderExtension, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
-
+import nl.lumc.sasc.biopet.utils.summary.db.Schema._
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
@@ -154,25 +150,15 @@ object BammetricsReport extends ReportBuilder {
   }
 
   /**
-    * Generate a stackbar plot for alignment stats
+    * Generates the lines for alignmentSummaryPlot
     *
-    * @param outputDir OutputDir for the tsv and png file
-    * @param prefix Prefix of the tsv and png file
     * @param summary Summary class
-    * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
     * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+    *                     * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
     */
-  def alignmentSummaryPlot(outputDir: File,
-                           prefix: String,
-                           summary: SummaryDb,
-                           libraryLevel: Boolean = false,
-                           sampleId: Option[Int] = None): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-    val tsvWriter = new PrintWriter(tsvFile)
-    if (libraryLevel) tsvWriter.print("Library") else tsvWriter.print("Sample")
-    tsvWriter.println("\tMapped\tDuplicates\tUnmapped\tSecondary")
-
+  def alignmentSummaryPlotLines(summary: SummaryDb,
+                       sampleId: Option[Int] = None,
+                                libraryLevel: Boolean = false): Seq[String] = {
     val statsPaths = Map(
       "Mapped" -> List("flagstats", "Mapped"),
       "Duplicates" -> List("flagstats", "Duplicates"),
@@ -183,19 +169,20 @@ object BammetricsReport extends ReportBuilder {
     val results: Map[(Int, Option[Int]), Map[String, Option[Any]]] = if (libraryLevel) {
       summary
         .getStatsForLibraries(runId,
-                              "bammetrics",
-                              "bamstats",
-                              sampleId = sampleId,
-                              keyValues = statsPaths)
+          "bammetrics",
+          "bamstats",
+          sampleId = sampleId,
+          keyValues = statsPaths)
         .map(x => (x._1._1, Some(x._1._2)) -> x._2)
     } else
       summary
         .getStatsForSamples(runId,
-                            "bammetrics",
-                            "bamstats",
-                            sample = sampleId.map(SampleId),
-                            keyValues = statsPaths)
+          "bammetrics",
+          "bamstats",
+          sample = sampleId.map(SampleId),
+          keyValues = statsPaths)
         .map(x => (x._1, None) -> x._2)
+    val summaryPlotLines = ArrayBuffer[String]()
 
     for (((s, l), result) <- results) {
       val sampleName: String = summary.getSampleName(s).map(_.get)
@@ -212,16 +199,40 @@ object BammetricsReport extends ReportBuilder {
       sb.append(duplicates + "\t")
       sb.append((total - mapped) + "\t")
       sb.append(secondary)
-      tsvWriter.println(sb.toString)
+      summaryPlotLines += sb.toString
     }
+    summaryPlotLines
+  }
 
+  /**
+    * Generate a stackbar plot for alignment stats
+    *
+    * @param outputDir OutputDir for the tsv and png file
+    * @param prefix Prefix of the tsv and png file
+    * @param summaryPlotLines A sequence of strings written to the summary tsv
+    * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+    */
+  def alignmentSummaryPlot(outputDir: File,
+                           prefix: String,
+                           summaryPlotLines: Seq[String],
+                           libraryLevel: Boolean = false
+                           ): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    if (libraryLevel) tsvWriter.print("Library") else tsvWriter.print("Sample")
+    tsvWriter.println("\tMapped\tDuplicates\tUnmapped\tSecondary")
+
+    for (line <- summaryPlotLines) {
+      tsvWriter.println(line)
+    }
     tsvWriter.close()
 
     val plot = new StackedBarPlot(null)
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(200 + (results.size * 10))
+    plot.width = Some(200 + (summaryPlotLines.size * 10))
     plot.title = Some("Aligned_reads")
     plot.runLocal()
   }
@@ -499,5 +510,29 @@ object BammetricsReport extends ReportBuilder {
         writer.println((c :: keys.map(x => table(x)(i))).mkString("\t"))
     }
     writer.close()
+  }
+}
+
+object BamMetricsAlignmentSummary {
+  def values(summary: SummaryDb,
+             runId: Int,
+             allSamples: Seq[Sample],
+             allLibraries: Seq[Library],
+             sampleId: Option[Int] = None,
+             libId: Option[Int],
+             sampleLevel: Boolean = false): Map[String,Any] = {
+
+    val statsPaths = Map(
+        "All" -> List("flagstats", "All"),
+        "Mapped" -> List("flagstats", "Mapped"),
+        "Duplicates" -> List("flagstats", "Duplicates"),
+        "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
+      )
+    val alignmentSummaryResults = summary.getStatsForLibraries(runId,"bammetrics","bamstats", sampleId, statsPaths)
+    val alignmentSummaryPlotLines = BammetricsReport.alignmentSummaryPlotLines(summary,sampleId,!sampleLevel)
+  Map(
+    "alignmentSummaryResults" -> alignmentSummaryResults,
+    "alignmentSummaryPlotLines" -> alignmentSummaryPlotLines
+  )
   }
 }
