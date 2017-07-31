@@ -299,7 +299,7 @@ object BammetricsReport extends ReportBuilder {
     * This is a generic method to create plots
     * @param outputDir Outputdir of the plot
     * @param prefix Files will start with this name
-    * @param tables Tables to be written
+    * @param plotTables Tables to be written
     * @param yKeyList Keys to search from, first has prio over second one
     * @param xKeyList Keys to search from, first has prio over second one
     * @param xlabel X label shown on the plot
@@ -309,7 +309,7 @@ object BammetricsReport extends ReportBuilder {
     */
   def writePlotFromSummary(outputDir: File,
                            prefix: String,
-                           tables: Array[Map[String, Array[Any]]],
+                           plotTables: Array[Map[String, Array[Any]]],
                            yKeyList: List[String],
                            xKeyList: List[String],
                            xlabel: Option[String] = None,
@@ -319,7 +319,7 @@ object BammetricsReport extends ReportBuilder {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
 
-    writeTableToTsv(tsvFile, mergeTables(tables, yKeyList.head), yKeyList.head)
+    writeTableToTsv(tsvFile, mergeTables(plotTables, yKeyList.head), yKeyList.head)
 
     LinePlot(
       tsvFile,
@@ -327,7 +327,7 @@ object BammetricsReport extends ReportBuilder {
       xlabel = xlabel,
       ylabel = ylabel,
       title = title,
-      hideLegend = tables.size > 40,
+      hideLegend = plotTables.size > 40,
       /* changed from results.size. Original results in summaryForPlot*/
       removeZero = removeZero
     ).runLocal()
@@ -336,41 +336,38 @@ object BammetricsReport extends ReportBuilder {
   def insertSizePlotTables(summary: SummaryDb,
                            libraryLevel: Boolean = false,
                            sampleId: Option[Int] = None,
-                           libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {}
+                           libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
+    val statsPaths = Map(
+      "insert_size" -> List("histogram", "insert_size"),
+      "count" -> List("histogram", "All_Reads.fr_count")
+    )
+    val plotTables = summaryForPlot(summary,
+      statsPaths,
+      "insert_size" :: Nil,
+      "count" :: Nil,      "bammetrics",
+      "CollectInsertSizeMetrics",libraryLevel,sampleId,libraryId)
+    plotTables
+  }
 
   /**
     * Generate a line plot for insertsize
     *
     * @param outputDir OutputDir for the tsv and png file
     * @param prefix Prefix of the tsv and png file
-    * @param summary Summary class
-    * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
-    * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+    * @param insertSizePlotTables
     */
   def insertSizePlot(outputDir: File,
                      prefix: String,
                      insertSizePlotTables: Array[Map[String, Array[Any]]]): Unit = {
-    val statsPaths = Map(
-      "insert_size" -> List("histogram", "insert_size"),
-      "count" -> List("histogram", "All_Reads.fr_count")
-    )
-
     writePlotFromSummary(
       outputDir,
       prefix,
       insertSizePlotTables,
-      libraryLevel,
-      sampleId,
-      libraryId,
-      statsPaths,
       "insert_size" :: Nil,
       "count" :: Nil,
-      "bammetrics",
-      "CollectInsertSizeMetrics",
-      "Insert size",
-      "Reads",
-      "Insert size"
-    )
+    "Insert size",
+    "Reads",
+      "Insert size")
   }
 
   def mappingQualityPlotTables(summary: SummaryDb,
@@ -381,7 +378,7 @@ object BammetricsReport extends ReportBuilder {
       "mapping_quality" -> List("mapping_quality", "histogram", "values"),
       "count" -> List("mapping_quality", "histogram", "counts")
     )
-    val plotTables: Array[Map[String, Array[Any]]] = summaryForPlot(summary,
+    val plotTables = summaryForPlot(summary,
                                                                     statsPaths,
                                                                     "mapping_quality" :: Nil,
                                                                     "count" :: Nil,
