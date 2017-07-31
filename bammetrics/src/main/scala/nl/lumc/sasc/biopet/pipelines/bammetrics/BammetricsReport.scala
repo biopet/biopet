@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
 import nl.lumc.sasc.biopet.utils.summary.db.Schema._
+
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
@@ -236,12 +237,8 @@ object BammetricsReport extends ReportBuilder {
     plot.title = Some("Aligned_reads")
     plot.runLocal()
   }
-
   /**
     * This is a generic method to create plots
-    * @param outputDir Outputdir of the plot
-    * @param prefix Files will start with this name
-    * @param summary Summary where the data is
     * @param libraryLevel If enabled the plots will show data per library
     * @param sampleId If set only this sample is shown
     * @param libraryId If set onlt this library is shown
@@ -250,29 +247,17 @@ object BammetricsReport extends ReportBuilder {
     * @param xKeyList Keys to search from, first has prio over second one
     * @param pipeline Query for the pipeline
     * @param module Query for the module
-    * @param xlabel X label shown on the plot
-    * @param ylabel Y label shown on the plot
-    * @param title Title of the plot
-    * @param removeZero
     */
-  def writePlotFromSummary(outputDir: File,
-                           prefix: String,
-                           summary: SummaryDb,
-                           libraryLevel: Boolean = false,
-                           sampleId: Option[Int] = None,
-                           libraryId: Option[Int] = None,
-                           statsPaths: Map[String, List[String]],
-                           yKeyList: List[String],
-                           xKeyList: List[String],
-                           pipeline: PipelineQuery,
-                           module: ModuleQuery,
-                           xlabel: Option[String] = None,
-                           ylabel: Option[String] = None,
-                           title: Option[String] = None,
-                           removeZero: Boolean = true): Unit = {
-    val tsvFile = new File(outputDir, prefix + ".tsv")
-    val pngFile = new File(outputDir, prefix + ".png")
-
+  def summaryForPlot(                   statsPaths: Map[String, List[String]],
+                                        summary: SummaryDb,
+                                        yKeyList: List[String],
+                                        xKeyList: List[String],
+                                        pipeline: PipelineQuery,
+                                        module: ModuleQuery,
+                                        libraryLevel: Boolean = false,
+                     sampleId: Option[Int] = None,
+                     libraryId: Option[Int] = None
+                      ): Any = {
     val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
       summary
         .getStatsForLibraries(runId, pipeline, module, sampleId = sampleId, keyValues = statsPaths)
@@ -282,12 +267,11 @@ object BammetricsReport extends ReportBuilder {
     } else
       summary
         .getStatsForSamples(runId,
-                            pipeline,
-                            module,
-                            sample = sampleId.map(SampleId),
-                            keyValues = statsPaths)
+          pipeline,
+          module,
+          sample = sampleId.map(SampleId),
+          keyValues = statsPaths)
         .map(x => (x._1, None) -> x._2.map(x => x._1 -> x._2.map(ConfigUtils.any2list(_).toArray)))
-
     val tables: Array[Map[String, Array[Any]]] = results.map {
       case ((sample, library), map) =>
         val sampleName = Await
@@ -304,6 +288,33 @@ object BammetricsReport extends ReportBuilder {
             .getOrElse(Array())
         )
     }.toArray
+    tables
+  }
+
+  /**
+    * This is a generic method to create plots
+    * @param outputDir Outputdir of the plot
+    * @param prefix Files will start with this name
+    * @param tables Tables to be written
+    * @param yKeyList Keys to search from, first has prio over second one
+    * @param xKeyList Keys to search from, first has prio over second one
+    * @param xlabel X label shown on the plot
+    * @param ylabel Y label shown on the plot
+    * @param title Title of the plot
+    * @param removeZero
+    */
+
+  def writePlotFromSummary(outputDir: File,
+                           prefix: String,
+                           tables: Array[Map[String, Array[Any]]],
+                           xKeyList: List[String],
+                           yKeyList: List[String],
+                           xlabel: Option[String] = None,
+                           ylabel: Option[String] = None,
+                           title: Option[String] = None,
+                           removeZero: Boolean = true): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
 
     writeTableToTsv(tsvFile, mergeTables(tables, yKeyList.head), yKeyList.head)
 
@@ -312,7 +323,7 @@ object BammetricsReport extends ReportBuilder {
              xlabel = xlabel,
              ylabel = ylabel,
              title = title,
-             hideLegend = results.size > 40,
+             hideLegend = tables.size > 40, /* changed from results.size. Original results in summaryForPlot*/
              removeZero = removeZero).runLocal()
   }
 
@@ -327,7 +338,7 @@ object BammetricsReport extends ReportBuilder {
     */
   def insertSizePlot(outputDir: File,
                      prefix: String,
-                     summary: SummaryDb,
+                     tables: Array[Map[String, Array[Any]]],
                      libraryLevel: Boolean = false,
                      sampleId: Option[Int] = None,
                      libraryId: Option[Int] = None): Unit = {
@@ -339,7 +350,7 @@ object BammetricsReport extends ReportBuilder {
     writePlotFromSummary(
       outputDir,
       prefix,
-      summary,
+      tables,
       libraryLevel,
       sampleId,
       libraryId,
@@ -364,7 +375,12 @@ object BammetricsReport extends ReportBuilder {
       "mapping_quality" -> List("mapping_quality", "histogram", "values"),
       "count" -> List("mapping_quality", "histogram", "counts")
     )
-
+    summaryForPlot(statsPaths,
+      "mapping_quality" :: Nil,
+      "count" :: Nil,
+      "bammetrics",
+      "bamstats"
+      )
     writePlotFromSummary(
       outputDir,
       prefix,
@@ -373,10 +389,8 @@ object BammetricsReport extends ReportBuilder {
       sampleId,
       libraryId,
       statsPaths,
-      "mapping_quality" :: Nil,
-      "count" :: Nil,
-      "bammetrics",
-      "bamstats",
+
+,
       "Mapping quality",
       "Reads",
       "Mapping quality"
@@ -385,7 +399,7 @@ object BammetricsReport extends ReportBuilder {
 
   def clippingPlot(outputDir: File,
                    prefix: String,
-                   summary: SummaryDb,
+                   tables: Array[Map[String, Array[Any]]],
                    libraryLevel: Boolean = false,
                    sampleId: Option[Int] = None,
                    libraryId: Option[Int] = None): Unit = {
@@ -423,7 +437,7 @@ object BammetricsReport extends ReportBuilder {
     */
   def wgsHistogramPlot(outputDir: File,
                        prefix: String,
-                       summary: SummaryDb,
+                       tables: Array[Map[String, Array[Any]]],
                        libraryLevel: Boolean = false,
                        sampleId: Option[Int] = None,
                        libraryId: Option[Int] = None): Unit = {
@@ -462,7 +476,7 @@ object BammetricsReport extends ReportBuilder {
     */
   def rnaHistogramPlot(outputDir: File,
                        prefix: String,
-                       summary: SummaryDb,
+                       tables: Array[Map[String, Array[Any]]],
                        libraryLevel: Boolean = false,
                        sampleId: Option[Int] = None,
                        libraryId: Option[Int] = None): Unit = {
@@ -513,14 +527,17 @@ object BammetricsReport extends ReportBuilder {
   }
 }
 
-object BamMetricsAlignmentSummary {
+object BamMetricsAlignmentReport {
   def values(summary: SummaryDb,
              runId: Int,
              allSamples: Seq[Sample],
              allLibraries: Seq[Library],
              sampleId: Option[Int] = None,
-             libId: Option[Int],
-             sampleLevel: Boolean = false): Map[String,Any] = {
+             libId: Option[Int] = None,
+             sampleLevel: Boolean = false,
+             showPlot: Boolean = false,
+             showIntro: Boolean = true,
+             showTable: Boolean = true): Map[String,Any] = {
 
     val statsPaths = Map(
         "All" -> List("flagstats", "All"),
@@ -529,10 +546,38 @@ object BamMetricsAlignmentSummary {
         "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
       )
     val alignmentSummaryResults = summary.getStatsForLibraries(runId,"bammetrics","bamstats", sampleId, statsPaths)
-    val alignmentSummaryPlotLines = BammetricsReport.alignmentSummaryPlotLines(summary,sampleId,!sampleLevel)
+    val alignmentSummaryPlotLines: Option[Seq[String]] =
+      if (showPlot)
+        Some(BammetricsReport.alignmentSummaryPlotLines(summary,sampleId,!sampleLevel))
+      else None
   Map(
     "alignmentSummaryResults" -> alignmentSummaryResults,
-    "alignmentSummaryPlotLines" -> alignmentSummaryPlotLines
+    "alignmentSummaryPlotLines" -> alignmentSummaryPlotLines,
+    "sampleLevel" -> sampleLevel,
+    "showPlot" -> showPlot,
+    "showIntro" -> showIntro,
+    "showTable" -> showTable,
+    "sampleId" -> sampleId,
+    "libId" -> libId
   )
+  }
+}
+object BamMetricsMappingQuality {
+  def values(summary: SummaryDb,
+             runId: Int,
+             allSamples: Seq[Sample],
+             allLibraries: Seq[Library],
+             sampleId: Option[Int],
+             libId: Option[Int],
+             sampleLevel: Boolean= false,
+             showPlot: Boolean = false,
+             showIntro: Boolean = true,
+             showTable: Boolean = true): Map[String,Any] = {
+
+    val samples = sampleId match {
+      case Some(id) => allSamples.filter(_.id == id).toList
+      case _ => allSamples.toList
+    }
+    val
   }
 }

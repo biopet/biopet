@@ -20,7 +20,7 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%@ var alignmentSummaryPlotLines: Seq[String] %>
+<%@ var alignmentSummaryPlotLines: Option[Seq[String]] %>
 <%@ var alignmentSummaryResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
@@ -48,7 +48,7 @@
     </div>
 #end
 #if (showPlot)
-#{ BammetricsReport.alignmentSummaryPlot(outputDir, "alignmentSummary", alignmentSummaryPlotLines, !sampleLevel) }#
+#{ BammetricsReport.alignmentSummaryPlot(outputDir, "alignmentSummary", alignmentSummaryPlotLines.getOrElse(Seq("")), !sampleLevel) }#
 
     <div class="panel-body">
         <img src="alignmentSummary.png" class="img-responsive" />
