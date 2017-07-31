@@ -197,7 +197,7 @@ object FlexiprepReport extends ReportBuilder {
   }
 
   /**
-    * Generates the lines for baseSummaryPlotLines
+    * Generates the lines for baseSummaryPlot
     * @param read Must give "R1" or "R2"
     * @param summary Summary class
     * @param sampleId Default selects all samples, when given plot is limits on given sample
