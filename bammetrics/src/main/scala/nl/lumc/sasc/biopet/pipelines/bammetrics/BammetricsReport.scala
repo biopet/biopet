@@ -248,8 +248,8 @@ object BammetricsReport extends ReportBuilder {
     * @param pipeline Query for the pipeline
     * @param module Query for the module
     */
-  def summaryForPlot(                   statsPaths: Map[String, List[String]],
-                                        summary: SummaryDb,
+  def summaryForPlot(                                         summary: SummaryDb,
+                      statsPaths: Map[String, List[String]],
                                         yKeyList: List[String],
                                         xKeyList: List[String],
                                         pipeline: PipelineQuery,
@@ -257,7 +257,7 @@ object BammetricsReport extends ReportBuilder {
                                         libraryLevel: Boolean = false,
                      sampleId: Option[Int] = None,
                      libraryId: Option[Int] = None
-                      ): Any = {
+                      ): Array[Map[String, Array[Any]]]= {
     val results: Map[(Int, Option[Int]), Map[String, Option[Array[Any]]]] = if (libraryLevel) {
       summary
         .getStatsForLibraries(runId, pipeline, module, sampleId = sampleId, keyValues = statsPaths)
@@ -307,8 +307,8 @@ object BammetricsReport extends ReportBuilder {
   def writePlotFromSummary(outputDir: File,
                            prefix: String,
                            tables: Array[Map[String, Array[Any]]],
-                           xKeyList: List[String],
                            yKeyList: List[String],
+                           xKeyList: List[String],
                            xlabel: Option[String] = None,
                            ylabel: Option[String] = None,
                            title: Option[String] = None,
@@ -365,37 +365,37 @@ object BammetricsReport extends ReportBuilder {
     )
   }
 
-  def mappingQualityPlot(outputDir: File,
-                         prefix: String,
-                         summary: SummaryDb,
-                         libraryLevel: Boolean = false,
-                         sampleId: Option[Int] = None,
-                         libraryId: Option[Int] = None): Unit = {
+  def mappingQualityPlotSummary(summary: SummaryDb,
+                               ): Unit = {
     val statsPaths = Map(
       "mapping_quality" -> List("mapping_quality", "histogram", "values"),
       "count" -> List("mapping_quality", "histogram", "counts")
     )
-    summaryForPlot(statsPaths,
+    val plotSummary: Array[Map[String, Array[Any]]] = summaryForPlot(summary, statsPaths,
       "mapping_quality" :: Nil,
       "count" :: Nil,
       "bammetrics",
       "bamstats"
-      )
-    writePlotFromSummary(
-      outputDir,
-      prefix,
-      summary,
-      libraryLevel,
-      sampleId,
-      libraryId,
-      statsPaths,
-
-,
-      "Mapping quality",
-      "Reads",
-      "Mapping quality"
     )
+    plotSummary
   }
+
+    def mappingQualityPlot(outputDir: File,
+                           prefix: String,
+                           mappingQualityPlotSummary: Array[Map[String, Array[Any]]],
+                           libraryLevel: Boolean = false,
+                           sampleId: Option[Int] = None,
+                           libraryId: Option[Int] = None): Unit = {
+      val statsPaths = Map(
+        "mapping_quality" -> List("mapping_quality", "histogram", "values"),
+        "count" -> List("mapping_quality", "histogram", "counts")
+      )
+      writePlotFromSummary(outputDir,
+        prefix,
+        mappingQualityPlotSummary,
+        "mapping_quality" :: Nil,
+        "count" :: Nil,"Mapping Quality", "Reads","Mapping Quality")
+    }
 
   def clippingPlot(outputDir: File,
                    prefix: String,

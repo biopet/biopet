@@ -99,6 +99,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     val centrifugeAnalysis = GearsKronaPlot.values(summary, runId, "gearscentrifuge", "centrifuge_report", samples, libraries, sampleId, libId )
     val centrifugeUniqueAnalysis = GearsKronaPlot.values(summary, runId, "gearscentrifuge", "centrifuge_unique_report", samples, libraries, sampleId, libId )
     val alignmentSummary = BamMetricsAlignmentReport.values(summary, runId, samples, libraries, sampleId, libId, sampleLevel =true,showPlot=true,showTable=false)
+    val mappingQualitySummary= BammetricsReport.mappingQualityPlotSummary(summary)
     Future {
       ReportPage(
         List("Samples" -> generateSamplesPage(pageArgs)) ++
