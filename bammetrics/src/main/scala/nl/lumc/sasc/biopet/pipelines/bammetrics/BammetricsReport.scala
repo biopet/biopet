@@ -478,6 +478,18 @@ object BammetricsReport extends ReportBuilder {
                          "Whole genome coverage")
   }
 
+  def rnaHistogramPlotTables(summary: SummaryDb,
+                             libraryLevel: Boolean = false,
+                             sampleId: Option[Int] = None,
+                             libraryId: Option[Int] = None): Array[Map[String, Array[Any]]] = {
+    val statsPaths = Map(
+      "position" -> List("histogram", "normalized_position"),
+      "count" -> List("histogram", "All_Reads.normalized_coverage")
+    )
+    summaryForPlot(summary,statsPaths,      "position" :: Nil,
+      "count" :: Nil,  "bammetrics",
+      "rna",libraryLevel,sampleId,libraryId)
+  }
   /**
     * Generate a line plot for rna coverage
     *
@@ -489,30 +501,18 @@ object BammetricsReport extends ReportBuilder {
     */
   def rnaHistogramPlot(outputDir: File,
                        prefix: String,
-                       tables: Array[Map[String, Array[Any]]],
+                       rnaHistogramPlotTables: Array[Map[String, Array[Any]]],
                        libraryLevel: Boolean = false,
                        sampleId: Option[Int] = None,
                        libraryId: Option[Int] = None): Unit = {
-    val statsPaths = Map(
-      "position" -> List("histogram", "normalized_position"),
-      "count" -> List("histogram", "All_Reads.normalized_coverage")
-    )
-
-    writePlotFromSummary(
-      outputDir,
+    writePlotFromSummary(outputDir,
       prefix,
-      summary,
-      libraryLevel,
-      sampleId,
-      libraryId,
-      statsPaths,
+      rnaHistogramPlotTables,
       "position" :: Nil,
       "count" :: Nil,
-      "bammetrics",
-      "rna",
       "Relative position",
       "Coverage",
-      "Rna coverage"
+      "RNA coverage"
     )
   }
 
