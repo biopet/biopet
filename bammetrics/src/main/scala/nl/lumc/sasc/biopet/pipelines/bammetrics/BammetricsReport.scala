@@ -569,10 +569,11 @@ object BammetricsReport extends ReportBuilder {
              allLibraries: Seq[Library],
              sampleId: Option[Int],
              libId: Option[Int],
+              fields: List[String] = List("min", "max", "mean", "median", "modal"),
              sampleLevel: Boolean = false,
              showPlot: Boolean = false,
              showIntro: Boolean = true,
-             showTable: Boolean = true
+             showTable: Boolean = true)
                : Map[String, Any] = {
 
     val samples = sampleId match {
@@ -580,7 +581,11 @@ object BammetricsReport extends ReportBuilder {
       case _ => allSamples.toList
     }
     val mapQualityPlotTables = mappingQualityPlotTables(summary,!sampleLevel,sampleId,libId)
+
+    val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
+    val mappingQualityTableResults: Map[(Int, Int), Map[String, Option[Any]]]: = summary.getStatsForLibraries(runId, "bammetrics", "bamstats", sampleId, statsPaths)
     Map("mappingQualityPlotTables" -> mapQualityPlotTables,
+      "mappingQualityTableResults" -> mappingQualityTableResults,
     "showIntro" -> showIntro,
     "showTable" -> showTable,
       "showPlot" -> showPlot,

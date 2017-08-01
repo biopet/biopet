@@ -1,5 +1,6 @@
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
-#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
@@ -19,6 +20,7 @@
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
 <%@ var mappingQualityPlotTables: Array[Map[String, Array[Any]]] %>
+<%@ var mappingQualityTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -87,8 +89,7 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics", "bamstats", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                        val results: Map[String, Option[Any]] = mappingQualityTableResults(sample.id, libId)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
