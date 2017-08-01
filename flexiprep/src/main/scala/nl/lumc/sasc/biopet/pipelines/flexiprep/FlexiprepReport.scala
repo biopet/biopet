@@ -51,15 +51,18 @@ object FlexiprepReport extends ReportBuilder {
   override def pageArgs = Map("multisample" -> false)
 
   /** Index page for a flexiprep report */
-  def indexPage: Future[ReportPage] = this.flexiprepPage(summary, sampleId.get, libId.get).map {
-    page =>
-      ReportPage(
-        Nil,
-        List(
-          "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
-        ) ::: page.sections,
-        Map())
-  }
+  def indexPage: Future[ReportPage] = {
+    val flexiprepPageSummaries = this.flexiprepPageSummaries(summary, sampleId.get, libId.get)
+    this.flexiprepPage(flexiprepPageSummaries).map {
+      page =>
+        ReportPage(
+          Nil,
+          List(
+            "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
+          ) ::: page.sections,
+          Map())
+    }}
+  /** Generate a QC report page for 1 single library, sampleId and libId must be defined in the arguments */
   def flexiprepPageSummaries(summary: SummaryDb,
                           sampleId: Int,
                           libId: Int): Map[String, Map[String, Any]] = {
@@ -81,7 +84,7 @@ object FlexiprepReport extends ReportBuilder {
       "flexiprepBaseSummary" -> flexiprepBaseSummary
     )
   }
-  /** Generate a QC report page for 1 single library, sampleId and libId must be defined in the arguments */
+
   def flexiprepPage(summaries: Map[String, Map[String, Any]]): Future[ReportPage] = {
     val flexiprepBaseSummary = summaries("flexiprepBaseSummary")
     val flexiprepReadSummary = summaries("flexiprepReadSummary")

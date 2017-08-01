@@ -50,27 +50,27 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   override def extFiles =
     super.extFiles ++ List("js/gears.js",
-                           "js/krona-2.0.js",
-                           "img/krona/loading.gif",
-                           "img/krona/hidden.png",
-                           "img/krona/favicon.ico")
+      "js/krona-2.0.js",
+      "img/krona/loading.gif",
+      "img/krona/hidden.png",
+      "img/krona/favicon.ico")
       .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   /** Root page for the carp report */
   def indexPage: Future[ReportPage] = {
 
     val krakenExecuted = Await.result(summary.getStatsSize(runId,
-                                                           "gearskraken",
-                                                           "krakenreport",
-                                                           library = NoLibrary,
-                                                           mustHaveSample = true),
-                                      Duration.Inf) >= 1
+      "gearskraken",
+      "krakenreport",
+      library = NoLibrary,
+      mustHaveSample = true),
+      Duration.Inf) >= 1
     val centrifugeExecuted = Await.result(summary.getStatsSize(runId,
-                                                               "gearscentrifuge",
-                                                               "centrifuge_report",
-                                                               library = NoLibrary,
-                                                               mustHaveSample = true),
-                                          Duration.Inf) >= 1
+      "gearscentrifuge",
+      "centrifuge_report",
+      library = NoLibrary,
+      mustHaveSample = true),
+      Duration.Inf) >= 1
     val wgsExecuted = Await.result(
       summary.getStatsSize(runId, "bammetrics", "wgs", library = NoLibrary, mustHaveSample = true),
       Duration.Inf) >= 1
@@ -79,109 +79,109 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       Duration.Inf) >= 1
     val insertsizeExecuted = summary
       .getStatsForSamples(runId,
-                          "bammetrics",
-                          "CollectInsertSizeMetrics",
-                          keyValues = Map("metrics" -> List("metrics")))
+        "bammetrics",
+        "CollectInsertSizeMetrics",
+        keyValues = Map("metrics" -> List("metrics")))
       .exists(_._2("metrics").isDefined)
     val mappingExecuted = Await.result(
       summary.getStatsSize(runId, "mapping", NoModule, mustHaveLibrary = true),
       Duration.Inf) >= 1
     val mappingSettings = summary.getSettingsForLibraries(runId,
-                                                          "mapping",
-                                                          NoModule,
-                                                          keyValues =
-                                                            Map("paired" -> List("paired")))
+      "mapping",
+      NoModule,
+      keyValues =
+        Map("paired" -> List("paired")))
     val pairedFound = !mappingExecuted || mappingSettings.exists(_._2.exists(_._2 == Option(true)))
     val flexiprepExecuted = Await
       .result(summary.getStatsSize(runId, "flexiprep", mustHaveLibrary = true), Duration.Inf) >= 1
 
     val krakenDustbinAnalysis = GearsKronaPlot.values(summary,
-                                                      runId,
-                                                      "gearskraken",
-                                                      "krakenreport",
-                                                      samples,
-                                                      libraries,
-                                                      sampleId,
-                                                      libId)
+      runId,
+      "gearskraken",
+      "krakenreport",
+      samples,
+      libraries,
+      sampleId,
+      libId)
     val centrifugeAnalysis = GearsKronaPlot.values(summary,
-                                                   runId,
-                                                   "gearscentrifuge",
-                                                   "centrifuge_report",
-                                                   samples,
-                                                   libraries,
-                                                   sampleId,
-                                                   libId)
+      runId,
+      "gearscentrifuge",
+      "centrifuge_report",
+      samples,
+      libraries,
+      sampleId,
+      libId)
     val centrifugeUniqueAnalysis = GearsKronaPlot.values(summary,
-                                                         runId,
-                                                         "gearscentrifuge",
-                                                         "centrifuge_unique_report",
-                                                         samples,
-                                                         libraries,
-                                                         sampleId,
-                                                         libId)
+      runId,
+      "gearscentrifuge",
+      "centrifuge_unique_report",
+      samples,
+      libraries,
+      sampleId,
+      libId)
     val alignmentReportValues = BammetricsReportPage.alignmentSummaryValues(summary,
-                                                                            runId,
-                                                                            samples,
-                                                                            libraries,
-                                                                            sampleId,
-                                                                            libId,
-                                                                            sampleLevel = true,
-                                                                            showPlot = true,
-                                                                            showTable = false)
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId,
+      sampleLevel = true,
+      showPlot = true,
+      showTable = false)
     val mappingQualityReportValues = BammetricsReportPage.mappingQualityValues(summary,
-                                                                               runId,
-                                                                               samples,
-                                                                               libraries,
-                                                                               sampleId,
-                                                                               libId,
-                                                                               sampleLevel = true,
-                                                                               showPlot = true,
-                                                                               showTable = false)
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId,
+      sampleLevel = true,
+      showPlot = true,
+      showTable = false)
     val clippingReportValues = BammetricsReportPage.clippingValues(summary, runId, samples,
-      libraries, sampleId, libId,sampleLevel = true, showPlot = true, showTable = false)
+      libraries, sampleId, libId, sampleLevel = true, showPlot = true, showTable = false)
     val insertSizeReportValues = BammetricsReportPage.insertSizeValues(summary, runId, samples,
-    libraries, sampleId, libId,sampleLevel = true, showPlot = true, showTable = false)
+      libraries, sampleId, libId, sampleLevel = true, showPlot = true, showTable = false)
     val wgsHistogramReportValues = BammetricsReportPage.wgsHistogramValues(summary, runId, samples,
-      libraries, sampleId, libId,sampleLevel = true, showPlot = true, showTable = false)
+      libraries, sampleId, libId, sampleLevel = true, showPlot = true, showTable = false)
     val rnaHistogramReportValues = BammetricsReportPage.rnaHistogramValues(summary, runId, samples,
-      libraries, sampleId, libId,sampleLevel = true, showPlot = true, showTable = false)
-    val flexiprepReadSummary = FlexiprepReadSummary.values(summary, runId, samples, libraries,sampleId,libId,showPlot=true, showTable = false)
-    val flexiprepBaseSummary = FlexiprepBaseSummary.values(summary, runId, samples, libraries,sampleId,libId,showPlot=true, showTable = false)
+      libraries, sampleId, libId, sampleLevel = true, showPlot = true, showTable = false)
+    val flexiprepReadSummary = FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId, libId, showPlot = true, showTable = false)
+    val flexiprepBaseSummary = FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId, libId, showPlot = true, showTable = false)
     Future {
       ReportPage(
         List("Samples" -> generateSamplesPage(pageArgs)) ++
           (if (krakenExecuted)
-             List(
-               "Dustbin analysis - Kraken" -> Future.successful(
-                 ReportPage(List(),
-                            List("Krona plot" -> ReportSection(
-                              "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                              krakenDustbinAnalysis)),
-                            Map())))
-           else Nil) ++ (if (centrifugeExecuted)
-                           List(
-                             "Centrifuge analysis" -> Future.successful(ReportPage(
-                               List(
-                                 "Non-unique" -> Future.successful(ReportPage(
-                                   List(),
-                                   List("All mappings" -> ReportSection(
-                                     "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                                     centrifugeAnalysis)),
-                                   Map()))),
-                               List("Unique mappings" -> ReportSection(
-                                 "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                                 centrifugeUniqueAnalysis)),
-                               Map("summaryModuleTag" -> "gearscentrifuge",
-                                   "centrifugeTag" -> Some("centrifuge"))
-                             )))
-                         else Nil) ++
+            List(
+              "Dustbin analysis - Kraken" -> Future.successful(
+                ReportPage(List(),
+                  List("Krona plot" -> ReportSection(
+                    "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                    krakenDustbinAnalysis)),
+                  Map())))
+          else Nil) ++ (if (centrifugeExecuted)
+          List(
+            "Centrifuge analysis" -> Future.successful(ReportPage(
+              List(
+                "Non-unique" -> Future.successful(ReportPage(
+                  List(),
+                  List("All mappings" -> ReportSection(
+                    "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                    centrifugeAnalysis)),
+                  Map()))),
+              List("Unique mappings" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                centrifugeUniqueAnalysis)),
+              Map("summaryModuleTag" -> "gearscentrifuge",
+                "centrifugeTag" -> Some("centrifuge"))
+            )))
+        else Nil) ++
           List(
             "Reference" -> Future.successful(
               ReportPage(
                 List(),
                 List(
                   "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp",
-                                               Map("pipeline" -> pipelineName))
+                    Map("pipeline" -> pipelineName))
                 ),
                 Map()))),
         List("Report" -> frontSection) ++
@@ -197,33 +197,33 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
               clippingReportValues)
           ) ++
           (if (pairedFound && insertsizeExecuted)
-             List(
-               "Insert Size" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-                 insertSizeReportValues))
-           else Nil) ++
+            List(
+              "Insert Size" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+                insertSizeReportValues))
+          else Nil) ++
           (if (wgsExecuted)
-             List(
-               "Whole genome coverage" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-                 wgsHistogramReportValues))
-           else Nil) ++
+            List(
+              "Whole genome coverage" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+                wgsHistogramReportValues))
+          else Nil) ++
           (if (rnaExecuted)
-             List(
-               "Rna coverage" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
-                 rnaHistogramReportValues))
-           else Nil) ++
+            List(
+              "Rna coverage" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
+                rnaHistogramReportValues))
+          else Nil) ++
           (if (flexiprepExecuted)
-             List(
-               "QC reads" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-                 flexiprepReadSummary),
-               "QC bases" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-                 flexiprepBaseSummary)
-             )
-           else Nil),
+            List(
+              "QC reads" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+                flexiprepReadSummary),
+              "QC bases" -> ReportSection(
+                "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+                flexiprepBaseSummary)
+            )
+          else Nil),
         pageArgs ++ Map("pipeline" -> pipelineName)
       )
     }
@@ -250,16 +250,16 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     val centrifugeAllMappingsReportValues = GearsKronaPlot.values(summary, runId, "gearscentrifuge",
       "centrifuge_report", samples, libraries, sampleId, libId, Some("centrifuge"))
-    val centrifugeUniqueMappingsReportValues = GearsKronaPlot.values(summary,runId,"gearscentrifuge",
-    "centrifuge_unique_report", samples, libraries, sampleId, libId)
-    val dustbinAnalysisReportValues = GearsKronaPlot.values(summary,runId, "gearskraken", "krakenreport",
-      samples,libraries,sampleId,libId)
+    val centrifugeUniqueMappingsReportValues = GearsKronaPlot.values(summary, runId, "gearscentrifuge",
+      "centrifuge_unique_report", samples, libraries, sampleId, libId)
+    val dustbinAnalysisReportValues = GearsKronaPlot.values(summary, runId, "gearskraken", "krakenreport",
+      samples, libraries, sampleId, libId)
     val alignmentSummaryReportValues = BammetricsReportPage.alignmentSummaryValues(summary, runId,
       samples, libraries, sampleId, libId, showPlot = true)
     val preprocessingReportValues = BammetricsReportPage.alignmentSummaryValues(summary, runId,
       samples, libraries, sampleId, libId, sampleLevel = true)
-    val flexiprepReadSummary = FlexiprepReadSummary.values(summary,runId,samples,libraries,sampleId,libId)
-    val flexiprepBaseSummary = FlexiprepBaseSummary.values(summary,runId,samples,libraries,sampleId,libId)
+    val flexiprepReadSummary = FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId, libId)
+    val flexiprepBaseSummary = FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId, libId)
 
     Future {
       ReportPage(
@@ -286,7 +286,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
             "Dustbin analysis" -> Future.successful(
               ReportPage(List(),
                 List("Krona Plot" -> ReportSection(
-                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",dustbinAnalysisReportValues)),
+                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp", dustbinAnalysisReportValues)),
                 Map())))
         else Nil),
         List(
@@ -310,7 +310,9 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     }
 
     /** Library page */
-    def libraryPage(sampleId: Int, libId: Int, args: Map[String, Any]): Future[ReportPage] = Future {
+    def libraryPage(sampleId: Int,
+                    libId: Int,
+                    args: Map[String, Any]): Future[ReportPage] = {
       val krakenExecuted = Await.result(summary.getStatsSize(runId,
         "gearskraken",
         "krakenreport",
@@ -331,44 +333,46 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         mustHaveLibrary = true),
         Duration.Inf) >= 1
 
-      ReportPage(
-        ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
-          (if (flexiprepExecuted)
-            List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId, libId))
-          else Nil) :::
-          (if (centrifugeExecuted)
-            List("Centrifuge analysis" -> Future.successful(ReportPage(
-              List("Non-unique" -> Future.successful(
-                ReportPage(List(),
-                  List("All mappings" -> ReportSection(
-                    "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                    Map("summaryStatsTag" -> "centrifuge_report"))),
-                  Map()))),
-              List("Unique mappings" -> ReportSection(
-                "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
-                Map("summaryStatsTag" -> "centrifuge_unique_report"))),
-              Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
-            )))
-          else Nil) ::: (if (krakenExecuted)
-          List(
-            "Dustbin analysis" -> Future.successful(
-              ReportPage(List(),
-                List("Krona Plot" -> ReportSection(
-                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
-                Map())))
-        else Nil),
-        "Alignment" -> ReportSection(
-          "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
-          (if (flexiprepExecuted)
+      Future {
+        ReportPage(
+          ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
+            (if (flexiprepExecuted)
+              List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId, libId))
+            else Nil) :::
+            (if (centrifugeExecuted)
+              List("Centrifuge analysis" -> Future.successful(ReportPage(
+                List("Non-unique" -> Future.successful(
+                  ReportPage(List(),
+                    List("All mappings" -> ReportSection(
+                      "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                      Map("summaryStatsTag" -> "centrifuge_report"))),
+                    Map()))),
+                List("Unique mappings" -> ReportSection(
+                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                  Map("summaryStatsTag" -> "centrifuge_unique_report"))),
+                Map("summaryModuleTag" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
+              )))
+            else Nil) ::: (if (krakenExecuted)
             List(
-              "QC reads" -> ReportSection(
-                "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-              "QC bases" -> ReportSection(
-                "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-            )
+              "Dustbin analysis" -> Future.successful(
+                ReportPage(List(),
+                  List("Krona Plot" -> ReportSection(
+                    "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")),
+                  Map())))
           else Nil),
-        args
-      )
+          "Alignment" -> ReportSection(
+            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
+            (if (flexiprepExecuted)
+              List(
+                "QC reads" -> ReportSection(
+                  "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+                "QC bases" -> ReportSection(
+                  "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+              )
+            else Nil),
+          args
+        )
+      }
     }
   }
-  }
+}
