@@ -95,11 +95,11 @@ object BammetricsReportPage {
     }
     val clippingPlotTables: Option[Array[Map[String, Array[Any]]]] =
       if (showPlot)
-        Some(BammetricsReport.clippingPlotTables(summary,!sampleLevel, sampleId, libId))
+        Some(BammetricsReport.clippingPlotTables(summary, !sampleLevel, sampleId, libId))
       else None
 
     val statsPaths = fields.map(x => x -> List("clipping", "general", x)).toMap
-    val clippingTableResults = summary.getStatsForLibraries(runId, "bammetrics", "bamstats",sampleId, statsPaths)
+    val clippingTableResults = summary.getStatsForLibraries(runId, "bammetrics", "bamstats", sampleId, statsPaths)
     Map(
       "clippingPlotTables" -> clippingPlotTables,
       "clippingTableResults" -> clippingTableResults,
@@ -110,4 +110,39 @@ object BammetricsReportPage {
       "libId" -> libId
     )
   }
+
+  def insertSizeValues(summary: SummaryDb,
+                       runId: Int,
+                       allSamples: Seq[Sample],
+                       allLibraries: Seq[Library],
+                       sampleId: Option[Int],
+                       libId: Option[Int],
+                       fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size"),
+                       sampleLevel: Boolean = false,
+                       showPlot: Boolean = false,
+                       showIntro: Boolean = true,
+                       showTable: Boolean = true): Map[String, Any] = {
+
+    val samples = sampleId match {
+      case Some(id) => allSamples.filter(_.id == id).toList
+      case _ => allSamples.toList
+    }
+    val insertSizePlotTables: Option[Array[Map[String, Array[Any]]]] =
+      if (showPlot)
+        Some(BammetricsReport.clippingPlotTables(summary, !sampleLevel, sampleId, libId))
+      else None
+
+    val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+    val insertSizeTableResults = summary.getStatsForLibraries(runId, "bammetrics", "CollectInsertSizeMetrics", sampleId, statsPaths)
+    Map(
+      "insertSizePlotTables" -> insertSizePlotTables,
+      "insertSizeTableResults" -> insertSizeTableResults,
+      "showIntro" -> showIntro,
+      "showTable" -> showTable,
+      "showPlot" -> showPlot,
+      "sampleId" -> sampleId,
+      "libId" -> libId
+    )
+  }
 }
+

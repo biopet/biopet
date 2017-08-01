@@ -9,7 +9,6 @@
 <%@ var sampleId: Option[Int] = None %>
 <%@ var libId: Option[Int] = None %>
 <%@ var rootPath: String %>
-<%@ var metricsTag: String = "bammetrics" %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var outputDir: File %>
 <%@ var fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size")%>
@@ -19,8 +18,8 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%@ var insertSizePlotLines: Option[Seq[String]] %>
-<%@ var alignmentSummaryResults: Map[(Int, Int), Map[String, Option[Any]]] %>
+<%@ var insertSizePlotTables: Option[Array[Map[String, Array[Any]]]] %>
+<%@ var insertSizeTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -47,7 +46,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
+    #{ BammetricsReport.insertSizePlot(outputDir, "insertsize", insertSizePlotTables.getOrElse(Array(Map("x" -> Array(""))))) }#
 
     <div class="panel-body">
     <img src="insertsize.png" class="img-responsive" />
@@ -90,8 +89,7 @@
                 #if (libs.head != libId) <tr> #end
                         #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                         #{
-                            val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
-                            val results = summary.getStatKeys(runId, "bammetrics", "CollectInsertSizeMetrics", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                    val results: Map[String, Option[Any]] = insertSizeTableResults(sample.id, libId)
                         }#
                         #for (field <- fields)
                             <td>${results(field)}</td>
