@@ -271,8 +271,6 @@ object BammetricsReportPage {
       sampleId.map(SampleId).get,
       libId.map(LibraryId).getOrElse(NoLibrary),
       statsPaths)
-    Map("plotFile" -> plotFile, "values" -> values,
-    "target" -> target,
-    "metricsTag" -> metricsTag)
+    Map("plotFile" -> plotFile, "values" -> values, "target" -> target, "metricsTag" -> metricsTag)
   }
 }
