@@ -85,6 +85,7 @@
                     #for (field <- fields)
                         <td>${results(field)}</td>
                     #end
+                    #end
                 </tr>
             #end
         #end

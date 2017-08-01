@@ -23,13 +23,11 @@ import nl.lumc.sasc.biopet.core.report.{
   ReportPage,
   ReportSection
 }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport.mappingQualityPlotTables
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.rscript.{LinePlot, StackedBarPlot}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._
-import nl.lumc.sasc.biopet.utils.summary.db.Schema._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
@@ -71,11 +69,20 @@ object BammetricsReport extends ReportBuilder {
       )
     }
 
+  /** Generates values for bamMetricsPage */
+  def bamMetricsPageValues(summary: SummaryDb,
+                           sampleId: Option[Int],
+                           libId: Option[Int],
+                           metricsTag: String = "bammetrics"): Map[String, Any] = {
+    Map("" -> "")
+  }
+
   /** Generates a page with alignment stats */
   def bamMetricsPage(summary: SummaryDb,
                      sampleId: Option[Int],
                      libId: Option[Int],
-                     metricsTag: String = "bammetrics"): Future[ReportPage] = Future {
+                     metricsTag: String = "bammetrics"): Future[ReportPage] = {
+
     val wgsExecuted = summary.getStatsSize(runId,
                                            metricsTag,
                                            "wgs",
@@ -115,45 +122,55 @@ object BammetricsReport extends ReportBuilder {
       case _ => Nil
     }
 
-    ReportPage(
-      if (targets.isEmpty) List()
-      else
+    val covstatsPlotValuesArray = ArrayBuffer[(String, Map[String,Any])]()
+      for (t <- targets) {
+        covstatsPlotValuesArray += Tuple2(t,BammetricsReportPage.covstatsPlotValues(summary, runId, sampleId, libId, Some(t)))
+      }
+
+    val covstatsPlotValuesList = covstatsPlotValuesArray.toList
+
+
+    Future {
+      ReportPage(
+        if (targets.isEmpty) List()
+        else
+          List(
+            "Targets" -> Future.successful(
+              ReportPage(
+                List(),
+                covstatsPlotValuesList.map(covstats =>
+                  covstats._1 -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp",
+                    covstats._2)),
+                Map()))),
         List(
-          "Targets" -> Future.successful(
-            ReportPage(
-              List(),
-              targets.map(t =>
-                t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp",
-                                   Map("target" -> Some(t)))),
-              Map()))),
-      List(
-        "Summary" -> ReportSection(
-          "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        "Mapping Quality" -> ReportSection(
-          "/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp",
-          Map("showPlot" -> true)),
-        "Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp",
-                                    Map("showPlot" -> true))
-      ) ++
-        (if (insertsizeMetrics)
-           List(
-             "Insert Size" -> ReportSection(
-               "/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-               Map("showPlot" -> true)))
-         else Nil) ++ (if (wgsExecuted)
-                         List(
-                           "Whole genome coverage" -> ReportSection(
-                             "/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-                             Map("showPlot" -> true)))
-                       else Nil) ++
-        (if (rnaExecuted)
-           List(
-             "Rna coverage" -> ReportSection(
-               "/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
-               Map("showPlot" -> true)))
-         else Nil),
-      Map("metricsTag" -> metricsTag)
-    )
+          "Summary" -> ReportSection(
+            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
+          "Mapping Quality" -> ReportSection(
+            "/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp",
+            Map("showPlot" -> true)),
+          "Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp",
+                                      Map("showPlot" -> true))
+        ) ++
+          (if (insertsizeMetrics)
+             List(
+               "Insert Size" -> ReportSection(
+                 "/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+                 Map("showPlot" -> true)))
+           else Nil) ++ (if (wgsExecuted)
+                           List(
+                             "Whole genome coverage" -> ReportSection(
+                               "/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+                               Map("showPlot" -> true)))
+                         else Nil) ++
+          (if (rnaExecuted)
+             List(
+               "Rna coverage" -> ReportSection(
+                 "/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
+                 Map("showPlot" -> true)))
+           else Nil),
+        Map("metricsTag" -> metricsTag)
+      )
+    }
   }
 
   /**

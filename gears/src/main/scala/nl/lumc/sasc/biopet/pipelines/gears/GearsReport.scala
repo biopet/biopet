@@ -345,10 +345,10 @@ object GearsReport extends MultisampleReportBuilder {
 
     val flexiprepReportPage =
       if (flexiprepExecuted) {
-        val flexiprepPageSummaries = FlexiprepReport.flexiprepPageSummaries(summary,sampleId,libId)
+        val flexiprepPageSummaries =
+          FlexiprepReport.flexiprepPageSummaries(summary, sampleId, libId)
         Some("QC" -> FlexiprepReport.flexiprepPage(flexiprepPageSummaries))
-      }
-      else None
+      } else None
 
     val centrifugePageAllMappingsKronaPlot = GearsKronaPlot.values(summary,
                                                                    runId,

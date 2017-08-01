@@ -7,6 +7,7 @@
 #import(scala.concurrent.Await)
 #import(scala.concurrent.duration.Duration)
 #import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema)
 #import(java.io.File)
 <%@ var summary: SummaryDb %>
 <%@ var sampleId: Option[Int] %>
@@ -16,17 +17,15 @@
 <%@ var target: Option[String] %>
 <%@ var runId: Int %>
 <%@ var fields: List[String] = List("mean", "median", "max", "horizontal", "frac_min_10x", "frac_min_20x", "frac_min_30x", "frac_min_40x", "frac_min_50x") %>
+<%@ var plotFile: Option[Schema.File] %>
+<%@ var values: Map[String, Option[Any]] %>
 #{
     val moduleName = target.get + "_cov_stats"
 
-    val statsPaths = fields.map(x => x -> List("coverage", "_all", x)).toMap
-    val plotFile = Await.result(summary.getFile(runId, PipelineName(metricsTag), ModuleName(moduleName), sampleId.map(SampleId).get, libId.map(LibraryId).getOrElse(NoLibrary), "plot"), Duration.Inf)
     val originalPlot = new File(plotFile.get.path)
     val plot = new File(outputDir, target.get + "_cov_stats.png")
 
-    val values = summary.getStatKeys(runId, PipelineName(metricsTag), ModuleName(moduleName), sampleId.map(SampleId).get, libId.map(LibraryId).getOrElse(NoLibrary), statsPaths)
-
-    if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
+     if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
 }#
 <img src="${plot.getName}">
 
