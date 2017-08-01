@@ -19,7 +19,7 @@
 <%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%@ var mappingQualityPlotTables: Array[Map[String, Array[Any]]] %>
+<%@ var mappingQualityPlotTables: Option[Array[Map[String, Array[Any]]]] %>
 <%@ var mappingQualityTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
@@ -46,7 +46,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", mappingQualityPlotTables)}#
+    #{ BammetricsReport.mappingQualityPlot(outputDir, "mapping_quality", mappingQualityPlotTables.getOrElse(Array(Map("x" -> Array("")))))}#
 
     <div class="panel-body">
     <img src="mapping_quality.png" class="img-responsive" />

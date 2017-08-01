@@ -19,7 +19,7 @@
 <%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
-<%@ var clippingPlotTables: Array[Map[String, Array[Any]]] %>
+<%@ var clippingPlotTables: Option[Array[Map[String, Array[Any]]]] %>
 <%@ var clippingTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
@@ -46,8 +46,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.clippingPlot(outputDir, "clipping", clippingPlotTables) }#
-
+    #{ BammetricsReport.clippingPlot(outputDir, "clipping", clippingPlotTables.getOrElse(Array(Map("x" -> Array(""))))) }#
     <div class="panel-body">
     <img src="clipping.png" class="img-responsive" />
     </div>

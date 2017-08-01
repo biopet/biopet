@@ -19,6 +19,8 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%@ var insertSizePlotLines: Option[Seq[String]] %>
+<%@ var alignmentSummaryResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
