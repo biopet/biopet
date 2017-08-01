@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.report.{
   ReportPage,
   ReportSection
 }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.{BamMetricsAlignmentReport, BammetricsReport}
+import nl.lumc.sasc.biopet.pipelines.bammetrics.{BammetricsReport, BammetricsReportPage}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.pipelines.gears.GearsKronaPlot
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -124,16 +124,24 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                                                          libraries,
                                                          sampleId,
                                                          libId)
-    val alignmentSummary = BammetricsReport.alignmentReportValues(summary,
-                                                            runId,
-                                                            samples,
-                                                            libraries,
-                                                            sampleId,
-                                                            libId,
-                                                            sampleLevel = true,
-                                                            showPlot = true,
-                                                            showTable = false)
-    val mappingQualitySummary = BammetricsReport.mappingQualityPlotTables(summary)
+    val alignmentReportValues = BammetricsReportPage.alignmentSummaryValues(summary,
+                                                                            runId,
+                                                                            samples,
+                                                                            libraries,
+                                                                            sampleId,
+                                                                            libId,
+                                                                            sampleLevel = true,
+                                                                            showPlot = true,
+                                                                            showTable = false)
+    val mappingQualityReportValues = BammetricsReportPage.mappingQualityValues(summary,
+                                                                               runId,
+                                                                               samples,
+                                                                               libraries,
+                                                                               sampleId,
+                                                                               libId,
+                                                                               sampleLevel = true,
+                                                                               showPlot = true,
+                                                                               showTable = false)
     Future {
       ReportPage(
         List("Samples" -> generateSamplesPage(pageArgs)) ++
@@ -176,10 +184,10 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           List(
             "Alignment" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
-              alignmentSummary),
+              alignmentReportValues),
             "Mapping Quality" -> ReportSection(
               "/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp",
-              Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
+              mappingQualityReportValues),
             "Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp",
                                         Map("sampleLevel" -> true,
                                             "showPlot" -> true,

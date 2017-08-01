@@ -1,4 +1,5 @@
-#import(nl.lumc.sasc.biopet.utils.summary.db.Schema._)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Sample)
+#import(nl.lumc.sasc.biopet.utils.summary.db.Schema.Library)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb._)
 #import(nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._)
@@ -18,6 +19,8 @@
 <%@ var fields: List[String] = List("min", "max", "mean", "median", "modal")%>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%@ var clippingPlotTables: Array[Map[String, Array[Any]]] %>
+<%@ var clippingTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -43,7 +46,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.clippingPlot(outputDir, "clipping", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
+    #{ BammetricsReport.clippingPlot(outputDir, "clipping", clippingPlotTables) }#
 
     <div class="panel-body">
     <img src="clipping.png" class="img-responsive" />
@@ -86,8 +89,7 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val statsPaths = fields.map(x => x -> List("clipping", "general", x)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics", "bamstats", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                    val results: Map[String, Option[Any]] = clippingTableResults(sample.id, libId)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
