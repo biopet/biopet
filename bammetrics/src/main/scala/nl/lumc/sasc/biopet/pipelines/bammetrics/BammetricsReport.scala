@@ -126,10 +126,49 @@ object BammetricsReport extends ReportBuilder {
       for (t <- targets) {
         covstatsPlotValuesArray += Tuple2(t,BammetricsReportPage.covstatsPlotValues(summary, runId, sampleId, libId, Some(t)))
       }
-
     val covstatsPlotValuesList = covstatsPlotValuesArray.toList
 
-
+    val alignmentSummaryReportValues = BammetricsReportPage.alignmentSummaryValues(
+      summary,
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId
+    )
+    val mappingQualityReportValues = BammetricsReportPage.mappingQualityValues(
+      summary,
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId,
+      showPlot = true
+    )
+    val clippingReportValues = BammetricsReportPage.clippingValues(
+      summary,
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId,
+      showPlot= true
+    )
+    val insertSizeReportValues = BammetricsReportPage.insertSizeValues(
+      summary,
+      runId,
+      samples,
+      libraries,
+      sampleId,
+      libId,
+      showPlot= true
+    )
+    val wgsHistogramReportValues = BammetricsReportPage.wgsHistogramValues(
+      summary,runId, samples, libraries, sampleId, libId, showPlot = true
+    )
+    val rnaHistogramReportValues = BammetricsReportPage.rnaHistogramValues(
+      summary,runId, samples, libraries, sampleId, libId, showPlot = true
+    )
     Future {
       ReportPage(
         if (targets.isEmpty) List()
@@ -144,29 +183,29 @@ object BammetricsReport extends ReportBuilder {
                 Map()))),
         List(
           "Summary" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
+            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",alignmentSummaryReportValues),
           "Mapping Quality" -> ReportSection(
             "/nl/lumc/sasc/biopet/pipelines/bammetrics/mappingQuality.ssp",
-            Map("showPlot" -> true)),
+            mappingQualityReportValues),
           "Clipping" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/clipping.ssp",
-                                      Map("showPlot" -> true))
+            clippingReportValues)
         ) ++
           (if (insertsizeMetrics)
              List(
                "Insert Size" -> ReportSection(
                  "/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-                 Map("showPlot" -> true)))
+                 insertSizeReportValues))
            else Nil) ++ (if (wgsExecuted)
                            List(
                              "Whole genome coverage" -> ReportSection(
                                "/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-                               Map("showPlot" -> true)))
+                               wgsHistogramReportValues))
                          else Nil) ++
           (if (rnaExecuted)
              List(
                "Rna coverage" -> ReportSection(
                  "/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
-                 Map("showPlot" -> true)))
+                 rnaHistogramReportValues))
            else Nil),
         Map("metricsTag" -> metricsTag)
       )
