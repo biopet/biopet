@@ -58,7 +58,10 @@ object BammetricsReportPage {
       case Some(id) => allSamples.filter(_.id == id).toList
       case _ => allSamples.toList
     }
-    val mapQualityPlotTables = mappingQualityPlotTables(summary, !sampleLevel, sampleId, libId)
+    val mapQualityPlotTables: Option[Array[Map[String, Array[Any]]]] =
+      if (showPlot)
+        Some(mappingQualityPlotTables(summary, !sampleLevel, sampleId, libId))
+      else None
 
     val statsPaths = fields.map(x => x -> List("mapping_quality", "general", x)).toMap
     val mappingQualityTableResults: Map[(Int, Int), Map[String, Option[Any]]] =
@@ -90,7 +93,11 @@ object BammetricsReportPage {
       case Some(id) => allSamples.filter(_.id == id).toList
       case _ => allSamples.toList
     }
-    val clippingPlotTables = BammetricsReport.clippingPlotTables(summary,!sampleLevel, sampleId, libId)
+    val clippingPlotTables: Option[Array[Map[String, Array[Any]]]] =
+      if (showPlot)
+        Some(BammetricsReport.clippingPlotTables(summary,!sampleLevel, sampleId, libId))
+      else None
+
     val statsPaths = fields.map(x => x -> List("clipping", "general", x)).toMap
     val clippingTableResults = summary.getStatsForLibraries(runId, "bammetrics", "bamstats",sampleId, statsPaths)
     Map(
