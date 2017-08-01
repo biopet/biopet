@@ -19,6 +19,8 @@
 <%@ var fields: List[String] = List("mean_coverage", "pct_5x", "pct_10x", "pct_15x", "pct_20x", "pct_25x", "pct_30x", "pct_40x", "pct_50x", "pct_60x", "pct_70x", "pct_80x", "pct_90x", "pct_100x")%>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%@ var wgsHistogramPlotTables: Option[Array[Map[String, Array[Any]]]] %>
+<%@ var wgsHistogramTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -38,7 +40,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.wgsHistogramPlot(outputDir, "wgs", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
+    #{ BammetricsReport.wgsHistogramPlot(outputDir, "rna", wgsHistogramPlotTables.getOrElse(Array(Map("x" -> Array(""))))) }#
 
     <div class="panel-body">
     <img src="wgs.png" class="img-responsive" />
@@ -78,9 +80,8 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics", "wgs", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
-                    }#
+                        val results = wgsHistogramTableResults(sample.id, libId)
+                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
                     #end

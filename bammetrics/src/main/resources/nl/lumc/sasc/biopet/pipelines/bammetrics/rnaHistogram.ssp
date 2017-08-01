@@ -20,6 +20,8 @@
 <%@ var runId: Int %>
 <%@ var allSamples: Seq[Sample] %>
 <%@ var allLibraries: Seq[Library] %>
+<%@ var rnaHistogramPlotTables: Option[Array[Map[String, Array[Any]]]] %>
+<%@ var rnaHistogramTableResults: Map[(Int, Int), Map[String, Option[Any]]] %>
 #{
     val samples = sampleId match {
     case Some(id) => allSamples.filter(_.id == id).toList
@@ -39,7 +41,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.rnaHistogramPlot(outputDir, "rna", summary, !sampleLevel, sampleId = sampleId, libraryId = libId) }#
+    #{ BammetricsReport.rnaHistogramPlot(outputDir, "rna", rnaHistogramPlotTables.getOrElse(Array(Map("x" -> Array(""))))) }#
 
     <div class="panel-body">
         <img src="rna.png" class="img-responsive" />
@@ -79,8 +81,7 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                        val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
-                        val results = summary.getStatKeys(runId, "bammetrics", "rna", sample = sample.id, library = libId.map(LibraryId).getOrElse(NoLibrary), keyValues = statsPaths)
+                          val results = rnaHistogramTableResults(sample.id, libId)
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>

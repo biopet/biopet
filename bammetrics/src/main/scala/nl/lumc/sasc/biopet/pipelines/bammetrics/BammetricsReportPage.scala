@@ -144,5 +144,71 @@ object BammetricsReportPage {
       "libId" -> libId
     )
   }
+  def rnaHistogramValues(summary: SummaryDb,
+                       runId: Int,
+                       allSamples: Seq[Sample],
+                       allLibraries: Seq[Library],
+                       sampleId: Option[Int],
+                       libId: Option[Int],
+                       fields: List[String] = List("PF_ALIGNED_BASES", "MEDIAN_5PRIME_BIAS", "MEDIAN_3PRIME_BIAS", "MEDIAN_5PRIME_TO_3PRIME_BIAS"),
+                       sampleLevel: Boolean = false,
+                       showPlot: Boolean = false,
+                       showIntro: Boolean = true,
+                       showTable: Boolean = true): Map[String, Any] = {
+
+    val samples = sampleId match {
+      case Some(id) => allSamples.filter(_.id == id).toList
+      case _ => allSamples.toList
+    }
+    val rnaHistogramPlotTables: Option[Array[Map[String, Array[Any]]]] =
+      if (showPlot)
+        Some(BammetricsReport.rnaHistogramPlotTables(summary, !sampleLevel, sampleId, libId))
+      else None
+
+    val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+    val rnaHistogramTableResults = summary.getStatsForLibraries(runId, "bammetrics", "rna", sampleId, statsPaths)
+    Map(
+      "rnaHistogramPlotTables" -> rnaHistogramPlotTables,
+      "rnaHistogramTableResults" -> rnaHistogramTableResults,
+      "showIntro" -> showIntro,
+      "showTable" -> showTable,
+      "showPlot" -> showPlot,
+      "sampleId" -> sampleId,
+      "libId" -> libId
+    )
+  }
+  def wgsHistogramValues(summary: SummaryDb,
+                         runId: Int,
+                         allSamples: Seq[Sample],
+                         allLibraries: Seq[Library],
+                         sampleId: Option[Int],
+                         libId: Option[Int],
+                         fields: List[String] = List("mean_coverage", "pct_5x", "pct_10x", "pct_15x", "pct_20x", "pct_25x", "pct_30x", "pct_40x", "pct_50x", "pct_60x", "pct_70x", "pct_80x", "pct_90x", "pct_100x"),
+                         sampleLevel: Boolean = false,
+                         showPlot: Boolean = false,
+                         showIntro: Boolean = true,
+                         showTable: Boolean = true): Map[String, Any] = {
+
+    val samples = sampleId match {
+      case Some(id) => allSamples.filter(_.id == id).toList
+      case _ => allSamples.toList
+    }
+    val wgsHistogramPlotTables: Option[Array[Map[String, Array[Any]]]] =
+      if (showPlot)
+        Some(BammetricsReport.wgsHistogramPlotTables(summary, !sampleLevel, sampleId, libId))
+      else None
+
+    val statsPaths = fields.map(x => x -> List("metrics", x.toUpperCase)).toMap
+    val wgsHistogramTableResults = summary.getStatsForLibraries(runId, "bammetrics", "wgs", sampleId, statsPaths)
+    Map(
+      "wgsHistogramPlotTables" -> wgsHistogramPlotTables,
+      "wgsHistogramTableResults" -> wgsHistogramTableResults,
+      "showIntro" -> showIntro,
+      "showTable" -> showTable,
+      "showPlot" -> showPlot,
+      "sampleId" -> sampleId,
+      "libId" -> libId
+    )
+  }
 }
 
