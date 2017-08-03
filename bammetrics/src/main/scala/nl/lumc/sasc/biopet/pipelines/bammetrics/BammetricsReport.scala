@@ -50,15 +50,16 @@ object BammetricsReport extends ReportBuilder {
   def pipelineName = "bammetrics"
 
   /** Root page for single BamMetrcis report */
-  def indexPage: Future[ReportPage] =
-    bamMetricsPage(summary, sampleId, libId).map { bamMetricsPage =>
+  def indexPage: Future[ReportPage] ={
+    val bamMetricsValues: (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String) = bamMetricsPageValues(summary, sampleId, libId)
+    bamMetricsPage(bamMetricsValues).map { bamMetricsPage =>
       ReportPage(
         bamMetricsPage.subPages ::: List(
           "Versions" -> Future(
             ReportPage(List(),
-                       List("Executables" -> ReportSection(
-                         "/nl/lumc/sasc/biopet/core/report/executables.ssp")),
-                       Map())),
+              List("Executables" -> ReportSection(
+                "/nl/lumc/sasc/biopet/core/report/executables.ssp")),
+              Map())),
           "Files" -> filesPage(sampleId, libId)
         ),
         List(
@@ -68,12 +69,13 @@ object BammetricsReport extends ReportBuilder {
         Map()
       )
     }
+    }
 
   /** Generates values for bamMetricsPage */
   def bamMetricsPageValues(summary: SummaryDb,
                            sampleId: Option[Int],
                            libId: Option[Int],
-                           metricsTag: String = "bammetrics"): (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]]) = {
+                           metricsTag: String = "bammetrics"): (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String) = {
     val wgsExecuted = summary.getStatsSize(runId,
                                            metricsTag,
                                            "wgs",
