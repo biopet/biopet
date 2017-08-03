@@ -73,7 +73,7 @@ object BammetricsReport extends ReportBuilder {
   def bamMetricsPageValues(summary: SummaryDb,
                            sampleId: Option[Int],
                            libId: Option[Int],
-                           metricsTag: String = "bammetrics"): Map[String, Any] = {
+                           metricsTag: String = "bammetrics"): (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]]) = {
     val wgsExecuted = summary.getStatsSize(runId,
                                            metricsTag,
                                            "wgs",
@@ -174,128 +174,42 @@ object BammetricsReport extends ReportBuilder {
       libId,
       showPlot = true
     )
+
+    Tuple5(
     Map(
       "wgsExecuted" -> wgsExecuted,
       "rnaExecuted" -> rnaExecuted,
-      "insertsizeMetrics" -> insertsizeMetrics,
-      "targetSettings" -> targetSettings,
-      "covstatsPlotValuesList" -> covstatsPlotValuesList,
+      "insertsizeMetrics" -> insertsizeMetrics),
+      Map("targets" -> targets),
+      Map("covstatsPlotValuesList" -> covstatsPlotValuesList),
+      Map(
       "alignmentSummaryReportValues" -> alignmentSummaryReportValues,
+        "mappingQualityReportValues" -> mappingQualityReportValues,
       "clippingReportValues" -> clippingReportValues,
       "insertSizeReportValues" -> insertSizeReportValues,
       "wgsHistogramReportValues" -> wgsHistogramReportValues,
       "rnaHistogramReportValues" -> rnaHistogramReportValues
+    ),
+      metricsTag
     )
 
   }
 
   /** Generates a page with alignment stats */
-  def bamMetricsPage(summary: SummaryDb,
-                     sampleId: Option[Int],
-                     libId: Option[Int],
-                     metricsTag: String = "bammetrics"): Future[ReportPage] = {
+  def bamMetricsPage(bamMetricsPageValues:(Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String)): Future[ReportPage] = {
 
-    val wgsExecuted: Boolean = summary.getStatsSize(runId,
-                                                    metricsTag,
-                                                    "wgs",
-                                                    sample = sampleId.map(SampleId),
-                                                    library = libId.map(LibraryId)) >= 1
-    val rnaExecuted: Boolean = summary.getStatsSize(runId,
-                                                    metricsTag,
-                                                    "rna",
-                                                    sample = sampleId.map(SampleId),
-                                                    library = libId.map(LibraryId)) >= 1
-
-    val insertsizeMetrics: Boolean = summary
-      .getStatKeys(
-        runId,
-        metricsTag,
-        "CollectInsertSizeMetrics",
-        sampleId.map(SampleId).getOrElse(NoSample),
-        libId.map(LibraryId).getOrElse(NoLibrary),
-        Map("metrics" -> List("metrics"))
-      )
-      .exists(_._2.isDefined)
-
-    val targetSettings: Map[String, Option[Any]] = summary.getSettingKeys(
-      runId,
-      metricsTag,
-      NoModule,
-      sample = sampleId.map(SampleId).getOrElse(NoSample),
-      library = libId.map(LibraryId).getOrElse(NoLibrary),
-      Map("amplicon_name" -> List("amplicon_name"), "roi_name" -> List("roi_name"))
-    )
-    val targets = (
-      targetSettings("amplicon_name"),
-      targetSettings("roi_name")
-    ) match {
-      case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
-      case (_, Some(roi: List[_])) => roi.map(_.toString)
-      case _ => Nil
-    }
-
-    val covstatsPlotValuesArray = ArrayBuffer[(String, Map[String, Any])]()
-    for (t <- targets) {
-      covstatsPlotValuesArray += Tuple2(
-        t,
-        BammetricsReportPage.covstatsPlotValues(summary, runId, sampleId, libId, Some(t)))
-    }
-    val covstatsPlotValuesList: List[(String, Map[String, Any])] = covstatsPlotValuesArray.toList
-
-    val alignmentSummaryReportValues: Map[String, Any] =
-      BammetricsReportPage.alignmentSummaryValues(
-        summary,
-        runId,
-        samples,
-        libraries,
-        sampleId,
-        libId
-      )
-    val mappingQualityReportValues: Map[String, Any] = BammetricsReportPage.mappingQualityValues(
-      summary,
-      runId,
-      samples,
-      libraries,
-      sampleId,
-      libId,
-      showPlot = true
-    )
-    val clippingReportValues: Map[String, Any] = BammetricsReportPage.clippingValues(
-      summary,
-      runId,
-      samples,
-      libraries,
-      sampleId,
-      libId,
-      showPlot = true
-    )
-    val insertSizeReportValues: Map[String, Any] = BammetricsReportPage.insertSizeValues(
-      summary,
-      runId,
-      samples,
-      libraries,
-      sampleId,
-      libId,
-      showPlot = true
-    )
-    val wgsHistogramReportValues: Map[String, Any] = BammetricsReportPage.wgsHistogramValues(
-      summary,
-      runId,
-      samples,
-      libraries,
-      sampleId,
-      libId,
-      showPlot = true
-    )
-    val rnaHistogramReportValues: Map[String, Any] = BammetricsReportPage.rnaHistogramValues(
-      summary,
-      runId,
-      samples,
-      libraries,
-      sampleId,
-      libId,
-      showPlot = true
-    )
+    val wgsExecuted = bamMetricsPageValues._1("wgsExecuted")
+    val rnaExecuted = bamMetricsPageValues._1("rnaExecuted")
+    val insertsizeMetrics = bamMetricsPageValues._1("insertsizeMetrics")
+    val targets = bamMetricsPageValues._2("targets")
+    val covstatsPlotValuesList = bamMetricsPageValues._3("covstatsPlotValuesList")
+    val alignmentSummaryReportValues = bamMetricsPageValues._4("alignmentSummaryReportValues")
+    val mappingQualityReportValues = bamMetricsPageValues._4("mappingQualityReportValues")
+    val clippingReportValues = bamMetricsPageValues._4("clippingReportValues")
+    val insertSizeReportValues = bamMetricsPageValues._4("insertSizeReportValues")
+    val wgsHistogramReportValues = bamMetricsPageValues._4("wgsHistogramReportValues")
+    val rnaHistogramReportValues = bamMetricsPageValues._4("rnaHistogramReportValues")
+    val metricsTag = bamMetricsPageValues._5
     Future {
       ReportPage(
         if (targets.isEmpty) List()
