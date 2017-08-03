@@ -50,7 +50,7 @@ object MappingReport extends ReportBuilder {
       .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   /** Root page for single BamMetrcis report */
-  def indexPage: Future[ReportPage] = Future {
+  def indexPage: Future[ReportPage] = {
     val mappingSettings = summary.getSettingKeys(
       runId,
       "mapping",
@@ -61,13 +61,16 @@ object MappingReport extends ReportBuilder {
         Map("skip_flexiprep" -> List("skip_flexiprep"), "skip_metrics" -> List("skip_metrics"))
     )
     val skipFlexiprep = mappingSettings.get("skip_flexiprep").flatten.getOrElse(false) == true
+    val bamMetricsPageValues = BammetricsReport.bamMetricsPageValues(summary,sampleId,libId)
+    val flexiprepReportPageValues = FlexiprepReport.flexiprepPageSummaries(summary, sampleId.get, libId.get)
     val bamMetricsPage =
       if (mappingSettings.get("skip_metrics").flatten.getOrElse(false) == false) {
-        Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
+        Some(BammetricsReport.bamMetricsPage(bamMetricsPageValues))
       } else None
-    ReportPage(
+  Future {
+  ReportPage(
       (if (skipFlexiprep) Nil
-       else List("QC" -> FlexiprepReport.flexiprepPage(summary, sampleId.get, libId.get))) :::
+       else List("QC" -> FlexiprepReport.flexiprepPage(flexiprepReportPageValues))) :::
         bamMetricsPage.map(_.subPages).getOrElse(Nil),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/mappingFront.ssp")
@@ -75,4 +78,5 @@ object MappingReport extends ReportBuilder {
       Map()
     )
   }
+}
 }
