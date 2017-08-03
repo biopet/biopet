@@ -98,10 +98,10 @@
                         "Duplicates" -> List("flagstats", "Duplicates"),
                         "NotPrimaryAlignment" -> List("flagstats", "NotPrimaryAlignment")
                         )
-                        val total = alignmentSummaryResults(sample.id,libId)("All").getOrElse(0L).asInstanceOf[Long]
-                        val mapped = alignmentSummaryResults(sample.id, libId)("Mapped").getOrElse(0L).asInstanceOf[Long]
-                        val duplicates = alignmentSummaryResults(sample.id,libId)("Duplicates").getOrElse(0L).asInstanceOf[Long]
-                        val secondary = alignmentSummaryResults(sample.id,libId)("NotPrimaryAlignment").getOrElse(0L).asInstanceOf[Long]
+                        val total = alignmentSummaryResults((sample.id,libId.get))("All").getOrElse(0L).asInstanceOf[Long]
+                        val mapped = alignmentSummaryResults((sample.id, libId.get))("Mapped").getOrElse(0L).asInstanceOf[Long]
+                        val duplicates = alignmentSummaryResults((sample.id,libId.get))("Duplicates").getOrElse(0L).asInstanceOf[Long]
+                        val secondary = alignmentSummaryResults((sample.id,libId.get))("NotPrimaryAlignment").getOrElse(0L).asInstanceOf[Long]
                     }#
                     <td>${total}</td>
                     <td>${mapped}</td>

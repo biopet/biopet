@@ -88,7 +88,7 @@
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample.name}/Libraries/${libName}/index.html">${libName}</a></td> #end
                     #{
-                    val results: Map[String, Option[Any]] = clippingTableResults(sample.id, libId)
+                    val results: Map[String, Option[Any]] = clippingTableResults((sample.id,libId.get))
                     }#
                     #for (field <- fields)
                         <td>${results(field)}</td>
