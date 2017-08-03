@@ -50,16 +50,20 @@ object BammetricsReport extends ReportBuilder {
   def pipelineName = "bammetrics"
 
   /** Root page for single BamMetrcis report */
-  def indexPage: Future[ReportPage] ={
-    val bamMetricsValues: (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String) = bamMetricsPageValues(summary, sampleId, libId)
+  def indexPage: Future[ReportPage] = {
+    val bamMetricsValues: (Map[String, Boolean],
+                           Map[String, List[String]],
+                           Map[String, List[(String, Map[String, Any])]],
+                           Map[String, Map[String, Any]],
+                           String) = bamMetricsPageValues(summary, sampleId, libId)
     bamMetricsPage(bamMetricsValues).map { bamMetricsPage =>
       ReportPage(
         bamMetricsPage.subPages ::: List(
           "Versions" -> Future(
             ReportPage(List(),
-              List("Executables" -> ReportSection(
-                "/nl/lumc/sasc/biopet/core/report/executables.ssp")),
-              Map())),
+                       List("Executables" -> ReportSection(
+                         "/nl/lumc/sasc/biopet/core/report/executables.ssp")),
+                       Map())),
           "Files" -> filesPage(sampleId, libId)
         ),
         List(
@@ -69,13 +73,18 @@ object BammetricsReport extends ReportBuilder {
         Map()
       )
     }
-    }
+  }
 
   /** Generates values for bamMetricsPage */
-  def bamMetricsPageValues(summary: SummaryDb,
-                           sampleId: Option[Int],
-                           libId: Option[Int],
-                           metricsTag: String = "bammetrics"): (Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String) = {
+  def bamMetricsPageValues(
+      summary: SummaryDb,
+      sampleId: Option[Int],
+      libId: Option[Int],
+      metricsTag: String = "bammetrics"): (Map[String, Boolean],
+                                           Map[String, List[String]],
+                                           Map[String, List[(String, Map[String, Any])]],
+                                           Map[String, Map[String, Any]],
+                                           String) = {
     val wgsExecuted = summary.getStatsSize(runId,
                                            metricsTag,
                                            "wgs",
@@ -178,27 +187,31 @@ object BammetricsReport extends ReportBuilder {
     )
 
     Tuple5(
-    Map(
-      "wgsExecuted" -> wgsExecuted,
-      "rnaExecuted" -> rnaExecuted,
-      "insertsizeMetrics" -> insertsizeMetrics),
+      Map("wgsExecuted" -> wgsExecuted,
+          "rnaExecuted" -> rnaExecuted,
+          "insertsizeMetrics" -> insertsizeMetrics),
       Map("targets" -> targets),
       Map("covstatsPlotValuesList" -> covstatsPlotValuesList),
       Map(
-      "alignmentSummaryReportValues" -> alignmentSummaryReportValues,
+        "alignmentSummaryReportValues" -> alignmentSummaryReportValues,
         "mappingQualityReportValues" -> mappingQualityReportValues,
-      "clippingReportValues" -> clippingReportValues,
-      "insertSizeReportValues" -> insertSizeReportValues,
-      "wgsHistogramReportValues" -> wgsHistogramReportValues,
-      "rnaHistogramReportValues" -> rnaHistogramReportValues
-    ),
+        "clippingReportValues" -> clippingReportValues,
+        "insertSizeReportValues" -> insertSizeReportValues,
+        "wgsHistogramReportValues" -> wgsHistogramReportValues,
+        "rnaHistogramReportValues" -> rnaHistogramReportValues
+      ),
       metricsTag
     )
 
   }
 
   /** Generates a page with alignment stats */
-  def bamMetricsPage(bamMetricsPageValues:(Map[String, Boolean], Map[String, List[String]], Map[String, List[(String, Map[String, Any])]], Map[String, Map[String, Any]], String)): Future[ReportPage] = {
+  def bamMetricsPage(
+      bamMetricsPageValues: (Map[String, Boolean],
+                             Map[String, List[String]],
+                             Map[String, List[(String, Map[String, Any])]],
+                             Map[String, Map[String, Any]],
+                             String)): Future[ReportPage] = {
 
     val wgsExecuted = bamMetricsPageValues._1("wgsExecuted")
     val rnaExecuted = bamMetricsPageValues._1("rnaExecuted")

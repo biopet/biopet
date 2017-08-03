@@ -342,7 +342,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       FlexiprepReadSummary.values(summary, runId, samples, libraries, sampleId, libId)
     val flexiprepBaseSummary =
       FlexiprepBaseSummary.values(summary, runId, samples, libraries, sampleId, libId)
-    val bamMetricsReportValues = BammetricsReport.bamMetricsPageValues(summary, Some(sampleId), libId)
+    val bamMetricsReportValues =
+      BammetricsReport.bamMetricsPageValues(summary, Some(sampleId), libId)
 
     Future {
       ReportPage(
@@ -419,13 +420,55 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                                                                 mustHaveLibrary = true),
                                            Duration.Inf) >= 1
       val flexiprepPageSummaries = FlexiprepReport.flexiprepPageSummaries(summary, sampleId, libId)
-      val bamMetricsReportValues = BammetricsReport.bamMetricsPageValues(summary, Some(sampleId), Some(libId))
-      val centrifugeAllMappingsReportValues = GearsKronaPlot.values(summary, runId, "gearscentrifuge","centrifuge_report",samples,libraries,Some(sampleId),Some(libId), centrifugeTag = Some("centrifuge"))
-      val centrifugeUniqueMappingsReportValues = GearsKronaPlot.values(summary, runId, "gearscentrifuge","centrifuge_unique_report",samples,libraries,Some(sampleId),Some(libId), centrifugeTag = Some("centrifuge"))
-      val krakenDustbinAnalysisReportValues = GearsKronaPlot.values(summary, runId, "gearskraken","krakenreport",samples,libraries,Some(sampleId),Some(libId))
-      val alignmentSummaryReportValues = BammetricsReportPage.alignmentSummaryValues(summary,runId,samples,libraries,Some(sampleId),Some(libId))
-      val flexiprepReadSummaryReportValues = FlexiprepReadSummary.values(summary, runId, samples, libraries, Some(sampleId),Some(libId))
-      val flexiprepBaseSummaryReportValues = FlexiprepBaseSummary.values(summary, runId, samples, libraries, Some(sampleId),Some(libId))
+      val bamMetricsReportValues =
+        BammetricsReport.bamMetricsPageValues(summary, Some(sampleId), Some(libId))
+      val centrifugeAllMappingsReportValues = GearsKronaPlot.values(summary,
+                                                                    runId,
+                                                                    "gearscentrifuge",
+                                                                    "centrifuge_report",
+                                                                    samples,
+                                                                    libraries,
+                                                                    Some(sampleId),
+                                                                    Some(libId),
+                                                                    centrifugeTag =
+                                                                      Some("centrifuge"))
+      val centrifugeUniqueMappingsReportValues = GearsKronaPlot.values(summary,
+                                                                       runId,
+                                                                       "gearscentrifuge",
+                                                                       "centrifuge_unique_report",
+                                                                       samples,
+                                                                       libraries,
+                                                                       Some(sampleId),
+                                                                       Some(libId),
+                                                                       centrifugeTag =
+                                                                         Some("centrifuge"))
+      val krakenDustbinAnalysisReportValues = GearsKronaPlot.values(summary,
+                                                                    runId,
+                                                                    "gearskraken",
+                                                                    "krakenreport",
+                                                                    samples,
+                                                                    libraries,
+                                                                    Some(sampleId),
+                                                                    Some(libId))
+      val alignmentSummaryReportValues = BammetricsReportPage.alignmentSummaryValues(
+        summary,
+        runId,
+        samples,
+        libraries,
+        Some(sampleId),
+        Some(libId))
+      val flexiprepReadSummaryReportValues = FlexiprepReadSummary.values(summary,
+                                                                         runId,
+                                                                         samples,
+                                                                         libraries,
+                                                                         Some(sampleId),
+                                                                         Some(libId))
+      val flexiprepBaseSummaryReportValues = FlexiprepBaseSummary.values(summary,
+                                                                         runId,
+                                                                         samples,
+                                                                         libraries,
+                                                                         Some(sampleId),
+                                                                         Some(libId))
       Future {
         ReportPage(
           ("Alignment" -> BammetricsReport.bamMetricsPage(bamMetricsReportValues)) ::
@@ -443,7 +486,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                List("Unique mappings" -> ReportSection(
                  "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
                  centrifugeUniqueMappingsReportValues)),
-               Map("summaryPipelineName" -> "gearscentrifuge", "centrifugeTag" -> Some("centrifuge"))
+               Map("summaryPipelineName" -> "gearscentrifuge",
+                   "centrifugeTag" -> Some("centrifuge"))
              )))
            else
              Nil) ::: (if (krakenExecuted)
@@ -451,17 +495,21 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
                            "Dustbin analysis" -> Future.successful(
                              ReportPage(List(),
                                         List("Krona Plot" -> ReportSection(
-                                          "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",krakenDustbinAnalysisReportValues)),
+                                          "/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+                                          krakenDustbinAnalysisReportValues)),
                                         Map())))
                        else Nil),
           "Alignment" -> ReportSection(
-            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", alignmentSummaryReportValues) ::
+            "/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
+            alignmentSummaryReportValues) ::
             (if (flexiprepExecuted)
              List(
                "QC reads" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",flexiprepReadSummaryReportValues),
+                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+                 flexiprepReadSummaryReportValues),
                "QC bases" -> ReportSection(
-                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp", flexiprepBaseSummaryReportValues)
+                 "/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+                 flexiprepBaseSummaryReportValues)
              )
            else Nil),
           args
