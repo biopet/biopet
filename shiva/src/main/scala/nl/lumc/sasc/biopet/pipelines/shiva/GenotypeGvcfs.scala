@@ -40,7 +40,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     val genotype = new gatk.GenotypeGVCFs(this)
     genotype.variant = if (inputGvcfs.size > 1) {
       val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
-      combineJob.allJobs.foreach(add(_))
+      combineJob.allJobs.filter(job => job.group.nonEmpty || !job.isIntermediate).foreach(add(_))
       combineJob.job.variant
     } else {
       inputGvcfs.headOption.foreach { file =>
@@ -54,7 +54,10 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     add(genotype)
   }
 
-  class CombineJob(outputFile: File, outputDir: File, allInput: List[File], group: List[Int] = Nil) {
+  private class CombineJob(val outputFile: File,
+                           val outputDir: File,
+                           val allInput: List[File],
+                           val group: List[Int] = Nil) {
     val job: gatk.CombineGVCFs = new gatk.CombineGVCFs(qscript)
     job.out = outputFile
     job.isIntermediate = group.nonEmpty || !writeFinalGvcfFile
