@@ -64,11 +64,10 @@ object VcfStats extends ToolCommand {
       .asInstanceOf[URLClassLoader]
       .getURLs
       .map(_.getFile)
-    val conf = new SparkConf()
-      .set("spark.executor.memory", cmdArgs.sparkExecutorMemory.getOrElse(""))
+    val conf = cmdArgs.sparkExecutorMemory.toList.foldLeft(new SparkConf()
       .setAppName(commandName)
       .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
-      .setJars(jars)
+      .setJars(jars)) (_.set("spark.executor.memory", _))
     val sc = new SparkContext(conf)
     logger.info("Spark context is up")
 
