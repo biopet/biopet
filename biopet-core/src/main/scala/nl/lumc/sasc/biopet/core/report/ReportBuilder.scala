@@ -138,9 +138,6 @@ trait ReportBuilder extends ToolCommand {
   /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
 
-  private var done = 0
-  private var total = 0
-
   private var _sampleId: Option[Int] = None
   protected[report] def sampleId: Option[Int] = _sampleId
   private var _libId: Option[Int] = None
@@ -219,9 +216,6 @@ trait ReportBuilder extends ToolCommand {
       x.copy(subPages = x.subPages ::: generalPages(sampleId, libId))
     }
 
-    //    total = ReportBuilder.countPages(rootPage)
-    done = 0
-
     logger.info("Generate pages")
     val jobsFutures = generatePage(
       summary,
@@ -234,30 +228,10 @@ trait ReportBuilder extends ToolCommand {
             "runId" -> cmdArgs.runId)
     )
 
-    total = jobsFutures.size
-    logger.info(total + " pages to be generated")
-
-    def wait(futures: List[Future[Any]]): Unit = {
-      try {
-        Await.result(Future.sequence(futures), Duration.fromNanos(30000000000L))
-      } catch {
-        case _: TimeoutException =>
-      }
-      val notDone = futures.filter(!_.isCompleted)
-      done += futures.size - notDone.size
-      if (notDone.nonEmpty) {
-        logger.info(s"$done / $total pages are generated")
-        wait(notDone)
-      }
-    }
-
-    //jobsFutures.foreach(f => f.onFailure{ case e => throw new RuntimeException(e) })
-
-    wait(jobsFutures)
-    Await.result(Future.sequence(jobsFutures), Duration.Inf)
     Await.result(baseFilesFuture, Duration.Inf)
+    Await.result(jobsFutures, Duration.Inf)
 
-    logger.info(s"Done, $done pages generated")
+    logger.info(s"Done")
   }
 
   /** This must be implemented, this will be the root page of the report */
@@ -280,7 +254,7 @@ trait ReportBuilder extends ToolCommand {
                    pageFuture: Future[ReportPage],
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): List[Future[ReportPage]] = {
+                   args: Map[String, Any] = Map()): Future[List[ReportPage]] = {
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
 
     def pageArgs(page: ReportPage) = {
@@ -324,7 +298,10 @@ trait ReportBuilder extends ToolCommand {
       page
     }
 
-    renderFuture :: Await.result(subPageJobs, Duration.Inf)
+    for {
+      f1 <- subPageJobs
+      f2 <- renderFuture
+    } yield f2 :: f1
   }
 
   def pipelineName: String
@@ -335,15 +312,15 @@ trait ReportBuilder extends ToolCommand {
       .getFiles(runId, sample = sampleId.map(SampleId), library = libraryId.map(LibraryId))
       .map(_.groupBy(_.pipelineId))
     val modulePages = dbFiles.map(_.map {
-      case (pipelineId, files) =>
-        val moduleSections = files.groupBy(_.moduleId).map {
-          case (moduleId, files) =>
+      case (pipelineId, pFiles) =>
+        val moduleSections = pFiles.groupBy(_.moduleId).map {
+          case (moduleId, mFiles) =>
             val moduleName: Future[String] = moduleId match {
               case Some(id) => summary.getModuleName(pipelineId, id).map(_.getOrElse("Pipeline"))
               case _ => Future.successful("Pipeline")
             }
             moduleName.map(_ -> ReportSection("/nl/lumc/sasc/biopet/core/report/files.ssp",
-                                              Map("files" -> files)))
+                                              Map("files" -> mFiles)))
         }
         val moduleSectionsSorted = moduleSections.find(_._1 == "Pipeline") ++ moduleSections
           .filter(_._1 != "Pipeline")
