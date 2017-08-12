@@ -209,7 +209,7 @@ object VcfFilter extends ToolCommand {
           denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
           resToDom(record, cmdArgs.resToDom) &&
           trioCompound(record, cmdArgs.trioCompound) &&
-          advanceGroupFilter(record, cmdArgs.advancedGroups) &&
+          advancedGroupFilter(record, cmdArgs.advancedGroups) &&
           (cmdArgs.iDset.isEmpty || inIdSet(record, cmdArgs.iDset))) {
         writer.add(record)
         counterLeft += 1
