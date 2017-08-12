@@ -261,4 +261,17 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     inIdSet(record, Set("dummy")) shouldBe false
   }
 
+  @Test def testAdvancedGroup(): Unit = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    advancedGroupFilter(record, Nil) shouldBe true
+    advancedGroupFilter(record, List(List("Sample_101", "Sample_102"))) shouldBe true
+    advancedGroupFilter(record, List(List("Sample_102", "Sample_103"))) shouldBe false
+    advancedGroupFilter(
+      record,
+      List(List("Sample_102", "Sample_103"), List("Sample_101", "Sample_102"))) shouldBe false
+    advancedGroupFilter(record, List(List("Sample_102"), List("Sample_101", "Sample_102"))) shouldBe true
+  }
+
 }

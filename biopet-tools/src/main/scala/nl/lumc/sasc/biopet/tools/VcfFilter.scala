@@ -61,7 +61,8 @@ object VcfFilter extends ToolCommand {
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   iDset: Set[String] = Set(),
-                  minGenomeQuality: Int = 0)
+                  minGenomeQuality: Int = 0,
+                  advancedGroups: List[List[String]] = Nil)
 
   class OptParser extends AbstractOptParser[Args](commandName) {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -153,6 +154,9 @@ object VcfFilter extends ToolCommand {
     opt[Int]("minGenomeQuality") unbounded () action { (x, c) =>
       c.copy(minGenomeQuality = x)
     }
+    opt[String]("advancedGroups") unbounded () action { (x, c) =>
+      c.copy(advancedGroups = x.split(",").toList :: c.advancedGroups)
+    } text "All members of groups sprated with a ','"
   }
 
   /** @param args the command line arguments */
@@ -205,6 +209,7 @@ object VcfFilter extends ToolCommand {
           denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
           resToDom(record, cmdArgs.resToDom) &&
           trioCompound(record, cmdArgs.trioCompound) &&
+          advancedGroupFilter(record, cmdArgs.advancedGroups) &&
           (cmdArgs.iDset.isEmpty || inIdSet(record, cmdArgs.iDset))) {
         writer.add(record)
         counterLeft += 1
@@ -443,5 +448,25 @@ object VcfFilter extends ToolCommand {
   /** Returns true when VCF record contains a ID from the given list */
   def inIdSet(record: VariantContext, idSet: Set[String]): Boolean = {
     record.getID.split(",").exists(idSet.contains)
+  }
+
+  /**
+    * returns true when for all groups all or none members have a variants,
+    * records with partial groups are discarded
+    */
+  def advancedGroupFilter(record: VariantContext, groups: List[List[String]]): Boolean = {
+    val samples = record.getGenotypes
+      .map(a => a.getSampleName -> (a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a)))
+      .toMap
+
+    val g: List[Option[Boolean]] = groups.map { group =>
+      val total = group.size
+      val count = group.count(samples(_))
+      if (count == 0) Some(false)
+      else if (total == count) Some(true)
+      else None
+    }
+
+    !g.contains(None)
   }
 }
