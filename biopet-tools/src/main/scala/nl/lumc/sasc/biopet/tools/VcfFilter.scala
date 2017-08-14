@@ -196,7 +196,7 @@ object VcfFilter extends ToolCommand {
           minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
           minGenomeQuality(record, cmdArgs.minGenomeQuality, cmdArgs.minSamplesPass) &&
           (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
-          (cmdArgs.mustNotHaveVariant.isEmpty || !mustHaveVariant(record,
+          (cmdArgs.mustNotHaveVariant.isEmpty || !mustNotHaveVariant(record,
                                                                   cmdArgs.mustNotHaveVariant)) &&
           calledIn(record, cmdArgs.calledIn) &&
           hasGenotype(record, cmdArgs.mustHaveGenotype) &&
@@ -359,6 +359,25 @@ object VcfFilter extends ToolCommand {
       .map(record.getGenotype)
       .exists(a => a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a))
   }
+
+  /**
+    * Checks if given samples does have a variant hin this record
+    *
+    * @param record VCF record
+    * @param samples List of samples that should have this variant
+    * @return true if filter passed
+    */
+  def mustNotHaveVariant(record: VariantContext, samples: List[String]): Boolean = {
+    samples.foreach { s =>
+      if (!record.getSampleNames.toList.contains(s)) {
+        throw new IllegalArgumentException(s"Sample name $s does not exist in VCF file")
+      }
+    }
+    samples
+      .map(record.getGenotype)
+      .forall(a => a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a))
+  }
+
 
   /** Checks if given samples have the same genotype */
   def notSameGenotype(record: VariantContext, sample1: String, sample2: String): Boolean = {
