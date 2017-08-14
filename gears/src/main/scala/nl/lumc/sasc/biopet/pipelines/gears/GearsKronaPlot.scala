@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.utils.summary.db.Schema.{Library, Sample}
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb
 import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.{ModuleName, SampleId}
+import nl.lumc.sasc.biopet.utils.summary.db.SummaryDb.Implicts._
 
 object GearsKronaPlot {
   def values(summary: SummaryDb,
