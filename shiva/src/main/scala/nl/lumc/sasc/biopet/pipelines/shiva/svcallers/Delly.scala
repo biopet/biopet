@@ -60,7 +60,7 @@ class Delly(val parent: Configurable) extends SvCaller {
       if (del) dellyCaller("DEL", "del")
       if (dup) dellyCaller("DUP", "dup")
       if (inv) dellyCaller("INV", "inv")
-      if (inv) dellyCaller("INS", "ins")
+      if (ins) dellyCaller("INS", "ins")
       if (bnd) dellyCaller("BND", "tra")
 
       if (mergeVariants.input.isEmpty)
