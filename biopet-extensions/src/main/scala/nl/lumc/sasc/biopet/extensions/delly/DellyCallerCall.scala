@@ -38,7 +38,7 @@ class DellyCallerCall(val parent: Configurable)
   override def defaultCoreMemory = 4.0
 
   def versionCommand: String = versionexecutable.getAbsolutePath
-  def versionRegex: Regex = """D(ELLY|elly) \(Version: (.*)\)""".r
+  def versionRegex: Regex = """D[eE][lL][lL][yY] \(Version: (.*)\)""".r
   override def versionExitcode = List(0, 1)
   @Input(doc = "Input file (bam)")
   var input: File = _
