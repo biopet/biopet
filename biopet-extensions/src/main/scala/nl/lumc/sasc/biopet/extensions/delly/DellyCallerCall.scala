@@ -34,7 +34,6 @@ class DellyCallerCall(val parent: Configurable)
 
   private lazy val versionexecutable: File = new File(executable)
 
-  override def defaultThreads = 1
   override def defaultCoreMemory = 4.0
 
   def versionCommand: String = versionexecutable.getAbsolutePath
