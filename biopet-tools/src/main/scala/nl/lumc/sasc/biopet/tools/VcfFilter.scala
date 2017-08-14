@@ -50,6 +50,7 @@ object VcfFilter extends ToolCommand {
                   minAlternateDepth: Int = -1,
                   minSamplesPass: Int = 1,
                   mustHaveVariant: List[String] = Nil,
+                  mustNotHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
                   mustHaveGenotype: List[(String, GenotypeType)] = Nil,
                   uniqueVariantInSample: String = null,
@@ -103,6 +104,9 @@ object VcfFilter extends ToolCommand {
     opt[String]("mustHaveVariant") unbounded () valueName "<sample>" action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
     } text "Given sample must have 1 alternative allele"
+    opt[String]("mustNotHaveVariant") unbounded () valueName "<sample>" action { (x, c) =>
+      c.copy(mustNotHaveVariant = x :: c.mustNotHaveVariant)
+    } text "Given sample may not have alternative alleles"
     opt[String]("calledIn") unbounded () valueName "<sample>" action { (x, c) =>
       c.copy(calledIn = x :: c.calledIn)
     } text "Must be called in this sample"
@@ -192,6 +196,8 @@ object VcfFilter extends ToolCommand {
           minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
           minGenomeQuality(record, cmdArgs.minGenomeQuality, cmdArgs.minSamplesPass) &&
           (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
+          (cmdArgs.mustNotHaveVariant.isEmpty || !mustHaveVariant(record,
+                                                                  cmdArgs.mustNotHaveVariant)) &&
           calledIn(record, cmdArgs.calledIn) &&
           hasGenotype(record, cmdArgs.mustHaveGenotype) &&
           (cmdArgs.diffGenotype.isEmpty || cmdArgs.diffGenotype.forall(x =>
