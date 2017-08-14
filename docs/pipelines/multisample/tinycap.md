@@ -23,7 +23,7 @@ Count tables are generated per sample and an aggregation per (run)project is cre
 biopet pipelines tinycap [options] \
 -config `<path-to>/settings_tinycap.yml`
 -config `<path-to>/sample_sheet.yml` \
--l DEBUG -qsub -jobParaEnv BWA -run
+-qsub -jobParaEnv BWA -run
 ```
 
 ## Example
