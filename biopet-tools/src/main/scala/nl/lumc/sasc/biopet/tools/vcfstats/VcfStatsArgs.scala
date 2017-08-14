@@ -23,6 +23,7 @@ case class VcfStatsArgs(inputFile: File = null,
                         writeBinStats: Boolean = false,
                         localThreads: Int = 1,
                         sparkMaster: Option[String] = None,
+                        sparkExecutorMemory: Option[String] = None,
                         contigSampleOverlapPlots: Boolean = false)
 
 /**
@@ -79,4 +80,7 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   opt[String]("sparkMaster") unbounded () action { (x, c) =>
     c.copy(sparkMaster = Some(x))
   } text s"Spark master to use"
+  opt[String]("sparkExecutorMemory") unbounded () action { (x, c) =>
+    c.copy(sparkExecutorMemory = Some(x))
+  } text s"Spark executor memory to use"
 }

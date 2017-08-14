@@ -21,6 +21,8 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
   @Input(required = true, shortName = "V")
   var inputGvcfs: List[File] = Nil
 
+  val writeFinalGvcfFile: Boolean = config("writeFinalGvcfFile", default = true)
+
   var namePrefix: String = config("name_prefix", default = "multisample")
 
   val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
@@ -29,31 +31,36 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
   def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
 
   /** Init for pipeline */
-  def init(): Unit = {}
+  def init(): Unit = {
+    inputGvcfs.foreach(inputFiles :+= InputFile(_))
+  }
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    inputGvcfs.foreach(inputFiles :+= InputFile(_))
-
-    if (inputGvcfs.size > 1) {
+    val genotype = new gatk.GenotypeGVCFs(this)
+    genotype.variant = if (inputGvcfs.size > 1) {
       val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
-      combineJob.allJobs.foreach(add(_))
-    } else
+      combineJob.allJobs.filter(job => job.group.nonEmpty || !job.isIntermediate).foreach(add(_))
+      combineJob.job.variant
+    } else {
       inputGvcfs.headOption.foreach { file =>
         add(Ln(this, file, finalGvcfFile))
         add(Ln(this, file + ".tbi", finalGvcfFile + ".tbi"))
       }
+      Seq(finalGvcfFile)
+    }
 
-    val genotype = new gatk.GenotypeGVCFs(this)
-    genotype.variant = List(finalGvcfFile)
     genotype.out = finalVcfFile
     add(genotype)
   }
 
-  class CombineJob(outputFile: File, outputDir: File, allInput: List[File], group: List[Int] = Nil) {
+  private class CombineJob(val outputFile: File,
+                           val outputDir: File,
+                           val allInput: List[File],
+                           val group: List[Int] = Nil) {
     val job: gatk.CombineGVCFs = new gatk.CombineGVCFs(qscript)
     job.out = outputFile
-    job.isIntermediate = group.nonEmpty
+    job.isIntermediate = group.nonEmpty || !writeFinalGvcfFile
     val subJobs: ListBuffer[CombineJob] = ListBuffer()
     val groupedInput: List[List[File]] = makeEqualGroups(allInput)
     if (groupedInput.size == 1) job.variant = groupedInput.head
