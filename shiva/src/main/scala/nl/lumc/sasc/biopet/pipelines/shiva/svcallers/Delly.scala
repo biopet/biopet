@@ -39,10 +39,10 @@ class Delly(val parent: Configurable) extends SvCaller {
       val mergeVariants = new MergeVcfs(this)
       mergeVariants.output = new File(dellyDir, sample + ".delly.vcf.gz")
 
-      def dellyCaller(analysistype: String, outputName: String): Unit = {
+      def dellyCaller(analysisType: String, outputName: String): Unit = {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = analysistype
+        delly.analysistype = analysisType
         delly.isIntermediate = true
         delly.outputbcf = new File(dellyDir, sample + s".delly.$outputName.bcf")
         add(delly)
