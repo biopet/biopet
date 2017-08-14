@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsMerge
 import nl.lumc.sasc.biopet.extensions.delly.DellyCallerCall
-import nl.lumc.sasc.biopet.extensions.picard.SortVcf
+import nl.lumc.sasc.biopet.extensions.picard.{MergeVcfs, SortVcf}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -36,10 +36,8 @@ class Delly(val parent: Configurable) extends SvCaller {
       val dellyDir = new File(outputDir, sample)
 
       // Use bcftools merge to merge the bcf files. Output is an uncompressed vcf
-      val mergeVariants = new BcftoolsMerge(this)
-      mergeVariants.output = new File(dellyDir, sample + ".delly.vcf")
-      mergeVariants.m = Some("id")
-      mergeVariants.forcesamples = true
+      val mergeVariants = new MergeVcfs(this)
+      mergeVariants.output = new File(dellyDir, sample + ".delly.vcf.gz")
 
       if (del) {
         val delly = new DellyCallerCall(this)
@@ -98,12 +96,7 @@ class Delly(val parent: Configurable) extends SvCaller {
 
       add(mergeVariants)
 
-      val compressedVCF = new SortVcf(this)
-      compressedVCF.input = mergeVariants.output
-      compressedVCF.output = mergeVariants.output + ".gz"
-      add(compressedVCF)
-
-      addVCF(sample, compressedVCF.output)
+      addVCF(sample, mergeVariants.output)
     }
   }
 }
