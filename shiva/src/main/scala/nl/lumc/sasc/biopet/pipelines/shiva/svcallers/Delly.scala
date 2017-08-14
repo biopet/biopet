@@ -44,53 +44,53 @@ class Delly(val parent: Configurable) extends SvCaller {
       if (del) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "DEL"
+        delly.analysisType = "DEL"
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.del.bcf")
+        delly.outputBcf = new File(dellyDir, sample + ".delly.del.bcf")
         add(delly)
 
         // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= delly.outputBcf
       }
       if (dup) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "DUP"
+        delly.analysisType = "DUP"
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.dup.bcf")
+        delly.outputBcf = new File(dellyDir, sample + ".delly.dup.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= delly.outputBcf
       }
       if (inv) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "INV"
+        delly.analysisType = "INV"
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.inv.bcf")
+        delly.outputBcf = new File(dellyDir, sample + ".delly.inv.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= delly.outputBcf
       }
       if (ins) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "INS"
+        delly.analysisType = "INS"
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.ins.bcf")
+        delly.outputBcf = new File(dellyDir, sample + ".delly.ins.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= delly.outputBcf
       }
       if (bnd) {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "BND"
+        delly.analysisType = "BND"
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.tra.bcf")
+        delly.outputBcf = new File(dellyDir, sample + ".delly.tra.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= delly.outputBcf
       }
 
       if (mergeVariants.input.isEmpty)
