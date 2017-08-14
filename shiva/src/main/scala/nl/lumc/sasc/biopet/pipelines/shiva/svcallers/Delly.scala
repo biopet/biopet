@@ -39,91 +39,29 @@ class Delly(val parent: Configurable) extends SvCaller {
       val mergeVariants = new MergeVcfs(this)
       mergeVariants.output = new File(dellyDir, sample + ".delly.vcf.gz")
 
-      if (del) {
+      def dellyCaller(analysistype: String, outputName: String): Unit = {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = "DEL"
+        delly.analysistype = analysistype
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.del.bcf")
+        delly.outputbcf = new File(dellyDir, sample + s".delly.$outputName.bcf")
         add(delly)
 
         val view = new BcftoolsView(this)
         view.input = delly.outputbcf
-        view.output = new File(dellyDir, sample + ".delly.del.vcf.gz")
+        view.output = new File(dellyDir, sample + s".delly.$outputName.vcf.gz")
         view.outputType = "z"
         add(view)
 
         // bcf files must to be concatenated with bcftools merge
         mergeVariants.input :+= view.output
       }
-      if (dup) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysistype = "DUP"
-        delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.dup.bcf")
-        add(delly)
 
-        val view = new BcftoolsView(this)
-        view.input = delly.outputbcf
-        view.output = new File(dellyDir, sample + ".delly.dup.vcf.gz")
-        view.outputType = "z"
-        add(view)
-
-        // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= view.output
-      }
-      if (inv) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysistype = "INV"
-        delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.inv.bcf")
-        add(delly)
-
-        val view = new BcftoolsView(this)
-        view.input = delly.outputbcf
-        view.output = new File(dellyDir, sample + ".delly.inv.vcf.gz")
-        view.outputType = "z"
-        add(view)
-
-        // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= view.output
-      }
-      if (ins) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysistype = "INS"
-        delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.ins.bcf")
-        add(delly)
-
-        val view = new BcftoolsView(this)
-        view.input = delly.outputbcf
-        view.output = new File(dellyDir, sample + ".delly.ins.vcf.gz")
-        view.outputType = "z"
-        add(view)
-
-        // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= view.output
-      }
-      if (bnd) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysistype = "BND"
-        delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + ".delly.tra.bcf")
-        add(delly)
-
-        val view = new BcftoolsView(this)
-        view.input = delly.outputbcf
-        view.output = new File(dellyDir, sample + ".delly.tra.vcf.gz")
-        view.outputType = "z"
-        add(view)
-
-        // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= view.output
-      }
+      if (del) dellyCaller("DEL", "del")
+      if (dup) dellyCaller("DUP", "dup")
+      if (inv) dellyCaller("INV", "inv")
+      if (inv) dellyCaller("INS", "ins")
+      if (bnd) dellyCaller("BND", "tra")
 
       if (mergeVariants.input.isEmpty)
         Logging.addError("At least 1 SV-type should be selected for Delly")
