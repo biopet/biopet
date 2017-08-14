@@ -196,8 +196,9 @@ object VcfFilter extends ToolCommand {
           minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
           minGenomeQuality(record, cmdArgs.minGenomeQuality, cmdArgs.minSamplesPass) &&
           (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
-          (cmdArgs.mustNotHaveVariant.isEmpty || !mustNotHaveVariant(record,
-                                                                  cmdArgs.mustNotHaveVariant)) &&
+          (cmdArgs.mustNotHaveVariant.isEmpty || !mustNotHaveVariant(
+            record,
+            cmdArgs.mustNotHaveVariant)) &&
           calledIn(record, cmdArgs.calledIn) &&
           hasGenotype(record, cmdArgs.mustHaveGenotype) &&
           (cmdArgs.diffGenotype.isEmpty || cmdArgs.diffGenotype.forall(x =>
@@ -377,7 +378,6 @@ object VcfFilter extends ToolCommand {
       .map(record.getGenotype)
       .forall(a => a.isHomRef || a.isNoCall || VcfUtils.isCompoundNoCall(a))
   }
-
 
   /** Checks if given samples have the same genotype */
   def notSameGenotype(record: VariantContext, sample1: String, sample2: String): Boolean = {
