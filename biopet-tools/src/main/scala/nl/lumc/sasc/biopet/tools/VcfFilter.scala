@@ -196,9 +196,8 @@ object VcfFilter extends ToolCommand {
           minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
           minGenomeQuality(record, cmdArgs.minGenomeQuality, cmdArgs.minSamplesPass) &&
           (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
-          (cmdArgs.mustNotHaveVariant.isEmpty || !mustNotHaveVariant(
-            record,
-            cmdArgs.mustNotHaveVariant)) &&
+          (cmdArgs.mustNotHaveVariant.isEmpty || mustNotHaveVariant(record,
+                                                                    cmdArgs.mustNotHaveVariant)) &&
           calledIn(record, cmdArgs.calledIn) &&
           hasGenotype(record, cmdArgs.mustHaveGenotype) &&
           (cmdArgs.diffGenotype.isEmpty || cmdArgs.diffGenotype.forall(x =>
