@@ -136,7 +136,7 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
     )
   }
 
-  def baseCmd: String = {
+  def cmdLine: String = {
     executable +
       required("view") +
       conditional(dropGenotype, "-G") +
@@ -170,19 +170,9 @@ class BcftoolsView(val parent: Configurable) extends Bcftools {
       optional("-v", types) +
       optional("-V", excludeTypes) +
       conditional(onlyPrivate, "-x") +
-      conditional(excludePrivate, "-X")
-  }
-
-  def cmdPipeInput: String = {
-    baseCmd + "-"
-  }
-
-  def cmdPipe: String = {
-    baseCmd + required(input)
-  }
-
-  def cmdLine: String = {
-    baseCmd + required("-o", output) + required(input)
+      conditional(excludePrivate, "-X") +
+      (if (outputAsStdout) "" else required("-o", output)) +
+      (if (inputAsStdin) "-" else required(input))
   }
 
   /**

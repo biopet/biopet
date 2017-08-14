@@ -14,7 +14,7 @@
   */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsMerge
+import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsMerge, BcftoolsView}
 import nl.lumc.sasc.biopet.extensions.delly.DellyCallerCall
 import nl.lumc.sasc.biopet.extensions.picard.{MergeVcfs, SortVcf}
 import nl.lumc.sasc.biopet.utils.Logging
@@ -47,8 +47,14 @@ class Delly(val parent: Configurable) extends SvCaller {
         delly.outputbcf = new File(dellyDir, sample + ".delly.del.bcf")
         add(delly)
 
+        val view = new BcftoolsView(this)
+        view.input = delly.outputbcf
+        view.output = new File(dellyDir, sample + ".delly.del.vcf.gz")
+        view.outputType = "z"
+        add(view)
+
         // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= delly.outputbcf
+        mergeVariants.input :+= view.output
       }
       if (dup) {
         val delly = new DellyCallerCall(this)
@@ -58,7 +64,14 @@ class Delly(val parent: Configurable) extends SvCaller {
         delly.outputbcf = new File(dellyDir, sample + ".delly.dup.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        val view = new BcftoolsView(this)
+        view.input = delly.outputbcf
+        view.output = new File(dellyDir, sample + ".delly.dup.vcf.gz")
+        view.outputType = "z"
+        add(view)
+
+        // bcf files must to be concatenated with bcftools merge
+        mergeVariants.input :+= view.output
       }
       if (inv) {
         val delly = new DellyCallerCall(this)
@@ -68,7 +81,14 @@ class Delly(val parent: Configurable) extends SvCaller {
         delly.outputbcf = new File(dellyDir, sample + ".delly.inv.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        val view = new BcftoolsView(this)
+        view.input = delly.outputbcf
+        view.output = new File(dellyDir, sample + ".delly.inv.vcf.gz")
+        view.outputType = "z"
+        add(view)
+
+        // bcf files must to be concatenated with bcftools merge
+        mergeVariants.input :+= view.output
       }
       if (ins) {
         val delly = new DellyCallerCall(this)
@@ -78,7 +98,14 @@ class Delly(val parent: Configurable) extends SvCaller {
         delly.outputbcf = new File(dellyDir, sample + ".delly.ins.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        val view = new BcftoolsView(this)
+        view.input = delly.outputbcf
+        view.output = new File(dellyDir, sample + ".delly.ins.vcf.gz")
+        view.outputType = "z"
+        add(view)
+
+        // bcf files must to be concatenated with bcftools merge
+        mergeVariants.input :+= view.output
       }
       if (bnd) {
         val delly = new DellyCallerCall(this)
@@ -88,7 +115,14 @@ class Delly(val parent: Configurable) extends SvCaller {
         delly.outputbcf = new File(dellyDir, sample + ".delly.tra.bcf")
         add(delly)
 
-        mergeVariants.input :+= delly.outputbcf
+        val view = new BcftoolsView(this)
+        view.input = delly.outputbcf
+        view.output = new File(dellyDir, sample + ".delly.tra.vcf.gz")
+        view.outputType = "z"
+        add(view)
+
+        // bcf files must to be concatenated with bcftools merge
+        mergeVariants.input :+= view.output
       }
 
       if (mergeVariants.input.isEmpty)
