@@ -77,7 +77,7 @@ class Bowtie(val parent: Configurable)
       }
     }
     if (R2.nonEmpty && maxins.isEmpty) {
-      Logging.addError(
+      logger.warn(
         "The parameter 'maxins' that specifies the maximum allowed insert size, is missing in the configuration. Please note that Bowtie won't align reads coming from inserts longer than this value.")
     }
   }
