@@ -17,7 +17,7 @@ and the following quantification modes:
 | ---- | ---------- | -------- |
 | FragmentsPerGene | fragments_per_gene | Fragment counts per gene (using HTSeq-count) |
 | BaseCounts | base_counts | Base counts per gene/transcript/exons |
-| Stringtie | stringtie |  | 
+| StringTie | stringtie | StringTie is an assembler of RNA-Seq alignments into potential transcripts. For more, refer [StringTie web page](http://ccb.jhu.edu/software/stringtie/index.shtml) | 
 | CufflinksStrict | cufflinks_strict |  | 
 | CufflinksGuided | cufflinks_guided |  | 
 | CufflinksBlind | cufflinks_blind |  | 
@@ -73,7 +73,7 @@ For the pipeline settings, there are some values that you need to specify while 
 | - | output_dir | String | - | Path to output directory (if it does not exist, Gentrap will create it for you) |
 | mapping | aligner | String | - | Aligner of choice. (`gsnap`, `tophat`, `hisat2`, `star`, `star-2pass`) `star-2pass` enables the 2-pass mapping option of STAR, for the most sensitive novel junction discovery. For more, please refer to [STAR user Manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) |
 | mapping | reference_fasta | String | | this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file. If the `.dict` file does not exist, you can create it using: ```` java -jar <picard jar> CreateSequenceDictionary R=<reference.fasta> O=<outputDict> ```` |
-| gentrap | expression_measures | String | |this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`). |
+| gentrap | expression_measures | String | |this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided`, `cufflinks_blind` and `stringtie`. If you only wish to align, you can set the value as an empty list (`[]`). |
 | gentrap | strand_protocol | String | |this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols. |
 | gentrap | annotation_reffat | String | | contains the path to an annotation refFlat file of the entire genome |
 
