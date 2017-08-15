@@ -84,7 +84,7 @@ object VcfStats extends ToolCommand {
       .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
       .cache()
 
-    val totalStats = Future(regionStats.aggregate(Stats.emptyStats(samples))(_ += _._1, _ += _))
+    val totalStats = Future(regionStats.toLocalIterator.foldLeft(Stats.emptyStats(samples))(_ += _._1))
       .map(
         _.writeAllOutput(cmdArgs.outputDir,
                          samples,
