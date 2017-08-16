@@ -42,8 +42,8 @@ class Stringtie(val parent: Configurable) extends QScript with Measurement with 
         val stringtieCount = new StringtieTool(this)
         stringtieCount.inputBam = file
         stringtieCount.l = Some(id)
-        stringtieCount.referenceGtf = Some(annotationGtf)
-        stringtieCount.outputGtf = stringtieMergedTranscripts
+        stringtieCount.referenceGtf = Some(stringtieMergedTranscripts)
+        stringtieCount.outputGtf = new File(sampleDir, s"$id.merged.gtf")
         stringtieCount.geneAbundances = Some(new File(sampleDir, s"$id.merged.gene_abund.tab"))
         stringtieCount.referenceCoverage = Some(new File(sampleDir, s"$id.merged.cov_refs.gtf"))
         stringtieCount.e = true
