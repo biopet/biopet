@@ -79,35 +79,45 @@ object VcfStats extends ToolCommand {
     }).combineOverlap
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
 
-    val regionStats = sc
+    val rdd = sc
       .parallelize(regions, regions.size)
-      .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-      .cache()
-
-    val totalStats = Future(regionStats.toLocalIterator.foldLeft(Stats.emptyStats(samples))(_ += _._1))
-      .map(
-        _.writeAllOutput(cmdArgs.outputDir,
-                         samples,
-                         adGenotypeTags,
-                         adInfoTags,
-                         sampleDistributions,
-                         None))
-
-    regionStats
-      .flatMap(_._2)
-      .aggregateByKey(Stats.emptyStats(samples))(_ += _, _ += _)
-      .foreach {
-        case (k, v) =>
-          v.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + k),
-                           samples,
-                           adGenotypeTags,
-                           adInfoTags,
-                           sampleDistributions,
-                           Some(k))
+      .map("total" -> readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .aggregateByKey((Stats.emptyStats(samples), Map[String, Stats]()))(
+        {
+          case (a, b) =>
+            (a._1 += b._1,
+             b._2.foldLeft(a._2)((x, y) =>
+               x ++ Map(y._1 -> (x.getOrElse(y._1, Stats.emptyStats(samples)) += y._2))))
+        }, {
+          case (a, b) =>
+            (a._1 += b._1,
+             b._2.foldLeft(a._2)((x, y) =>
+               x ++ Map(y._1 -> (x.getOrElse(y._1, Stats.emptyStats(samples)) += y._2))))
+        }
+      )
+      .map {
+        case (_, (total, contigs)) =>
+          val totalFuture = Future(
+            total.writeAllOutput(cmdArgs.outputDir,
+                                 samples,
+                                 adGenotypeTags,
+                                 adInfoTags,
+                                 sampleDistributions,
+                                 None))
+          val futures = contigs.map(
+            x =>
+              Future(
+                x._2.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + x._1),
+                                    samples,
+                                    adGenotypeTags,
+                                    adInfoTags,
+                                    sampleDistributions,
+                                    Some(x._1))))
+          Await.result(Future.sequence(futures), Duration.Inf)
+          Await.result(totalFuture, Duration.Inf)
       }
-    regionStats.unpersist()
 
-    Await.result(totalStats, Duration.Inf)
+    rdd.toLocalIterator.size
 
     val completeStatsJson = regions
       .flatMap(_.map(_.chr))
