@@ -81,7 +81,7 @@ object VcfStats extends ToolCommand {
 
     val rdd = sc
       .parallelize(regions, regions.size)
-      .map("total" -> readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
       .aggregateByKey((Stats.emptyStats(samples), Map[String, Stats]()))(
         {
           case (a, b) =>
@@ -97,13 +97,6 @@ object VcfStats extends ToolCommand {
       )
       .map {
         case (_, (total, contigs)) =>
-          val totalFuture = Future(
-            total.writeAllOutput(cmdArgs.outputDir,
-                                 samples,
-                                 adGenotypeTags,
-                                 adInfoTags,
-                                 sampleDistributions,
-                                 None))
           val futures = contigs.map(
             x =>
               Future(
@@ -114,10 +107,16 @@ object VcfStats extends ToolCommand {
                                     sampleDistributions,
                                     Some(x._1))))
           Await.result(Future.sequence(futures), Duration.Inf)
-          Await.result(totalFuture, Duration.Inf)
+          "total" -> total
       }
-
-    rdd.toLocalIterator.size
+      .aggregateByKey(Stats.emptyStats(samples))(_ += _, _ += _)
+      .foreach(
+        _._2.writeAllOutput(cmdArgs.outputDir,
+                            samples,
+                            adGenotypeTags,
+                            adInfoTags,
+                            sampleDistributions,
+                            None))
 
     val completeStatsJson = regions
       .flatMap(_.map(_.chr))
@@ -140,7 +139,7 @@ object VcfStats extends ToolCommand {
               samples: List[String],
               cmdArgs: Args,
               adInfoTags: List[String],
-              adGenotypeTags: List[String]): (Stats, List[(String, Stats)]) = {
+              adGenotypeTags: List[String]): (Option[String], (Stats, List[(String, Stats)])) = {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val totalStats = Stats.emptyStats(samples)
     val dict = FastaUtils.getDictFromFasta(cmdArgs.referenceFile)
@@ -193,7 +192,14 @@ object VcfStats extends ToolCommand {
     }
     reader.close()
 
-    (totalStats, Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten)
+    val bla = Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten
+
+    val key =
+      if (bla.size == 1) Some(bla.head._1)
+      else if (bla.size > 1) Some("")
+      else None
+
+    key -> (totalStats, Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten)
   }
 
   val defaultGenotypeFields =
