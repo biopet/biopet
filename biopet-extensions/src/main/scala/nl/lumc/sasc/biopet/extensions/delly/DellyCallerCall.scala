@@ -34,11 +34,10 @@ class DellyCallerCall(val parent: Configurable)
 
   private lazy val versionexecutable: File = new File(executable)
 
-  override def defaultThreads = 1
   override def defaultCoreMemory = 4.0
 
   def versionCommand: String = versionexecutable.getAbsolutePath
-  def versionRegex: Regex = """D(ELLY|elly) \(Version: (.*)\)""".r
+  def versionRegex: Regex = """D[eE][lL][lL][yY] \(Version: (.*)\)""".r
   override def versionExitcode = List(0, 1)
   @Input(doc = "Input file (bam)")
   var input: File = _
@@ -47,10 +46,10 @@ class DellyCallerCall(val parent: Configurable)
   var reference: File = _
 
   @Output(doc = "Delly BCF output")
-  var outputbcf: File = _
+  var outputBcf: File = _
 
   @Argument(doc = " SV type: DEL, DUP, INV, BND, INS")
-  var analysistype: String = _
+  var analysisType: String = _
 
   // Rest of available arguments for the call command of delly
   var fileformat: Option[String] = config("fileformat")
@@ -67,8 +66,8 @@ class DellyCallerCall(val parent: Configurable)
   def cmdLine: String =
     required(executable) +
       required("call") +
-      required("-t", analysistype) + // SV type (DEL, DUP, INV, BND, INS)
-      required("-o", outputbcf) + // delly BCF output
+      required("-t", analysisType) + // SV type (DEL, DUP, INV, BND, INS)
+      required("-o", outputBcf) + // delly BCF output
       required("-g", reference) + // reference file, on which the reads are aligned
       required(input) // BAM file with the alignments
 

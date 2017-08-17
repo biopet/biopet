@@ -38,21 +38,32 @@ class Stringtie(val parent: Configurable) extends QScript with Measurement with 
         stringtie.geneAbundances = Some(new File(sampleDir, s"$id.gene_abund.tab"))
         stringtie.referenceCoverage = Some(new File(sampleDir, s"$id.cov_refs.gtf"))
         add(stringtie)
+
+        val stringtieCount = new StringtieTool(this)
+        stringtieCount.inputBam = file
+        stringtieCount.l = Some(id)
+        stringtieCount.referenceGtf = Some(stringtieMergedTranscripts)
+        stringtieCount.outputGtf = new File(sampleDir, s"$id.merged.gtf")
+        stringtieCount.geneAbundances = Some(new File(sampleDir, s"$id.merged.gene_abund.tab"))
+        stringtieCount.referenceCoverage = Some(new File(sampleDir, s"$id.merged.cov_refs.gtf"))
+        stringtieCount.e = true
+        add(stringtieCount)
+
         stringtie.outputGtf
     }.toList
 
     val stringtieMerge = new StringtieMerge(this)
     stringtieMerge.inputGtfs = sampleGtfFiles
     stringtieMerge.referenceGtf = Some(annotationGtf)
-    stringtieMerge.outputGtf = stringtieMergeOutput
+    stringtieMerge.outputGtf = stringtieMergedTranscripts
     add(stringtieMerge)
 
     addSummaryJobs()
   }
 
-  def stringtieMergeOutput: File = new File(outputDir, "stringtie.merged.gtf")
+  def stringtieMergedTranscripts: File = new File(outputDir, "stringtie.merged.gtf")
 
   override def summaryFiles: Map[String, File] =
     super.summaryFiles ++ Map("annotation_gtf" -> annotationGtf,
-                              "stringtie_merged" -> stringtieMergeOutput)
+                              "stringtie_merged" -> stringtieMergedTranscripts)
 }

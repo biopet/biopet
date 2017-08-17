@@ -42,13 +42,13 @@ class Delly(val parent: Configurable) extends SvCaller {
       def dellyCaller(analysisType: String, outputName: String): Unit = {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysistype = analysisType
+        delly.analysisType = analysisType
         delly.isIntermediate = true
-        delly.outputbcf = new File(dellyDir, sample + s".delly.$outputName.bcf")
+        delly.outputBcf = new File(dellyDir, sample + s".delly.$outputName.bcf")
         add(delly)
 
         val view = new BcftoolsView(this)
-        view.input = delly.outputbcf
+        view.input = delly.outputBcf
         view.output = new File(dellyDir, sample + s".delly.$outputName.vcf.gz")
         view.outputType = "z"
         add(view)
