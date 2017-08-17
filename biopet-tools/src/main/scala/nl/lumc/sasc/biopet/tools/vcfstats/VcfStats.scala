@@ -11,9 +11,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -31,6 +28,7 @@ object VcfStats extends ToolCommand {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
+    val dict = FastaUtils.getCachedDict(cmdArgs.referenceFile)
 
     reader.close()
 
@@ -80,44 +78,39 @@ object VcfStats extends ToolCommand {
     }).combineOverlap
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
 
-    val rdd = sc
+    val statsRdd = sc
       .parallelize(regions, regions.size)
-      .map(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-      .aggregateByKey((Stats.emptyStats(samples), Map[String, Stats]()))(
-        {
-          case (a, b) =>
-            (a._1 += b._1,
-             b._2.foldLeft(a._2)((x, y) =>
-               x ++ Map(y._1 -> (x.getOrElse(y._1, Stats.emptyStats(samples)) += y._2))))
-        }, {
-          case (a, b) =>
-            (a._1 += b._1,
-             b._2.foldLeft(a._2)((x, y) =>
-               x ++ Map(y._1 -> (x.getOrElse(y._1, Stats.emptyStats(samples)) += y._2))))
-        }
-      )
+      .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+
+    val contigsRdd = statsRdd
+      .foldByKey(Stats.emptyStats(samples))(_ += _)
+      .coalesce(dict.size(), shuffle = true)
+
+    val totalRdd = contigsRdd
       .map {
-        case (_, (total, contigs)) =>
-          val futures = contigs.map(
-            x =>
-              Future(
-                x._2.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + x._1),
-                                    samples,
-                                    adGenotypeTags,
-                                    adInfoTags,
-                                    sampleDistributions,
-                                    Some(x._1))))
-          Await.result(Future.sequence(futures), Duration.Inf)
-          "total" -> total
+        case (contig, stats) =>
+          stats.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + contig),
+                               samples,
+                               adGenotypeTags,
+                               adInfoTags,
+                               sampleDistributions,
+                               Some(contig))
+          "total" -> stats
       }
-      .aggregateByKey(Stats.emptyStats(samples))(_ += _, _ += _)
-      .foreach(
-        _._2.writeAllOutput(cmdArgs.outputDir,
-                            samples,
-                            adGenotypeTags,
-                            adInfoTags,
-                            sampleDistributions,
-                            None))
+      .foldByKey(Stats.emptyStats(samples))(_ += _)
+      .map {
+        case (_, stats) =>
+          stats.writeAllOutput(cmdArgs.outputDir,
+                               samples,
+                               adGenotypeTags,
+                               adInfoTags,
+                               sampleDistributions,
+                               None)
+      }
+      .coalesce(1, shuffle = true)
+      .cache()
+
+    totalRdd.count()
 
     val completeStatsJson = regions
       .flatMap(_.map(_.chr))
@@ -183,37 +176,15 @@ object VcfStats extends ToolCommand {
                samples: List[String],
                cmdArgs: Args,
                adInfoTags: List[String],
-               adGenotypeTags: List[String]): (Option[String], (Stats, List[(String, Stats)])) = {
+               adGenotypeTags: List[String]): List[(String, Stats)] = {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
-    val totalStats = Stats.emptyStats(samples)
-    val dict = FastaUtils.getDictFromFasta(cmdArgs.referenceFile)
 
-    val nonCompleteContigs = for (bedRecord <- bedRecords) yield {
-      val stats = readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader)
-      totalStats += stats
-      if (bedRecord.length == dict.getSequence(bedRecord.chr).getSequenceLength) {
-        Future {
-          stats.writeAllOutput(
-            new File(cmdArgs.outputDir, "contigs" + File.separator + bedRecord.chr),
-            samples,
-            adGenotypeTags,
-            adInfoTags,
-            sampleDistributions,
-            Some(bedRecord.chr))
-          None
-        }
-      } else Future.successful(Some(bedRecord.chr -> stats))
+    val stats = for (bedRecord <- bedRecords) yield {
+      bedRecord.chr -> readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader)
     }
     reader.close()
 
-    val bla = Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten
-
-    val key =
-      if (bla.size == 1) Some(bla.head._1)
-      else if (bla.size > 1) Some("")
-      else None
-
-    key -> (totalStats, Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten)
+    stats
   }
 
   val defaultGenotypeFields =
