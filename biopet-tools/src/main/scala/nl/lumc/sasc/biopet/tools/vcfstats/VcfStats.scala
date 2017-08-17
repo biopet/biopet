@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.File
 import java.net.URLClassLoader
 
+import argonaut._
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
@@ -11,6 +12,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -28,7 +31,6 @@ object VcfStats extends ToolCommand {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
-    val dict = FastaUtils.getCachedDict(cmdArgs.referenceFile)
 
     reader.close()
 
@@ -77,6 +79,7 @@ object VcfStats extends ToolCommand {
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
+    val contigs = regions.flatMap(_.map(_.chr))
 
     val statsRdd = sc
       .parallelize(regions, regions.size)
@@ -84,46 +87,40 @@ object VcfStats extends ToolCommand {
 
     val contigsRdd = statsRdd
       .foldByKey(Stats.emptyStats(samples))(_ += _)
-      .coalesce(dict.size(), shuffle = true)
+      .coalesce(contigs.size(), shuffle = true)
+      .cache()
 
     val totalRdd = contigsRdd
-      .map {
-        case (contig, stats) =>
-          stats.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + contig),
-                               samples,
-                               adGenotypeTags,
-                               adInfoTags,
-                               sampleDistributions,
-                               Some(contig))
-          "total" -> stats
-      }
+      .map("total" -> _._2)
       .foldByKey(Stats.emptyStats(samples))(_ += _)
       .map {
         case (_, stats) =>
-          stats.writeAllOutput(cmdArgs.outputDir,
-                               samples,
-                               adGenotypeTags,
-                               adInfoTags,
-                               sampleDistributions,
-                               None)
+          val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
+          val outputFile = new File(cmdArgs.outputDir, "total.json")
+          IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
+          json
       }
       .coalesce(1, shuffle = true)
       .cache()
 
-    totalRdd.count()
+    val contigJsons = contigsRdd.map {
+      case (contig, stats) =>
+        val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
+        val outputFile =
+          new File(cmdArgs.outputDir,
+                   "contigs" + File.separator + contig + File.separator + s"$contig.json")
+        outputFile.getParentFile.mkdirs()
+        IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
+        contig -> json
+    }
 
-    val completeStatsJson = regions
-      .flatMap(_.map(_.chr))
-      .foldLeft(ConfigUtils.fileToConfigMap(new File(cmdArgs.outputDir, "total.json"))) {
-        case (map, contig) =>
-          val contigMap = ConfigUtils.fileToConfigMap(
-            new File(cmdArgs.outputDir,
-                     "contigs" + File.separator + contig + File.separator + s"$contig.json"))
-          ConfigUtils.mergeMaps(map, contigMap)
-      }
+    val totalJsonFuture = totalRdd.collectAsync()
+    val contigsJsonsFuture = contigJsons.collectAsync()
+
+    val result = Json.obj("total" -> Await.result(totalJsonFuture, Duration.Inf).head, "contigs" -> Json.obj(Await.result(contigsJsonsFuture, Duration.Inf):_*))
 
     IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"),
-                             ConfigUtils.mapToJson(completeStatsJson).nospaces :: Nil)
+      result.nospaces :: Nil)
 
     sc.stop
     logger.info("Done")
