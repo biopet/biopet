@@ -81,11 +81,9 @@ object VcfStats extends ToolCommand {
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
     val contigs = regions.flatMap(_.map(_.chr))
 
-    val statsRdd = sc
+    val contigsRdd = sc
       .parallelize(regions, regions.size)
       .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-
-    val contigsRdd = statsRdd
       .foldByKey(Stats.emptyStats(samples))(_ += _)
       .repartition(contigs.size)
       .cache()
@@ -94,14 +92,16 @@ object VcfStats extends ToolCommand {
       .map("total" -> _._2)
       .foldByKey(Stats.emptyStats(samples))(_ += _)
       .repartition(1)
-      .map {
-        case (_, stats) =>
-          val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
-          val outputFile = new File(cmdArgs.outputDir, "total.json")
-          IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
-          json
-      }
       .cache()
+
+    val totalJson = totalRdd.map {
+      case (_, stats) =>
+        val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
+        val outputFile = new File(cmdArgs.outputDir, "total.json")
+        stats.writeOverlap(cmdArgs.outputDir, samples)
+        IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
+        json
+    }
 
     val contigJsons = contigsRdd.map {
       case (contig, stats) =>
@@ -110,11 +110,12 @@ object VcfStats extends ToolCommand {
           new File(cmdArgs.outputDir,
                    "contigs" + File.separator + contig + File.separator + s"$contig.json")
         outputFile.getParentFile.mkdirs()
+        stats.writeOverlap(outputFile.getParentFile, samples)
         IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
         contig -> json
     }
 
-    val totalJsonFuture = totalRdd.collectAsync()
+    val totalJsonFuture = totalJson.collectAsync()
     val contigsJsonsFuture =
       if (!cmdArgs.notWriteContigStats) contigJsons.collectAsync()
       else {
