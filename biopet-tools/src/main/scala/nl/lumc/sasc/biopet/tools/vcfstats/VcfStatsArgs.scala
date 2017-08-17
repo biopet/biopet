@@ -23,7 +23,10 @@ case class VcfStatsArgs(inputFile: File = null,
                         writeBinStats: Boolean = false,
                         localThreads: Int = 1,
                         sparkMaster: Option[String] = None,
-                        sparkConfigValues: Map[String, String] = Map(),
+                        sparkConfigValues: Map[String, String] = Map(
+                          "spark.memory.fraction" -> "0.8",
+                          "spark.memory.storageFraction" -> "0.2"
+                        ),
                         contigSampleOverlapPlots: Boolean = false)
 
 /**
