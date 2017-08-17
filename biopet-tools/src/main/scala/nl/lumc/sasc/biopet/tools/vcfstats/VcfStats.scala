@@ -66,6 +66,7 @@ object VcfStats extends ToolCommand {
       .map(_.getFile)
     val conf = cmdArgs.sparkConfigValues.foldLeft(
       new SparkConf()
+        .setExecutorEnv(sys.env.toArray)
         .setAppName(commandName)
         .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
         .setJars(jars))((a, b) => a.set(b._1, b._2))
