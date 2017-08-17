@@ -117,10 +117,11 @@ object VcfStats extends ToolCommand {
     val totalJsonFuture = totalRdd.collectAsync()
     val contigsJsonsFuture = contigJsons.collectAsync()
 
-    val result = Json.obj("total" -> Await.result(totalJsonFuture, Duration.Inf).head, "contigs" -> Json.obj(Await.result(contigsJsonsFuture, Duration.Inf):_*))
+    val result = Json.obj(
+      "total" -> Await.result(totalJsonFuture, Duration.Inf).head,
+      "contigs" -> Json.obj(Await.result(contigsJsonsFuture, Duration.Inf): _*))
 
-    IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"),
-      result.nospaces :: Nil)
+    IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"), result.nospaces :: Nil)
 
     sc.stop
     logger.info("Done")
