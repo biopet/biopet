@@ -81,7 +81,7 @@ object VcfStats extends ToolCommand {
 
     val rdd = sc
       .parallelize(regions, regions.size)
-      .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .map(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
       .aggregateByKey((Stats.emptyStats(samples), Map[String, Stats]()))(
         {
           case (a, b) =>
@@ -135,47 +135,60 @@ object VcfStats extends ToolCommand {
     logger.info("Done")
   }
 
-  def readBin(bedRecords: List[BedRecord],
+  def readBin(bedRecord: BedRecord,
               samples: List[String],
               cmdArgs: Args,
               adInfoTags: List[String],
-              adGenotypeTags: List[String]): (Option[String], (Stats, List[(String, Stats)])) = {
+              adGenotypeTags: List[String],
+              reader: VCFFileReader): Stats = {
+    val stats = Stats.emptyStats(samples)
+
+    logger.info("Starting on: " + bedRecord)
+
+    val samInterval = bedRecord.toSamInterval
+
+    val query =
+      reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
+    if (!query.hasNext) {
+      Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
+      for (sample <- samples) yield {
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
+                                  fillGenotype(adGenotypeTags))
+      }
+    }
+
+    for (record <- query if record.getStart <= samInterval.getEnd) {
+      Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+      for (sample1 <- samples) yield {
+        val genotype = record.getGenotype(sample1)
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
+                                  checkGenotype(record, genotype, adGenotypeTags))
+        for (sample2 <- samples) {
+          val genotype2 = record.getGenotype(sample2)
+          if (genotype.getAlleles == genotype2.getAlleles)
+            stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
+          stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils
+            .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+        }
+      }
+    }
+
+    logger.info("Completed on: " + bedRecord)
+
+    stats
+  }
+
+  def readBins(bedRecords: List[BedRecord],
+               samples: List[String],
+               cmdArgs: Args,
+               adInfoTags: List[String],
+               adGenotypeTags: List[String]): (Option[String], (Stats, List[(String, Stats)])) = {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val totalStats = Stats.emptyStats(samples)
     val dict = FastaUtils.getDictFromFasta(cmdArgs.referenceFile)
 
     val nonCompleteContigs = for (bedRecord <- bedRecords) yield {
-      val stats = Stats.emptyStats(samples)
-
-      logger.info("Starting on: " + bedRecord)
-
-      val samInterval = bedRecord.toSamInterval
-
-      val query =
-        reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
-      if (!query.hasNext) {
-        Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
-        for (sample <- samples) yield {
-          Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
-                                    fillGenotype(adGenotypeTags))
-        }
-      }
-
-      for (record <- query if record.getStart <= samInterval.getEnd) {
-        Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-        for (sample1 <- samples) yield {
-          val genotype = record.getGenotype(sample1)
-          Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
-                                    checkGenotype(record, genotype, adGenotypeTags))
-          for (sample2 <- samples) {
-            val genotype2 = record.getGenotype(sample2)
-            if (genotype.getAlleles == genotype2.getAlleles)
-              stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils
-              .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
-          }
-        }
-      }
+      val stats = readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader)
       totalStats += stats
       if (bedRecord.length == dict.getSequence(bedRecord.chr).getSequenceLength) {
         Future {
