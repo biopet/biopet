@@ -87,12 +87,13 @@ object VcfStats extends ToolCommand {
 
     val contigsRdd = statsRdd
       .foldByKey(Stats.emptyStats(samples))(_ += _)
-      .coalesce(contigs.size(), shuffle = true)
+      .repartition(contigs.size)
       .cache()
 
     val totalRdd = contigsRdd
       .map("total" -> _._2)
       .foldByKey(Stats.emptyStats(samples))(_ += _)
+      .repartition(1)
       .map {
         case (_, stats) =>
           val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
@@ -100,7 +101,6 @@ object VcfStats extends ToolCommand {
           IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
           json
       }
-      .coalesce(1, shuffle = true)
       .cache()
 
     val contigJsons = contigsRdd.map {
@@ -116,7 +116,7 @@ object VcfStats extends ToolCommand {
 
     val totalJsonFuture = totalRdd.collectAsync()
     val contigsJsonsFuture =
-      if (cmdArgs.writeContigStats) contigJsons.collectAsync()
+      if (!cmdArgs.notWriteContigStats) contigJsons.collectAsync()
       else {
         contigJsons.count()
         Future.successful(contigs.map(_ -> Json.jNull))
