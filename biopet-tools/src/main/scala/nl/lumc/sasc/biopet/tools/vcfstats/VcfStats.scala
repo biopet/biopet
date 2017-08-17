@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 /**
@@ -115,7 +115,12 @@ object VcfStats extends ToolCommand {
     }
 
     val totalJsonFuture = totalRdd.collectAsync()
-    val contigsJsonsFuture = contigJsons.collectAsync()
+    val contigsJsonsFuture =
+      if (cmdArgs.writeContigStats) contigJsons.collectAsync()
+      else {
+        contigJsons.count()
+        Future.successful(contigs.map(_ -> Json.jNull))
+      }
 
     val result = Json.obj(
       "total" -> Await.result(totalJsonFuture, Duration.Inf).head,

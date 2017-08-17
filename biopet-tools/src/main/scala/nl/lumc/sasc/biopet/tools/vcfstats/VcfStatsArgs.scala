@@ -22,6 +22,7 @@ case class VcfStatsArgs(inputFile: File = null,
                         maxContigsInSingleJob: Int = 250,
                         writeBinStats: Boolean = false,
                         localThreads: Int = 1,
+                        writeContigStats: Boolean = true,
                         sparkMaster: Option[String] = None,
                         sparkConfigValues: Map[String, String] = Map(
                           "spark.memory.fraction" -> "0.1",
@@ -79,6 +80,9 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   } text "Write bin statistics. Default False"
   opt[Int]('t', "localThreads") unbounded () action { (x, c) =>
     c.copy(localThreads = x)
+  } text s"Number of local threads to use"
+  opt[Unit]("writeContigStats") unbounded () action { (_, c) =>
+    c.copy(writeContigStats = true)
   } text s"Number of local threads to use"
   opt[String]("sparkMaster") unbounded () action { (x, c) =>
     c.copy(sparkMaster = Some(x))
