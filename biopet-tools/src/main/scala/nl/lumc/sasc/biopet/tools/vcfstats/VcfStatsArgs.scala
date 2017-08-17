@@ -44,7 +44,7 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   } text "Fasta reference which was used to call input VCF (required)"
   opt[File]('o', "outputDir") required () unbounded () maxOccurs 1 valueName "<file>" action {
     (x, c) =>
-      c.copy(outputDir = x)
+      c.copy(outputDir = x.getAbsoluteFile)
   } validate { x =>
     if (x == null) failure("Valid output directory required")
     else if (x.exists) success
