@@ -154,15 +154,17 @@ class Bowtie2(val parent: Configurable)
     val indexDir = new File(bowtieIndex).getParentFile
     val basename = bowtieIndex.stripPrefix(indexDir.getPath + File.separator)
     if (indexDir.exists()) {
-      if (!indexDir
-            .list()
-            .toList
-            .filter(_.startsWith(basename))
-            .exists({ p =>
-              p.endsWith(".bt2") || p.endsWith(".bt2l")
-            }))
-        Logging.addError(
-          s"No index files found for bowtie2 in: $indexDir with basename: $basename")
+      if (indexDir.canRead && indexDir.canExecute) {
+        if (!indexDir
+              .list()
+              .toList
+              .filter(_.startsWith(basename))
+              .exists({ p =>
+                p.endsWith(".bt2") || p.endsWith(".bt2l")
+              }))
+          Logging.addError(
+            s"No index files found for bowtie2 in: $indexDir with basename: $basename")
+      } else Logging.addError(s"Index dir of bowtie2 is not readable: $indexDir")
     }
   }
 

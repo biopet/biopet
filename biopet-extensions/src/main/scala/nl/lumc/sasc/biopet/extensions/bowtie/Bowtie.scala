@@ -68,13 +68,15 @@ class Bowtie(val parent: Configurable)
     val indexDir = new File(bowtieIndex).getParentFile
     val basename = bowtieIndex.stripPrefix(indexDir.getPath + File.separator)
     if (indexDir.exists()) {
-      if (indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwtl")))
-        largeIndex = config("large-index", default = true)
-      else {
-        if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwt")))
-          Logging.addError(
-            s"No index files found for bowtie in: $indexDir with basename: $basename")
-      }
+      if (indexDir.canRead && indexDir.canExecute) {
+        if (indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwtl")))
+          largeIndex = config("large-index", default = true)
+        else {
+          if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwt")))
+            Logging.addError(
+              s"No index files found for bowtie in: $indexDir with basename: $basename")
+        }
+      } else Logging.addError(s"Index dir of bowtie is not readable: $indexDir")
     }
     if (R2.nonEmpty && maxins.isEmpty) {
       logger.warn(
