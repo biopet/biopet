@@ -28,6 +28,8 @@ object AddGenesAndIntronsToGtf extends ToolCommand {
 
     val reader = Source.fromFile(cmdArgs.input)
 
+    // TODO: add header skip and writing
+
     val genes = reader
       .getLines()
       .map(Feature.fromLine)
