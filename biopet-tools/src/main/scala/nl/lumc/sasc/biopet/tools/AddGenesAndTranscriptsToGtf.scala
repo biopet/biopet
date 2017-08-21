@@ -7,7 +7,7 @@ import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.io.Source
 
-object AddGenesAndIntronsToGtf extends ToolCommand {
+object AddGenesAndTranscriptsToGtf extends ToolCommand {
   case class Args(input: File = null, output: File = null)
 
   class OptParser extends AbstractOptParser[Args](commandName) {
