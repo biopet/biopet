@@ -69,7 +69,7 @@ object RefflatStats extends ToolCommand {
       cmdArgs.refflatFile,
       FastaUtils.getCachedDict(cmdArgs.referenceFasta))
 
-    val futures = geneReader.getAll.map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
+    val futures = geneReader.getAll.filter(_.getName == "ENSG00000003249").map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
     val totalGenes = futures.length
 
     logger.info(s"$totalGenes genes found in refflat file")
@@ -108,7 +108,9 @@ object RefflatStats extends ToolCommand {
       for (transcriptStat <- geneStat.transcripts.sortBy(_.name)) {
         val exonLength = transcriptStat.exons.map(_.length).sum
         transcriptWriter.println(
-          s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t${transcriptStat.start}\t${transcriptStat.end}\t${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
+          s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t" +
+            s"${transcriptStat.start}\t${transcriptStat.end}\t" +
+            s"${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
             .getOrElse(".")}\t${transcriptStat.length}\t$exonLength\t${transcriptStat.exons.length}")
         for (stat <- transcriptStat.exons) {
           exonWriter.println(
@@ -138,7 +140,7 @@ object RefflatStats extends ToolCommand {
     val exons =
       geneToExonRegions(gene).distinct.map(exon => exon -> exon.getGc(referenceFile)).toMap
     val introns =
-      geneToIntronRegions(gene).distinct.map(exon => exon -> exon.getGc(referenceFile)).toMap
+      geneToIntronRegions(gene).distinct.map(intron => intron -> intron.getGc(referenceFile)).toMap
 
     val exonicRegions = BedRecordList.fromList(exons.keys).combineOverlap
     val exonicGc = exonicRegions.getGc(referenceFile)
