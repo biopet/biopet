@@ -19,6 +19,8 @@ import java.io.File
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.{FastaSequenceFile, IndexedFastaSequenceFile}
 
+import scala.collection.JavaConversions._
+
 import scala.io.Source
 
 /**
@@ -94,5 +96,22 @@ object FastaUtils {
 
   def readContigMapReverse(file: File): Map[String, String] = {
     readContigMap(file).flatMap(x => x._2.map(y => y -> x._1))
+  }
+
+  def rebuildContigMap(contigMap: File, referenceFasta: File): Map[String, Set[String]] = {
+    rebuildContigMap(contigMap, getDictFromFasta(referenceFasta))
+  }
+
+  def rebuildContigMap(contigMap: File, dict: SAMSequenceDictionary): Map[String, Set[String]] = {
+    val map = readContigMap(contigMap)
+    (for (contig <- dict.getSequences) yield {
+      val name = contig.getSequenceName
+      val set = map
+        .filter(x => x._1 == name || x._2.contains(name))
+        .flatMap(x => x._2 + x._1)
+        .filter(_ != name)
+        .toSet
+      name -> set
+    }).toMap
   }
 }
