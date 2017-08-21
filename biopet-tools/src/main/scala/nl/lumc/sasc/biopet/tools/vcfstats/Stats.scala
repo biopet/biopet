@@ -16,6 +16,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 
 import java.io.{File, FileOutputStream, IOException, PrintWriter}
 
+import argonaut.Json
 import nl.lumc.sasc.biopet.tools.vcfstats.Stats.plotHeatmap
 import nl.lumc.sasc.biopet.tools.vcfstats.VcfStats.logger
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, sortAnyAny}
@@ -156,6 +157,13 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
           samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
       )
     )
+  }
+
+  def asJson(samples: List[String],
+             genotypeFields: List[String],
+             infoFields: List[String],
+             sampleDistributions: List[String]): Json = {
+    ConfigUtils.mapToJson(getStatsAsMap(samples, genotypeFields, infoFields, sampleDistributions))
   }
 
   def writeAllOutput(outputDir: File,

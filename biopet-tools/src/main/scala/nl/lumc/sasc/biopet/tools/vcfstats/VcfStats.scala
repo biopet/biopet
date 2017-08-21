@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.tools.vcfstats
 import java.io.File
 import java.net.URLClassLoader
 
+import argonaut._
 import htsjdk.variant.variantcontext.{Genotype, VariantContext}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
@@ -11,9 +12,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
 /**
   * Created by pjvanthof on 14/07/2017.
@@ -64,11 +64,12 @@ object VcfStats extends ToolCommand {
       .asInstanceOf[URLClassLoader]
       .getURLs
       .map(_.getFile)
-    val conf = cmdArgs.sparkExecutorMemory.toList.foldLeft(
+    val conf = cmdArgs.sparkConfigValues.foldLeft(
       new SparkConf()
+        .setExecutorEnv(sys.env.toArray)
         .setAppName(commandName)
         .setMaster(cmdArgs.sparkMaster.getOrElse(s"local[${cmdArgs.localThreads}]"))
-        .setJars(jars))(_.set("spark.executor.memory", _))
+        .setJars(jars))((a, b) => a.set(b._1, b._2))
     val sc = new SparkContext(conf)
     logger.info("Spark context is up")
 
@@ -78,112 +79,116 @@ object VcfStats extends ToolCommand {
       case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
+    val contigs = regions.flatMap(_.map(_.chr))
 
-    val regionStats = sc
+    val contigsRdd = sc
       .parallelize(regions, regions.size)
-      .map(readBin(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .foldByKey(Stats.emptyStats(samples))(_ += _)
+      .repartition(contigs.size)
       .cache()
 
-    val totalStats = Future(regionStats.aggregate(Stats.emptyStats(samples))(_ += _._1, _ += _))
-      .map(
-        _.writeAllOutput(cmdArgs.outputDir,
-                         samples,
-                         adGenotypeTags,
-                         adInfoTags,
-                         sampleDistributions,
-                         None))
+    val totalRdd = contigsRdd
+      .map("total" -> _._2)
+      .foldByKey(Stats.emptyStats(samples))(_ += _)
+      .repartition(1)
+      .cache()
 
-    regionStats
-      .flatMap(_._2)
-      .aggregateByKey(Stats.emptyStats(samples))(_ += _, _ += _)
-      .foreach {
-        case (k, v) =>
-          v.writeAllOutput(new File(cmdArgs.outputDir, "contigs" + File.separator + k),
-                           samples,
-                           adGenotypeTags,
-                           adInfoTags,
-                           sampleDistributions,
-                           Some(k))
+    val totalJson = totalRdd.map {
+      case (_, stats) =>
+        val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
+        val outputFile = new File(cmdArgs.outputDir, "total.json")
+        stats.writeOverlap(cmdArgs.outputDir, samples)
+        IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
+        json
+    }
+
+    val contigJsons = contigsRdd.map {
+      case (contig, stats) =>
+        val json = stats.asJson(samples, adGenotypeTags, adInfoTags, sampleDistributions)
+        val outputFile =
+          new File(cmdArgs.outputDir,
+                   "contigs" + File.separator + contig + File.separator + s"$contig.json")
+        outputFile.getParentFile.mkdirs()
+        stats.writeOverlap(outputFile.getParentFile, samples)
+        IoUtils.writeLinesToFile(outputFile, json.nospaces :: Nil)
+        contig -> json
+    }
+
+    val totalJsonFuture = totalJson.collectAsync()
+    val contigsJsonsFuture =
+      if (!cmdArgs.notWriteContigStats) contigJsons.collectAsync()
+      else {
+        contigJsons.count()
+        Future.successful(contigs.map(_ -> Json.jNull))
       }
-    regionStats.unpersist()
 
-    Await.result(totalStats, Duration.Inf)
+    val result = Json.obj(
+      "total" -> Await.result(totalJsonFuture, Duration.Inf).head,
+      "contigs" -> Json.obj(Await.result(contigsJsonsFuture, Duration.Inf): _*))
 
-    val completeStatsJson = regions
-      .flatMap(_.map(_.chr))
-      .foldLeft(ConfigUtils.fileToConfigMap(new File(cmdArgs.outputDir, "total.json"))) {
-        case (map, contig) =>
-          val contigMap = ConfigUtils.fileToConfigMap(
-            new File(cmdArgs.outputDir,
-                     "contigs" + File.separator + contig + File.separator + s"$contig.json"))
-          ConfigUtils.mergeMaps(map, contigMap)
-      }
-
-    IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"),
-                             ConfigUtils.mapToJson(completeStatsJson).nospaces :: Nil)
+    IoUtils.writeLinesToFile(new File(cmdArgs.outputDir, "stats.json"), result.nospaces :: Nil)
 
     sc.stop
     logger.info("Done")
   }
 
-  def readBin(bedRecords: List[BedRecord],
+  def readBin(bedRecord: BedRecord,
               samples: List[String],
               cmdArgs: Args,
               adInfoTags: List[String],
-              adGenotypeTags: List[String]): (Stats, List[(String, Stats)]) = {
+              adGenotypeTags: List[String],
+              reader: VCFFileReader): Stats = {
+    val stats = Stats.emptyStats(samples)
+
+    logger.info("Starting on: " + bedRecord)
+
+    val samInterval = bedRecord.toSamInterval
+
+    val query =
+      reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
+    if (!query.hasNext) {
+      Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
+      for (sample <- samples) yield {
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
+                                  fillGenotype(adGenotypeTags))
+      }
+    }
+
+    for (record <- query if record.getStart <= samInterval.getEnd) {
+      Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+      for (sample1 <- samples) yield {
+        val genotype = record.getGenotype(sample1)
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
+                                  checkGenotype(record, genotype, adGenotypeTags))
+        for (sample2 <- samples) {
+          val genotype2 = record.getGenotype(sample2)
+          if (genotype.getAlleles == genotype2.getAlleles)
+            stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
+          stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils
+            .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+        }
+      }
+    }
+
+    logger.info("Completed on: " + bedRecord)
+
+    stats
+  }
+
+  def readBins(bedRecords: List[BedRecord],
+               samples: List[String],
+               cmdArgs: Args,
+               adInfoTags: List[String],
+               adGenotypeTags: List[String]): List[(String, Stats)] = {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
-    val totalStats = Stats.emptyStats(samples)
-    val dict = FastaUtils.getDictFromFasta(cmdArgs.referenceFile)
 
-    val nonCompleteContigs = for (bedRecord <- bedRecords) yield {
-      val stats = Stats.emptyStats(samples)
-
-      logger.info("Starting on: " + bedRecord)
-
-      val samInterval = bedRecord.toSamInterval
-
-      val query =
-        reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
-      if (!query.hasNext) {
-        Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
-        for (sample <- samples) yield {
-          Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
-                                    fillGenotype(adGenotypeTags))
-        }
-      }
-
-      for (record <- query if record.getStart <= samInterval.getEnd) {
-        Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-        for (sample1 <- samples) yield {
-          val genotype = record.getGenotype(sample1)
-          Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
-                                    checkGenotype(record, genotype, adGenotypeTags))
-          for (sample2 <- samples) {
-            val genotype2 = record.getGenotype(sample2)
-            if (genotype.getAlleles == genotype2.getAlleles)
-              stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils
-              .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
-          }
-        }
-      }
-      totalStats += stats
-      if (bedRecord.length == dict.getSequence(bedRecord.chr).getSequenceLength) {
-        Future {
-          stats.writeAllOutput(
-            new File(cmdArgs.outputDir, "contigs" + File.separator + bedRecord.chr),
-            samples,
-            adGenotypeTags,
-            adInfoTags,
-            sampleDistributions,
-            Some(bedRecord.chr))
-          None
-        }
-      } else Future.successful(Some(bedRecord.chr -> stats))
+    val stats = for (bedRecord <- bedRecords) yield {
+      bedRecord.chr -> readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader)
     }
     reader.close()
 
-    (totalStats, Await.result(Future.sequence(nonCompleteContigs), Duration.Inf).flatten)
+    stats
   }
 
   val defaultGenotypeFields =

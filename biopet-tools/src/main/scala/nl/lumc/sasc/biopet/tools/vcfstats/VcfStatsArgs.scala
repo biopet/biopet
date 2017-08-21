@@ -22,8 +22,12 @@ case class VcfStatsArgs(inputFile: File = null,
                         maxContigsInSingleJob: Int = 250,
                         writeBinStats: Boolean = false,
                         localThreads: Int = 1,
+                        notWriteContigStats: Boolean = false,
                         sparkMaster: Option[String] = None,
-                        sparkExecutorMemory: Option[String] = None,
+                        sparkConfigValues: Map[String, String] = Map(
+                          "spark.memory.fraction" -> "0.1",
+                          "spark.memory.storageFraction" -> "0.2"
+                        ),
                         contigSampleOverlapPlots: Boolean = false)
 
 /**
@@ -44,7 +48,7 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   } text "Fasta reference which was used to call input VCF (required)"
   opt[File]('o', "outputDir") required () unbounded () maxOccurs 1 valueName "<file>" action {
     (x, c) =>
-      c.copy(outputDir = x)
+      c.copy(outputDir = x.getAbsoluteFile)
   } validate { x =>
     if (x == null) failure("Valid output directory required")
     else if (x.exists) success
@@ -77,10 +81,16 @@ class VcfStatsOptParser(cmdName: String) extends AbstractOptParser[VcfStatsArgs]
   opt[Int]('t', "localThreads") unbounded () action { (x, c) =>
     c.copy(localThreads = x)
   } text s"Number of local threads to use"
+  opt[Unit]("notWriteContigStats") unbounded () action { (_, c) =>
+    c.copy(notWriteContigStats = true)
+  } text s"Number of local threads to use"
   opt[String]("sparkMaster") unbounded () action { (x, c) =>
     c.copy(sparkMaster = Some(x))
   } text s"Spark master to use"
   opt[String]("sparkExecutorMemory") unbounded () action { (x, c) =>
-    c.copy(sparkExecutorMemory = Some(x))
+    c.copy(sparkConfigValues = c.sparkConfigValues + ("spark.executor.memory" -> x))
   } text s"Spark executor memory to use"
+  opt[(String, String)]("sparkConfigValue") unbounded () action { (x, c) =>
+    c.copy(sparkConfigValues = c.sparkConfigValues + (x._1 -> x._2))
+  } text s"Add values to the spark config"
 }
