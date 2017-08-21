@@ -14,12 +14,12 @@ object RebuildContigMap extends ToolCommand {
                   referenceFasta: File = null)
 
   class OptParser extends AbstractOptParser[Args](commandName) {
-    opt[File]('I', "inputContigMap") required () unbounded () valueName "<file>" action {
-      (x, c) =>
-        c.copy(inputContigMap = x)
+    opt[File]('I', "inputContigMap") required () unbounded () valueName "<file>" action { (x, c) =>
+      c.copy(inputContigMap = x)
     } text "Input contig map"
-    opt[File]('o', "outputContigMap") required () unbounded () valueName "<file>" action { (x, c) =>
-      c.copy(outputContigMap = x)
+    opt[File]('o', "outputContigMap") required () unbounded () valueName "<file>" action {
+      (x, c) =>
+        c.copy(outputContigMap = x)
     } text "output contig map"
     opt[File]('R', "referenceFasta") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(referenceFasta = x)
