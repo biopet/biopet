@@ -26,7 +26,13 @@ class RebuildContigMapTest extends TestNGSuite with Matchers {
     writer.println("chrT\tchrQ")
     writer.close()
 
-    RebuildContigMap.main(Array("-I", inputFile.getAbsolutePath, "-o", outputFile.getAbsolutePath, "-R", resourcePath("/fake_chrQ.fa")))
+    RebuildContigMap.main(
+      Array("-I",
+            inputFile.getAbsolutePath,
+            "-o",
+            outputFile.getAbsolutePath,
+            "-R",
+            resourcePath("/fake_chrQ.fa")))
 
     val reader = Source.fromFile(outputFile)
     reader.getLines().toList.filter(!_.startsWith("#")) shouldBe List("chrQ\tchrT")
