@@ -14,9 +14,9 @@
   */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsMerge
+import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsMerge, BcftoolsView}
 import nl.lumc.sasc.biopet.extensions.delly.DellyCallerCall
-import nl.lumc.sasc.biopet.extensions.picard.SortVcf
+import nl.lumc.sasc.biopet.extensions.picard.{MergeVcfs, SortVcf}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -36,74 +36,39 @@ class Delly(val parent: Configurable) extends SvCaller {
       val dellyDir = new File(outputDir, sample)
 
       // Use bcftools merge to merge the bcf files. Output is an uncompressed vcf
-      val mergeVariants = new BcftoolsMerge(this)
-      mergeVariants.output = new File(dellyDir, sample + ".delly.vcf")
-      mergeVariants.m = Some("id")
-      mergeVariants.forcesamples = true
+      val mergeVariants = new MergeVcfs(this)
+      mergeVariants.output = new File(dellyDir, sample + ".delly.vcf.gz")
 
-      if (del) {
+      def dellyCaller(analysisType: String, outputName: String): Unit = {
         val delly = new DellyCallerCall(this)
         delly.input = bamFile
-        delly.analysisType = "DEL"
+        delly.analysisType = analysisType
         delly.isIntermediate = true
-        delly.outputBcf = new File(dellyDir, sample + ".delly.del.bcf")
+        delly.outputBcf = new File(dellyDir, sample + s".delly.$outputName.bcf")
         add(delly)
+
+        val view = new BcftoolsView(this)
+        view.input = delly.outputBcf
+        view.output = new File(dellyDir, sample + s".delly.$outputName.vcf.gz")
+        view.outputType = "z"
+        add(view)
 
         // bcf files must to be concatenated with bcftools merge
-        mergeVariants.input :+= delly.outputBcf
+        mergeVariants.input :+= view.output
       }
-      if (dup) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysisType = "DUP"
-        delly.isIntermediate = true
-        delly.outputBcf = new File(dellyDir, sample + ".delly.dup.bcf")
-        add(delly)
 
-        mergeVariants.input :+= delly.outputBcf
-      }
-      if (inv) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysisType = "INV"
-        delly.isIntermediate = true
-        delly.outputBcf = new File(dellyDir, sample + ".delly.inv.bcf")
-        add(delly)
-
-        mergeVariants.input :+= delly.outputBcf
-      }
-      if (ins) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysisType = "INS"
-        delly.isIntermediate = true
-        delly.outputBcf = new File(dellyDir, sample + ".delly.ins.bcf")
-        add(delly)
-
-        mergeVariants.input :+= delly.outputBcf
-      }
-      if (bnd) {
-        val delly = new DellyCallerCall(this)
-        delly.input = bamFile
-        delly.analysisType = "BND"
-        delly.isIntermediate = true
-        delly.outputBcf = new File(dellyDir, sample + ".delly.tra.bcf")
-        add(delly)
-
-        mergeVariants.input :+= delly.outputBcf
-      }
+      if (del) dellyCaller("DEL", "del")
+      if (dup) dellyCaller("DUP", "dup")
+      if (inv) dellyCaller("INV", "inv")
+      if (ins) dellyCaller("INS", "ins")
+      if (bnd) dellyCaller("BND", "tra")
 
       if (mergeVariants.input.isEmpty)
         Logging.addError("At least 1 SV-type should be selected for Delly")
 
       add(mergeVariants)
 
-      val compressedVCF = new SortVcf(this)
-      compressedVCF.input = mergeVariants.output
-      compressedVCF.output = mergeVariants.output + ".gz"
-      add(compressedVCF)
-
-      addVCF(sample, compressedVCF.output)
+      addVCF(sample, mergeVariants.output)
     }
   }
 }
