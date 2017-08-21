@@ -44,7 +44,7 @@ class AddGenesAndTranscriptsToGtfTest extends TestNGSuite with Matchers {
                         Some(true),
                         None,
                         Map("gene_id" -> "gene_1", "transcript_id" -> "transcript_1_1"))
-    IoUtils.writeLinesToFile(inputFile, List(exon1.asGtfLine, exon2.asGtfLine))
+    IoUtils.writeLinesToFile(inputFile, List("#test", exon1.asGtfLine, exon2.asGtfLine))
 
     val outputFile = File.createTempFile("test.", ".gtf")
     outputFile.deleteOnExit()
@@ -56,7 +56,8 @@ class AddGenesAndTranscriptsToGtfTest extends TestNGSuite with Matchers {
     val lines = reader.getLines().toList
     reader.close()
 
-    val features = lines.map(Feature.fromLine)
+    lines.head shouldBe "#test"
+    val features = lines.filter(!_.startsWith("#")).map(Feature.fromLine)
 
     features shouldBe List(
       gene1,
