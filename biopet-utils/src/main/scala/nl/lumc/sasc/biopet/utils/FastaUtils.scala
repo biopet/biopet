@@ -86,7 +86,7 @@ object FastaUtils {
       .map { line =>
         val columns = line.split("\t")
         val refContig = columns(0)
-        val alternativeNames = columns(1).split(";").toSet
+        val alternativeNames = columns.lift(1).map(_.split(";").toSet).getOrElse(Set())
         refContig -> alternativeNames
       }
       .toMap

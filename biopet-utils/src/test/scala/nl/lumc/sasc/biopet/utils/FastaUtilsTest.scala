@@ -49,4 +49,19 @@ class FastaUtilsTest extends TestNGSuite with Matchers {
 
     FastaUtils.getSequenceGc(referenceFile, "chrQ", 11, 20) shouldBe 0.4
   }
+
+  @Test
+  def testReadContigMap(): Unit = {
+    val inputFile = File.createTempFile("contigMap.", ".tsv")
+    inputFile.deleteOnExit()
+
+    val writer = new PrintWriter(inputFile)
+    writer.println("chrT\tchrQ")
+    writer.println("chrX\t")
+    writer.close()
+
+    val map = FastaUtils.readContigMap(inputFile)
+
+    map shouldBe Map("chrT" -> Set("chrQ"), "chrX" -> Set())
+  }
 }
