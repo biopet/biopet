@@ -69,7 +69,7 @@ object RefflatStats extends ToolCommand {
       cmdArgs.refflatFile,
       FastaUtils.getCachedDict(cmdArgs.referenceFasta))
 
-    val futures = geneReader.getAll.filter(_.getName == "ENSG00000003249").map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
+    val futures = geneReader.getAll.map(generateGeneStats(_, cmdArgs.referenceFasta)).toList
     val totalGenes = futures.length
 
     logger.info(s"$totalGenes genes found in refflat file")
