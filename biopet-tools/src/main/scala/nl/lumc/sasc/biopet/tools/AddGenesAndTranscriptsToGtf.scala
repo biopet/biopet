@@ -5,6 +5,7 @@ import java.io.{File, PrintWriter}
 import nl.lumc.sasc.biopet.utils.annotation.Feature
 import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object AddGenesAndTranscriptsToGtf extends ToolCommand {
@@ -28,15 +29,20 @@ object AddGenesAndTranscriptsToGtf extends ToolCommand {
 
     val reader = Source.fromFile(cmdArgs.input)
 
-    // TODO: add header skip and writing
+    val header = new ListBuffer[String]()
 
     val genes = reader
       .getLines()
+      .filter { line =>
+        if (line.startsWith("#")) header += line
+        !line.startsWith("#")
+      }
       .map(Feature.fromLine)
       .toTraversable
       .groupBy(_.attributes.get("gene_id"))
 
     val writer = new PrintWriter(cmdArgs.output)
+    header.foreach(writer.println)
 
     for ((geneN, features) <- genes) {
       geneN match {
