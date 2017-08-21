@@ -212,7 +212,7 @@ object RefflatStats extends ToolCommand {
 
   def transcriptToIntronRegions(transcript: Gene#Transcript): List[BedRecord] = {
     if (transcript.exons.length > 1) {
-      (for (i <- 0 until (transcript.exons.length - 2)) yield {
+      (for (i <- 0 until (transcript.exons.length - 1)) yield {
         val intronStart = transcript.exons(i).end + 1
         val intronEnd = transcript.exons(i + 1).start - 1
         val start = List(intronStart, intronEnd).min
