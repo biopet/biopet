@@ -27,7 +27,7 @@ import scala.util.Random
   *
   * Created by ahbbollen on 9-4-15.
   */
-class AnnotateVcfWithBedTest extends TestNGSuite with MockitoSugar with Matchers {
+class AnnotateVcfWithBedTest extends TestNGSuite with Matchers {
   import AnnotateVcfWithBed._
 
   private def resourcePath(p: String): String = {
