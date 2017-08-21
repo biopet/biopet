@@ -107,10 +107,9 @@ object RefflatStats extends ToolCommand {
           .getOrElse(".")}\t${geneStat.length}\t${geneStat.exonLength}")
       for (transcriptStat <- geneStat.transcripts.sortBy(_.name)) {
         val exonLength = transcriptStat.exons.map(_.length).sum
-        transcriptWriter.println(
-          s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t" +
-            s"${transcriptStat.start}\t${transcriptStat.end}\t" +
-            s"${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
+        transcriptWriter.println(s"${geneStat.name}\t${transcriptStat.name}\t${geneStat.contig}\t" +
+          s"${transcriptStat.start}\t${transcriptStat.end}\t" +
+          s"${transcriptStat.totalGc}\t${transcriptStat.exonGc}\t${transcriptStat.intronGc
             .getOrElse(".")}\t${transcriptStat.length}\t$exonLength\t${transcriptStat.exons.length}")
         for (stat <- transcriptStat.exons) {
           exonWriter.println(
