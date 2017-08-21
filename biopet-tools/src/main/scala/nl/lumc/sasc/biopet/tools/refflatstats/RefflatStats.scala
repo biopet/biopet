@@ -126,6 +126,7 @@ object RefflatStats extends ToolCommand {
     geneWriter.close()
     transcriptWriter.close()
     exonWriter.close()
+    intronWriter.close()
 
     logger.info("Done")
   }
