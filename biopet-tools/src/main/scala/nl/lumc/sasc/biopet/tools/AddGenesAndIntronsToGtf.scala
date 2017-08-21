@@ -22,13 +22,14 @@ object AddGenesAndIntronsToGtf extends ToolCommand {
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val cmdArgs
-    : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+      : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.info("Start")
 
     val reader = Source.fromFile(cmdArgs.input)
 
-    val genes = reader.getLines()
+    val genes = reader
+      .getLines()
       .map(Feature.fromLine)
       .toTraversable
       .groupBy(_.attributes.get("gene_id"))
@@ -38,22 +39,44 @@ object AddGenesAndIntronsToGtf extends ToolCommand {
     for ((geneN, features) <- genes) {
       geneN match {
         case Some(geneName) =>
-          val (geneStart, geneEnd) = features.foldLeft((features.head.minPosition, features.head.maxPosition)) { case (a, b) =>
-            (if (a._1 < b.minPosition) a._1 else b.minPosition,
-            if (a._2 > b.maxPosition) a._2 else b.maxPosition)
-          }
-          val gene = Feature(features.head.contig, features.head.source, "gene", geneStart, geneEnd, None, features.head.strand, None, Map("gene_id" -> geneName))
+          val (geneStart, geneEnd) =
+            features.foldLeft((features.head.minPosition, features.head.maxPosition)) {
+              case (a, b) =>
+                (if (a._1 < b.minPosition) a._1 else b.minPosition,
+                 if (a._2 > b.maxPosition) a._2 else b.maxPosition)
+            }
+          val gene = Feature(features.head.contig,
+                             features.head.source,
+                             "gene",
+                             geneStart,
+                             geneEnd,
+                             None,
+                             features.head.strand,
+                             None,
+                             Map("gene_id" -> geneName))
           writer.println(gene.asGtfLine)
           val transcriptFeatures = features.groupBy(_.attributes.get("transcript_id"))
 
           for ((transcriptN, transFeatures) <- transcriptFeatures) {
             transcriptN match {
               case Some(transcriptName) =>
-                val (transStart, transEnd) = transFeatures.foldLeft((transFeatures.head.minPosition, transFeatures.head.maxPosition)) { case (a, b) =>
-                  (if (a._1 < b.minPosition) a._1 else b.minPosition,
-                    if (a._2 > b.maxPosition) a._2 else b.maxPosition)
+                val (transStart, transEnd) = transFeatures.foldLeft(
+                  (transFeatures.head.minPosition, transFeatures.head.maxPosition)) {
+                  case (a, b) =>
+                    (if (a._1 < b.minPosition) a._1 else b.minPosition,
+                     if (a._2 > b.maxPosition) a._2 else b.maxPosition)
                 }
-                val transcript = Feature(features.head.contig, features.head.source, "gene", geneStart, geneEnd, None, features.head.strand, None, Map("gene_id" -> geneName, "transcript_id" -> transcriptName))
+                val transcript = Feature(
+                  features.head.contig,
+                  features.head.source,
+                  "transcript",
+                  geneStart,
+                  geneEnd,
+                  None,
+                  features.head.strand,
+                  None,
+                  Map("gene_id" -> geneName, "transcript_id" -> transcriptName)
+                )
                 writer.println(transcript.asGtfLine)
 
               case _ => transFeatures.foreach(f => writer.println(f.asGtfLine))
