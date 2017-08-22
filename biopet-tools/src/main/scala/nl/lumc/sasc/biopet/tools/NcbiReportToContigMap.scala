@@ -22,7 +22,7 @@ object NcbiReportToContigMap extends ToolCommand {
     opt[File]('a', "assembly_report") required () unbounded () valueName "<file>" action {
       (x, c) =>
         c.copy(assemblyReport = x)
-    } text "refseq ID from NCBI"
+    } text "Assembly report from NCBI"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output Fasta file"
