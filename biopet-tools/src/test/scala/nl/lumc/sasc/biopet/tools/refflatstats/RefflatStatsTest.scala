@@ -48,7 +48,7 @@ class RefflatStatsTest extends TestNGSuite with Matchers {
     val lines = Source.fromFile(geneOutput).getLines().toList
 
     lines.head shouldBe "gene\tcontig\tstart\tend\ttotalGC\texonGc\tintronGc\tlength\texonLength"
-    lines(1) shouldBe "geneA\tchrQ\t201\t500\t0.49\t0.5\t0.43999999999999995\t300\t197"
+    lines(1) shouldBe "geneA\tchrQ\t201\t500\t0.49\t0.5\t0.47000000000000003\t300\t197"
 
   }
 }
