@@ -6,11 +6,11 @@ import nl.lumc.sasc.biopet.tools.bamstats.BamStats.commandName
 import nl.lumc.sasc.biopet.utils.AbstractOptParser
 
 case class BamStatsArgs(outputDir: File = null,
-                bamFile: File = null,
-                referenceFasta: Option[File] = None,
-                binSize: Int = 10000,
-                threadBinSize: Int = 1000000,
-                tsvOutputs: Boolean = false)
+                        bamFile: File = null,
+                        referenceFasta: Option[File] = None,
+                        binSize: Int = 10000,
+                        threadBinSize: Int = 1000000,
+                        tsvOutputs: Boolean = false)
 
 class BamStatsOptParser extends AbstractOptParser[BamStatsArgs](commandName) {
   opt[File]('R', "reference") valueName "<file>" action { (x, c) =>
