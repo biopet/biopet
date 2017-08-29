@@ -25,7 +25,7 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
 
   var namePrefix: String = config("name_prefix", default = "multisample")
 
-  val maxNumberOfFiles: Int = config("max_number_of_files", default = 10)
+  val maxNumberOfFiles: Int = config("max_number_of_files", default = 25)
 
   def finalGvcfFile = new File(outputDir, s"$namePrefix.g.vcf.gz")
   def finalVcfFile = new File(outputDir, s"$namePrefix.vcf.gz")
@@ -40,7 +40,14 @@ class GenotypeGvcfs(val parent: Configurable) extends QScript with BiopetQScript
     val genotype = new gatk.GenotypeGVCFs(this)
     genotype.variant = if (inputGvcfs.size > 1) {
       val combineJob = new CombineJob(finalGvcfFile, outputDir, inputGvcfs)
-      combineJob.allJobs.filter(job => job.group.nonEmpty || !job.isIntermediate).foreach(add(_))
+      if (writeFinalGvcfFile) combineJob.allJobs.foreach(add(_))
+      else
+        combineJob.allJobs
+          .filter(
+            job =>
+              job.out.getParentFile.getAbsoluteFile
+                .contains(outputDir + File.separator + ".grouped"))
+          .foreach(add(_))
       combineJob.job.variant
     } else {
       inputGvcfs.headOption.foreach { file =>
