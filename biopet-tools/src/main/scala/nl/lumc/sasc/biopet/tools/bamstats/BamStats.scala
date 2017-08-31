@@ -19,7 +19,7 @@ import java.io.{File, PrintWriter}
 import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 import nl.lumc.sasc.biopet.utils.{ConfigUtils, FastaUtils, ToolCommand}
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
+import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -89,10 +89,6 @@ object BamStats extends ToolCommand {
            binSize: Int,
            threadBinSize: Int,
            tsvOutput: Boolean): Unit = {
-
-    val samReader: SamReader = SamReaderFactory.makeDefault().open(bamFile)
-    val dict = samReader.getFileHeader.getSequenceDictionary
-
     val contigs = referenceDict.getSequences
       .flatMap(r => BedRecord(r.getSequenceName, 0, r.getSequenceLength).scatter(threadBinSize))
     val groups = contigs.foldLeft((List[List[BedRecord]](), List[BedRecord](), 0L)) {
@@ -180,7 +176,7 @@ object BamStats extends ToolCommand {
       try {
         logger.info(s"${totalSize - todo.size}/$totalSize tasks done")
         val completed = todo.groupBy(_.isCompleted)
-        val bla = completed.getOrElse(true, Nil).foreach { f =>
+        completed.getOrElse(true, Nil).foreach { f =>
           Await.result(f, Duration.Inf).foreach {
             case (region, stats) =>
               totalStats += stats
@@ -193,7 +189,7 @@ object BamStats extends ToolCommand {
           wait(completed(false))
         }
       } catch {
-        case e: TimeoutException =>
+        case _: TimeoutException =>
           wait(todo)
       }
     }
