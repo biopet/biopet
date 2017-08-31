@@ -25,7 +25,7 @@ trait ToolCommandFunction extends BiopetJavaCommandLineFunction with Version {
   def toolObject: Object
 
   def versionCommand = ""
-  def versionRegex: List[Regex] = "".r :: Nil
+  def versionRegex: List[Regex] = Nil
 
   override def getVersion = Some("Biopet " + FullVersion)
 
