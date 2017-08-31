@@ -115,7 +115,7 @@ class Snptest(val parent: Configurable)
   executable = config("exe", default = "snptest")
 
   def versionCommand: String = executable + " -help"
-  def versionRegex: Regex = "Welcome to SNPTEST (.*)".r
+  def versionRegex: List[Regex] = "Welcome to SNPTEST (.*)".r :: Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

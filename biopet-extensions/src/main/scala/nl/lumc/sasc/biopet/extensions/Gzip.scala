@@ -31,7 +31,7 @@ class Gzip(val parent: Configurable) extends BiopetCommandLineFunction with Vers
 
   executable = config("exe", default = "gzip", freeVar = false)
 
-  def versionRegex: Regex = """gzip (.*)""".r
+  def versionRegex: List[Regex] = """gzip (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   def cmdLine: String =

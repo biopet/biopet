@@ -46,7 +46,7 @@ class GmapBuild(val parent: Configurable)
 
   override def defaultCoreMemory = 25.0
 
-  def versionRegex: Regex = """.* version (.*)""".r
+  def versionRegex: List[Regex] = """.* version (.*)""".r :: Nil
   def versionCommand: String = executable
   override def versionExitcode = List(0, 1, 255)
 

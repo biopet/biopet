@@ -31,5 +31,5 @@ abstract class Xhmm extends BiopetCommandLineFunction with Version {
   var discoverParamsFile: File = config("discover_params", namespace = "xhmm")
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """xhmm (.*)""".r
+  def versionRegex: List[Regex] = """xhmm (.*)""".r :: Nil
 }

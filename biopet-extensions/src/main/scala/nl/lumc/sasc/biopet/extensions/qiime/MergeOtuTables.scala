@@ -29,7 +29,7 @@ class MergeOtuTables(val parent: Configurable) extends BiopetCommandLineFunction
   executable = config("exe", default = "merge_otu_tables.py")
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
 
   @Input(required = true)
   var input: List[File] = Nil

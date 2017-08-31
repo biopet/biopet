@@ -58,7 +58,7 @@ trait BiopetJavaCommandLineFunction
     if (!BiopetCommandLineFunction.executableCache.contains(executable))
       preProcessExecutable()
     if (!Version.versionCache.contains(javaVersionCommand))
-      Version.getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
+      Version.getVersionInternal(javaVersionCommand, """java version "(.*)"""".r :: Nil) match {
         case Some(version) => Version.versionCache += javaVersionCommand -> version
         case _ =>
       }

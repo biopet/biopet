@@ -23,6 +23,6 @@ abstract class Samtools extends BiopetCommandLineFunction with Version {
   override def subPath: List[String] = "samtools" :: super.subPath
   executable = config("exe", default = "samtools", namespace = "samtools", freeVar = false)
   def versionCommand: String = executable
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 }

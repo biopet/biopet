@@ -49,7 +49,7 @@ class Fastqc(val parent: Configurable) extends BiopetCommandLineFunction with Ve
   var nogroup: Boolean = config("nogroup", default = false)
   var extract: Boolean = config("extract", default = true)
 
-  def versionRegex: Regex = """FastQC (.*)""".r
+  def versionRegex: List[Regex] = """FastQC (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
   override def defaultThreads = 4
 

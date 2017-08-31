@@ -31,7 +31,7 @@ class SplitLibrariesFastq(val parent: Configurable)
   executable = config("exe", default = "split_libraries_fastq.py")
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
 
   @Input
   var input: List[File] = Nil

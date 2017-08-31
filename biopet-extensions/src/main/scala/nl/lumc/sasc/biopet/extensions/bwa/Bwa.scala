@@ -26,7 +26,7 @@ import scala.util.matching.Regex
 abstract class Bwa extends BiopetCommandLineFunction with Version {
   override def subPath: List[String] = "bwa" :: super.subPath
   executable = config("exe", default = "bwa")
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable
 }

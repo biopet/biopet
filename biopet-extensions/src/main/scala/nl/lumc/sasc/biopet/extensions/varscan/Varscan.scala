@@ -25,5 +25,5 @@ abstract class Varscan extends BiopetJavaCommandLineFunction with Version {
   jarFile = config("varscan_jar")
 
   def versionCommand = s"$executable -jar $jarFile"
-  def versionRegex: Regex = """VarScan v(.*)""".r
+  def versionRegex: List[Regex] = """VarScan v(.*)""".r :: Nil
 }

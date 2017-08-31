@@ -63,7 +63,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction with Version {
       executable + " -cp " + jarFile + " " + javaMainClass + s" $picardToolName -h"
     else null
   }
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 4.0

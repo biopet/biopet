@@ -42,7 +42,7 @@ class Bowtie(val parent: Configurable)
   var output: File = _
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  def versionRegex: Regex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex: List[Regex] = """.*[Vv]ersion:? (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable + " --version"
 

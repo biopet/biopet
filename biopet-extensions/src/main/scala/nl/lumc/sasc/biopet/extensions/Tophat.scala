@@ -32,7 +32,7 @@ class Tophat(val parent: Configurable)
 
   executable = config("exe", default = "tophat", freeVar = false)
 
-  def versionRegex: Regex = """TopHat v(.*)""".r
+  def versionRegex: List[Regex] = """TopHat v(.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable + " --version"
 

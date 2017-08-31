@@ -32,7 +32,7 @@ class Flash(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   def versionCommand: String = executable + " --version"
 
   /** Regex to get version from version command output */
-  def versionRegex: Regex = """FLASH (v.*)""".r
+  def versionRegex: List[Regex] = """FLASH (v.*)""".r :: Nil
 
   @Input(required = true)
   var fastqR1: File = _

@@ -32,7 +32,7 @@ class Sed(val parent: Configurable) extends BiopetCommandLineFunction with Versi
   override def versionCommand: String = executable + " --version"
 
   /** Regex to get version from version command output */
-  override def versionRegex: Regex = """sed (GNU sed) \d+.\d+.\d+""".r
+  override def versionRegex: List[Regex] = """sed (GNU sed) \d+.\d+.\d+""".r :: Nil
 
   @Input(required = false)
   var inputFile: File = _

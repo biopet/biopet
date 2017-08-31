@@ -26,6 +26,6 @@ import scala.util.matching.Regex
 abstract class Macs2 extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "macs2", namespace = "macs2", freeVar = false)
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """macs2 (.*)""".r
+  def versionRegex: List[Regex] = """macs2 (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 }

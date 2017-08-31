@@ -71,7 +71,7 @@ class HtseqCount(val parent: Configurable) extends BiopetCommandLineFunction wit
   /** suppress progress report */
   var quiet: Boolean = config("quiet", default = false)
 
-  def versionRegex: Regex = """.*, version (.*)\.""".r
+  def versionRegex: List[Regex] = """.*, version (.*)\.""".r :: Nil
   def versionCommand: String = executable + " --help"
 
   def cmdLine: String = {

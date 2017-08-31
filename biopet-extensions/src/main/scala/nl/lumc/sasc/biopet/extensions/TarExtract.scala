@@ -34,7 +34,7 @@ class TarExtract(val parent: Configurable) extends BiopetCommandLineFunction wit
 
   executable = config("exe", default = "tar", freeVar = false)
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """tar \(GNU tar\) (.*)""".r
+  def versionRegex: List[Regex] = """tar \(GNU tar\) (.*)""".r :: Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
