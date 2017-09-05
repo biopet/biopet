@@ -34,7 +34,7 @@ class Md5sum(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   executable = config("exe", default = "md5sum")
 
-  def versionRegex: Regex = """md5sum \(GNU coreutils\) (.*)""".r
+  def versionRegex: List[Regex] = """md5sum \(GNU coreutils\) (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   /** return commandline to execute */

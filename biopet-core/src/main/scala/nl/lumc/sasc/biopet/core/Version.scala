@@ -32,7 +32,7 @@ trait Version extends QFunction {
   def versionCommand: String
 
   /** Regex to get version from version command output */
-  def versionRegex: Regex
+  def versionRegex: List[Regex]
 
   /** Allowed exit codes for the version command */
   protected[core] def versionExitcode = List(0)
@@ -64,7 +64,7 @@ object Version extends Logging {
 
   /** Executes the version command */
   private[core] def getVersionInternal(versionCommand: String,
-                                       versionRegex: Regex,
+                                       versionRegex: List[Regex],
                                        versionExitcode: List[Int] = List(0)): Option[String] = {
     if (versionCache.contains(versionCommand)) versionCache.get(versionCommand)
     else if (versionCommand == null || versionRegex == null) None
@@ -83,10 +83,14 @@ object Version extends Logging {
         return None
       }
       for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
-        line match {
-          case versionRegex(m) => return Some(m)
-          case _ =>
-        }
+        val versons = versionRegex
+          .flatMap(r =>
+            line match {
+              case r(v) => Some(v)
+              case _ => None
+          })
+          .headOption
+          .foreach(x => return Some(x))
       }
       logger.warn(
         "getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)

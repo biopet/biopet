@@ -23,7 +23,7 @@ abstract class Conifer extends PythonCommandLineFunction with Version {
   override def subPath: List[String] = "conifer" :: super.subPath
   //  executable = config("exe", default = "conifer")
   setPythonScript(config("script", default = "conifer.py", namespace = "conifer"))
-  def versionRegex: Regex = """(.*)""".r
+  def versionRegex: List[Regex] = """(.*)""".r :: Nil
   override def versionExitcode = List(0)
   def versionCommand: String = executable + " " + pythonScript + " --version"
 

@@ -37,7 +37,7 @@ class StringtieMerge(val parent: Configurable)
   def versionCommand: String = executable + " --version"
 
   /** Regex to get version from version command output */
-  def versionRegex: Regex = "(.*)".r
+  def versionRegex: List[Regex] = "(.*)".r :: Nil
 
   def cmdLine: String =
     required(executable) +

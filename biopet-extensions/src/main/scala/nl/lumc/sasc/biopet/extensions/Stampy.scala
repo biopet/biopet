@@ -64,7 +64,7 @@ class Stampy(val parent: Configurable)
   var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
-  def versionRegex: Regex = """stampy v(.*) \(.*\), .*""".r
+  def versionRegex: List[Regex] = """stampy v(.*) \(.*\), .*""".r :: Nil
   override def versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.

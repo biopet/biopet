@@ -45,7 +45,7 @@ class Cutadapt(val parent: Configurable)
 
   executable = config("exe", default = "cutadapt")
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """(.*)""".r
+  def versionRegex: List[Regex] = """(.*)""".r :: Nil
 
   /** Name of the key containing clipped adapters information in the summary stats. */
   def adaptersStatsName = "adapters"

@@ -324,7 +324,7 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var log_to_file: File = _
 
-  def versionRegex: Regex = """(.*)""".r
+  def versionRegex: List[Regex] = """(.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable + " -jar " + jarFile + " -version"
 

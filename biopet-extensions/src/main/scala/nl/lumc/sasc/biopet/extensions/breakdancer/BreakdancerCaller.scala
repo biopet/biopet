@@ -27,7 +27,7 @@ class BreakdancerCaller(val parent: Configurable) extends BiopetCommandLineFunct
 
   override def defaultThreads = 1 // breakdancer can only work on 1 single thread
 
-  def versionRegex: Regex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex: List[Regex] = """.*[Vv]ersion:? (.*)""".r :: Nil
   override def versionExitcode = List(1)
   def versionCommand: String = executable
 

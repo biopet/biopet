@@ -30,5 +30,5 @@ abstract class TaxExtract extends BiopetCommandLineFunction with Version {
   }
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """.+, version (.*)""".r
+  def versionRegex: List[Regex] = """.+, version (.*)""".r :: Nil
 }

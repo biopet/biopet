@@ -33,7 +33,7 @@ class BowtieBuild(val parent: Configurable) extends BiopetCommandLineFunction wi
   var baseName: String = _
 
   executable = config("exe", default = "bowtie-build", freeVar = false)
-  def versionRegex: Regex = """.*[Vv]ersion:? (\d*\.\d*\.\d*)""".r
+  def versionRegex: List[Regex] = """.*[Vv]ersion:? (\d*\.\d*\.\d*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   override def defaultCoreMemory = 15.0

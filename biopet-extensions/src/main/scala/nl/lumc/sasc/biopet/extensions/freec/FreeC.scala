@@ -127,7 +127,7 @@ class FreeC(val parent: Configurable)
 
   // Control-FREEC v8.7 : calling copy number alterations and LOH regions using deep-sequencing data
   override def versionCommand: String = executable
-  override def versionRegex: Regex = """Control-FREEC v([0-9\.]+) : .*""".r
+  override def versionRegex: List[Regex] = """Control-FREEC v([0-9\.]+) : .*""".r :: Nil
   override def defaultThreads = 4
   override def defaultCoreMemory = 50
 

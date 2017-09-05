@@ -35,7 +35,7 @@ class CleverCaller(val parent: Configurable)
   override def defaultCoreMemory = 3.0
 
   def versionCommand: String = versionExecutable.getAbsolutePath
-  def versionRegex: Regex = """(.*)""".r
+  def versionRegex: List[Regex] = """(.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")

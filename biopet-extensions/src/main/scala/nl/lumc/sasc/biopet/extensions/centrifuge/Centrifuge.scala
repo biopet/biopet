@@ -98,7 +98,7 @@ class Centrifuge(val parent: Configurable)
   def versionCommand: String = s"$executable --version"
 
   /** Regex to get version from version command output */
-  def versionRegex: Regex = ".* version (.*)".r
+  def versionRegex: List[Regex] = ".* version (.*)".r :: Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

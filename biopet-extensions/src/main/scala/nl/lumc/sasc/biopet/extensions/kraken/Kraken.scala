@@ -47,7 +47,7 @@ class Kraken(val parent: Configurable) extends BiopetCommandLineFunction with Ve
 
   executable = config("exe", default = "kraken")
 
-  def versionRegex: Regex = """^Kraken version ([\d\w\-\.]+)""".r
+  def versionRegex: List[Regex] = """^Kraken version ([\d\w\-\.]+)""".r :: Nil
 
   override def versionExitcode = List(0, 1)
 

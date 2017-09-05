@@ -59,7 +59,7 @@ class Sickle(val parent: Configurable)
   var discardN: Boolean = config("discardN", default = false)
   var quiet: Boolean = config("quiet", default = false)
   var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
-  def versionRegex: Regex = """sickle version (.*)""".r
+  def versionRegex: List[Regex] = """sickle version (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   /** Sets qualityType is still empty */

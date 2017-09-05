@@ -45,7 +45,7 @@ class Hisat2Build(val parent: Configurable) extends BiopetCommandLineFunction wi
   var exon: Option[File] = config("exon")
 
   executable = config("exe", default = "hisat2-build", freeVar = false)
-  def versionRegex: Regex = """.*hisat.*version (.*)""".r
+  def versionRegex: List[Regex] = """.*hisat.*version (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   var bmax: Option[Int] = config("bmax")

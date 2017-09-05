@@ -33,7 +33,7 @@ class Curl(val parent: Configurable) extends BiopetCommandLineFunction with Vers
 
   executable = config("exe", default = "curl")
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """curl (\w+\.\w+\.\w+) .*""".r
+  def versionRegex: List[Regex] = """curl (\w+\.\w+\.\w+) .*""".r :: Nil
 
   def cmdLine: String =
     required(executable) + required(url) + (if (outputAsStdout) "" else " > " + required(output))

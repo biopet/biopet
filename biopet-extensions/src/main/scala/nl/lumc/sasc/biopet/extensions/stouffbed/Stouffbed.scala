@@ -17,6 +17,6 @@ abstract class Stouffbed extends BiopetCommandLineFunction with Version {
   var inputFiles: List[File] = Nil
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """.+, version (.*)""".r
+  def versionRegex: List[Regex] = """.+, version (.*)""".r :: Nil
 
 }

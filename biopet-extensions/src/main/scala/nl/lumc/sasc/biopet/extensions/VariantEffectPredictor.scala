@@ -55,7 +55,8 @@ class VariantEffectPredictor(val parent: Configurable)
     else super.subPath
   }
 
-  def versionRegex: Regex = """version (\d*)""".r
+  def versionRegex: List[Regex] =
+    """version (\d*)""".r :: """ *ensembl-vep *\: (.*)""".r :: Nil
   def versionCommand: String = executable + " " + vepScript + " --help"
 
   //Boolean vars

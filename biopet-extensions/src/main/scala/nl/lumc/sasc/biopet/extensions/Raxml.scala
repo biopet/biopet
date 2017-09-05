@@ -31,7 +31,7 @@ class Raxml(val parent: Configurable) extends BiopetCommandLineFunction with Ver
 
   override def defaultThreads = 1
   def versionCommand: String = executable + " -v"
-  def versionRegex: Regex = """.*version ([\w\.]*) .*""".r
+  def versionRegex: List[Regex] = """.*version ([\w\.]*) .*""".r :: Nil
 
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _

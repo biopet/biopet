@@ -60,7 +60,7 @@ class Tabix(val parent: Configurable) extends BiopetCommandLineFunction with Ver
   executable = config("exe", default = "tabix", freeVar = false)
 
   def versionCommand: String = executable
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 
   /** Formats that tabix can handle */

@@ -131,7 +131,7 @@ class Freebayes(val parent: Configurable)
   var haplotypeLength: Option[Int] = config("haplotype_length")
 
   executable = config("exe", default = "freebayes")
-  def versionRegex: Regex = """version:  (.*)""".r
+  def versionRegex: List[Regex] = """version:  (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   override def beforeGraph(): Unit = {
