@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.variant.variantcontext.{Allele, VariantContext, VariantContextBuilder}
 import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
@@ -54,7 +55,14 @@ object CorrectRefAlleles extends ToolCommand {
       }
       if (correct) writer.add(record)
       else {
-        // TODO: Not correct
+        val alleles = record.getAlleles.map { a =>
+          val bases = a.getBaseString
+          Allele.create(bases, bases == ref)
+        }
+        val newRecord = new VariantContextBuilder(record)
+          .alleles(alleles)
+          .genotypes(record.getGenotypes).make()
+        writer.add(newRecord)
       }
     }
 
