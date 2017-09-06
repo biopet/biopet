@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
+import htsjdk.samtools.{SAMReadGroupRecord, SAMSequenceDictionary, SamReader, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
@@ -41,6 +41,7 @@ object BamUtils {
     val temp = bamFiles.map { file =>
       val inputSam = SamReaderFactory.makeDefault.open(file)
       val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
+      inputSam.close()
       if (samples.size == 1) samples.head -> file
       else if (samples.size > 1)
         throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
@@ -51,6 +52,23 @@ object BamUtils {
     if (temp.map(_._1).distinct.size != temp.size)
       throw new IllegalArgumentException("Samples has been found twice")
     temp.toMap
+  }
+
+  /**
+    * This method will return all readgroups for each sample
+    *
+    * @throws IllegalArgumentException
+    * @param bamFiles input bam files
+    * @return Map of sample readgroups
+    */
+  def sampleReadGroups(bamFiles: List[File]): Map[String, List[SAMReadGroupRecord]] = {
+    val sampleBamFiles = sampleBamMap(bamFiles)
+    sampleBamFiles.map { case (sampleName, bamFile) =>
+      val inputSam = SamReaderFactory.makeDefault.open(bamFile)
+      val header = inputSam.getFileHeader
+      inputSam.close()
+      sampleName -> header.getReadGroups.toList
+    }
   }
 
   /**
