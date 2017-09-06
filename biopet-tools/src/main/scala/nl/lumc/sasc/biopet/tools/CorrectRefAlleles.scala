@@ -3,28 +3,29 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import htsjdk.variant.variantcontext.{Allele, VariantContext, VariantContextBuilder}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext._
+import htsjdk.variant.variantcontext.writer.{
+  AsyncVariantContextWriter,
+  VariantContextWriterBuilder
+}
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.{AbstractOptParser, ToolCommand}
 
 import scala.collection.JavaConversions._
 
 object CorrectRefAlleles extends ToolCommand {
-  case class Args(inputFile: File = null,
-                  outputFile: File = null,
-                  referenceFasta: File = null)
+  case class Args(inputFile: File = null, outputFile: File = null, referenceFasta: File = null)
 
   class OptParser extends AbstractOptParser[Args](commandName) {
-    opt[File]('I', "input") required () unbounded () valueName "<vcf file>" action {
-      (x, c) =>
-        c.copy(inputFile = x)
+    opt[File]('I', "input") required () unbounded () valueName "<vcf file>" action { (x, c) =>
+      c.copy(inputFile = x)
     } text "input vcf file"
     opt[File]('o', "output") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output vcf file"
-    opt[File]('R', "referenceFasta") required () unbounded () valueName "<fasta file>" action { (x, c) =>
-      c.copy(referenceFasta = x)
+    opt[File]('R', "referenceFasta") required () unbounded () valueName "<fasta file>" action {
+      (x, c) =>
+        c.copy(referenceFasta = x)
     } text "Reference fasta file"
   }
 
@@ -35,6 +36,9 @@ object CorrectRefAlleles extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+
+    logger.info("Start")
+    logger.warn("This tool will only look ad the GT field and ignores the rest")
 
     val referenceFile = new IndexedFastaSequenceFile(cmdArgs.referenceFasta)
 
@@ -48,7 +52,9 @@ object CorrectRefAlleles extends ToolCommand {
     writer.writeHeader(header)
 
     for (record <- reader) {
-      val ref = referenceFile.getSubsequenceAt(record.getContig, record.getStart, record.getEnd).getBaseString
+      val ref = referenceFile
+        .getSubsequenceAt(record.getContig, record.getStart, record.getEnd)
+        .getBaseString
       val correct = record.getAlleles.forall { allele =>
         if (allele.isReference) allele.getBaseString == ref
         else allele.getBaseString != ref
@@ -59,9 +65,16 @@ object CorrectRefAlleles extends ToolCommand {
           val bases = a.getBaseString
           Allele.create(bases, bases == ref)
         }
+        val genotypes = record.getGenotypes.map { g =>
+          new GenotypeBuilder(g.getSampleName, g.getAlleles.map { a =>
+            if (a.isCalled) alleles.find(_.getBaseString == a.getBaseString).get
+            else Allele.NO_CALL
+          }).make()
+        }
         val newRecord = new VariantContextBuilder(record)
           .alleles(alleles)
-          .genotypes(record.getGenotypes).make()
+          .genotypes(genotypes)
+          .make()
         writer.add(newRecord)
       }
     }
@@ -69,5 +82,7 @@ object CorrectRefAlleles extends ToolCommand {
     referenceFile.close()
     writer.close()
     reader.close()
+
+    logger.info("Done")
   }
 }
