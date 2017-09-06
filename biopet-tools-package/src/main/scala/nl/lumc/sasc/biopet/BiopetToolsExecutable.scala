@@ -22,6 +22,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
 
   def tools: List[MainCommand] =
     List(
+      nl.lumc.sasc.biopet.tools.CorrectRefAlleles,
       nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
       nl.lumc.sasc.biopet.tools.bamstats.BamStats,
       nl.lumc.sasc.biopet.tools.BaseCounter,
