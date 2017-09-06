@@ -110,8 +110,7 @@ object CountAlleles extends ToolCommand {
         if (cmdArgs.outputReadgroups) sampleGenotype :: counts.map(x => x._2.toGenotype(x._1.getSample + "-" + x._1.getReadGroupId, vcfRecord)).toList
         else List(sampleGenotype)
       }
-      builder.genotypes(genotypes.flatten)
-      writer.add(builder.make)
+      writer.add(builder.genotypes(genotypes.flatten).make)
     }
     bamReaders.foreach(_._2.close())
     reader.close()
