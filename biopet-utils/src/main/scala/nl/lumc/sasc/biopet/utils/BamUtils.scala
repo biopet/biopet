@@ -38,11 +38,16 @@ object BamUtils {
     * @return Map of sample bam files
     */
   def sampleBamMap(bamFiles: List[File]): Map[String, File] = {
+    val readers = sampleBamReaderMap(bamFiles)
+    readers.foreach(_._2._1.close())
+    readers.map(x => x._1 -> x._2._2)
+  }
+
+  def sampleBamReaderMap(bamFiles: List[File]): Map[String, (SamReader, File)] = {
     val temp = bamFiles.map { file =>
       val inputSam = SamReaderFactory.makeDefault.open(file)
       val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
-      inputSam.close()
-      if (samples.size == 1) samples.head -> file
+      if (samples.size == 1) samples.head -> (inputSam, file)
       else if (samples.size > 1)
         throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
       else
@@ -63,11 +68,20 @@ object BamUtils {
     */
   def sampleReadGroups(bamFiles: List[File]): Map[String, List[SAMReadGroupRecord]] = {
     val sampleBamFiles = sampleBamMap(bamFiles)
-    sampleBamFiles.map { case (sampleName, bamFile) =>
-      val inputSam = SamReaderFactory.makeDefault.open(bamFile)
-      val header = inputSam.getFileHeader
-      inputSam.close()
-      sampleName -> header.getReadGroups.toList
+    sampleBamFiles.map {
+      case (sampleName, bamFile) =>
+        val inputSam = SamReaderFactory.makeDefault.open(bamFile)
+        val header = inputSam.getFileHeader
+        inputSam.close()
+        sampleName -> header.getReadGroups.toList
+    }
+  }
+
+  def sampleReadGroups(
+      readers: Map[String, (SamReader, File)]): Map[String, List[SAMReadGroupRecord]] = {
+    readers.map {
+      case (sampleName, (reader, bamFile)) =>
+        sampleName -> reader.getFileHeader.getReadGroups.toList
     }
   }
 

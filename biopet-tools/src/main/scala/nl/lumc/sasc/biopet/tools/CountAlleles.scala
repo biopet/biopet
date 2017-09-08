@@ -17,13 +17,20 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools._
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.writer.{
+  AsyncVariantContextWriter,
+  VariantContextWriterBuilder
+}
 import htsjdk.variant.variantcontext._
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils._
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.io.Source
 
 object CountAlleles extends ToolCommand {
   case class Args(inputFile: File = null,
@@ -40,8 +47,11 @@ object CountAlleles extends ToolCommand {
     opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output VCF file name"
-    opt[File]('b', "bam") unbounded () minOccurs 1 action { (x, c) =>
+    opt[File]('b', "bam") unbounded () action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
+    } text "bam file, from which the variants (VCF files) were called"
+    opt[File]("bamList") unbounded () action { (x, c) =>
+      c.copy(bamFiles = Source.fromFile(x).getLines().map(new File(_)).toList ::: c.bamFiles)
     } text "bam file, from which the variants (VCF files) were called"
     opt[Int]('m', "min_mapping_quality") maxOccurs 1 action { (x, c) =>
       c.copy(minMapQual = x)
@@ -64,12 +74,17 @@ object CountAlleles extends ToolCommand {
     val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
+    logger.info("Start")
+
     val dict = FastaUtils.getCachedDict(cmdArgs.referenceFasta)
 
-    val sampleBamFiles = BamUtils.sampleBamMap(cmdArgs.bamFiles)
-    val sampleReadergroup = BamUtils.sampleReadGroups(cmdArgs.bamFiles)
-    val samReaderFactory = SamReaderFactory.makeDefault
-    val bamReaders: Map[String, SamReader] = sampleBamFiles.map(x => x._1 -> samReaderFactory.open(x._2))
+    logger.info(cmdArgs.bamFiles.size + " bamfiles found")
+
+    val bamReaders = BamUtils.sampleBamReaderMap(cmdArgs.bamFiles)
+    val sampleReadergroup = BamUtils.sampleReadGroups(bamReaders)
+
+    logger.info(s"Samples found: ${sampleReadergroup.size}")
+    logger.info(s"Readgroups found: ${sampleReadergroup.map(_._2.size).sum}")
 
     val reader = new VCFFileReader(cmdArgs.inputFile, false)
     val writer = new AsyncVariantContextWriter(
@@ -78,46 +93,64 @@ object CountAlleles extends ToolCommand {
         .setOutputFile(cmdArgs.outputFile)
         .build)
 
-    val headerLines: Set[VCFHeaderLine] = Set(new VCFFormatHeaderLine("GT",
-      VCFHeaderLineCount.R,
-      VCFHeaderLineType.String,
-      "Genotype of position"),
-    new VCFFormatHeaderLine("AD",
-      VCFHeaderLineCount.R,
-      VCFHeaderLineType.Integer,
-      "Allele depth, ref and alt on order of vcf file"),
-    new VCFFormatHeaderLine("DP",
-      1,
-      VCFHeaderLineType.Integer,
-      "Depth of position"))
-    val sampleNames = if (cmdArgs.outputReadgroups)
-      sampleReadergroup.flatMap(x => x._1 :: x._2.map(rg => rg.getSample + "-" + rg.getReadGroupId)).toList
-    else sampleBamFiles.keys.toList
+    val headerLines: Set[VCFHeaderLine] = Set(
+      new VCFFormatHeaderLine("GT",
+                              VCFHeaderLineCount.R,
+                              VCFHeaderLineType.String,
+                              "Genotype of position"),
+      new VCFFormatHeaderLine("AD",
+                              VCFHeaderLineCount.R,
+                              VCFHeaderLineType.Integer,
+                              "Allele depth, ref and alt on order of vcf file"),
+      new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Depth of position")
+    )
+    val sampleNames =
+      (if (cmdArgs.outputReadgroups)
+         sampleReadergroup
+           .flatMap(x => x._1 :: x._2.map(rg => rg.getSample + "-" + rg.getReadGroupId))
+           .toList
+       else sampleReadergroup.keys.toList).sorted
 
     val header = new VCFHeader(headerLines, sampleNames)
     header.setSequenceDictionary(dict)
     writer.writeHeader(header)
 
-    for (vcfRecord <- reader) {
-      val countReports = bamReaders.map(x => x._1 -> countAlleles(vcfRecord, x._2))
+    val it = for (vcfRecord <- reader.iterator().buffered) yield {
+      val countReports = bamReaders.map(x =>
+        x._1 -> Future(countAlleles(vcfRecord, x._2._1, sampleReadergroup(x._1))))
 
       val builder = new VariantContextBuilder()
         .chr(vcfRecord.getContig)
         .start(vcfRecord.getStart)
         .alleles(vcfRecord.getAlleles)
-      val genotypes = for ((sampleName, counts) <- countReports) yield {
-        val sampleGenotype = counts.values.reduce(_ + _).toGenotype(sampleName, vcfRecord)
-        if (cmdArgs.outputReadgroups) sampleGenotype :: counts.map(x => x._2.toGenotype(x._1.getSample + "-" + x._1.getReadGroupId, vcfRecord)).toList
+        .computeEndFromAlleles(vcfRecord.getAlleles, vcfRecord.getStart)
+      val genotypes = for ((sampleName, countsFuture) <- countReports) yield {
+        val counts = Await.result(countsFuture, Duration.Inf)
+        val sampleGenotype =
+          counts.values.fold(AlleleCounts())(_ + _).toGenotype(sampleName, vcfRecord)
+        if (cmdArgs.outputReadgroups)
+          sampleGenotype :: counts
+            .map(x => x._2.toGenotype(x._1.getSample + "-" + x._1.getReadGroupId, vcfRecord))
+            .toList
         else List(sampleGenotype)
       }
-      writer.add(builder.genotypes(genotypes.flatten).make)
+      builder.genotypes(genotypes.flatten).make
     }
-    bamReaders.foreach(_._2.close())
+    var c = 0L
+    it.buffered.foreach { record =>
+      c += 1
+      if (c % 1000 == 0) logger.info(s"$c variants done")
+      writer.add(record)
+    }
+    logger.info(s"$c variants done")
+    bamReaders.foreach(_._2._1.close())
     reader.close()
     writer.close()
+
+    logger.info("Done")
   }
 
-  protected case class AlleleCounts(count: Map[Allele, Int], dp: Int) {
+  protected case class AlleleCounts(count: Map[Allele, Int] = Map(), dp: Int = 0) {
     def +(other: AlleleCounts): AlleleCounts = {
       val alleles = this.count.keySet ++ other.count.keySet
       val map = alleles.map(a => a -> (this.count.getOrElse(a, 0) + other.count.getOrElse(a, 0)))
@@ -125,21 +158,43 @@ object CountAlleles extends ToolCommand {
     }
 
     def toGenotype(sampleName: String, vcfRecord: VariantContext): Genotype = {
+      val alleles =
+        if (count.forall(_._2 == 0)) List(Allele.NO_CALL, Allele.NO_CALL)
+        else {
+          val f = count.toList.map(x => (x._2.toDouble / dp) -> x._1)
+          val maxF = f.map(_._1).max
+          val firstAllele = f.find(_._1 == maxF).get._2
+          if (maxF > 0.8) List(firstAllele, firstAllele)
+          else {
+            val leftOver = f.filter(_._2 != firstAllele)
+            val maxF2 = (0.0 :: leftOver.map(_._1)).max
+            val secondAllele = leftOver.find(_._1 == maxF2).map(_._2).getOrElse(Allele.NO_CALL)
+            List(firstAllele, secondAllele)
+          }
+        }
       new GenotypeBuilder(sampleName)
-        .attribute("DP", dp)
-        .attribute("AD", vcfRecord.getAlleles.map(count.getOrElse(_, 0)).toArray)
+        .alleles(alleles.sortBy(a => vcfRecord.getAlleleIndex(a)))
+        .DP(dp)
+        .AD(vcfRecord.getAlleles.map(count.getOrElse(_, 0)).toArray)
         .make()
     }
   }
 
-  def countAlleles(vcfRecord: VariantContext, samReader: SamReader): Map[SAMReadGroupRecord, AlleleCounts] = {
-    samReader
+  def countAlleles(vcfRecord: VariantContext,
+                   samReader: SamReader,
+                   readGroups: List[SAMReadGroupRecord]): Map[SAMReadGroupRecord, AlleleCounts] = {
+    val map = samReader
       .query(vcfRecord.getContig, vcfRecord.getStart, vcfRecord.getEnd, false)
       .toList
       .groupBy(_.getReadGroup)
-      .map { case (readGroup, rs) =>
-        val count = rs.flatMap(CheckAllelesVcfInBam.checkAlleles(_, vcfRecord)).groupBy(x => x).map(x => vcfRecord.getAllele(x._1) -> x._2.size)
-        readGroup -> AlleleCounts(count, rs.size)
+      .map {
+        case (readGroup, rs) =>
+          val count = rs
+            .flatMap(CheckAllelesVcfInBam.checkAlleles(_, vcfRecord))
+            .groupBy(x => x)
+            .map(x => vcfRecord.getAllele(x._1) -> x._2.size)
+          readGroup -> AlleleCounts(count, rs.size)
       }
+    readGroups.map(rg => rg -> map.getOrElse(rg, AlleleCounts())).toMap
   }
 }
