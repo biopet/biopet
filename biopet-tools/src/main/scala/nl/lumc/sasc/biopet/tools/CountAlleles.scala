@@ -138,57 +138,8 @@ object CountAlleles extends ToolCommand {
       .toList
       .groupBy(_.getReadGroup)
       .map { case (readGroup, rs) =>
-        val count = rs.flatMap(checkAlleles(_, vcfRecord)).groupBy(x => x).map(x => vcfRecord.getAllele(x._1) -> x._2.size)
+        val count = rs.flatMap(CheckAllelesVcfInBam.checkAlleles(_, vcfRecord)).groupBy(x => x).map(x => vcfRecord.getAllele(x._1) -> x._2.size)
         readGroup -> AlleleCounts(count, rs.size)
       }
-  }
-
-  def checkAlleles(samRecord: SAMRecord, vcfRecord: VariantContext): Option[String] = {
-    val readStartPos = List
-      .range(0, samRecord.getReadBases.length)
-      .find(x => samRecord.getReferencePositionAtReadPosition(x + 1) == vcfRecord.getStart) getOrElse {
-      return None
-    }
-    val readBases = samRecord.getReadBases
-    val alleles = vcfRecord.getAlleles.map(x => x.getBaseString)
-    val refAllele = alleles.head
-    var maxSize = 1
-    for (allele <- alleles if allele.length > maxSize) maxSize = allele.length
-    val readC = for (t <- readStartPos until readStartPos + maxSize if t < readBases.length)
-      yield readBases(t).toChar
-    val allelesInRead = mutable.Set(alleles.filter(readC.mkString.startsWith): _*)
-
-    // Removal of insertions that are not really in the cigarstring
-    for (allele <- allelesInRead if allele.length > refAllele.length) {
-      val refPos = for (t <- refAllele.length until allele.length)
-        yield samRecord.getReferencePositionAtReadPosition(readStartPos + t + 1)
-      if (refPos.exists(_ > 0)) allelesInRead -= allele
-    }
-
-    // Removal of alleles that are not really in the cigarstring
-    for (allele <- allelesInRead) {
-      val readPosAfterAllele =
-        samRecord.getReferencePositionAtReadPosition(readStartPos + allele.length + 1)
-      val vcfPosAfterAllele = vcfRecord.getStart + refAllele.length
-      if (readPosAfterAllele != vcfPosAfterAllele &&
-          (refAllele.length != allele.length || (refAllele.length == allele.length && readPosAfterAllele < 0)))
-        allelesInRead -= allele
-    }
-
-    for (allele <- allelesInRead if allele.length >= refAllele.length) {
-      if (allelesInRead.exists(_.length > allele.length)) allelesInRead -= allele
-    }
-    if (allelesInRead.contains(refAllele) && allelesInRead.exists(_.length < refAllele.length))
-      allelesInRead -= refAllele
-    if (allelesInRead.isEmpty) None
-    else if (allelesInRead.size == 1) Some(allelesInRead.head)
-    else {
-      logger.warn("vcfRecord: " + vcfRecord)
-      logger.warn("samRecord: " + samRecord.getSAMString)
-      logger.warn("Found multiple options: " + allelesInRead.toString)
-      logger.warn("ReadStartPos: " + readStartPos + "  Read Length: " + samRecord.getReadLength)
-      logger.warn("Read skipped, please report this")
-      None
-    }
   }
 }
