@@ -23,13 +23,14 @@ import scala.collection.mutable
   * @param sampleToSample Stores sample to sample compare stats
   */
 case class SampleStats(genotypeStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
-                       sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()) {
+                       sampleToSample: Array[SampleToSampleStats] = Array()) {
 
   /** Add an other class */
   def +=(other: SampleStats): Unit = {
-    for ((key, value) <- other.sampleToSample) {
-      if (this.sampleToSample.contains(key)) this.sampleToSample(key) += value
-      else this.sampleToSample(key) = value
+    require(other.sampleToSample.size == this.sampleToSample.size)
+    val zipped = this.sampleToSample.zip(other.sampleToSample).zipWithIndex
+    for (((s1, s2), i) <- zipped) {
+      s1 += s2
     }
     for ((field, fieldMap) <- other.genotypeStats) {
       val thisField = this.genotypeStats.get(field)

@@ -71,16 +71,11 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testSampleStats(): Unit = {
-    val s1 = SampleStats()
-    val s2 = SampleStats()
+    val s1 = SampleStats(sampleToSample = Array.fill(2)(SampleToSampleStats()))
+    val s2 = SampleStats(sampleToSample = Array.fill(2)(SampleToSampleStats()))
 
-    s1.sampleToSample += "s1" -> SampleToSampleStats()
-    s1.sampleToSample += "s2" -> SampleToSampleStats()
-    s2.sampleToSample += "s1" -> SampleToSampleStats()
-    s2.sampleToSample += "s2" -> SampleToSampleStats()
-
-    s1.sampleToSample("s1").alleleOverlap = 1
-    s2.sampleToSample("s2").alleleOverlap = 2
+    s1.sampleToSample(0).alleleOverlap = 1
+    s2.sampleToSample(1).alleleOverlap = 2
 
     s1.genotypeStats += "1" -> mutable.Map(1 -> 1)
     s2.genotypeStats += "2" -> mutable.Map(2 -> 2)
@@ -92,7 +87,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 2))
     ss1.alleleOverlap = 1
     ss2.alleleOverlap = 2
-    s1.sampleToSample shouldBe mutable.Map("s1" -> ss1, "s2" -> ss2)
+    s1.sampleToSample shouldBe Array(ss1, ss2)
 
     s1 += s2
     s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 4))

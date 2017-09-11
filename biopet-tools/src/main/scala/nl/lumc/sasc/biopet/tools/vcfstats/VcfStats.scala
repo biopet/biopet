@@ -149,23 +149,23 @@ object VcfStats extends ToolCommand {
       reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
     if (!query.hasNext) {
       Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
-      for (sample <- samples) yield {
-        Stats.mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats,
+      for (sample <- samples.zipWithIndex) yield {
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample._2).genotypeStats,
                                   fillGenotype(adGenotypeTags))
       }
     }
 
     for (record <- query if record.getStart <= samInterval.getEnd) {
       Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-      for (sample1 <- samples) yield {
-        val genotype = record.getGenotype(sample1)
-        Stats.mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats,
+      for (sample1 <- samples.zipWithIndex) yield {
+        val genotype = record.getGenotype(sample1._2)
+        Stats.mergeNestedStatsMap(stats.samplesStats(sample1._2).genotypeStats,
                                   checkGenotype(record, genotype, adGenotypeTags))
-        for (sample2 <- samples) {
-          val genotype2 = record.getGenotype(sample2)
+        for (sample2 <- samples.zipWithIndex) {
+          val genotype2 = record.getGenotype(sample2._2)
           if (genotype.getAlleles == genotype2.getAlleles)
-            stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-          stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += VcfUtils
+            stats.samplesStats(sample1._2).sampleToSample(sample2._2).genotypeOverlap += 1
+          stats.samplesStats(sample1._2).sampleToSample(sample2._2).alleleOverlap += VcfUtils
             .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
         }
       }
