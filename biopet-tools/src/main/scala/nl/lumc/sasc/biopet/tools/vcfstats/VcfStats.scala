@@ -104,7 +104,8 @@ object VcfStats extends ToolCommand {
                 if (it.nonEmpty) Iterator(contig -> it.map(_._2).reduce(_ += _))
                 else Iterator()
             })
-        .reduceByKey(_ += _).setName(contig)
+        .reduceByKey(_ += _)
+        .setName(contig)
     }
     val contigsRdd = (sc.union(multiFutures) ++ regionsOneRdd).cache()
 
