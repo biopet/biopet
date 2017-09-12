@@ -83,17 +83,14 @@ object VcfStats extends ToolCommand {
     val contigs = regions.flatMap(_.map(_.chr))
 
     val bigContigs = regions.filter(_.size == 1).flatten.groupBy(_.chr).map {
-      case (contig, r) =>
+      case (_, r) =>
         val rdds = r
           .grouped(10)
           .map(
             g =>
               sc.parallelize(g.map(List(_)), g.size)
-                .setName(contig)
                 .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-                .setName(contig)
                 .reduceByKey(_ += _)
-                .setName(contig)
                 .repartition(1))
           .toList
 
@@ -105,16 +102,13 @@ object VcfStats extends ToolCommand {
                   a.grouped(10)
                     .map { g =>
                       sc.union(g)
-                        .setName(contig)
                         .reduceByKey(_ += _)
-                        .setName(contig)
                         .repartition(1)
                     }
                     .toList
                 else a
             })
           .reduceByKey(_ += _)
-          .setName(contig)
           .repartition(1)
     }
     val smallContigs = regions.filter(_.size > 1).map { r =>
