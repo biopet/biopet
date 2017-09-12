@@ -64,6 +64,7 @@ object VcfStats extends ToolCommand {
       .asInstanceOf[URLClassLoader]
       .getURLs
       .map(_.getFile)
+      .filter(_.endsWith(".jar"))
     val conf = cmdArgs.sparkConfigValues.foldLeft(
       new SparkConf()
         .setExecutorEnv(sys.env.toArray)
@@ -84,8 +85,28 @@ object VcfStats extends ToolCommand {
     val regionsRdd = sc
       .parallelize(regions, regions.size)
       .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+      .cache()
 
-    val contigsRdd = regionsRdd.reduceByKey(_ += _).cache()
+    val counts = regionsRdd.countByKey()
+
+    val multiCount = counts.filter(_._2 > 1).keySet
+
+    val regionsOneRdd = regionsRdd.filter(x => !multiCount.contains(x._1))
+    val multiFutures = multiCount.toList.map { contig =>
+      val rdd = regionsRdd.filter(_._1 == contig).setName(contig)
+      val count = counts(contig)
+      val steps = Math.log10(count).ceil.toInt - 1
+      (1 until steps)
+        .foldLeft(rdd)(
+          (a, b) =>
+            a.repartition((count.toDouble / Math.pow(10, b)).ceil.toInt)
+              .mapPartitions { it =>
+                if (it.nonEmpty) Iterator(contig -> it.map(_._2).reduce(_ += _))
+                else Iterator()
+            })
+        .reduceByKey(_ += _).setName(contig)
+    }
+    val contigsRdd = (sc.union(multiFutures) ++ regionsOneRdd).cache()
 
     val totalRdd = contigsRdd
       .map("total" -> _._2)
