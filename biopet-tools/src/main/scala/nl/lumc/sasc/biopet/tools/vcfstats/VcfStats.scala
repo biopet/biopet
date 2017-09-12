@@ -81,17 +81,15 @@ object VcfStats extends ToolCommand {
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
     val contigs = regions.flatMap(_.map(_.chr))
 
-    val contigsRdd = sc
+    val regionsRdd = sc
       .parallelize(regions, regions.size)
       .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-      .foldByKey(Stats.emptyStats(samples))(_ += _)
-      .repartition(contigs.size)
-      .cache()
+
+    val contigsRdd = regionsRdd.reduceByKey(_ += _).cache()
 
     val totalRdd = contigsRdd
       .map("total" -> _._2)
-      .foldByKey(Stats.emptyStats(samples))(_ += _)
-      .repartition(1)
+      .reduceByKey(_ += _)
       .cache()
 
     val totalJson = totalRdd.map {
