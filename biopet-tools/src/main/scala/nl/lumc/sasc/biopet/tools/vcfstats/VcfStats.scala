@@ -82,32 +82,43 @@ object VcfStats extends ToolCommand {
       .scatter(cmdArgs.binSize, maxContigsInSingleJob = Some(cmdArgs.maxContigsInSingleJob))
     val contigs = regions.flatMap(_.map(_.chr))
 
-    val regionsRdd = sc
-      .parallelize(regions, regions.size)
-      .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
-      .cache()
+    val bigContigs = regions.filter(_.size == 1).flatten.groupBy(_.chr).map {
+      case (contig, r) =>
+        val rdds = r
+          .grouped(10)
+          .map(
+            g =>
+              sc.parallelize(g.map(List(_)), g.size)
+                .setName(contig)
+                .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+                .setName(contig)
+                .reduceByKey(_ += _)
+                .setName(contig))
+          .toList
 
-    val counts = regionsRdd.countByKey()
-
-    val multiCount = counts.filter(_._2 > 1).keySet
-
-    val regionsOneRdd = regionsRdd.filter(x => !multiCount.contains(x._1))
-    val multiFutures = multiCount.toList.map { contig =>
-      val rdd = regionsRdd.filter(_._1 == contig).setName(contig)
-      val count = counts(contig)
-      val steps = Math.log10(count).ceil.toInt - 1
-      (1 until steps)
-        .foldLeft(rdd)(
-          (a, b) =>
-            a.repartition((count.toDouble / Math.pow(10, b)).ceil.toInt)
-              .mapPartitions { it =>
-                if (it.nonEmpty) Iterator(contig -> it.map(_._2).reduce(_ += _))
-                else Iterator()
+        val steps = Math.log10(rdds.size).ceil.toInt
+        sc.union((1 until steps)
+            .foldLeft(rdds) {
+              case (a, _) =>
+                if (a.size > 10)
+                  a.grouped(10)
+                    .map { g =>
+                      sc.union(g).setName(contig).reduceByKey(_ += _).setName(contig)
+                    }
+                    .toList
+                else a
             })
-        .reduceByKey(_ += _)
-        .setName(contig)
+          .reduceByKey(_ += _)
+          .setName(contig)
     }
-    val contigsRdd = (sc.union(multiFutures) ++ regionsOneRdd).cache()
+    val smallContigs = regions.filter(_.size > 1).map { r =>
+      sc.parallelize(r.map(List(_)), r.size)
+        .flatMap(readBins(_, samples, cmdArgs, adInfoTags, adGenotypeTags))
+        .reduceByKey(_ += _)
+        .cache()
+    }
+
+    val contigsRdd = sc.union(smallContigs ++ bigContigs).cache
 
     val totalRdd = contigsRdd
       .map("total" -> _._2)
@@ -158,42 +169,43 @@ object VcfStats extends ToolCommand {
               cmdArgs: Args,
               adInfoTags: List[String],
               adGenotypeTags: List[String],
-              reader: VCFFileReader): Stats = {
-    val stats = Stats.emptyStats(samples)
+              reader: VCFFileReader): Option[Stats] = {
 
     logger.info("Starting on: " + bedRecord)
 
     val samInterval = bedRecord.toSamInterval
 
-    val query =
-      reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
-    if (!query.hasNext) {
+    val query = reader.query(samInterval.getContig, samInterval.getStart, samInterval.getEnd)
+
+    if (query.nonEmpty) {
+      val stats = Stats.emptyStats(samples)
+
       Stats.mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
       for (sample <- samples.zipWithIndex) yield {
         Stats.mergeNestedStatsMap(stats.samplesStats(sample._2).genotypeStats,
                                   fillGenotype(adGenotypeTags))
       }
-    }
 
-    for (record <- query if record.getStart <= samInterval.getEnd) {
-      Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-      for (sample1 <- samples.zipWithIndex) yield {
-        val genotype = record.getGenotype(sample1._2)
-        Stats.mergeNestedStatsMap(stats.samplesStats(sample1._2).genotypeStats,
-                                  checkGenotype(record, genotype, adGenotypeTags))
-        for (sample2 <- samples.zipWithIndex) {
-          val genotype2 = record.getGenotype(sample2._2)
-          if (genotype.getAlleles == genotype2.getAlleles)
-            stats.samplesStats(sample1._2).sampleToSample(sample2._2).genotypeOverlap += 1
-          stats.samplesStats(sample1._2).sampleToSample(sample2._2).alleleOverlap += VcfUtils
-            .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+      for (record <- query if record.getStart <= samInterval.getEnd) {
+        Stats.mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+        for (sample1 <- samples.zipWithIndex) yield {
+          val genotype = record.getGenotype(sample1._2)
+          Stats.mergeNestedStatsMap(stats.samplesStats(sample1._2).genotypeStats,
+                                    checkGenotype(record, genotype, adGenotypeTags))
+          for (sample2 <- samples.zipWithIndex) {
+            val genotype2 = record.getGenotype(sample2._2)
+            if (genotype.getAlleles == genotype2.getAlleles)
+              stats.samplesStats(sample1._2).sampleToSample(sample2._2).genotypeOverlap += 1
+            stats.samplesStats(sample1._2).sampleToSample(sample2._2).alleleOverlap += VcfUtils
+              .alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+          }
         }
       }
-    }
 
-    logger.info("Completed on: " + bedRecord)
+      logger.info("Completed on: " + bedRecord)
 
-    stats
+      Some(stats)
+    } else None
   }
 
   def readBins(bedRecords: List[BedRecord],
@@ -204,11 +216,12 @@ object VcfStats extends ToolCommand {
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
 
     val stats = for (bedRecord <- bedRecords) yield {
-      bedRecord.chr -> readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader)
+      readBin(bedRecord, samples, cmdArgs, adInfoTags, adGenotypeTags, reader).map(
+        bedRecord.chr -> _)
     }
     reader.close()
 
-    stats
+    stats.flatten
   }
 
   val defaultGenotypeFields =
