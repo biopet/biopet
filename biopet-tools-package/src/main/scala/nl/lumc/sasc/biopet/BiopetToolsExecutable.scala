@@ -29,6 +29,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
       nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
       nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
       nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat,
+      nl.lumc.sasc.biopet.tools.CountAlleles,
       nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
       nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
       nl.lumc.sasc.biopet.tools.FastqSplitter,
