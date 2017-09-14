@@ -31,7 +31,7 @@ import scala.sys.process.{Process, ProcessLogger}
   * @param samplesStats Stores all sample/genotype specific stats
   */
 case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
-                 samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
+                 samplesStats: mutable.Map[Int, SampleStats] = mutable.Map()) {
 
   /** Add an other class */
   def +=(other: Stats): Stats = {
@@ -91,18 +91,18 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
     file.getParentFile.mkdirs()
     val writer = new PrintWriter(file)
     writer.println(samples.mkString(field + "\t", "\t", ""))
-    val keySet = (for (sample <- samples)
+    val keySet = (for ((sample, sampleIndex) <- samples.zipWithIndex)
       yield
         this
-          .samplesStats(sample)
+          .samplesStats(sampleIndex)
           .genotypeStats
           .getOrElse(field, Map[Any, Int]())
           .keySet).fold(Set[Any]())(_ ++ _)
     for (key <- keySet.toList.sortWith(sortAnyAny)) {
-      val values = for (sample <- samples)
+      val values = for ((sample, sampleIndex) <- samples.zipWithIndex)
         yield
           this
-            .samplesStats(sample)
+            .samplesStats(sampleIndex)
             .genotypeStats
             .getOrElse(field, Map[Any, Int]())
             .getOrElse(key, 0)
@@ -113,22 +113,22 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
 
   /** Function to write 1 specific genotype field */
   def getGenotypeField(samples: List[String], field: String): Map[String, Map[String, Any]] = {
-    val keySet = (for (sample <- samples)
+    val keySet = (for ((sample, sampleIndex) <- samples.zipWithIndex)
       yield
         this
-          .samplesStats(sample)
+          .samplesStats(sampleIndex)
           .genotypeStats
           .getOrElse(field, Map[Any, Int]())
           .keySet).fold(Set[Any]())(_ ++ _)
 
-    (for (sample <- samples)
+    (for ((sample, sampleIndex) <- samples.zipWithIndex)
       yield
         sample -> {
           keySet
             .map(
               key =>
                 key.toString -> this
-                  .samplesStats(sample)
+                  .samplesStats(sampleIndex)
                   .genotypeStats
                   .getOrElse(field, Map[Any, Int]())
                   .get(key))
@@ -142,19 +142,21 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
                     genotypeFields: List[String] = Nil,
                     infoFields: List[String] = Nil,
                     sampleDistributions: List[String] = Nil): Map[String, Any] = {
+    val sampleIndex = samples.zipWithIndex
     Map(
       "genotype" -> genotypeFields.map(f => f -> getGenotypeField(samples, f)).toMap,
       "info" -> infoFields.map(f => f -> getField(f)).toMap,
       "sample_distributions" -> sampleDistributions
         .map(f => f -> getField("SampleDistribution-" + f))
-        .toMap
-    ) ++ Map(
+        .toMap,
       "sample_compare" -> Map(
         "samples" -> samples,
-        "genotype_overlap" -> samples.map(sample1 =>
-          samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).genotypeOverlap)),
-        "allele_overlap" -> samples.map(sample1 =>
-          samples.map(sample2 => samplesStats(sample1).sampleToSample(sample2).alleleOverlap))
+        "genotype_overlap" -> sampleIndex.map(sample1 =>
+          sampleIndex.map(sample2 =>
+            samplesStats(sample1._2).sampleToSample(sample2._2).genotypeOverlap)),
+        "allele_overlap" -> sampleIndex.map(sample1 =>
+          sampleIndex.map(sample2 =>
+            samplesStats(sample1._2).sampleToSample(sample2._2).alleleOverlap))
       )
     )
   }
@@ -218,14 +220,14 @@ case class Stats(generalStats: mutable.Map[String, mutable.Map[Any, Int]] = muta
 
     absWriter.println(samples.mkString("\t", "\t", ""))
     relWriter.println(samples.mkString("\t", "\t", ""))
-    for (sample1 <- samples) {
-      val values = for (sample2 <- samples)
-        yield function(this.samplesStats(sample1).sampleToSample(sample2))
+    for (sample1 <- samples.zipWithIndex) {
+      val values = for (sample2 <- samples.zipWithIndex)
+        yield function(this.samplesStats(sample1._2).sampleToSample(sample2._2))
 
-      absWriter.println(values.mkString(sample1 + "\t", "\t", ""))
+      absWriter.println(values.mkString(sample1._1 + "\t", "\t", ""))
 
-      val total = function(this.samplesStats(sample1).sampleToSample(sample1))
-      relWriter.println(values.map(_.toFloat / total).mkString(sample1 + "\t", "\t", ""))
+      val total = function(this.samplesStats(sample1._2).sampleToSample(sample1._2))
+      relWriter.println(values.map(_.toFloat / total).mkString(sample1._1 + "\t", "\t", ""))
     }
     absWriter.close()
     relWriter.close()
@@ -239,12 +241,11 @@ object Stats {
 
   def emptyStats(samples: List[String]): Stats = {
     val stats = new Stats
+    val sampleIndex = samples.zipWithIndex
     //init stats
-    for (sample1 <- samples) {
-      stats.samplesStats += sample1 -> new SampleStats
-      for (sample2 <- samples) {
-        stats.samplesStats(sample1).sampleToSample += sample2 -> new SampleToSampleStats
-      }
+    for (sample1 <- sampleIndex) {
+      stats.samplesStats += sample1._2 -> SampleStats(
+        sampleToSample = Array.fill(samples.size)(new SampleToSampleStats))
     }
     stats
   }
