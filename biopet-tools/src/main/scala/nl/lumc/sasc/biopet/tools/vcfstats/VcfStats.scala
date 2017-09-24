@@ -128,8 +128,8 @@ object VcfStats extends ToolCommand {
 
     val contigsRdd = sc.union(smallContigs ++ bigContigs).cache
 
-    val totalRdd = contigsRdd
-      .map("total" -> _._2)
+    val totalRdd = (contigsRdd
+      .map("total" -> _._2) ++ sc.parallelize(List("total" -> Stats.emptyStats(samples)), 1))
       .reduceByKey(_ += _)
       .cache()
 
