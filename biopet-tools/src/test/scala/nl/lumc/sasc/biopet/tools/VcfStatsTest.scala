@@ -222,6 +222,16 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testEmptyVcf(): Unit = {
+    val tmp = Files.createTempDirectory("vcfStats")
+    val vcf = resourcePath("/empty.vcf.gz")
+    val ref = resourcePath("/fake_chrQ.fa")
+
+    noException should be thrownBy main(
+      Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
+  }
+
+  @Test
   def testSortAnyAny(): Unit = {
     //stub
     val one: Any = 1
