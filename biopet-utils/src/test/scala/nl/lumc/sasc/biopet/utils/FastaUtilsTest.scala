@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.utils
 import java.io.{File, PrintWriter}
 import java.nio.file.Paths
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -46,6 +47,19 @@ class FastaUtilsTest extends TestNGSuite with Matchers {
   @Test
   def testGetSequenceGc(): Unit = {
     val referenceFile = new File(resourcePath("/fake_chrQ.fa"))
+
+    val reader = new IndexedFastaSequenceFile(referenceFile)
+    reader.getSubsequenceAt("chrQ", 11, 20).getBaseString shouldBe "GAAACTCCAA"
+
+    FastaUtils.getSequenceGc(referenceFile, "chrQ", 11, 20) shouldBe 0.4
+  }
+
+  @Test
+  def testGetSequenceGcCompressed(): Unit = {
+    val referenceFile = new File(resourcePath("/fake_chrQ.fa.gz"))
+
+    val reader = new IndexedFastaSequenceFile(referenceFile)
+    reader.getSubsequenceAt("chrQ", 11, 20).getBaseString shouldBe "GAAACTCCAA"
 
     FastaUtils.getSequenceGc(referenceFile, "chrQ", 11, 20) shouldBe 0.4
   }
