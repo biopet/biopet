@@ -32,6 +32,8 @@ object FindOverlapMatch extends ToolCommand {
   case class Args(inputMetrics: File = null,
                   outputFile: Option[File] = None,
                   cutoff: Double = 0.0,
+                  shouldMatchRegexFile: Option[File] = None,
+                  showBestMatch: Boolean = false,
                   filterSameNames: Boolean = true,
                   rowSampleRegex: Option[Regex] = None,
                   columnSampleRegex: Option[Regex] = None)
@@ -40,6 +42,11 @@ object FindOverlapMatch extends ToolCommand {
     opt[File]('i', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputMetrics = x)
     } text "Input should be a table where the first row and column have the ID's, those can be different"
+    opt[File]("shouldMatchRegexFile") unbounded () valueName "<file>" action { (x, c) =>
+      c.copy(shouldMatchRegexFile = Some(x))
+    } text "File with regexes what should be the correct mathes.\n" +
+      "first column is the row samples reges, second column the column regex.\n" +
+      "When no second column given first column is used."
     opt[File]('o', "output") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
     } text "default to stdout"
@@ -49,6 +56,9 @@ object FindOverlapMatch extends ToolCommand {
     opt[Unit]("use_same_names") unbounded () valueName "<value>" action { (_, c) =>
       c.copy(filterSameNames = false)
     } text "Do not compare samples with the same name"
+    opt[Unit]("showBestMatch") unbounded () valueName "<value>" action { (_, c) =>
+      c.copy(showBestMatch = true)
+    } text "Show best match, even when it's below cutoff"
     opt[String]("rowSampleRegex") unbounded () valueName "<regex>" action { (x, c) =>
       c.copy(rowSampleRegex = Some(x.r))
     } text "Samples in the row should match this regex"
@@ -65,6 +75,8 @@ object FindOverlapMatch extends ToolCommand {
     val cmdArgs
       : Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
+    logger.info("Start")
+
     val reader = Source.fromFile(cmdArgs.inputMetrics)
 
     val data = reader.getLines().map(_.split("\t")).toArray
@@ -75,31 +87,82 @@ object FindOverlapMatch extends ToolCommand {
     var overlap = 0
     var multiOverlap = 0
     var noOverlap = 0
+    var correctMatches = 0
+    var incorrectMathes = 0
 
     val writer = cmdArgs.outputFile match {
       case Some(file) => new PrintStream(file)
       case _ => sys.process.stdout
     }
 
-    for (columnSample <- samplesColumnHeader
-         if cmdArgs.columnSampleRegex.forall(_.findFirstIn(columnSample._1).isDefined)) {
+    val matheRegexes = cmdArgs.shouldMatchRegexFile.map { file =>
+      val reader = Source.fromFile(file)
+      val regexes = reader
+        .getLines()
+        .map { line =>
+          val values = line.split("\t").map(_.r)
+          values.head -> values.lift(1).getOrElse(values.head)
+        }
+        .toList
+      reader.close()
+      regexes
+    }
+
+    for ((columnSampleName, columnSampleId) <- samplesColumnHeader
+         if cmdArgs.columnSampleRegex.forall(_.findFirstIn(columnSampleName).isDefined)) {
+
       val buffer = ListBuffer[(String, Double)]()
-      for (rowSample <- samplesRowHeader
-           if cmdArgs.rowSampleRegex.forall(_.findFirstIn(rowSample._1).isDefined)) {
-        val value = data(columnSample._2)(rowSample._2).toDouble
-        if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || columnSample._2 != rowSample._2)) {
+      val usedRows = samplesRowHeader.filter {
+        case (name, id) =>
+          cmdArgs.rowSampleRegex.forall(_.findFirstIn(name).isDefined)
+      }
+      for (rowSample <- usedRows) {
+        val value = data(columnSampleId)(rowSample._2).toDouble
+        if (value >= cmdArgs.cutoff && (!cmdArgs.filterSameNames || columnSampleId != rowSample._2)) {
           buffer.+=((rowSample._1, value))
         }
       }
+
       if (buffer.nonEmpty) overlap += 1
       else noOverlap += 1
       if (buffer.size > 1) multiOverlap += 1
 
-      writer.println(s"${columnSample._1}\t${buffer.mkString("\t")}")
+      if (buffer.isEmpty && cmdArgs.showBestMatch) {
+        val max = usedRows.map(x => data(columnSampleId)(x._2).toDouble).max
+        samplesRowHeader
+          .filter(x => data(columnSampleId)(x._2).toDouble == max)
+          .foreach {
+            case (name, _) =>
+              buffer.+=((name, max))
+          }
+      }
+
+      matheRegexes.foreach { regexes =>
+        regexes.find(_._1.findFirstMatchIn(columnSampleName).isDefined).foreach {
+          case (_, regex2) =>
+            val max = buffer.map(_._2).max
+            if (buffer.filter(_._2 == max).exists(x => regex2.findFirstMatchIn(x._1).isDefined)) {
+              correctMatches += 1
+            } else {
+              logger.warn(s"Incorrect match found, sample: $columnSampleName")
+              incorrectMathes += 1
+              usedRows
+                .filter(x => regex2.findFirstIn(x._1).isDefined)
+                .foreach(x => buffer.+=((x._1, data(columnSampleId)(x._2).toDouble)))
+            }
+        }
+      }
+
+      writer.println(s"$columnSampleName\t${buffer.mkString("\t")}")
+    }
+    cmdArgs.outputFile.foreach(_ => writer.close())
+    if (matheRegexes.isDefined) {
+      logger.info(s"$correctMatches correct matches found")
+      logger.info(s"$incorrectMathes incorrect matches found")
     }
     logger.info(s"$overlap found")
     logger.info(s"no $noOverlap found")
     logger.info(s"multi $multiOverlap found")
-    writer.close()
+    logger.info("Done")
   }
 }
