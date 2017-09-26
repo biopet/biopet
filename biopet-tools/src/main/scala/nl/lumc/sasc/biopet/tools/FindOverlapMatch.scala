@@ -45,7 +45,7 @@ object FindOverlapMatch extends ToolCommand {
     opt[File]("shouldMatchRegexFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(shouldMatchRegexFile = Some(x))
     } text "File with regexes what should be the correct mathes.\n" +
-      "first column is the row samples reges, second column the column regex.\n" +
+      "first column is the row samples regex, second column the column regex.\n" +
       "When no second column given first column is used."
     opt[File]('o', "output") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
