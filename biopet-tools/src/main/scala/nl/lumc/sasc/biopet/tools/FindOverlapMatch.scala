@@ -44,7 +44,7 @@ object FindOverlapMatch extends ToolCommand {
     } text "Input should be a table where the first row and column have the ID's, those can be different"
     opt[File]("shouldMatchRegexFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(shouldMatchRegexFile = Some(x))
-    } text "File with regexes what should be the correct mathes.\n" +
+    } text "File with regexes what should be the correct matches.\n" +
       "first column is the row samples regex, second column the column regex.\n" +
       "When no second column given first column is used."
     opt[File]('o', "output") unbounded () valueName "<file>" action { (x, c) =>
@@ -88,14 +88,14 @@ object FindOverlapMatch extends ToolCommand {
     var multiOverlap = 0
     var noOverlap = 0
     var correctMatches = 0
-    var incorrectMathes = 0
+    var incorrectMatches = 0
 
     val writer = cmdArgs.outputFile match {
       case Some(file) => new PrintStream(file)
       case _ => sys.process.stdout
     }
 
-    val matheRegexes = cmdArgs.shouldMatchRegexFile.map { file =>
+    val matcheRegexes = cmdArgs.shouldMatchRegexFile.map { file =>
       val reader = Source.fromFile(file)
       val regexes = reader
         .getLines()
@@ -137,7 +137,7 @@ object FindOverlapMatch extends ToolCommand {
           }
       }
 
-      matheRegexes.foreach { regexes =>
+      matcheRegexes.foreach { regexes =>
         regexes.find(_._1.findFirstMatchIn(columnSampleName).isDefined).foreach {
           case (_, regex2) =>
             val max = buffer.map(_._2).max
@@ -145,7 +145,7 @@ object FindOverlapMatch extends ToolCommand {
               correctMatches += 1
             } else {
               logger.warn(s"Incorrect match found, sample: $columnSampleName")
-              incorrectMathes += 1
+              incorrectMatches += 1
               usedRows
                 .filter(x => regex2.findFirstIn(x._1).isDefined)
                 .foreach(x => buffer.+=((x._1, data(columnSampleId)(x._2).toDouble)))
@@ -156,9 +156,9 @@ object FindOverlapMatch extends ToolCommand {
       writer.println(s"$columnSampleName\t${buffer.mkString("\t")}")
     }
     cmdArgs.outputFile.foreach(_ => writer.close())
-    if (matheRegexes.isDefined) {
+    if (matcheRegexes.isDefined) {
       logger.info(s"$correctMatches correct matches found")
-      logger.info(s"$incorrectMathes incorrect matches found")
+      logger.info(s"$incorrectMatches incorrect matches found")
     }
     logger.info(s"$overlap found")
     logger.info(s"no $noOverlap found")
