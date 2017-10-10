@@ -95,7 +95,7 @@ object FindOverlapMatch extends ToolCommand {
       case _ => sys.process.stdout
     }
 
-    val matcheRegexes = cmdArgs.shouldMatchRegexFile.map { file =>
+    val matchesRegexes = cmdArgs.shouldMatchRegexFile.map { file =>
       val reader = Source.fromFile(file)
       val regexes = reader
         .getLines()
@@ -137,7 +137,7 @@ object FindOverlapMatch extends ToolCommand {
           }
       }
 
-      matcheRegexes.foreach { regexes =>
+      matchesRegexes.foreach { regexes =>
         regexes.find(_._1.findFirstMatchIn(columnSampleName).isDefined).foreach {
           case (_, regex2) =>
             val max = buffer.map(_._2).max
@@ -156,7 +156,7 @@ object FindOverlapMatch extends ToolCommand {
       writer.println(s"$columnSampleName\t${buffer.mkString("\t")}")
     }
     cmdArgs.outputFile.foreach(_ => writer.close())
-    if (matcheRegexes.isDefined) {
+    if (matchesRegexes.isDefined) {
       logger.info(s"$correctMatches correct matches found")
       logger.info(s"$incorrectMatches incorrect matches found")
     }
