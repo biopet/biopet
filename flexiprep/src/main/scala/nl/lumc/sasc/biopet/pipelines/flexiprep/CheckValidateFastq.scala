@@ -16,9 +16,9 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.WriteSummary
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
+import org.broadinstitute.gatk.utils.commandline.Input
 
 import scala.io.Source
 
@@ -27,7 +27,7 @@ import scala.io.Source
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckValidateFastq extends InProcessFunction {
+class CheckValidateFastq(val parent: Configurable) extends InProcessFunction with Configurable {
   @Input(required = true)
   var inputLogFile: File = _
 
