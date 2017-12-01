@@ -61,7 +61,7 @@ class Shiva(val parent: Configurable)
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
       override def configNamespace: String = "shivavariantcalling"
-      override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
+      override def configPath: List[String] = super.configPath ::: Nil
       genders = samples.map { case (sampleName, s) => sampleName -> s.gender }
 
       //TODO: this needs changed when the sample/library refactoring is beeing done
