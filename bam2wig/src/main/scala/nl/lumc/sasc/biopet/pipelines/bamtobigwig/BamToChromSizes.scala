@@ -35,6 +35,9 @@ class BamToChromSizes(val parent: Configurable) extends InProcessFunction with C
   @Output
   var chromSizesFile: File = _
 
+  @Input(required = false)
+  var deps: List[File] = Nil
+
   def run(): Unit = {
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
     val writer = new PrintWriter(chromSizesFile)

@@ -54,9 +54,6 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
 
-    override def bamFile: Option[File] =
-      if (libraries.size == 1) libraries.head._2.mapping.map(_.finalBamFile) else super.bamFile
-
     override def preProcessBam = Some(createFile("filter.bam"))
 
     override def metricsPreprogressBam = false
@@ -69,7 +66,12 @@ class Carp(val parent: Configurable) extends QScript with MultisampleMappingTrai
     override def addJobs(): Unit = {
       super.addJobs()
 
-      add(Bam2Wig(qscript, bamFile.get))
+      val bam2Wig = Bam2Wig(qscript, bamFile.get)
+      if (libraries.size == 1) {
+        bam2Wig.deps ++= libraries.head._2.bamFile ++
+          libraries.head._2.bamFile.map(_.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      }
+      add(bam2Wig)
 
       val samtoolsView = new SamtoolsView(qscript)
       samtoolsView.input = bamFile.get

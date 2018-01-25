@@ -33,6 +33,9 @@ class Bam2Wig(val parent: Configurable) extends QScript with BiopetQScript {
   @Input(doc = "Input bam file", required = true)
   var bamFile: File = _
 
+  @Input(required = false)
+  var deps: List[File] = Nil
+
   def init(): Unit = {
     inputFiles :+= new InputFile(bamFile)
   }
@@ -46,6 +49,7 @@ class Bam2Wig(val parent: Configurable) extends QScript with BiopetQScript {
     bs.bamFile = bamFile
     bs.chromSizesFile = bamFile.getAbsoluteFile + ".chrom.sizes"
     bs.isIntermediate = true
+    deps.foreach(bs.deps :+= _)
     add(bs)
 
     val igvCount = new IGVToolsCount(this)
@@ -53,6 +57,7 @@ class Bam2Wig(val parent: Configurable) extends QScript with BiopetQScript {
     igvCount.genomeChromSizes = bs.chromSizesFile
     igvCount.wig = Some(outputWigleFile)
     igvCount.tdf = Some(outputTdfFile)
+    deps.foreach(igvCount.deps :+= _)
     add(igvCount)
 
     val wigToBigWig = new WigToBigWig(this)

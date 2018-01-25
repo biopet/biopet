@@ -41,6 +41,10 @@ class Ln(val parent: Configurable) extends InProcessFunction with Configurable {
 
   /** Generate out file for job */
   override def freezeFieldValues(): Unit = {
+    if (output.getAbsolutePath == "/home/pjvan_thof/test/output/samples/sample2/lib_lib1/sample2-lib1.dedup.bam") {
+      ""
+    }
+
     val outLog: String = ".%s.%s.out".format(output.getName, analysisName)
     jobOutputFile = new File(output.getAbsoluteFile.getParentFile, outLog)
     super.freezeFieldValues()
@@ -106,6 +110,10 @@ object Ln {
     * @return
     */
   def apply(root: Configurable, input: File, output: File, relative: Boolean = true): Ln = {
+    if (output.getAbsolutePath == "/home/pjvan_thof/test/output/samples/sample2/lib_lib1/sample2-lib1.dedup.bam") {
+      ""
+    }
+
     val ln = new Ln(root)
     ln.input = input
     ln.output = output
