@@ -18,7 +18,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort}
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
@@ -44,6 +44,9 @@ class BamMetrics(val parent: Configurable)
 
   @Argument(required = false)
   var paired: Boolean = true
+
+  @Input(required = false)
+  var deps: List[File] = Nil
 
   override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
@@ -209,6 +212,11 @@ class BamMetrics(val parent: Configurable)
     }
 
     addSummaryJobs()
+    functions.foreach {
+      case f: BiopetCommandLineFunction =>
+        f.deps ++= deps
+      case f =>
+    }
   }
 }
 
