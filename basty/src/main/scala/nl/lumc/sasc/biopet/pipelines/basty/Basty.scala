@@ -48,6 +48,7 @@ class Basty(val parent: Configurable) extends QScript with MultiSampleQScript { 
   val executeGubbins: Boolean = config("execute_gubbins", default = true)
 
   override def defaults = Map(
+    "sample_ploidy" -> 1,
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
   )
