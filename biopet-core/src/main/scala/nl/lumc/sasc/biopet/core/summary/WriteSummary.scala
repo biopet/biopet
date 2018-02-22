@@ -45,8 +45,7 @@ class WriteSummary(val parent: SummaryQScript) extends InProcessFunction with Co
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
-  var md5sum: Boolean = config("summary_md5", default = true)
-  //TODO: add more checksums types
+  var md5sum: Boolean = config("summary_md5", default = false)
 
   override def freezeFieldValues(): Unit = {
     init()
