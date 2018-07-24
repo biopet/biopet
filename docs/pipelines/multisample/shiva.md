@@ -118,10 +118,10 @@ samples:
   sample1:
     tags:
       type: tumor
-      normal: sample2
+      control: sample2
   sample2:
     tags:
-      type: normal
+      type: control
 ```
 
 ## Config options
