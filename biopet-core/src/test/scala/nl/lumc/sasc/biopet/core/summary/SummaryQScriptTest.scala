@@ -123,10 +123,11 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
 object SummaryQScriptTest {
   def makeQscript(settings: Map[String, Any] = Map(),
                   files: Map[String, File] = Map(),
-                  c: Map[String, Any] = Map()) =
+                  c: Map[String, Any] = Map(),
+                  md5: Boolean = true) =
     new SummaryQScript with QScript {
       outputDir = new File(".")
-      override def globalConfig = new Config(c)
+      override def globalConfig = new Config(c + ("summary_md5" -> md5))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
       val tempFile: File = File.createTempFile("summary", ".json")
