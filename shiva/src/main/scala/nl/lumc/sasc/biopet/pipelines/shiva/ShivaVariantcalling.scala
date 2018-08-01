@@ -87,12 +87,12 @@ class ShivaVariantcalling(val parent: Configurable)
     if (Option(tumorSamples).isEmpty)
       tumorSamples = inputBams.keys
         .filter(name =>
-          config("type", path = "samples" :: name :: "tags" :: Nil, default = "normal").asString.toLowerCase == "tumor")
+          config("type", path = "samples" :: name :: "tags" :: Nil, default = "control").asString.toLowerCase == "tumor")
         .map { tumorSample =>
-          val normal: String = config("normal", path = "samples" :: tumorSample :: "tags" :: Nil)
-          if (!inputBams.keySet.contains(normal))
-            Logging.addError(s"Normal sample '$normal' does not exist")
-          TumorNormalPair(tumorSample, normal)
+          val control: String = config("control", path = "samples" :: tumorSample :: "tags" :: Nil)
+          if (!inputBams.keySet.contains(control))
+            Logging.addError(s"Control sample '$control' does not exist")
+          TumorNormalPair(tumorSample, control)
         }
         .toList
   }
