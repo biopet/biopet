@@ -27,6 +27,6 @@ abstract class IGVTools extends BiopetJavaCommandLineFunction with Version {
   jarFile = config("igvtools_jar", namespace = "igvtools")
 
   def versionCommand: String = executable + s" -jar ${jarFile.getAbsolutePath} version"
-  def versionRegex: Regex = """IGV Version:? ([\w\.]*) .*""".r
+  def versionRegex: List[Regex] = """IGV Version:? ([\w\.]*) .*""".r :: Nil
   override def versionExitcode = List(0)
 }

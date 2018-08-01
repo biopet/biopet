@@ -37,7 +37,7 @@ class PindelCaller(val parent: Configurable)
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
 
-  def versionRegex: Regex = """Pindel version:? (.*)""".r
+  def versionRegex: List[Regex] = """Pindel version:? (.*)""".r :: Nil
   override def versionExitcode = List(1)
   def versionCommand: String = executable
 

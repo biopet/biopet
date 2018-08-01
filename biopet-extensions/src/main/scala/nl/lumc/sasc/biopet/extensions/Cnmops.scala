@@ -40,7 +40,7 @@ class Cnmops(val parent: Configurable) extends RscriptCommandLineFunction with V
     val v = super.cmdLine + "--version"
     v.trim.replace("'", "")
   }
-  def versionRegex: Regex = "(\\d+\\.\\d+\\.\\d+)".r
+  def versionRegex: List[Regex] = "(\\d+\\.\\d+\\.\\d+)".r :: Nil
 
   /**
     * Check whether version of cn mops is at least 1.18.0

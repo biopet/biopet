@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 import java.nio.file.Paths
 
+import nl.lumc.sasc.biopet.core.Version
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -68,4 +69,23 @@ class VariantEffectPredictorTest extends TestNGSuite with Matchers {
     ConfigUtils.mergeMaps(stats2, stats1, vep1.resolveSummaryConflict)
   }
 
+  @Test
+  def testVersion(): Unit = {
+    val vep = new VariantEffectPredictor(null)
+    val lines = List(
+      "version 86",
+      "version 88",
+      "  ensembl-vep          : 90.1"
+    )
+    val versions = lines.flatMap { line =>
+      vep.versionRegex
+        .flatMap(r =>
+          line match {
+            case r(x) => Some(x)
+            case _ => None
+        })
+        .headOption
+    }
+    versions shouldBe List("86", "88", "90.1")
+  }
 }

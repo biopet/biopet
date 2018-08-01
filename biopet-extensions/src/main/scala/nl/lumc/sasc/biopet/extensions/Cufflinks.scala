@@ -189,7 +189,7 @@ class Cufflinks(val parent: Configurable) extends BiopetCommandLineFunction with
   /** do not contact server to check for update availability [FALSE] */
   var noUpdateCheck: Boolean = config("no_update_check", default = false)
 
-  def versionRegex: Regex = """cufflinks v(.*)""".r
+  def versionRegex: List[Regex] = """cufflinks v(.*)""".r :: Nil
   def versionCommand: String = executable
   override def versionExitcode = List(0, 1)
 

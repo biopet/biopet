@@ -62,6 +62,9 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
   def finalGvcfFile: File = genotypeGvcfs.finalGvcfFile
 
   def biopetScript() {
+    genotypeGvcfs.outputDir = outputDir
+    genotypeGvcfs.namePrefix = s"$namePrefix.$name"
+
     gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
       if (genderAwareCalling) {
         val gender = genders.getOrElse(sample, Gender.Unknown)
@@ -118,8 +121,6 @@ class HaplotypeCallerGvcf(val parent: Configurable) extends Variantcaller {
       }
     }
 
-    genotypeGvcfs.outputDir = outputDir
-    genotypeGvcfs.namePrefix = s"$namePrefix.$name"
     add(genotypeGvcfs)
   }
 }

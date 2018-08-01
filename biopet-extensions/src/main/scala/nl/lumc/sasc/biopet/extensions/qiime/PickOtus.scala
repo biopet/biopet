@@ -36,7 +36,7 @@ class PickOtus(val parent: Configurable) extends BiopetCommandLineFunction with 
   override def defaultThreads = 2
   override def defaultCoreMemory = 5.0
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
 
   var otuPickingMethod: Option[String] = config("otu_picking_method")
   var clusteringAlgorithm: Option[String] = config("clustering_algorithm")

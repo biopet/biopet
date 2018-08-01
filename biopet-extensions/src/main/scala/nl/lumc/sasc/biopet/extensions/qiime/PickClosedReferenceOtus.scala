@@ -38,7 +38,7 @@ class PickClosedReferenceOtus(val parent: Configurable)
   override def defaultThreads = 1
   override def defaultCoreMemory = 20.0
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
 
   @Input(required = false)
   var parameterFp: Option[File] = config("parameter_fp")

@@ -132,7 +132,7 @@ class Flexiprep(val parent: Configurable)
     add(validateFastq)
 
     if (config("abort_on_corrupt_fastq", default = true)) {
-      val checkValidateFastq = new CheckValidateFastq
+      val checkValidateFastq = new CheckValidateFastq(this)
       checkValidateFastq.inputLogFile = validateFastq.jobOutputFile
       checkValidateFastq.jobOutputFile = new File(outputDir, ".check.validate_fastq.log.out")
       add(checkValidateFastq)
@@ -309,7 +309,7 @@ class Flexiprep(val parent: Configurable)
     add(validateFastq)
 
     if (config("abort_on_corrupt_fastq", default = true)) {
-      val checkValidateFastq = new CheckValidateFastq
+      val checkValidateFastq = new CheckValidateFastq(this)
       checkValidateFastq.inputLogFile = validateFastq.jobOutputFile
       checkValidateFastq.jobOutputFile = new File(outputDir, ".check.validate_fastq.qc.log.out")
       add(checkValidateFastq)

@@ -30,7 +30,7 @@ class Awk(val parent: Configurable) extends BiopetCommandLineFunction with Versi
 
   def versionCommand: String = executable + " --version"
 
-  def versionRegex: Regex = """(GNU Awk \d+\.\d+\.\d+)""".r
+  def versionRegex: List[Regex] = """(GNU Awk \d+\.\d+\.\d+)""".r :: Nil
 
   @Input(required = false)
   var input: File = _

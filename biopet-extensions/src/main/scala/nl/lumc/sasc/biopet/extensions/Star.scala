@@ -59,7 +59,7 @@ class Star(val parent: Configurable)
   executable = config("exe", "STAR")
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """(.*)""".r
+  def versionRegex: List[Regex] = """(.*)""".r :: Nil
 
   @Argument(doc = "Output Directory")
   var outputDir: File = _

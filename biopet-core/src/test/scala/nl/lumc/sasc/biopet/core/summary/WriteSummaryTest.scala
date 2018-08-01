@@ -412,7 +412,7 @@ object WriteSummaryTest {
       def summaryFiles: Map[String, File] = files
 
       def versionCommand: String = "echo test version"
-      def versionRegex: Regex = """(.*)""".r
+      def versionRegex: List[Regex] = """(.*)""".r :: Nil
       override def getVersion = Some("test version")
 
       override def outputs = Seq()
@@ -438,7 +438,7 @@ object WriteSummaryTest {
       def summaryStats: Any = stats
 
       def versionCommand: String = "echo test version"
-      def versionRegex: Regex = """(.*)""".r
+      def versionRegex: List[Regex] = """(.*)""".r :: Nil
       override def getVersion = Some("test version")
 
       def commandLine: String = ""

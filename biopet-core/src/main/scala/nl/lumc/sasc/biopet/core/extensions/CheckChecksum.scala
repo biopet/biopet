@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.core.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.WriteSummary
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
 
@@ -25,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
   *
   * Created by pjvanthof on 16/08/15.
   */
-class CheckChecksum extends InProcessFunction {
+class CheckChecksum(val parent: Configurable) extends InProcessFunction with Configurable {
   @Input(required = true)
   var inputFile: File = _
 

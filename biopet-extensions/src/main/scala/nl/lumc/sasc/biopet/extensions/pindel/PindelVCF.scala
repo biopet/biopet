@@ -34,7 +34,7 @@ class PindelVCF(val parent: Configurable)
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  def versionRegex: Regex = """Version:?[ ]+(.*)""".r
+  def versionRegex: List[Regex] = """Version:?[ ]+(.*)""".r :: Nil
   override def versionExitcode = List(0)
   def versionCommand: String = executable + " -h"
 

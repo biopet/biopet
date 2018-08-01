@@ -79,6 +79,7 @@ class Centrifuge(val parent: Configurable)
   var norc: Boolean = config("norc", default = false)
 
   // Classification args
+  var k: Option[Int] = config("k")
   var minHitlen: Option[Int] = config("min_hitlen")
   var minTotallen: Option[Int] = config("min_totallen")
   var hostTaxids: List[Int] = config("host_taxids", default = Nil)
@@ -98,7 +99,7 @@ class Centrifuge(val parent: Configurable)
   def versionCommand: String = s"$executable --version"
 
   /** Regex to get version from version command output */
-  def versionRegex: Regex = ".* version (.*)".r
+  def versionRegex: List[Regex] = ".* version (.*)".r :: Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -129,6 +130,7 @@ class Centrifuge(val parent: Configurable)
       conditional(ignoreQuals, "--ignore-quals") +
       conditional(nofw, "--nofw") +
       conditional(norc, "--norc") +
+      optional("-k", k) +
       optional("--min-hitlen", minHitlen) +
       optional("--min-totallen", minTotallen) +
       optional("--host-taxids", if (hostTaxids.nonEmpty) Some(hostTaxids.mkString(",")) else None) +

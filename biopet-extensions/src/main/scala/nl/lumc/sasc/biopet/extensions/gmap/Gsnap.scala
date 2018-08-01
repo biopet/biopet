@@ -332,7 +332,7 @@ class Gsnap(val parent: Configurable)
   /** value to put into read-group library (rg-pl) field */
   var readGroupPlatform: Option[String] = config("read_group_platform")
 
-  def versionRegex: Regex = """.* version (.*)""".r
+  def versionRegex: List[Regex] = """.* version (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   override def beforeGraph(): Unit = {

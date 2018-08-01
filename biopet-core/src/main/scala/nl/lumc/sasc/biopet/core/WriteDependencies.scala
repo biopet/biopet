@@ -113,6 +113,10 @@ object WriteDependencies extends Logging with Configurable {
     val jobs = functionNames.par
       .map {
         case (f, name) =>
+          val configPath = f match {
+            case c: Configurable => c.configPath
+            case _ => Nil
+          }
           name.toString -> Map(
             "command" -> (f match {
               case cmd: CommandLineFunction => cmd.commandLine
@@ -146,7 +150,8 @@ object WriteDependencies extends Logging with Configurable {
             "fail_files" -> BiopetQScript.safeFailFiles(f).getOrElse(Seq()).toList,
             "stdout_file" -> f.jobOutputFile,
             "done_at_start" -> BiopetQScript.safeIsDone(f),
-            "fail_at_start" -> BiopetQScript.safeIsFail(f)
+            "fail_at_start" -> BiopetQScript.safeIsFail(f),
+            "config_path" -> configPath
           )
       }
       .toIterator

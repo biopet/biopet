@@ -23,5 +23,5 @@ abstract class Bedtools extends BiopetCommandLineFunction with Version {
   override def subPath: List[String] = "bedtools" :: super.subPath
   executable = config("exe", default = "bedtools", namespace = "bedtools")
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """bedtools (.*)""".r
+  def versionRegex: List[Regex] = """bedtools (.*)""".r :: Nil
 }

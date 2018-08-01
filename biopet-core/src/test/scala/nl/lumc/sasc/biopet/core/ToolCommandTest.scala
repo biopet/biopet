@@ -31,7 +31,7 @@ class ToolCommandTest extends TestNGSuite with Matchers {
     }
 
     tool.versionCommand shouldBe empty
-    tool.versionRegex.toString() shouldBe empty
+    tool.versionRegex shouldBe empty
     tool.getVersion shouldBe Some("Biopet " + FullVersion)
     tool.beforeGraph()
 

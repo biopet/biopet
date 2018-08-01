@@ -26,7 +26,7 @@ import scala.util.matching.Regex
   * Created by pjvanthof on 20/11/15.
   */
 class VtNormalize(val parent: Configurable) extends Vt with Version with Reference {
-  def versionRegex: Regex = """normalize (.*)""".r
+  def versionRegex: List[Regex] = """normalize (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable + " normalize"
 

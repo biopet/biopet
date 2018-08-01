@@ -22,12 +22,14 @@ object BiopetToolsExecutable extends BiopetExecutable {
 
   def tools: List[MainCommand] =
     List(
+      nl.lumc.sasc.biopet.tools.CorrectRefAlleles,
       nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
       nl.lumc.sasc.biopet.tools.bamstats.BamStats,
       nl.lumc.sasc.biopet.tools.BaseCounter,
       nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
       nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
       nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat,
+      nl.lumc.sasc.biopet.tools.CountAlleles,
       nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
       nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
       nl.lumc.sasc.biopet.tools.FastqSplitter,
@@ -61,6 +63,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
       nl.lumc.sasc.biopet.tools.WipeReads,
       nl.lumc.sasc.biopet.tools.MultiCoverage,
       nl.lumc.sasc.biopet.tools.NcbiReportToContigMap,
+      nl.lumc.sasc.biopet.tools.RebuildContigMap,
       nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly
     )
 

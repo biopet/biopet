@@ -46,7 +46,7 @@ class PickRepSet(val parent: Configurable) extends BiopetCommandLineFunction wit
   var sortBy: Option[String] = config("sort_by")
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
 
   var repSetPickingMethod: Option[String] = config("rep_set_picking_method")
 

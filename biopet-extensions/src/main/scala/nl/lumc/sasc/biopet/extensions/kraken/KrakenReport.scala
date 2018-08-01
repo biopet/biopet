@@ -26,7 +26,7 @@ import scala.util.matching.Regex
 class KrakenReport(val parent: Configurable) extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", default = "kraken-report")
-  def versionRegex: Regex = """Kraken version (.*)""".r
+  def versionRegex: List[Regex] = """Kraken version (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 4.0

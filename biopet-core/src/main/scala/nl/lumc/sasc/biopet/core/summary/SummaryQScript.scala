@@ -142,7 +142,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
-      if (writeSummary.md5sum) {
+      if (writeSummary.md5sum || inputFiles.find(_.file == file).flatMap(_.md5).isDefined) {
         if (!SummaryQScript.md5sumCache.contains(file)) {
           val md5sum = new Md5sum(this) {
             override def configNamespace = "md5sum"
@@ -208,7 +208,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       inputFile.md5 match {
         case Some(checksum) =>
           if (!SummaryQScript.checkChecksumCache.contains(inputFile.file)) {
-            val checkMd5 = new CheckChecksum
+            val checkMd5 = new CheckChecksum(this)
             checkMd5.inputFile = inputFile.file
             if (!SummaryQScript.md5sumCache.contains(inputFile.file))
               addChecksum(inputFile.file)

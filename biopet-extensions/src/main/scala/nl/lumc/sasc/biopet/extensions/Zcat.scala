@@ -34,7 +34,7 @@ class Zcat(val parent: Configurable) extends BiopetCommandLineFunction with Vers
 
   executable = config("exe", default = "zcat")
 
-  def versionRegex: Regex = """zcat \(gzip\) (.*)""".r
+  def versionRegex: List[Regex] = """zcat \(gzip\) (.*)""".r :: Nil
   def versionCommand: String = executable + " --version"
 
   /** Returns command to execute */

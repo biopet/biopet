@@ -45,7 +45,7 @@ class Hisat2(val parent: Configurable)
   var output: File = _
 
   executable = config("exe", default = "hisat2", freeVar = false)
-  def versionRegex: Regex = """.*hisat2-align-s version (.*)""".r
+  def versionRegex: List[Regex] = """.*hisat2-align-s version (.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
   def versionCommand: String = executable + " --version"
 

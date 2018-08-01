@@ -67,7 +67,7 @@ class AssignTaxonomy(val parent: Configurable) extends BiopetCommandLineFunction
   var outputDir: File = _
 
   def versionCommand: String = executable + " --version"
-  def versionRegex: Regex = """Version: (.*)""".r
+  def versionRegex: List[Regex] = """Version: (.*)""".r :: Nil
   override def defaultCoreMemory = 4.0
 
   override def beforeGraph(): Unit = {

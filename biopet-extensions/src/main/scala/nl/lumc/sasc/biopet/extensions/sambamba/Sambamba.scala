@@ -27,6 +27,6 @@ abstract class Sambamba extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", default = "sambamba", namespace = "sambamba", freeVar = false)
   def versionCommand: String = executable
-  def versionRegex: Regex = """sambamba v?(.*)""".r
+  def versionRegex: List[Regex] = """sambamba v?(.*)""".r :: Nil
   override def versionExitcode = List(0, 1)
 }

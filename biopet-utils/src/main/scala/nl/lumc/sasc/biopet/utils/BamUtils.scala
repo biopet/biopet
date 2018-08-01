@@ -16,7 +16,7 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
+import htsjdk.samtools.{SAMReadGroupRecord, SAMSequenceDictionary, SamReader, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
@@ -38,10 +38,16 @@ object BamUtils {
     * @return Map of sample bam files
     */
   def sampleBamMap(bamFiles: List[File]): Map[String, File] = {
+    val readers = sampleBamReaderMap(bamFiles)
+    readers.foreach(_._2._1.close())
+    readers.map(x => x._1 -> x._2._2)
+  }
+
+  def sampleBamReaderMap(bamFiles: List[File]): Map[String, (SamReader, File)] = {
     val temp = bamFiles.map { file =>
       val inputSam = SamReaderFactory.makeDefault.open(file)
       val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
-      if (samples.size == 1) samples.head -> file
+      if (samples.size == 1) samples.head -> (inputSam, file)
       else if (samples.size > 1)
         throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
       else
@@ -51,6 +57,32 @@ object BamUtils {
     if (temp.map(_._1).distinct.size != temp.size)
       throw new IllegalArgumentException("Samples has been found twice")
     temp.toMap
+  }
+
+  /**
+    * This method will return all readgroups for each sample
+    *
+    * @throws IllegalArgumentException
+    * @param bamFiles input bam files
+    * @return Map of sample readgroups
+    */
+  def sampleReadGroups(bamFiles: List[File]): Map[String, List[SAMReadGroupRecord]] = {
+    val sampleBamFiles = sampleBamMap(bamFiles)
+    sampleBamFiles.map {
+      case (sampleName, bamFile) =>
+        val inputSam = SamReaderFactory.makeDefault.open(bamFile)
+        val header = inputSam.getFileHeader
+        inputSam.close()
+        sampleName -> header.getReadGroups.toList
+    }
+  }
+
+  def sampleReadGroups(
+      readers: Map[String, (SamReader, File)]): Map[String, List[SAMReadGroupRecord]] = {
+    readers.map {
+      case (sampleName, (reader, bamFile)) =>
+        sampleName -> reader.getFileHeader.getReadGroups.toList
+    }
   }
 
   /**

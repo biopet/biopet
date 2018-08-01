@@ -202,6 +202,21 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     starReader.iterator().foreach(x => mustHaveVariant(x, List("Sample_101")) shouldBe false)
   }
 
+  @Test def testMustNotHaveVariant(): Unit = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    mustNotHaveVariant(record, List("Sample_101")) shouldBe false
+    mustNotHaveVariant(record, List("Sample_101", "Sample_102")) shouldBe false
+    mustNotHaveVariant(record, List("Sample_101", "Sample_102", "Sample_103")) shouldBe false
+    mustNotHaveVariant(record, List("Sample_103")) shouldBe true
+
+    an[IllegalArgumentException] shouldBe thrownBy(mustHaveVariant(record, List("notExistant")))
+
+    val starReader = new VCFFileReader(star, false)
+    starReader.iterator().foreach(x => mustHaveVariant(x, List("Sample_101")) shouldBe false)
+  }
+
   @Test def testSameGenotype(): Unit = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()

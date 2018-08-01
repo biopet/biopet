@@ -13,6 +13,7 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
     * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa mem</a>
     * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa aln</a>
     * <a href="http://bowtie-bio.sourceforge.net/index.shtml" target="_blank">Bowtie version 1.1.1</a>
+    * <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="_blank">Bowtie version 2.*</a>
     * <a href="http://www.well.ox.ac.uk/project-stampy" target="_blank">Stampy</a>
     * <a href="http://research-pub.gene.com/gmap/" target="_blank">Gsnap</a>
     * <a href="https://ccb.jhu.edu/software/tophat" target="_blank">TopHat</a>
@@ -114,15 +115,15 @@ Any supplied sample config will be ignored.
 #### Minimal
 ```json
 {
-"reference_fasta": "<path/to/reference">,
-"output_dir": "<path/to/output/dir">
+"reference_fasta": "<path/to/reference>",
+"output_dir": "<path/to/output/dir>"
 }
 ```
 
 #### With options
 ```json
 {
-"reference_fasta": "<path/to/reference">,
+"reference_fasta": "<path/to/reference>",
 "aligner": "bwa",
 "skip_metrics": true,
 "platform": "our_platform",
