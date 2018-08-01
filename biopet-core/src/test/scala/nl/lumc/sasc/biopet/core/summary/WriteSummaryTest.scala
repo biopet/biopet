@@ -358,13 +358,14 @@ object WriteSummaryTest {
 
   def makeMultisampleQscript(name: String,
                              c: Map[String, Any],
+                             md5: Boolean = true,
                              settings: Map[String, Any] = Map(),
                              files: Map[String, File] = Map(),
                              dir: File) =
     new MultiSampleQScript with QScript {
       summaryName = "test"
       outputDir = dir
-      override def globalConfig = new Config(c + ("exe" -> "test"))
+      override def globalConfig = new Config(c + ("exe" -> "test") + ("summary_md5" -> md5))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
       val tempFile: File = File.createTempFile("summary", ".json")

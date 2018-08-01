@@ -36,6 +36,7 @@ trait BiopetJavaCommandLineFunction
       optional("-Dscala.concurrent.context.maxThreads=", threads, spaceSeparated = false)
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
     setResources()
     if (javaMemoryLimit.isEmpty && memoryLimit.isDefined)
       javaMemoryLimit = memoryLimit
