@@ -133,7 +133,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       case (m, pair) =>
         val tag = Map(
           "samples" -> Map(pair.tumorSample -> Map(
-            "tags" -> Map("type" -> "tumor", "normal" -> pair.normalSample))))
+            "tags" -> Map("type" -> "tumor", "control" -> pair.normalSample))))
         ConfigUtils.mergeMaps(m, tag)
     }
     val map = sampleTags ++ Map(
