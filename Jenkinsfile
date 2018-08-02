@@ -6,14 +6,14 @@ node('local') {
             tool 'Apache Maven 3.3.9'
         }
 
-        timeout(45) {
+        timeout(120) {
             stage('Checkout') {
                 checkout scm
                 sh 'git submodule update --init --recursive'
             }
         }
 
-        timeout(45) {
+        timeout(120) {
             stage('Build and Test') {
                 withMaven(maven: 'Apache Maven 3.3.9', jdk: 'JDK 8u102') {
                     sh 'mvn -B -T 2 -Dmaven.test.failure.ignore clean package'
